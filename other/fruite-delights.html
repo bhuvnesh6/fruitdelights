@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fruite Delights – Fresh • Healthy • Daily | Indore</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --yellow: #F5C842;
+    --yellow-light: #FFF4C2;
+    --yellow-pale: #FFFBEA;
+    --green-dark: #2D6A1F;
+    --green-mid: #4A8C35;
+    --green-light: #7BBD5E;
+    --green-pale: #E8F5E0;
+    --red-leaf: #8B2E1A;
+    --white: #FFFFFF;
+    --text-dark: #1A2E0D;
+    --text-mid: #3D5A28;
+    --text-light: #6B8C55;
+    --shadow-soft: 0 8px 32px rgba(45,106,31,0.12);
+    --shadow-card: 0 4px 24px rgba(45,106,31,0.10);
+    --radius: 20px;
+    --radius-sm: 12px;
+    --transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; font-size: 16px; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--yellow-pale);
+    color: var(--text-dark);
+    overflow-x: hidden;
+  }
+
+  /* ── LOADER ── */
+  #loader {
+    position: fixed; inset: 0; z-index: 9999;
+    background: var(--yellow);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    transition: opacity 0.6s ease, visibility 0.6s ease;
+  }
+  #loader.hide { opacity: 0; visibility: hidden; }
+  .loader-logo {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    color: var(--green-dark);
+    font-weight: 900;
+    letter-spacing: -1px;
+  }
+  .loader-leaf { font-size: 2.5rem; animation: bounce 0.8s infinite alternate; }
+  @keyframes bounce { from { transform: translateY(0); } to { transform: translateY(-14px); } }
+  .loader-bar {
+    width: 180px; height: 4px; background: rgba(45,106,31,0.15);
+    border-radius: 99px; margin-top: 24px; overflow: hidden;
+  }
+  .loader-bar-inner {
+    height: 100%; width: 0; background: var(--green-dark);
+    border-radius: 99px; animation: loadBar 1.8s ease forwards;
+  }
+  @keyframes loadBar { to { width: 100%; } }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 100;
+    background: rgba(245,200,66,0.92);
+    backdrop-filter: blur(12px);
+    padding: 14px 20px;
+    display: flex; align-items: center; justify-content: space-between;
+    border-bottom: 1.5px solid rgba(45,106,31,0.12);
+    transition: var(--transition);
+  }
+  nav.scrolled {
+    padding: 10px 20px;
+    box-shadow: 0 4px 24px rgba(45,106,31,0.13);
+  }
+  .nav-brand {
+    display: flex; align-items: center; gap: 8px;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.45rem; font-weight: 900;
+    color: var(--green-dark); text-decoration: none;
+    letter-spacing: -0.5px;
+  }
+  .nav-brand span { font-size: 1.6rem; }
+  .nav-links {
+    display: flex; gap: 6px; list-style: none;
+  }
+  .nav-links a {
+    color: var(--green-dark); text-decoration: none;
+    font-size: 0.88rem; font-weight: 500;
+    padding: 7px 14px; border-radius: 99px;
+    transition: var(--transition);
+    white-space: nowrap;
+  }
+  .nav-links a:hover { background: var(--green-dark); color: var(--yellow); }
+  .nav-cta {
+    background: var(--green-dark) !important;
+    color: var(--yellow) !important;
+  }
+  .nav-hamburger {
+    display: none; flex-direction: column; gap: 5px;
+    cursor: pointer; padding: 6px;
+  }
+  .nav-hamburger span {
+    width: 24px; height: 2px; background: var(--green-dark);
+    border-radius: 2px; transition: var(--transition);
+  }
+  .mobile-menu {
+    display: none; position: fixed; inset: 0; z-index: 99;
+    background: var(--yellow);
+    flex-direction: column; align-items: center; justify-content: center; gap: 28px;
+    opacity: 0; transition: opacity 0.35s;
+  }
+  .mobile-menu.open { display: flex; opacity: 1; }
+  .mobile-menu a {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem; color: var(--green-dark); text-decoration: none;
+    font-weight: 700;
+  }
+  .mobile-close {
+    position: absolute; top: 22px; right: 22px;
+    font-size: 2rem; color: var(--green-dark); cursor: pointer;
+    background: none; border: none;
+  }
+
+  /* ── HERO ── */
+  #hero {
+    min-height: 100svh;
+    background: linear-gradient(160deg, var(--yellow) 0%, #FDE87C 50%, var(--yellow-pale) 100%);
+    display: flex; align-items: center; justify-content: center;
+    padding: 80px 20px 60px;
+    position: relative; overflow: hidden;
+  }
+  .hero-bg-circles {
+    position: absolute; inset: 0; pointer-events: none;
+  }
+  .hero-bg-circles span {
+    position: absolute; border-radius: 50%;
+    background: rgba(45,106,31,0.06);
+  }
+  .hero-bg-circles span:nth-child(1) { width: 500px; height: 500px; top: -200px; right: -150px; }
+  .hero-bg-circles span:nth-child(2) { width: 300px; height: 300px; bottom: -100px; left: -100px; background: rgba(45,106,31,0.08); }
+  .hero-bg-circles span:nth-child(3) { width: 180px; height: 180px; top: 30%; left: 5%; }
+
+  .hero-inner {
+    display: grid; grid-template-columns: 1fr 1fr; gap: 40px;
+    align-items: center; max-width: 1100px; width: 100%;
+  }
+  .hero-text { opacity: 0; transform: translateY(40px); }
+  .hero-text.animate { animation: fadeUp 0.8s 0.3s forwards; }
+  .hero-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(45,106,31,0.12); color: var(--green-dark);
+    padding: 6px 16px; border-radius: 99px;
+    font-size: 0.82rem; font-weight: 600; letter-spacing: 0.5px;
+    margin-bottom: 20px;
+  }
+  .hero-badge span { font-size: 1rem; }
+  .hero-h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    font-weight: 900; line-height: 1.1;
+    color: var(--green-dark); letter-spacing: -1.5px;
+    margin-bottom: 18px;
+  }
+  .hero-h1 em { color: var(--red-leaf); font-style: normal; }
+  .hero-sub {
+    font-size: clamp(1rem, 2.2vw, 1.15rem);
+    color: var(--text-mid); line-height: 1.7;
+    margin-bottom: 32px; font-weight: 400;
+  }
+  .hero-btns { display: flex; gap: 14px; flex-wrap: wrap; }
+  .btn {
+    padding: 14px 28px; border-radius: 99px;
+    font-size: 0.95rem; font-weight: 600;
+    cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: var(--transition); border: 2px solid transparent;
+    letter-spacing: 0.2px;
+  }
+  .btn-primary {
+    background: var(--green-dark); color: var(--yellow);
+    box-shadow: 0 6px 24px rgba(45,106,31,0.32);
+  }
+  .btn-primary:hover {
+    background: var(--green-mid);
+    transform: translateY(-2px);
+    box-shadow: 0 10px 32px rgba(45,106,31,0.38);
+  }
+  .btn-outline {
+    border-color: var(--green-dark); color: var(--green-dark);
+    background: transparent;
+  }
+  .btn-outline:hover {
+    background: var(--green-dark); color: var(--yellow);
+    transform: translateY(-2px);
+  }
+  .hero-visual {
+    display: flex; justify-content: center; align-items: center;
+    opacity: 0; transform: scale(0.85) rotate(-4deg);
+  }
+  .hero-visual.animate { animation: popIn 0.9s 0.5s forwards; }
+  .hero-fruit-box {
+    position: relative; width: clamp(220px, 38vw, 360px); aspect-ratio: 1;
+    background: white; border-radius: 32px;
+    box-shadow: 0 20px 60px rgba(45,106,31,0.2), 0 4px 12px rgba(0,0,0,0.06);
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  .fruit-emoji-grid {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;
+    padding: 24px;
+  }
+  .fruit-emoji-grid span {
+    font-size: clamp(2rem, 5vw, 3rem);
+    display: flex; align-items: center; justify-content: center;
+    transition: transform 0.3s;
+    cursor: default;
+  }
+  .fruit-emoji-grid span:hover { transform: scale(1.3) rotate(8deg); }
+  .hero-tag {
+    position: absolute; background: var(--green-dark); color: var(--yellow);
+    padding: 8px 16px; border-radius: 99px; font-size: 0.78rem;
+    font-weight: 700; letter-spacing: 0.5px;
+  }
+  .hero-tag-1 { bottom: -14px; left: 20px; }
+  .hero-tag-2 { top: -12px; right: 16px; background: var(--yellow); color: var(--green-dark); }
+
+  /* ── TRUST BAR ── */
+  .trust-bar {
+    background: var(--green-dark); color: var(--yellow);
+    padding: 18px 20px; overflow: hidden;
+  }
+  .trust-bar-inner {
+    display: flex; gap: 40px; align-items: center;
+    animation: scrollX 18s linear infinite;
+    white-space: nowrap;
+  }
+  .trust-item {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-size: 0.9rem; font-weight: 600; flex-shrink: 0;
+  }
+  .trust-item span:first-child { font-size: 1.3rem; }
+  @keyframes scrollX {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+
+  /* ── SECTION BASE ── */
+  section { padding: clamp(56px, 8vw, 96px) 20px; }
+  .container { max-width: 1100px; margin: 0 auto; }
+  .section-label {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: var(--green-pale); color: var(--green-dark);
+    padding: 6px 14px; border-radius: 99px;
+    font-size: 0.78rem; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .section-h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    font-weight: 900; color: var(--green-dark);
+    letter-spacing: -1px; line-height: 1.15;
+    margin-bottom: 12px;
+  }
+  .section-sub {
+    font-size: clamp(0.95rem, 2vw, 1.05rem);
+    color: var(--text-light); max-width: 560px;
+    line-height: 1.75;
+  }
+
+  /* ── WHY US ── */
+  #why { background: var(--white); }
+  .why-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px; margin-top: 48px;
+  }
+  .why-card {
+    background: var(--yellow-pale); border-radius: var(--radius);
+    padding: 28px 22px; text-align: center;
+    border: 1.5px solid transparent;
+    transition: var(--transition);
+    opacity: 0; transform: translateY(30px);
+  }
+  .why-card.visible {
+    animation: fadeUp 0.6s forwards;
+  }
+  .why-card:hover {
+    border-color: var(--green-light);
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-card);
+  }
+  .why-icon { font-size: 2.4rem; margin-bottom: 14px; }
+  .why-title { font-weight: 700; font-size: 1.05rem; color: var(--green-dark); margin-bottom: 8px; }
+  .why-desc { font-size: 0.88rem; color: var(--text-light); line-height: 1.65; }
+
+  /* ── PRODUCTS ── */
+  #products { background: var(--yellow-pale); }
+  .product-tabs {
+    display: flex; gap: 10px; flex-wrap: wrap; margin: 32px 0 28px;
+  }
+  .tab-btn {
+    padding: 9px 20px; border-radius: 99px; border: 2px solid var(--green-mid);
+    background: transparent; color: var(--green-dark);
+    font-size: 0.88rem; font-weight: 600; cursor: pointer;
+    transition: var(--transition);
+  }
+  .tab-btn.active, .tab-btn:hover {
+    background: var(--green-dark); color: var(--yellow); border-color: var(--green-dark);
+  }
+  .tab-pane { display: none; }
+  .tab-pane.active { display: grid; grid-template-columns: repeat(auto-fit, minmax(270px, 1fr)); gap: 20px; }
+
+  .plan-card {
+    background: var(--white); border-radius: var(--radius);
+    padding: 28px 24px; border: 2px solid transparent;
+    position: relative; overflow: hidden;
+    transition: var(--transition);
+    box-shadow: var(--shadow-card);
+    opacity: 0; transform: translateY(24px);
+  }
+  .plan-card.visible { animation: fadeUp 0.55s forwards; }
+  .plan-card:hover {
+    border-color: var(--green-light);
+    transform: translateY(-6px);
+    box-shadow: 0 16px 48px rgba(45,106,31,0.18);
+  }
+  .plan-card.featured {
+    border-color: var(--yellow);
+    background: linear-gradient(160deg, #FFFBEA 0%, #FFF4C2 100%);
+  }
+  .plan-badge {
+    position: absolute; top: 16px; right: -24px;
+    background: var(--yellow); color: var(--green-dark);
+    font-size: 0.7rem; font-weight: 800; padding: 4px 30px 4px 14px;
+    transform: rotate(0); letter-spacing: 0.5px;
+  }
+  .plan-emoji { font-size: 2.2rem; margin-bottom: 12px; }
+  .plan-name { font-family: 'Playfair Display', serif; font-size: 1.25rem; font-weight: 700; color: var(--green-dark); margin-bottom: 4px; }
+  .plan-meta { font-size: 0.82rem; color: var(--text-light); margin-bottom: 16px; }
+  .plan-price { font-size: 2rem; font-weight: 800; color: var(--green-dark); letter-spacing: -1px; margin-bottom: 18px; }
+  .plan-price sup { font-size: 1rem; }
+  .plan-features { list-style: none; margin-bottom: 24px; }
+  .plan-features li {
+    font-size: 0.88rem; color: var(--text-mid); padding: 6px 0;
+    border-bottom: 1px solid rgba(45,106,31,0.08);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .plan-features li::before { content: "✓"; color: var(--green-light); font-weight: 700; }
+  .plan-cta {
+    width: 100%; padding: 13px; border-radius: 99px;
+    background: var(--green-dark); color: var(--yellow);
+    font-size: 0.92rem; font-weight: 700;
+    border: none; cursor: pointer;
+    transition: var(--transition); letter-spacing: 0.3px;
+  }
+  .plan-cta:hover { background: var(--green-mid); transform: scale(1.03); }
+
+  /* Sample box */
+  .sample-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+  .sample-card {
+    background: var(--white); border-radius: var(--radius);
+    padding: 32px 24px; text-align: center;
+    box-shadow: var(--shadow-card); border: 2px solid transparent;
+    transition: var(--transition);
+    opacity: 0; transform: translateY(24px);
+  }
+  .sample-card.visible { animation: fadeUp 0.55s forwards; }
+  .sample-card:hover { border-color: var(--yellow); transform: translateY(-5px); }
+  .sample-price { font-size: 2.4rem; font-weight: 900; color: var(--green-dark); }
+  .sample-name { font-family: 'Playfair Display', serif; font-size: 1.1rem; color: var(--text-mid); margin: 8px 0 4px; }
+  .sample-desc { font-size: 0.83rem; color: var(--text-light); margin-bottom: 20px; line-height: 1.6; }
+
+  /* ── HOW IT WORKS ── */
+  #how { background: var(--green-pale); }
+  .steps { display: flex; flex-direction: column; gap: 0; margin-top: 48px; position: relative; }
+  .steps::before {
+    content: ''; position: absolute; left: 28px; top: 0; bottom: 0;
+    width: 2px; background: var(--green-light); opacity: 0.35;
+  }
+  .step {
+    display: flex; gap: 24px; align-items: flex-start;
+    padding: 24px 0; opacity: 0; transform: translateX(-30px);
+  }
+  .step.visible { animation: slideRight 0.6s forwards; }
+  .step-num {
+    width: 56px; height: 56px; border-radius: 50%; flex-shrink: 0;
+    background: var(--green-dark); color: var(--yellow);
+    font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 900;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 16px rgba(45,106,31,0.25);
+    position: relative; z-index: 1;
+  }
+  .step-content h3 { font-weight: 700; font-size: 1.05rem; color: var(--green-dark); margin-bottom: 6px; }
+  .step-content p { font-size: 0.9rem; color: var(--text-light); line-height: 1.65; }
+
+  /* ── ORDER FORM ── */
+  #order { background: var(--white); }
+  .order-wrap {
+    display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: start;
+  }
+  .order-info h3 { font-family: 'Playfair Display', serif; font-size: 1.5rem; color: var(--green-dark); margin-bottom: 16px; }
+  .order-info p { font-size: 0.92rem; color: var(--text-light); line-height: 1.75; margin-bottom: 24px; }
+  .contact-chips { display: flex; flex-direction: column; gap: 12px; }
+  .contact-chip {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--yellow-pale); border-radius: var(--radius-sm);
+    padding: 14px 16px;
+  }
+  .contact-chip .cc-icon { font-size: 1.4rem; }
+  .contact-chip a { color: var(--green-dark); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+  .contact-chip span.cc-label { font-size: 0.75rem; color: var(--text-light); display: block; }
+
+  form {
+    background: var(--yellow-pale); border-radius: var(--radius);
+    padding: clamp(24px, 5vw, 40px); border: 1.5px solid rgba(45,106,31,0.1);
+  }
+  .form-title { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--green-dark); margin-bottom: 24px; font-weight: 700; }
+  .selected-plan-display {
+    background: var(--green-dark); color: var(--yellow);
+    border-radius: var(--radius-sm); padding: 12px 16px;
+    font-size: 0.88rem; font-weight: 600; margin-bottom: 20px;
+    display: none;
+  }
+  .selected-plan-display.show { display: block; }
+  .form-group { margin-bottom: 16px; }
+  label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--green-dark); margin-bottom: 7px; letter-spacing: 0.3px; }
+  input, select, textarea {
+    width: 100%; padding: 13px 16px; border-radius: var(--radius-sm);
+    border: 1.5px solid rgba(45,106,31,0.18); background: var(--white);
+    font-family: 'DM Sans', sans-serif; font-size: 0.93rem; color: var(--text-dark);
+    transition: var(--transition); outline: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--green-mid);
+    box-shadow: 0 0 0 3px rgba(74,140,53,0.12);
+  }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .btn-submit {
+    width: 100%; padding: 16px; border-radius: 99px;
+    background: var(--green-dark); color: var(--yellow);
+    font-size: 1rem; font-weight: 700; border: none; cursor: pointer;
+    transition: var(--transition); letter-spacing: 0.4px;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    margin-top: 8px;
+  }
+  .btn-submit:hover { background: var(--green-mid); transform: translateY(-2px); }
+  .btn-submit .spinner {
+    width: 18px; height: 18px; border: 2.5px solid rgba(245,200,66,0.3);
+    border-top-color: var(--yellow); border-radius: 50%;
+    animation: spin 0.7s linear infinite; display: none;
+  }
+  .btn-submit.loading .btn-text { display: none; }
+  .btn-submit.loading .spinner { display: block; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── MAP ── */
+  #map-section { background: var(--yellow-pale); padding: 0; }
+  .map-container { position: relative; }
+  .map-overlay {
+    position: absolute; top: 20px; left: 20px; z-index: 10;
+    background: var(--white); border-radius: var(--radius);
+    padding: 20px 22px; box-shadow: var(--shadow-soft);
+    max-width: 220px;
+  }
+  .map-overlay h4 { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--green-dark); margin-bottom: 8px; }
+  .map-overlay p { font-size: 0.82rem; color: var(--text-light); line-height: 1.65; }
+  iframe { display: block; width: 100%; height: 340px; border: 0; filter: saturate(0.7) contrast(1.1); }
+
+  /* ── TESTIMONIALS ── */
+  #testimonials { background: var(--green-dark); }
+  #testimonials .section-h2, #testimonials .section-sub { color: var(--yellow); }
+  #testimonials .section-label { background: rgba(245,200,66,0.18); color: var(--yellow); }
+  .testi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-top: 48px; }
+  .testi-card {
+    background: rgba(255,255,255,0.06); border-radius: var(--radius);
+    padding: 28px 24px; border: 1px solid rgba(245,200,66,0.15);
+    transition: var(--transition); opacity: 0; transform: translateY(24px);
+  }
+  .testi-card.visible { animation: fadeUp 0.6s forwards; }
+  .testi-card:hover { background: rgba(255,255,255,0.1); transform: translateY(-4px); }
+  .testi-stars { color: var(--yellow); font-size: 1rem; margin-bottom: 14px; letter-spacing: 2px; }
+  .testi-text { font-size: 0.92rem; color: rgba(255,255,255,0.85); line-height: 1.75; margin-bottom: 20px; font-style: italic; }
+  .testi-author { display: flex; align-items: center; gap: 12px; }
+  .testi-avatar {
+    width: 42px; height: 42px; border-radius: 50%;
+    background: var(--yellow); display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem; font-weight: 700; color: var(--green-dark); flex-shrink: 0;
+  }
+  .testi-name { font-weight: 700; color: var(--yellow); font-size: 0.92rem; }
+  .testi-role { font-size: 0.78rem; color: rgba(255,255,255,0.5); }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--text-dark); color: rgba(255,255,255,0.7);
+    padding: 56px 20px 28px;
+  }
+  .footer-grid {
+    display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 40px;
+    max-width: 1100px; margin: 0 auto 48px;
+  }
+  .footer-brand .nav-brand { color: var(--yellow); margin-bottom: 16px; display: inline-flex; }
+  .footer-brand p { font-size: 0.88rem; line-height: 1.75; max-width: 280px; }
+  .footer-col h5 { color: var(--white); font-weight: 700; margin-bottom: 16px; font-size: 0.9rem; letter-spacing: 0.5px; }
+  .footer-col ul { list-style: none; }
+  .footer-col ul li { margin-bottom: 10px; }
+  .footer-col ul li a { color: rgba(255,255,255,0.6); text-decoration: none; font-size: 0.85rem; transition: color 0.3s; }
+  .footer-col ul li a:hover { color: var(--yellow); }
+  .footer-bottom {
+    max-width: 1100px; margin: 0 auto;
+    border-top: 1px solid rgba(255,255,255,0.08);
+    padding-top: 24px; display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .footer-bottom p { font-size: 0.8rem; }
+
+  /* ── FLOATING WA ── */
+  .wa-float {
+    position: fixed; bottom: 24px; right: 24px; z-index: 200;
+    width: 60px; height: 60px; border-radius: 50%;
+    background: #25D366; box-shadow: 0 6px 24px rgba(37,211,102,0.45);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: var(--transition);
+    animation: waFloat 2s ease-in-out infinite;
+    border: none; text-decoration: none;
+  }
+  .wa-float:hover { transform: scale(1.15); box-shadow: 0 10px 32px rgba(37,211,102,0.55); }
+  .wa-float svg { width: 30px; height: 30px; fill: white; }
+  @keyframes waFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-6px); }
+  }
+  .wa-tooltip {
+    position: fixed; bottom: 94px; right: 24px; z-index: 200;
+    background: var(--green-dark); color: var(--yellow);
+    padding: 8px 14px; border-radius: var(--radius-sm);
+    font-size: 0.8rem; font-weight: 600; white-space: nowrap;
+    opacity: 0; transform: translateY(6px);
+    transition: opacity 0.3s, transform 0.3s;
+    pointer-events: none;
+  }
+  .wa-float:hover + .wa-tooltip,
+  .wa-tooltip:hover { opacity: 1; transform: translateY(0); }
+
+  /* ── THANK YOU POPUP ── */
+  .popup-overlay {
+    position: fixed; inset: 0; z-index: 500;
+    background: rgba(26,46,13,0.7); backdrop-filter: blur(6px);
+    display: flex; align-items: center; justify-content: center;
+    padding: 20px; opacity: 0; pointer-events: none;
+    transition: opacity 0.4s;
+  }
+  .popup-overlay.show { opacity: 1; pointer-events: all; }
+  .popup-box {
+    background: var(--white); border-radius: var(--radius);
+    padding: 48px 36px; text-align: center; max-width: 420px; width: 100%;
+    transform: scale(0.85); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    position: relative;
+  }
+  .popup-overlay.show .popup-box { transform: scale(1); }
+  .popup-fruits { font-size: 2.8rem; margin-bottom: 16px; animation: spin 8s linear infinite; display: inline-block; }
+  .popup-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem; color: var(--green-dark); font-weight: 900; margin-bottom: 8px;
+  }
+  .popup-brand { font-size: 1.2rem; color: var(--red-leaf); font-weight: 800; margin-bottom: 12px; }
+  .popup-sub { font-size: 0.9rem; color: var(--text-light); line-height: 1.7; margin-bottom: 28px; }
+  .popup-wa {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: #25D366; color: white; border-radius: 99px;
+    padding: 13px 24px; font-weight: 700; text-decoration: none;
+    font-size: 0.92rem; transition: var(--transition);
+    margin-bottom: 14px;
+  }
+  .popup-wa:hover { background: #1DA851; transform: scale(1.04); }
+  .popup-close {
+    display: block; font-size: 0.83rem; color: var(--text-light);
+    cursor: pointer; background: none; border: none; margin: 0 auto;
+    transition: color 0.3s;
+  }
+  .popup-close:hover { color: var(--green-dark); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes popIn {
+    from { opacity: 0; transform: scale(0.85) rotate(-4deg); }
+    to { opacity: 1; transform: scale(1) rotate(0deg); }
+  }
+  @keyframes slideRight {
+    from { opacity: 0; transform: translateX(-30px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .nav-links { display: none; }
+    .nav-hamburger { display: flex; }
+    .hero-inner { grid-template-columns: 1fr; text-align: center; }
+    .hero-btns { justify-content: center; }
+    .hero-visual { order: -1; }
+    .hero-fruit-box { width: clamp(200px, 70vw, 280px); }
+    .order-wrap { grid-template-columns: 1fr; }
+    .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+    .form-row { grid-template-columns: 1fr; }
+    .hero-tag-2 { display: none; }
+    .steps::before { left: 22px; }
+  }
+
+  @media (max-width: 480px) {
+    .hero-h1 { font-size: 2.1rem; }
+    .hero-btns { flex-direction: column; align-items: center; }
+    .btn { width: 100%; justify-content: center; }
+    .tab-pane.active { grid-template-columns: 1fr; }
+    .sample-grid { grid-template-columns: 1fr; }
+    .footer-bottom { flex-direction: column; text-align: center; }
+    .wa-float { bottom: 16px; right: 16px; width: 54px; height: 54px; }
+  }
+
+  /* scroll reveal helper */
+  .reveal { opacity: 0; transform: translateY(28px); transition: opacity 0.6s ease, transform 0.6s ease; }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-leaf">🍓</div>
+  <div class="loader-logo">fruite delights</div>
+  <div class="loader-bar"><div class="loader-bar-inner"></div></div>
+</div>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <button class="mobile-close" id="menuClose">✕</button>
+  <a href="#products" onclick="closeMobileMenu()">Plans</a>
+  <a href="#how" onclick="closeMobileMenu()">How It Works</a>
+  <a href="#testimonials" onclick="closeMobileMenu()">Reviews</a>
+  <a href="#order" onclick="closeMobileMenu()">Order Now</a>
+  <a href="#contact" onclick="closeMobileMenu()">Contact</a>
+</div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <a href="#" class="nav-brand"><span>🍃</span> fruite delights</a>
+  <ul class="nav-links">
+    <li><a href="#products">Plans</a></li>
+    <li><a href="#how">How It Works</a></li>
+    <li><a href="#testimonials">Reviews</a></li>
+    <li><a href="#order">Contact</a></li>
+    <li><a href="#order" class="nav-cta">Order Now →</a></li>
+  </ul>
+  <div class="nav-hamburger" id="hamburger">
+    <span></span><span></span><span></span>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <div class="hero-bg-circles">
+    <span></span><span></span><span></span>
+  </div>
+  <div class="hero-inner container">
+    <div class="hero-text" id="heroText">
+      <div class="hero-badge"><span>🌿</span> Delivered Fresh, Every Day in Indore</div>
+      <h1 class="hero-h1">Your Daily Dose of <em>Fresh</em> &amp; Healthy Fruits</h1>
+      <p class="hero-sub">
+        Hand-picked seasonal fruits &amp; power-packed sprouts delivered straight to your home or office — fresh every morning, no hassle, just health.
+      </p>
+      <div class="hero-btns">
+        <a href="#products" class="btn btn-primary">🍎 Explore Plans</a>
+        <a href="#order" class="btn btn-outline">Get a Sample Box</a>
+      </div>
+    </div>
+    <div class="hero-visual" id="heroVisual">
+      <div class="hero-fruit-box">
+        <div class="hero-tag hero-tag-2">✨ Fresh Daily</div>
+        <div class="fruit-emoji-grid">
+          <span title="Apple">🍎</span>
+          <span title="Mango">🥭</span>
+          <span title="Grapes">🍇</span>
+          <span title="Kiwi">🥝</span>
+          <span title="Watermelon">🍉</span>
+          <span title="Banana">🍌</span>
+          <span title="Sprouts">🌱</span>
+          <span title="Papaya">🍈</span>
+          <span title="Pomegranate">💎</span>
+        </div>
+        <div class="hero-tag hero-tag-1">📦 Box Delivered</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TRUST BAR -->
+<div class="trust-bar">
+  <div class="trust-bar-inner" id="trustScroll">
+    <div class="trust-item"><span>🚚</span><span>Free Home Delivery</span></div>
+    <div class="trust-item"><span>🌿</span><span>100% Fresh Fruits</span></div>
+    <div class="trust-item"><span>📦</span><span>Hygienically Packed</span></div>
+    <div class="trust-item"><span>🏙️</span><span>Serving Indore</span></div>
+    <div class="trust-item"><span>⭐</span><span>500+ Happy Customers</span></div>
+    <div class="trust-item"><span>🌱</span><span>Daily Sprouts Available</span></div>
+    <div class="trust-item"><span>🏢</span><span>Office Bulk Orders</span></div>
+    <!-- duplicate for infinite -->
+    <div class="trust-item"><span>🚚</span><span>Free Home Delivery</span></div>
+    <div class="trust-item"><span>🌿</span><span>100% Fresh Fruits</span></div>
+    <div class="trust-item"><span>📦</span><span>Hygienically Packed</span></div>
+    <div class="trust-item"><span>🏙️</span><span>Serving Indore</span></div>
+    <div class="trust-item"><span>⭐</span><span>500+ Happy Customers</span></div>
+    <div class="trust-item"><span>🌱</span><span>Daily Sprouts Available</span></div>
+    <div class="trust-item"><span>🏢</span><span>Office Bulk Orders</span></div>
+  </div>
+</div>
+
+<!-- WHY US -->
+<section id="why">
+  <div class="container">
+    <div class="section-label reveal">🌟 Why Us</div>
+    <h2 class="section-h2 reveal">Why Indore Loves Fruite Delights</h2>
+    <p class="section-sub reveal">We're not just a delivery service — we're your daily health partner.</p>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon">🌅</div>
+        <div class="why-title">Morning Fresh</div>
+        <div class="why-desc">Fruits sourced and packed fresh every morning. No cold storage, no compromise.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🧺</div>
+        <div class="why-title">Curated Box</div>
+        <div class="why-desc">We handpick seasonal + premium fruits so you get the best mix every day.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">📍</div>
+        <div class="why-title">Indore Delivery</div>
+        <div class="why-desc">Right to your door or office desk. Timely, reliable, and consistent delivery.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">💸</div>
+        <div class="why-title">Affordable Plans</div>
+        <div class="why-desc">Starting ₹69 for a sample. Monthly plans under ₹60 per day. Real value.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🌱</div>
+        <div class="why-title">Sprouts + Juice</div>
+        <div class="why-desc">Our sprout plans come with Detoxy Juice — your gut will thank you.</div>
+      </div>
+      <div class="why-card">
+        <div class="why-icon">🏢</div>
+        <div class="why-title">Office Bulk</div>
+        <div class="why-desc">Keep your team healthy. Bulk office plans from just ₹999 for 5+ boxes.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS / PLANS -->
+<section id="products">
+  <div class="container">
+    <div class="section-label reveal">🍱 Our Plans</div>
+    <h2 class="section-h2 reveal">Pick Your Perfect Box</h2>
+    <p class="section-sub reveal">Every plan is designed to fuel your day with nature's best. Try a sample first!</p>
+
+    <div class="product-tabs">
+      <button class="tab-btn active" data-tab="sample">🎁 Sample Box</button>
+      <button class="tab-btn" data-tab="fruits">🍎 Fruit Plans</button>
+      <button class="tab-btn" data-tab="sprouts">🌱 Sprout Plans</button>
+      <button class="tab-btn" data-tab="office">🏢 Office Bulk</button>
+    </div>
+
+    <!-- Sample -->
+    <div class="tab-pane active" id="tab-sample">
+      <div class="section-label" style="margin-bottom:16px">Try Before You Subscribe 🍓</div>
+      <div class="sample-grid">
+        <div class="sample-card">
+          <div style="font-size:2.5rem">🥝</div>
+          <div class="sample-price">₹69</div>
+          <div class="sample-name">Weekday Sample</div>
+          <div class="sample-desc">Based on Mon–Fri Plans. Perfect taste of what's in store for you.</div>
+          <button class="plan-cta" onclick="selectPlan('Weekday Sample – ₹69')">Try This →</button>
+        </div>
+        <div class="sample-card" style="border-color:var(--yellow)">
+          <div style="font-size:2.5rem">🍎</div>
+          <div class="sample-price">₹89</div>
+          <div class="sample-name">Full Week Sample</div>
+          <div class="sample-desc">Based on Mon–Sat Plans. Experience the premium difference yourself.</div>
+          <button class="plan-cta" onclick="selectPlan('Full Week Sample – ₹89')">Try This →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fruit Plans -->
+    <div class="tab-pane" id="tab-fruits">
+      <div class="plan-card">
+        <div class="plan-emoji">🥝</div>
+        <div class="plan-name">Fresh Five</div>
+        <div class="plan-meta">Mon–Fri | 22 Days</div>
+        <div class="plan-price"><sup>₹</sup>1199</div>
+        <ul class="plan-features">
+          <li>4 to 5 Seasonal Fruits</li>
+          <li>2 Premium Fruits</li>
+          <li>300–350gm Per Box</li>
+          <li>22 Day Subscription</li>
+        </ul>
+        <button class="plan-cta" onclick="selectPlan('Fresh Five – ₹1199 (Mon–Fri | 22 Days)')">Subscribe Now</button>
+      </div>
+      <div class="plan-card featured">
+        <div class="plan-badge">⭐ Popular</div>
+        <div class="plan-emoji">🍎</div>
+        <div class="plan-name">Six Day Shine</div>
+        <div class="plan-meta">Mon–Sat | 26 Days</div>
+        <div class="plan-price"><sup>₹</sup>1399</div>
+        <ul class="plan-features">
+          <li>4 to 5 Seasonal Fruits</li>
+          <li>2 Premium Fruits</li>
+          <li>300–350gm Per Box</li>
+          <li>26 Day Subscription</li>
+        </ul>
+        <button class="plan-cta" onclick="selectPlan('Six Day Shine – ₹1399 (Mon–Sat | 26 Days)')">Subscribe Now</button>
+      </div>
+      <div class="plan-card">
+        <div class="plan-emoji">🍉</div>
+        <div class="plan-name">Premium Delight</div>
+        <div class="plan-meta">Mon–Sat | 26 Days</div>
+        <div class="plan-price"><sup>₹</sup>1699</div>
+        <ul class="plan-features">
+          <li>4 to 5 Seasonal Fruits</li>
+          <li>3 Premium Fruits</li>
+          <li>350–400gm Per Box</li>
+          <li>26 Day Subscription</li>
+        </ul>
+        <button class="plan-cta" onclick="selectPlan('Premium Delight – ₹1699 (Mon–Sat | 26 Days)')">Subscribe Now</button>
+      </div>
+    </div>
+
+    <!-- Sprout Plans -->
+    <div class="tab-pane" id="tab-sprouts">
+      <div class="plan-card">
+        <div class="plan-emoji">🌱</div>
+        <div class="plan-name">Sprout Lite</div>
+        <div class="plan-meta">Mon–Fri | 22 Days</div>
+        <div class="plan-price"><sup>₹</sup>1199</div>
+        <ul class="plan-features">
+          <li>Fresh Daily Sprout Box</li>
+          <li>Includes Detoxy Juice</li>
+          <li>22 Day Subscription</li>
+          <li>Gut-Friendly & Nutritious</li>
+        </ul>
+        <button class="plan-cta" onclick="selectPlan('Sprout Lite – ₹1199 (Mon–Fri | 22 Days)')">Subscribe Now</button>
+      </div>
+      <div class="plan-card featured">
+        <div class="plan-badge">⭐ Best Value</div>
+        <div class="plan-emoji">🌱</div>
+        <div class="plan-name">Sprout Pro</div>
+        <div class="plan-meta">Mon–Sat | 26 Days</div>
+        <div class="plan-price"><sup>₹</sup>1399</div>
+        <ul class="plan-features">
+          <li>Premium Daily Sprout Box</li>
+          <li>Includes Detoxy Juice</li>
+          <li>26 Day Subscription</li>
+          <li>Maximum Nutrition Daily</li>
+        </ul>
+        <button class="plan-cta" onclick="selectPlan('Sprout Pro – ₹1399 (Mon–Sat | 26 Days)')">Subscribe Now</button>
+      </div>
+    </div>
+
+    <!-- Office Bulk -->
+    <div class="tab-pane" id="tab-office">
+      <div class="plan-card featured" style="max-width:400px">
+        <div class="plan-badge">🏢 Bulk</div>
+        <div class="plan-emoji">🏢</div>
+        <div class="plan-name">Office Fresh Bulk</div>
+        <div class="plan-meta">Mon–Fri | 22 Days</div>
+        <div class="plan-price"><sup>₹</sup>999 <span style="font-size:1rem;color:var(--text-light)">/box</span></div>
+        <ul class="plan-features">
+          <li>4 to 5 Seasonal Fruits</li>
+          <li>2 Premium Fruits</li>
+          <li>300–350gm Per Box</li>
+          <li>Minimum 5 Boxes</li>
+          <li>Team Health Made Easy</li>
+        </ul>
+        <button class="plan-cta" onclick="selectPlan('Office Fresh Bulk – ₹999/box (Min 5 Boxes | Mon–Fri | 22 Days)')">Book for Office</button>
+      </div>
+      <div style="background:var(--green-pale);border-radius:var(--radius);padding:28px 24px;display:flex;flex-direction:column;gap:14px;justify-content:center">
+        <div style="font-size:2.5rem">🤝</div>
+        <h3 style="font-family:'Playfair Display',serif;color:var(--green-dark);font-size:1.3rem">Perfect for Teams</h3>
+        <p style="font-size:0.9rem;color:var(--text-light);line-height:1.75">Keep your office team energized and healthy. We handle the sourcing, packing and delivery — you just enjoy fresh fruits at your desk every morning.</p>
+        <a href="https://wa.me/917000000000?text=Hi! I'm interested in the Office Bulk Plan for my team." target="_blank" class="btn btn-primary" style="width:fit-content">Chat on WhatsApp 💬</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <div class="container">
+    <div class="section-label reveal">🔄 Process</div>
+    <h2 class="section-h2 reveal">How It Works</h2>
+    <p class="section-sub reveal">From choosing your plan to receiving fresh fruits at your door — it's simple.</p>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-content">
+          <h3>Choose Your Plan</h3>
+          <p>Browse our plans — fruit boxes, sprout boxes, or bulk office orders. Pick what suits your lifestyle and budget.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-content">
+          <h3>Fill Your Details</h3>
+          <p>Share your name, address, preferred delivery time, and start date. Takes less than 60 seconds.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-content">
+          <h3>We Confirm via WhatsApp</h3>
+          <p>Our team confirms your order on WhatsApp and answers any questions you have. Personal touch, always.</p>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-content">
+          <h3>Receive Fresh Daily</h3>
+          <p>Your box arrives fresh at your doorstep every morning. Sit back, eat healthy, and feel amazing.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ORDER FORM -->
+<section id="order">
+  <div class="container">
+    <div class="order-wrap">
+      <div class="order-info reveal">
+        <div class="section-label">📝 Order Now</div>
+        <h3>Start Your Healthy Journey Today</h3>
+        <p>Fill out the form and we'll confirm your subscription via WhatsApp. No payment required upfront — pay when you're ready to start.</p>
+        <div class="contact-chips" id="contact">
+          <div class="contact-chip">
+            <span class="cc-icon">📞</span>
+            <div>
+              <span class="cc-label">Call / WhatsApp</span>
+              <a href="tel:+917000000000">+91 70000 00000</a>
+            </div>
+          </div>
+          <div class="contact-chip">
+            <span class="cc-icon">📧</span>
+            <div>
+              <span class="cc-label">Email Us</span>
+              <a href="mailto:hello@fruitedelights.in">hello@fruitedelights.in</a>
+            </div>
+          </div>
+          <div class="contact-chip">
+            <span class="cc-icon">📍</span>
+            <div>
+              <span class="cc-label">Delivery Area</span>
+              <a href="#map-section">Indore, Madhya Pradesh</a>
+            </div>
+          </div>
+          <a href="https://wa.me/917000000000?text=Hi! I'd like to know more about Fruite Delights plans." target="_blank" class="btn btn-primary" style="margin-top:8px;text-decoration:none">
+            💬 Message on WhatsApp
+          </a>
+        </div>
+      </div>
+
+      <form id="orderForm" novalidate>
+        <div class="form-title">🍓 Place Your Order</div>
+        <div class="selected-plan-display" id="planDisplay">Selected: None</div>
+        <input type="hidden" id="selectedPlan" name="selectedPlan" value="">
+
+        <div class="form-group">
+          <label for="fullName">Full Name *</label>
+          <input type="text" id="fullName" name="fullName" placeholder="Your full name" required>
+        </div>
+        <div class="form-group">
+          <label for="mobile">Mobile Number *</label>
+          <input type="tel" id="mobile" name="mobile" placeholder="+91 XXXXX XXXXX" required>
+        </div>
+        <div class="form-group">
+          <label for="address">Delivery Address *</label>
+          <textarea id="address" name="address" rows="3" placeholder="Full address with landmark, Indore" required></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="deliveryTime">Preferred Delivery Time *</label>
+            <select id="deliveryTime" name="deliveryTime" required>
+              <option value="">Select time</option>
+              <option>6:00 AM – 8:00 AM</option>
+              <option>8:00 AM – 10:00 AM</option>
+              <option>10:00 AM – 12:00 PM</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="startDate">Start Date *</label>
+            <input type="date" id="startDate" name="startDate" required>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="planSelect">Plan (if not selected above)</label>
+          <select id="planSelect" name="planSelect">
+            <option value="">Choose a plan…</option>
+            <option>Weekday Sample – ₹69</option>
+            <option>Full Week Sample – ₹89</option>
+            <option>Fresh Five – ₹1199 (Mon–Fri | 22 Days)</option>
+            <option>Six Day Shine – ₹1399 (Mon–Sat | 26 Days)</option>
+            <option>Premium Delight – ₹1699 (Mon–Sat | 26 Days)</option>
+            <option>Sprout Lite – ₹1199 (Mon–Fri | 22 Days)</option>
+            <option>Sprout Pro – ₹1399 (Mon–Sat | 26 Days)</option>
+            <option>Office Fresh Bulk – ₹999/box (Min 5 Boxes)</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-submit" id="submitBtn">
+          <span class="btn-text">🍎 Place My Order</span>
+          <div class="spinner"></div>
+        </button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- MAP -->
+<div id="map-section">
+  <div class="map-container">
+    <div class="map-overlay">
+      <h4>📍 We Deliver in Indore</h4>
+      <p>Madhya Pradesh, India. We cover major areas across Indore city.</p>
+    </div>
+    <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d117730.42760014856!2d75.7571507!3d22.7195687!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3962fcad1b410ddb%3A0x96ec4da356678f55!2sIndore%2C%20Madhya%20Pradesh!5e0!3m2!1sen!2sin!4v1716000000000!5m2!1sen!2sin" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Fruite Delights Delivery Area - Indore"></iframe>
+  </div>
+</div>
+
+<!-- TESTIMONIALS -->
+<section id="testimonials">
+  <div class="container">
+    <div class="section-label reveal">💬 Reviews</div>
+    <h2 class="section-h2 reveal">What Our Customers Say</h2>
+    <p class="section-sub reveal">Real stories from real people who chose health with Fruite Delights.</p>
+    <div class="testi-grid">
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"I was skeptical at first but the sample box won me over. Now on my second month with Premium Delight. The fruits are ALWAYS fresh and the box is perfectly packed!"</p>
+        <div class="testi-author">
+          <div class="testi-avatar">P</div>
+          <div>
+            <div class="testi-name">Priya Sharma</div>
+            <div class="testi-role">Housewife, Vijay Nagar, Indore</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"We got the office bulk plan for our 15 people team. Everyone loves it. Our productivity has genuinely improved since we started eating healthy in the morning. Highly recommend!"</p>
+        <div class="testi-author">
+          <div class="testi-avatar">R</div>
+          <div>
+            <div class="testi-name">Rahul Jain</div>
+            <div class="testi-role">Manager, IT Company, Indore</div>
+          </div>
+        </div>
+      </div>
+      <div class="testi-card">
+        <div class="testi-stars">★★★★★</div>
+        <p class="testi-text">"The Sprout Pro plan with Detoxy Juice is a game changer. My digestion has improved so much. The delivery is always on time and the WhatsApp support is super responsive."</p>
+        <div class="testi-author">
+          <div class="testi-avatar">S</div>
+          <div>
+            <div class="testi-name">Sneha Patel</div>
+            <div class="testi-role">Fitness Enthusiast, Indore</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <a href="#" class="nav-brand"><span>🍃</span> fruite delights</a>
+      <p>Bringing fresh, healthy fruits and sprouts to homes and offices in Indore. Every day, without fail.</p>
+      <div style="margin-top:20px;display:flex;gap:12px">
+        <a href="https://wa.me/917000000000" target="_blank" style="background:#25D366;color:white;padding:10px 18px;border-radius:99px;text-decoration:none;font-size:0.83rem;font-weight:700">💬 WhatsApp</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h5>Quick Links</h5>
+      <ul>
+        <li><a href="#products">Our Plans</a></li>
+        <li><a href="#how">How It Works</a></li>
+        <li><a href="#testimonials">Reviews</a></li>
+        <li><a href="#order">Order Now</a></li>
+        <li><a href="#contact">Contact Us</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h5>Contact</h5>
+      <ul>
+        <li><a href="tel:+917000000000">📞 +91 70000 00000</a></li>
+        <li><a href="mailto:hello@fruitedelights.in">📧 hello@fruitedelights.in</a></li>
+        <li><a href="#map-section">📍 Indore, MP</a></li>
+        <li><a href="https://wa.me/917000000000">💬 WhatsApp Us</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Fruite Delights. All rights reserved. Made with ❤️ in Indore.</p>
+    <p style="font-size:0.78rem;opacity:0.5">Fresh • Healthy • Daily</p>
+  </div>
+</footer>
+
+<!-- FLOATING WA -->
+<a href="https://wa.me/917000000000?text=Hi! I'm interested in Fruite Delights plans. Please send me more details." target="_blank" class="wa-float" aria-label="Chat on WhatsApp">
+  <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+</a>
+<div class="wa-tooltip">Chat with us! 👋</div>
+
+<!-- THANK YOU POPUP -->
+<div class="popup-overlay" id="popup">
+  <div class="popup-box">
+    <div class="popup-fruits">🍓</div>
+    <div class="popup-title">Thank You For Choosing</div>
+    <div class="popup-brand">FRUITE DELIGHTS 🍓</div>
+    <p class="popup-sub">
+      <strong>Fresh • Healthy • Daily</strong><br><br>
+      We've received your order! Our team will confirm your subscription via WhatsApp within a few minutes. Get ready for your daily dose of freshness! 🌿
+    </p>
+    <a id="popupWa" href="#" target="_blank" class="popup-wa">
+      💬 Get Updates on WhatsApp
+    </a>
+    <button class="popup-close" id="popupClose">Close ✕</button>
+  </div>
+</div>
+
+<script>
+  // ── LOADER ──
+  window.addEventListener('load', () => {
+    setTimeout(() => {
+      document.getElementById('loader').classList.add('hide');
+      document.getElementById('heroText').classList.add('animate');
+      document.getElementById('heroVisual').classList.add('animate');
+    }, 2000);
+  });
+
+  // ── NAV SCROLL ──
+  const navbar = document.getElementById('navbar');
+  window.addEventListener('scroll', () => {
+    navbar.classList.toggle('scrolled', window.scrollY > 40);
+  }, { passive: true });
+
+  // ── MOBILE MENU ──
+  document.getElementById('hamburger').addEventListener('click', () => {
+    document.getElementById('mobileMenu').classList.add('open');
+  });
+  document.getElementById('menuClose').addEventListener('click', closeMobileMenu);
+  function closeMobileMenu() {
+    document.getElementById('mobileMenu').classList.remove('open');
+  }
+
+  // ── SCROLL REVEAL ──
+  const revealEls = document.querySelectorAll('.reveal, .why-card, .plan-card, .sample-card, .step, .testi-card');
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry, i) => {
+      if (entry.isIntersecting) {
+        const el = entry.target;
+        const delay = el.dataset.delay || (Array.from(el.parentNode.children).indexOf(el) * 80);
+        setTimeout(() => {
+          el.classList.add('visible');
+          el.style.animationDelay = '0ms';
+        }, delay);
+        observer.unobserve(el);
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  revealEls.forEach((el, i) => {
+    el.dataset.delay = (i % 6) * 80;
+    observer.observe(el);
+  });
+
+  // ── TABS ──
+  document.querySelectorAll('.tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+      document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      const pane = document.getElementById('tab-' + btn.dataset.tab);
+      pane.classList.add('active');
+      pane.querySelectorAll('.plan-card, .sample-card').forEach((el, i) => {
+        el.classList.remove('visible');
+        el.style.opacity = '0';
+        setTimeout(() => { el.classList.add('visible'); }, i * 100 + 50);
+      });
+    });
+  });
+
+  // ── SELECT PLAN ──
+  function selectPlan(planName) {
+    document.getElementById('selectedPlan').value = planName;
+    const display = document.getElementById('planDisplay');
+    display.textContent = '✅ Selected: ' + planName;
+    display.classList.add('show');
+    document.getElementById('planSelect').value = planName.includes('Sample')
+      ? planName : (document.getElementById('planSelect').querySelector('[value]') ? planName : '');
+    document.getElementById('order').scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }
+
+  // ── PLAN SELECT SYNC ──
+  document.getElementById('planSelect').addEventListener('change', function() {
+    if (this.value) {
+      document.getElementById('selectedPlan').value = this.value;
+      const display = document.getElementById('planDisplay');
+      display.textContent = '✅ Selected: ' + this.value;
+      display.classList.add('show');
+    }
+  });
+
+  // ── FORM SUBMIT ──
+  document.getElementById('orderForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const fullName = document.getElementById('fullName').value.trim();
+    const mobile = document.getElementById('mobile').value.trim();
+    const address = document.getElementById('address').value.trim();
+    const deliveryTime = document.getElementById('deliveryTime').value;
+    const startDate = document.getElementById('startDate').value;
+    const plan = document.getElementById('selectedPlan').value || document.getElementById('planSelect').value;
+
+    if (!fullName || !mobile || !address || !deliveryTime || !startDate) {
+      shake(btn); return;
+    }
+    if (!/^[\d\s\+\-]{8,15}$/.test(mobile)) {
+      shake(document.getElementById('mobile')); return;
+    }
+
+    btn.classList.add('loading');
+
+    setTimeout(() => {
+      btn.classList.remove('loading');
+      showPopup(fullName, mobile, plan, startDate, deliveryTime, address);
+      this.reset();
+      document.getElementById('planDisplay').classList.remove('show');
+      document.getElementById('selectedPlan').value = '';
+    }, 1800);
+  });
+
+  function shake(el) {
+    el.style.animation = 'none';
+    el.style.border = '2px solid #e53e3e';
+    setTimeout(() => { el.style.border = ''; }, 1200);
+  }
+
+  function showPopup(name, mobile, plan, date, time, address) {
+    const msg = encodeURIComponent(
+      `Hi Fruite Delights! 🍓\n\nI've just placed an order:\n\n👤 Name: ${name}\n📱 Mobile: ${mobile}\n📦 Plan: ${plan || 'Not specified'}\n📅 Start Date: ${date}\n⏰ Delivery Time: ${time}\n📍 Address: ${address}\n\nPlease confirm my subscription!`
+    );
+    document.getElementById('popupWa').href = `https://wa.me/917000000000?text=${msg}`;
+    document.getElementById('popup').classList.add('show');
+  }
+
+  document.getElementById('popupClose').addEventListener('click', () => {
+    document.getElementById('popup').classList.remove('show');
+  });
+  document.getElementById('popup').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+
+  // ── MIN DATE FOR START DATE ──
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const dd = String(today.getDate() + 1).padStart(2, '0');
+  document.getElementById('startDate').min = `${yyyy}-${mm}-${dd}`;
+</script>
+</body>
+</html>

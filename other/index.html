@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FlowCraft — WhatsApp Automation Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700;12..96,800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg-deep: #f0f2f7;
+    --bg-base: #f7f8fc;
+    --bg-card: rgba(255, 255, 255, 0.95);
+    --bg-card-hover: rgba(255, 255, 255, 1);
+    --bg-glass: rgba(255,255,255,0.7);
+    --bg-modal: rgba(255, 255, 255, 0.99);
+    --border: rgba(0,0,0,0.08);
+    --border-glow: rgba(99, 102, 241, 0.3);
+    --border-active: rgba(99, 102, 241, 0.7);
+
+    --purple: #6366f1;
+    --purple-light: #818cf8;
+    --blue: #3b82f6;
+    --blue-light: #60a5fa;
+    --cyan: #06b6d4;
+    --green: #059669;
+    --amber: #d97706;
+    --rose: #e11d48;
+    --indigo: #4f46e5;
+
+    --grad-main: linear-gradient(135deg, #6366f1, #3b82f6);
+    --grad-start: linear-gradient(135deg, #059669, #06b6d4);
+    --grad-msg: linear-gradient(135deg, #6366f1, #818cf8);
+    --grad-wait: linear-gradient(135deg, #d97706, #f97316);
+    --grad-cond: linear-gradient(135deg, #e11d48, #ec4899);
+
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --text-accent: #6366f1;
+
+    --shadow-card: 0 2px 12px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.05);
+    --shadow-glow: 0 0 0 3px rgba(99,102,241,0.12), 0 4px 20px rgba(99,102,241,0.1);
+    --shadow-drag: 0 20px 50px rgba(0,0,0,0.15), 0 0 30px rgba(99,102,241,0.15);
+
+    --radius: 16px;
+    --radius-sm: 8px;
+    --radius-lg: 24px;
+
+    --font-display: 'Bricolage Grotesque', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: var(--font-display);
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* === GRID BACKGROUND === */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(99,102,241,0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(99,102,241,0.06) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    top: -20%;
+    left: -10%;
+    width: 55%;
+    height: 55%;
+    background: radial-gradient(ellipse, rgba(99,102,241,0.07) 0%, transparent 70%);
+    pointer-events: none;
+    z-index: 0;
+    animation: nebula 12s ease-in-out infinite alternate;
+  }
+
+  @keyframes nebula {
+    from { transform: translate(0,0) scale(1); opacity: 0.5; }
+    to   { transform: translate(4%,4%) scale(1.1); opacity: 1; }
+  }
+
+  /* === HEADER === */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(255,255,255,0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 1.1rem;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .logo-icon {
+    width: 32px; height: 32px;
+    background: var(--grad-main);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  .logo-text span { color: var(--purple-light); }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+    white-space: nowrap;
+  }
+
+  .btn-ghost {
+    background: transparent;
+    border-color: rgba(0,0,0,0.1);
+    color: var(--text-secondary);
+  }
+  .btn-ghost:hover {
+    border-color: rgba(99,102,241,0.4);
+    color: var(--indigo);
+    background: rgba(99,102,241,0.07);
+  }
+
+  .btn-primary {
+    background: var(--grad-main);
+    color: white;
+    box-shadow: 0 4px 15px rgba(99,102,241,0.3);
+  }
+  .btn-primary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(99,102,241,0.45);
+  }
+
+  .btn-danger {
+    background: transparent;
+    border-color: rgba(244,63,94,0.3);
+    color: var(--rose);
+  }
+  .btn-danger:hover {
+    background: rgba(244,63,94,0.1);
+    border-color: var(--rose);
+  }
+
+  .btn-success {
+    background: linear-gradient(135deg, #10b981, #06b6d4);
+    color: white;
+    box-shadow: 0 4px 15px rgba(16,185,129,0.3);
+  }
+  .btn-success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(16,185,129,0.5);
+  }
+
+  .btn-sm { padding: 6px 12px; font-size: 0.75rem; }
+  .btn-icon { padding: 8px; gap: 0; }
+
+  /* === MAIN LAYOUT === */
+  .app-layout {
+    display: grid;
+    grid-template-columns: 260px 1fr 300px;
+    grid-template-rows: calc(100vh - 64px);
+    position: relative;
+    z-index: 1;
+  }
+
+  /* === SIDEBAR === */
+  .sidebar {
+    background: rgba(248, 249, 253, 0.98);
+    border-right: 1px solid var(--border);
+    padding: 20px 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .sidebar-section-title {
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+  }
+
+  .card-palette {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .palette-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border);
+    background: var(--bg-glass);
+    cursor: grab;
+    transition: all 0.2s;
+    user-select: none;
+  }
+
+  .palette-item:hover {
+    border-color: rgba(99,102,241,0.35);
+    background: rgba(99,102,241,0.06);
+    transform: translateX(3px);
+  }
+
+  .palette-item:active { cursor: grabbing; }
+
+  .palette-dot {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .palette-info { flex: 1; min-width: 0; }
+  .palette-name { font-size: 0.85rem; font-weight: 600; color: var(--text-primary); }
+  .palette-desc { font-size: 0.7rem; color: var(--text-muted); margin-top: 1px; }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat-card {
+    background: var(--bg-glass);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+  }
+
+  .stat-value {
+    font-size: 1.4rem;
+    font-weight: 800;
+    background: var(--grad-main);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    font-family: var(--font-mono);
+  }
+
+  .stat-label { font-size: 0.68rem; color: var(--text-muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* === CANVAS === */
+  .canvas-wrapper {
+    position: relative;
+    overflow: hidden;
+    background: var(--bg-deep);
+  }
+
+  .canvas-scroll {
+    height: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 40px 0 120px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    scroll-behavior: smooth;
+  }
+
+  .canvas-scroll::-webkit-scrollbar { width: 4px; }
+  .canvas-scroll::-webkit-scrollbar-track { background: transparent; }
+  .canvas-scroll::-webkit-scrollbar-thumb { background: rgba(99,102,241,0.25); border-radius: 2px; }
+
+  /* === WORKFLOW CARD === */
+  .workflow-item {
+    width: 100%;
+    max-width: 480px;
+    padding: 0 20px;
+    position: relative;
+    animation: cardIn 0.4s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
+  }
+
+  /* CONNECTOR */
+  .connector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 48px;
+    position: relative;
+  }
+
+  .connector-line {
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, rgba(139,92,246,0.6), rgba(59,130,246,0.6));
+    position: relative;
+    flex-shrink: 0;
+  }
+
+  .connector-line::after {
+    content: '';
+    position: absolute;
+    bottom: -6px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0; height: 0;
+    border-left: 6px solid transparent;
+    border-right: 6px solid transparent;
+    border-top: 8px solid rgba(59,130,246,0.8);
+  }
+
+  .connector-pulse {
+    position: absolute;
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--purple-light);
+    left: 50%;
+    transform: translateX(-50%);
+    animation: pulse-down 1.5s ease-in-out infinite;
+    box-shadow: 0 0 8px var(--purple);
+  }
+
+  @keyframes pulse-down {
+    0%   { top: 0; opacity: 1; }
+    100% { top: calc(100% - 6px); opacity: 0; }
+  }
+
+  /* CARD BASE */
+  .wf-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.25s;
+    box-shadow: var(--shadow-card);
+    cursor: default;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+  }
+
+  .wf-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .wf-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-glow), var(--shadow-card);
+    border-color: rgba(139,92,246,0.25);
+  }
+
+  .wf-card:hover::before { opacity: 1; }
+
+  .wf-card.dragging {
+    opacity: 0.45;
+    transform: scale(0.98);
+    border: 2px dashed rgba(99,102,241,0.45);
+  }
+
+  .wf-card.drag-over {
+    border-color: var(--purple);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15), var(--shadow-card);
+    transform: scale(1.01);
+  }
+
+  /* CARD HEADER */
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 16px 14px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .card-type-badge {
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .card-header-info { flex: 1; min-width: 0; }
+
+  .card-type-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 2px;
+  }
+
+  .card-title {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .card-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .wf-card:hover .card-actions { opacity: 1; }
+
+  .card-action-btn {
+    width: 28px; height: 28px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.15s;
+  }
+
+  .card-action-btn:hover {
+    background: rgba(0,0,0,0.06);
+    border-color: rgba(0,0,0,0.12);
+    color: var(--text-primary);
+  }
+
+  .card-action-btn.del:hover {
+    background: rgba(244,63,94,0.15);
+    border-color: rgba(244,63,94,0.4);
+    color: var(--rose);
+  }
+
+  .drag-handle {
+    cursor: grab;
+    color: var(--text-muted);
+    font-size: 14px;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.15s;
+    user-select: none;
+  }
+  .drag-handle:active { cursor: grabbing; }
+  .drag-handle:hover { color: var(--text-secondary); }
+
+  /* CARD BODY */
+  .card-body {
+    padding: 16px;
+  }
+
+  /* === CARD TYPE COLORS === */
+  .card-start .card-header { background: linear-gradient(135deg, rgba(5,150,105,0.07), rgba(6,182,212,0.04)); }
+  .card-start .card-type-badge { background: rgba(5,150,105,0.12); }
+  .card-start .card-type-label { color: var(--green); }
+  .card-start .wf-card { border-color: rgba(5,150,105,0.18); }
+
+  .card-message .card-header { background: linear-gradient(135deg, rgba(99,102,241,0.07), rgba(129,140,248,0.04)); }
+  .card-message .card-type-badge { background: rgba(99,102,241,0.12); }
+  .card-message .card-type-label { color: var(--purple); }
+
+  .card-wait .card-header { background: linear-gradient(135deg, rgba(217,119,6,0.07), rgba(249,115,22,0.04)); }
+  .card-wait .card-type-badge { background: rgba(217,119,6,0.12); }
+  .card-wait .card-type-label { color: var(--amber); }
+
+  .card-condition .card-header { background: linear-gradient(135deg, rgba(225,29,72,0.07), rgba(236,72,153,0.04)); }
+  .card-condition .card-type-badge { background: rgba(225,29,72,0.12); }
+  .card-condition .card-type-label { color: var(--rose); }
+
+  /* === FORM ELEMENTS === */
+  .field-group { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+  .field-group:last-child { margin-bottom: 0; }
+
+  .field-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .field-input, .field-select, .field-textarea {
+    background: #ffffff;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    padding: 10px 12px;
+    width: 100%;
+    transition: all 0.2s;
+    outline: none;
+    -webkit-appearance: none;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  .field-input:focus, .field-select:focus, .field-textarea:focus {
+    border-color: rgba(99,102,241,0.5);
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    background: #ffffff;
+  }
+
+  .field-textarea {
+    resize: vertical;
+    min-height: 90px;
+    line-height: 1.5;
+    font-family: var(--font-mono);
+    font-size: 0.8rem;
+  }
+
+  .field-select {
+    cursor: pointer;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394a3b8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+    background-color: #ffffff;
+  }
+
+  .field-select option { background: #ffffff; color: #0f172a; }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+  /* VARIABLES PILL */
+  .var-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-top: 6px;
+  }
+
+  .var-pill {
+    font-size: 0.68rem;
+    font-family: var(--font-mono);
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: rgba(99,102,241,0.1);
+    border: 1px solid rgba(99,102,241,0.25);
+    color: var(--purple);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .var-pill:hover {
+    background: rgba(99,102,241,0.18);
+    border-color: var(--purple);
+  }
+
+  /* SAVED INDICATOR */
+  .save-indicator {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    color: var(--green);
+    opacity: 0;
+    transition: opacity 0.3s;
+    margin-top: 8px;
+  }
+  .save-indicator.show { opacity: 1; }
+
+  /* CONDITION PATHS */
+  .condition-paths {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .path-box {
+    border-radius: var(--radius-sm);
+    padding: 10px;
+    border: 1px dashed;
+  }
+
+  .path-true { border-color: rgba(16,185,129,0.4); background: rgba(16,185,129,0.04); }
+  .path-false { border-color: rgba(244,63,94,0.4); background: rgba(244,63,94,0.04); }
+
+  .path-label {
+    font-size: 0.65rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .path-true .path-label { color: var(--green); }
+  .path-false .path-label { color: var(--rose); }
+
+  .path-desc { font-size: 0.72rem; color: var(--text-secondary); }
+
+  /* CARD FOOTER */
+  .card-footer {
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .step-num {
+    font-size: 0.65rem;
+    font-family: var(--font-mono);
+    color: var(--text-muted);
+    background: rgba(255,255,255,0.04);
+    padding: 3px 8px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* === ADD CARD ZONE === */
+  .add-zone {
+    width: 100%;
+    max-width: 480px;
+    padding: 0 20px;
+    margin-top: 8px;
+  }
+
+  .add-btn-main {
+    width: 100%;
+    padding: 14px;
+    border-radius: var(--radius);
+    border: 1.5px dashed rgba(99,102,241,0.3);
+    background: rgba(99,102,241,0.04);
+    color: var(--text-secondary);
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.25s;
+  }
+
+  .add-btn-main:hover {
+    border-color: rgba(99,102,241,0.6);
+    background: rgba(99,102,241,0.08);
+    color: var(--purple);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(99,102,241,0.12);
+  }
+
+  /* FAB */
+  .fab {
+    position: fixed;
+    bottom: 28px;
+    right: 320px;
+    z-index: 90;
+    background: var(--grad-main);
+    color: white;
+    border: none;
+    border-radius: 56px;
+    padding: 14px 22px;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 28px rgba(99,102,241,0.4);
+    transition: all 0.25s;
+  }
+
+  .fab:hover {
+    transform: translateY(-3px) scale(1.03);
+    box-shadow: 0 12px 36px rgba(99,102,241,0.55);
+  }
+
+  /* === MODAL === */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15,23,42,0.35);
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.25s;
+  }
+
+  .modal-overlay.open {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal {
+    background: #ffffff;
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: var(--radius-lg);
+    width: 100%;
+    max-width: 480px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+    transform: translateY(20px) scale(0.97);
+    transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    overflow: hidden;
+  }
+
+  .modal-overlay.open .modal {
+    transform: translateY(0) scale(1);
+  }
+
+  .modal-header {
+    padding: 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #fafafa;
+  }
+
+  .modal-title { font-size: 1.1rem; font-weight: 800; }
+  .modal-subtitle { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
+
+  .modal-close {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: rgba(0,0,0,0.04);
+    border: 1px solid var(--border);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all 0.15s;
+  }
+  .modal-close:hover { background: rgba(225,29,72,0.07); border-color: rgba(225,29,72,0.25); color: var(--rose); }
+
+  .modal-body { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; background: #ffffff; }
+
+  .card-choice {
+    border-radius: var(--radius);
+    border: 1.5px solid rgba(0,0,0,0.08);
+    padding: 20px 16px;
+    cursor: pointer;
+    transition: all 0.25s;
+    background: #f8f9fc;
+    text-align: center;
+  }
+
+  .card-choice:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+  }
+
+  .card-choice.msg:hover { border-color: rgba(99,102,241,0.5); box-shadow: 0 8px 24px rgba(99,102,241,0.15); background: rgba(99,102,241,0.04); }
+  .card-choice.wait:hover { border-color: rgba(217,119,6,0.5); box-shadow: 0 8px 24px rgba(217,119,6,0.15); background: rgba(217,119,6,0.04); }
+  .card-choice.cond:hover { border-color: rgba(225,29,72,0.5); box-shadow: 0 8px 24px rgba(225,29,72,0.15); background: rgba(225,29,72,0.04); }
+
+  .choice-icon {
+    font-size: 28px;
+    margin-bottom: 8px;
+    display: block;
+  }
+
+  .choice-name { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; }
+  .choice-desc { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; }
+
+  /* === RIGHT PANEL === */
+  .right-panel {
+    background: rgba(10,17,32,0.95);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .panel-tabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+    padding: 0 12px;
+  }
+
+  .panel-tab {
+    padding: 14px 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .panel-tab.active {
+    color: var(--purple-light);
+    border-bottom-color: var(--purple);
+  }
+
+  .panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+  }
+
+  .panel-content::-webkit-scrollbar { width: 3px; }
+  .panel-content::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.3); border-radius: 2px; }
+
+  /* JSON PANEL */
+  .json-output {
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: #94a3b8;
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    white-space: pre;
+    overflow-x: auto;
+    word-break: break-all;
+    min-height: 200px;
+  }
+
+  .json-key { color: #a78bfa; }
+  .json-string { color: #6ee7b7; }
+  .json-number { color: #fbbf24; }
+  .json-bool { color: #f472b6; }
+
+  /* TIMELINE PANEL */
+  .timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+  }
+
+  .tl-item {
+    display: flex;
+    gap: 12px;
+    position: relative;
+    padding-bottom: 20px;
+  }
+
+  .tl-item:last-child { padding-bottom: 0; }
+
+  .tl-line {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+  }
+
+  .tl-dot {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 2px solid;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    background: var(--bg-deep);
+    flex-shrink: 0;
+    z-index: 1;
+  }
+
+  .tl-connector {
+    width: 2px;
+    flex: 1;
+    background: linear-gradient(to bottom, rgba(139,92,246,0.4), rgba(59,130,246,0.4));
+    margin-top: 4px;
+    min-height: 20px;
+  }
+
+  .tl-item:last-child .tl-connector { display: none; }
+
+  .tl-content { flex: 1; min-width: 0; padding-top: 4px; }
+  .tl-title { font-size: 0.82rem; font-weight: 700; margin-bottom: 3px; }
+  .tl-subtitle { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; word-break: break-word; }
+
+  .tl-start .tl-dot { border-color: var(--green); color: var(--green); }
+  .tl-message .tl-dot { border-color: var(--purple); color: var(--purple-light); }
+  .tl-wait .tl-dot { border-color: var(--amber); color: var(--amber); }
+  .tl-condition .tl-dot { border-color: var(--rose); color: var(--rose); }
+
+  /* TEST PANEL */
+  .test-section { margin-bottom: 20px; }
+  .test-section-title { font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .test-result {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--green);
+    min-height: 80px;
+    line-height: 1.6;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.68rem;
+    font-weight: 600;
+  }
+
+  .badge-success { background: rgba(16,185,129,0.15); color: var(--green); border: 1px solid rgba(16,185,129,0.3); }
+  .badge-warning { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .badge-purple { background: rgba(139,92,246,0.15); color: var(--purple-light); border: 1px solid rgba(139,92,246,0.3); }
+
+  /* === EMPTY STATE === */
+  .empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 48px 24px;
+    text-align: center;
+    opacity: 0.5;
+  }
+
+  .empty-icon { font-size: 48px; margin-bottom: 16px; }
+  .empty-text { font-size: 0.85rem; color: var(--text-muted); }
+
+  /* === TOAST === */
+  .toast-container {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 500;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    pointer-events: none;
+  }
+
+  .toast {
+    background: rgba(20,30,50,0.95);
+    border: 1px solid rgba(139,92,246,0.3);
+    border-radius: 10px;
+    padding: 12px 18px;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+    animation: toastIn 0.3s cubic-bezier(0.34,1.56,0.64,1) forwards, toastOut 0.3s 2.5s forwards;
+    backdrop-filter: blur(20px);
+  }
+
+  @keyframes toastIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes toastOut {
+    from { opacity: 1; transform: translateY(0); }
+    to   { opacity: 0; transform: translateY(-8px); }
+  }
+
+  /* === IMPORT HIDDEN INPUT === */
+  #importInput { display: none; }
+
+  /* === DIVIDER === */
+  .section-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+  }
+
+  /* === STATUS BAR === */
+  .status-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-top: 1px solid var(--border);
+    font-size: 0.72rem;
+    color: var(--text-muted);
+    background: rgba(0,0,0,0.2);
+  }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--green);
+    box-shadow: 0 0 8px var(--green);
+    animation: blink 2s ease-in-out infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 1100px) {
+    .app-layout { grid-template-columns: 220px 1fr; grid-template-rows: auto; }
+    .right-panel { display: none; }
+    .fab { right: 24px; }
+  }
+
+  @media (max-width: 700px) {
+    .app-layout { grid-template-columns: 1fr; grid-template-rows: auto; }
+    .sidebar { display: none; }
+    .header-actions .btn:not(.btn-primary) { display: none; }
+    .fab { right: 16px; bottom: 20px; }
+    .workflow-item { max-width: 100%; padding: 0 12px; }
+    .add-zone { padding: 0 12px; }
+    .modal-body { grid-template-columns: 1fr; }
+  }
+
+  /* Scrollbar general */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(139,92,246,0.25); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(139,92,246,0.45); }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">⚡</div>
+    <div class="logo-text">Flow<span>Craft</span></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn btn-ghost btn-sm" onclick="undoLast()">↩ Undo</button>
+    <button class="btn btn-ghost btn-sm" onclick="importWorkflow()">📥 Import</button>
+    <button class="btn btn-ghost btn-sm" onclick="exportWorkflow()">📤 Export</button>
+    <button class="btn btn-success btn-sm" onclick="testSendMessage()">▶ Run Test</button>
+    <button class="btn btn-primary btn-sm" onclick="openAddModal()">＋ Add Step</button>
+  </div>
+</header>
+
+<input type="file" id="importInput" accept=".json" onchange="handleImport(event)">
+
+<!-- APP LAYOUT -->
+<div class="app-layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div>
+      <div class="sidebar-section-title">📦 Card Types</div>
+      <div class="card-palette">
+        <div class="palette-item" draggable="true" data-type="message" ondragstart="paletteDragStart(event, 'message')">
+          <div class="palette-dot" style="background:rgba(139,92,246,0.15)">💬</div>
+          <div class="palette-info">
+            <div class="palette-name">Message</div>
+            <div class="palette-desc">Send WhatsApp message</div>
+          </div>
+        </div>
+        <div class="palette-item" draggable="true" data-type="wait" ondragstart="paletteDragStart(event, 'wait')">
+          <div class="palette-dot" style="background:rgba(245,158,11,0.15)">⏱</div>
+          <div class="palette-info">
+            <div class="palette-name">Wait / Delay</div>
+            <div class="palette-desc">Pause before next step</div>
+          </div>
+        </div>
+        <div class="palette-item" draggable="true" data-type="condition" ondragstart="paletteDragStart(event, 'condition')">
+          <div class="palette-dot" style="background:rgba(244,63,94,0.15)">🔀</div>
+          <div class="palette-info">
+            <div class="palette-name">Condition</div>
+            <div class="palette-desc">Branch by status logic</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div>
+      <div class="sidebar-section-title">📊 Workflow Stats</div>
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-steps">1</div>
+          <div class="stat-label">Steps</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-msgs">0</div>
+          <div class="stat-label">Messages</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-waits">0</div>
+          <div class="stat-label">Delays</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" id="stat-conds">0</div>
+          <div class="stat-label">Conditions</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div>
+      <div class="sidebar-section-title">🔧 Variables</div>
+      <div style="display:flex;flex-wrap:wrap;gap:5px">
+        <span class="var-pill">{{name}}</span>
+        <span class="var-pill">{{number}}</span>
+        <span class="var-pill">{{date}}</span>
+        <span class="var-pill">{{status}}</span>
+        <span class="var-pill">{{company}}</span>
+      </div>
+      <p style="font-size:0.68rem;color:var(--text-muted);margin-top:8px;line-height:1.5">Click a variable to copy it. Paste in any Message card.</p>
+    </div>
+
+    <div class="section-divider"></div>
+
+    <div>
+      <div class="sidebar-section-title">⚡ Quick Actions</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <button class="btn btn-ghost btn-sm" style="justify-content:flex-start" onclick="clearWorkflow()">🗑️ Clear All</button>
+        <button class="btn btn-ghost btn-sm" style="justify-content:flex-start" onclick="loadSampleWorkflow()">📋 Load Sample</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- CANVAS -->
+  <main class="canvas-wrapper">
+    <div class="canvas-scroll" id="canvas" 
+      ondragover="canvasDragOver(event)" 
+      ondrop="canvasDrop(event)"
+      ondragleave="canvasDragLeave(event)">
+      <!-- Cards render here -->
+    </div>
+    <button class="fab" onclick="openAddModal()">＋ Add Step</button>
+  </main>
+
+  <!-- RIGHT PANEL -->
+  <aside class="right-panel">
+    <div class="panel-tabs">
+      <div class="panel-tab active" onclick="switchTab(this, 'timeline')">📍 Timeline</div>
+      <div class="panel-tab" onclick="switchTab(this, 'json')">{ } JSON</div>
+      <div class="panel-tab" onclick="switchTab(this, 'test')">🧪 Test</div>
+    </div>
+
+    <div class="panel-content" id="tab-timeline">
+      <div class="timeline" id="timeline-view"></div>
+    </div>
+
+    <div class="panel-content" id="tab-json" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+        <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600">AUTO-SAVES ON CHANGE</span>
+        <div class="status-dot"></div>
+      </div>
+      <div class="json-output" id="json-output"></div>
+    </div>
+
+    <div class="panel-content" id="tab-test" style="display:none">
+      <div class="test-section">
+        <div class="test-section-title">Test Values</div>
+        <div class="field-group">
+          <label class="field-label">Name</label>
+          <input class="field-input" id="test-name" value="Test User" placeholder="User name">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Phone</label>
+          <input type="number" class="field-input" id="test-phone" value="9999999999" placeholder="Phone number">
+        </div>
+      </div>
+
+      <div class="test-section">
+        <div class="test-section-title">First Message Preview</div>
+        <div class="test-result" id="test-preview">No message cards in workflow yet.</div>
+      </div>
+
+      <div class="test-section">
+        <div class="test-section-title">Simulated Payload</div>
+        <div class="test-result" id="test-payload">—</div>
+      </div>
+
+      <button class="btn btn-success" style="width:100%;justify-content:center" onclick="testSendMessage()">▶ Simulate Send</button>
+      <div style="margin-top:8px;font-size:0.7rem;color:var(--text-muted)">Logs to console. Real API call to /send-message.</div>
+    </div>
+
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      <span>Auto-saved · <span id="step-count">1</span> steps total</span>
+    </div>
+  </aside>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="addModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Add a Step</div>
+        <div class="modal-subtitle">Choose what happens next in your workflow</div>
+      </div>
+      <button class="modal-close" onclick="closeAddModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="card-choice msg" onclick="addCard('message'); closeAddModal()">
+        <span class="choice-icon">💬</span>
+        <div class="choice-name" style="color:var(--purple-light)">Message</div>
+        <div class="choice-desc">Send a personalized WhatsApp message to the lead</div>
+      </div>
+      <div class="card-choice wait" onclick="addCard('wait'); closeAddModal()">
+        <span class="choice-icon">⏱</span>
+        <div class="choice-name" style="color:var(--amber)">Wait / Delay</div>
+        <div class="choice-desc">Pause for minutes, hours, days, or weeks</div>
+      </div>
+      <div class="card-choice cond" onclick="addCard('condition'); closeAddModal()">
+        <span class="choice-icon">🔀</span>
+        <div class="choice-name" style="color:var(--rose)">Condition</div>
+        <div class="choice-desc">Branch based on lead status logic</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST CONTAINER -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+/* ======================================================
+   STATE
+====================================================== */
+let workflow = [];
+let undoStack = [];
+let nextId = 1;
+let draggingIdx = null;
+let paletteType = null;
+
+/* ======================================================
+   INIT
+====================================================== */
+window.addEventListener('DOMContentLoaded', () => {
+  loadFromStorage();
+  if (workflow.length === 0) {
+    // Default start card
+    workflow.push({ id: nextId++, type: 'start', condition: 'status = pending' });
+  }
+  render();
+
+  // Variable pills copy
+  document.querySelectorAll('.var-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      navigator.clipboard?.writeText(pill.textContent).catch(() => {});
+      toast('📋 Copied ' + pill.textContent, '🟣');
+    });
+  });
+});
+
+/* ======================================================
+   STORAGE
+====================================================== */
+function saveToStorage() {
+  try { localStorage.setItem('flowcraft_workflow', JSON.stringify(workflow)); } catch(e) {}
+}
+
+function loadFromStorage() {
+  try {
+    const raw = localStorage.getItem('flowcraft_workflow');
+    if (raw) {
+      workflow = JSON.parse(raw);
+      nextId = Math.max(...workflow.map(s => s.id), 0) + 1;
+    }
+  } catch(e) {}
+}
+
+/* ======================================================
+   RENDER
+====================================================== */
+function render() {
+  const canvas = document.getElementById('canvas');
+  canvas.innerHTML = '';
+
+  workflow.forEach((step, idx) => {
+    // Connector (not before first)
+    if (idx > 0) {
+      const conn = document.createElement('div');
+      conn.className = 'workflow-item';
+      conn.style.maxWidth = '480px';
+      conn.innerHTML = `
+        <div class="connector">
+          <div class="connector-line">
+            <div class="connector-pulse"></div>
+          </div>
+        </div>`;
+      canvas.appendChild(conn);
+    }
+
+    // Card wrapper
+    const item = document.createElement('div');
+    item.className = 'workflow-item';
+    item.setAttribute('data-idx', idx);
+    item.setAttribute('draggable', step.type !== 'start');
+    item.innerHTML = buildCard(step, idx);
+    
+    // Drag events for reordering
+    if (step.type !== 'start') {
+      item.addEventListener('dragstart', e => cardDragStart(e, idx));
+      item.addEventListener('dragend',   e => cardDragEnd(e, idx));
+    }
+    item.addEventListener('dragover',  e => cardDragOver(e, idx));
+    item.addEventListener('drop',      e => cardDrop(e, idx));
+    item.addEventListener('dragleave', e => cardDragLeave(e));
+
+    canvas.appendChild(item);
+  });
+
+  // Add zone
+  const addZone = document.createElement('div');
+  addZone.className = 'add-zone';
+  addZone.innerHTML = `<button class="add-btn-main" onclick="openAddModal()">＋ Add Step</button>`;
+  canvas.appendChild(addZone);
+
+  updateSidebar();
+  updateRightPanel();
+  saveToStorage();
+}
+
+function buildCard(step, idx) {
+  switch (step.type) {
+    case 'start':     return buildStartCard(step, idx);
+    case 'message':   return buildMessageCard(step, idx);
+    case 'wait':      return buildWaitCard(step, idx);
+    case 'condition': return buildConditionCard(step, idx);
+    default: return '';
+  }
+}
+
+function buildStartCard(step, idx) {
+  return `
+  <div class="wf-card card-start">
+    <div class="card-header">
+      <div class="card-type-badge">🟢</div>
+      <div class="card-header-info">
+        <div class="card-type-label">Trigger</div>
+        <div class="card-title">Start Workflow</div>
+      </div>
+      <div class="card-actions">
+        <div class="drag-handle" title="(Start card is fixed)">⋮⋮</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field-group">
+        <label class="field-label">Trigger Condition</label>
+        <select class="field-select" onchange="updateField(${step.id}, 'condition', this.value)">
+          <option value="status = pending" ${step.condition==='status = pending'?'selected':''}>status = pending</option>
+          <option value="status = interested" ${step.condition==='status = interested'?'selected':''}>status = interested</option>
+          <option value="status = not interested" ${step.condition==='status = not interested'?'selected':''}>status = not interested</option>
+          <option value="status = follow-up" ${step.condition==='status = follow-up'?'selected':''}>status = follow-up</option>
+        </select>
+      </div>
+    </div>
+    <div class="card-footer">
+      <span class="step-num">STEP 1</span>
+      <span class="badge badge-success">✓ Fixed Trigger</span>
+    </div>
+  </div>`;
+}
+
+function buildMessageCard(step, idx) {
+  const txt = (step.text || '').replace(/"/g, '&quot;');
+  return `
+  <div class="wf-card card-message" draggable="true">
+    <div class="card-header">
+      <div class="card-type-badge">💬</div>
+      <div class="card-header-info">
+        <div class="card-type-label">WhatsApp Message</div>
+        <div class="card-title">${step.text ? step.text.substring(0,30)+'…' : 'Untitled Message'}</div>
+      </div>
+      <div class="card-actions">
+        <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
+        <button class="card-action-btn del" onclick="deleteCard(${step.id})" title="Delete">🗑</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field-group">
+        <label class="field-label">Message Text</label>
+        <textarea class="field-textarea" placeholder="Hi {{name}}, just checking in on your enquiry! 👋" onchange="updateField(${step.id}, 'text', this.value)" oninput="updateField(${step.id}, 'text', this.value)">${step.text || ''}</textarea>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Insert Variable</label>
+        <div class="var-pills">
+          <span class="var-pill" onclick="insertVar(${step.id}, '{{name}}')">{{name}}</span>
+          <span class="var-pill" onclick="insertVar(${step.id}, '{{number}}')">{{number}}</span>
+          <span class="var-pill" onclick="insertVar(${step.id}, '{{date}}')">{{date}}</span>
+          <span class="var-pill" onclick="insertVar(${step.id}, '{{status}}')">{{status}}</span>
+        </div>
+      </div>
+      <div class="save-indicator" id="saved-${step.id}">✓ Saved</div>
+    </div>
+    <div class="card-footer">
+      <span class="step-num">STEP ${idx + 1}</span>
+      <span class="badge badge-purple">💬 Message</span>
+    </div>
+  </div>`;
+}
+
+function buildWaitCard(step, idx) {
+  return `
+  <div class="wf-card card-wait">
+    <div class="card-header">
+      <div class="card-type-badge">⏱</div>
+      <div class="card-header-info">
+        <div class="card-type-label">Delay / Wait</div>
+        <div class="card-title">Wait ${step.duration || 1} ${step.unit || 'days'}</div>
+      </div>
+      <div class="card-actions">
+        <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
+        <button class="card-action-btn del" onclick="deleteCard(${step.id})" title="Delete">🗑</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Duration</label>
+          <input type="number" min="1" class="field-input" value="${step.duration || 1}"
+            onchange="updateField(${step.id}, 'duration', parseInt(this.value))"
+            oninput="updateField(${step.id}, 'duration', parseInt(this.value))">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Unit</label>
+          <select class="field-select" onchange="updateField(${step.id}, 'unit', this.value)">
+            <option value="minutes" ${step.unit==='minutes'?'selected':''}>Minutes</option>
+            <option value="hours"   ${step.unit==='hours'?'selected':''}>Hours</option>
+            <option value="days"    ${step.unit==='days'?'selected':''}>Days</option>
+            <option value="weeks"   ${step.unit==='weeks'?'selected':''}>Weeks</option>
+            <option value="months"  ${step.unit==='months'?'selected':''}>Months</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <span class="step-num">STEP ${idx + 1}</span>
+      <span class="badge badge-warning">⏱ Wait</span>
+    </div>
+  </div>`;
+}
+
+function buildConditionCard(step, idx) {
+  return `
+  <div class="wf-card card-condition">
+    <div class="card-header">
+      <div class="card-type-badge">🔀</div>
+      <div class="card-header-info">
+        <div class="card-type-label">Branch / Condition</div>
+        <div class="card-title">If status matches…</div>
+      </div>
+      <div class="card-actions">
+        <div class="drag-handle" title="Drag to reorder">⋮⋮</div>
+        <button class="card-action-btn del" onclick="deleteCard(${step.id})" title="Delete">🗑</button>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="field-group">
+        <label class="field-label">Condition</label>
+        <select class="field-select" onchange="updateField(${step.id}, 'if_condition', this.value)">
+          <option value="status = pending"       ${step.if_condition==='status = pending'?'selected':''}>status = pending</option>
+          <option value="status = interested"    ${step.if_condition==='status = interested'?'selected':''}>status = interested</option>
+          <option value="status = not interested"${step.if_condition==='status = not interested'?'selected':''}>status = not interested</option>
+          <option value="status = replied"       ${step.if_condition==='status = replied'?'selected':''}>status = replied</option>
+        </select>
+      </div>
+      <div class="condition-paths">
+        <div class="path-box path-true">
+          <div class="path-label">✓ True</div>
+          <div class="path-desc">Continue to next step in sequence</div>
+        </div>
+        <div class="path-box path-false">
+          <div class="path-label">✗ Else</div>
+          <div class="path-desc">Skip to end / alternate path</div>
+        </div>
+      </div>
+    </div>
+    <div class="card-footer">
+      <span class="step-num">STEP ${idx + 1}</span>
+      <span style="font-size:0.68rem;color:var(--rose);background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.25);padding:3px 8px;border-radius:4px;font-weight:600">🔀 Branch</span>
+    </div>
+  </div>`;
+}
+
+/* ======================================================
+   CARD MANAGEMENT
+====================================================== */
+function addCard(type) {
+  pushUndo();
+  const step = { id: nextId++, type };
+  if (type === 'message')   { step.text = ''; }
+  if (type === 'wait')      { step.duration = 1; step.unit = 'days'; }
+  if (type === 'condition') { step.if_condition = 'status = pending'; }
+  workflow.push(step);
+  render();
+  toast('✅ Added ' + type + ' card');
+  // Scroll to bottom
+  setTimeout(() => {
+    const cs = document.getElementById('canvas');
+    cs.scrollTo({ top: cs.scrollHeight, behavior: 'smooth' });
+  }, 50);
+}
+
+function deleteCard(id) {
+  if (workflow.find(s => s.id === id)?.type === 'start') {
+    toast('⛔ Cannot delete the Start card', '🔴');
+    return;
+  }
+  pushUndo();
+  workflow = workflow.filter(s => s.id !== id);
+  render();
+  toast('🗑 Card removed');
+}
+
+function updateField(id, key, value) {
+  const step = workflow.find(s => s.id === id);
+  if (!step) return;
+  step[key] = value;
+  
+  // Show saved indicator for message cards
+  const savedEl = document.getElementById(`saved-${id}`);
+  if (savedEl) {
+    savedEl.classList.add('show');
+    clearTimeout(savedEl._t);
+    savedEl._t = setTimeout(() => savedEl.classList.remove('show'), 1800);
+  }
+
+  // Update title in card header live
+  if (key === 'text') {
+    const items = document.querySelectorAll(`[data-idx]`);
+    items.forEach(item => {
+      const idx = parseInt(item.getAttribute('data-idx'));
+      if (workflow[idx]?.id === id) {
+        const titleEl = item.querySelector('.card-title');
+        if (titleEl) titleEl.textContent = value ? value.substring(0,30)+'…' : 'Untitled Message';
+      }
+    });
+  }
+
+  // Update wait card title
+  if (key === 'duration' || key === 'unit') {
+    const items = document.querySelectorAll(`[data-idx]`);
+    items.forEach(item => {
+      const idx = parseInt(item.getAttribute('data-idx'));
+      if (workflow[idx]?.id === id) {
+        const titleEl = item.querySelector('.card-title');
+        if (titleEl) titleEl.textContent = `Wait ${step.duration || 1} ${step.unit || 'days'}`;
+      }
+    });
+  }
+
+  updateRightPanel();
+  saveToStorage();
+}
+
+function insertVar(id, varText) {
+  const step = workflow.find(s => s.id === id);
+  if (!step) return;
+  step.text = (step.text || '') + varText;
+  render();
+  toast('📌 Inserted ' + varText);
+}
+
+/* ======================================================
+   DRAG & DROP — Card Reordering
+====================================================== */
+function cardDragStart(e, idx) {
+  draggingIdx = idx;
+  paletteType = null;
+  e.dataTransfer.effectAllowed = 'move';
+  e.dataTransfer.setData('text/plain', 'card:' + idx);
+  setTimeout(() => {
+    document.querySelectorAll(`[data-idx="${idx}"] .wf-card`).forEach(el => el.classList.add('dragging'));
+  }, 0);
+}
+
+function cardDragEnd(e, idx) {
+  draggingIdx = null;
+  document.querySelectorAll('.wf-card').forEach(el => {
+    el.classList.remove('dragging');
+    el.classList.remove('drag-over');
+  });
+}
+
+function cardDragOver(e, idx) {
+  e.preventDefault();
+  if (idx === 0) return; // don't drag over start
+  if (draggingIdx !== null && draggingIdx !== idx) {
+    document.querySelectorAll(`[data-idx="${idx}"] .wf-card`).forEach(el => el.classList.add('drag-over'));
+  }
+}
+
+function cardDragLeave(e) {
+  document.querySelectorAll('.wf-card').forEach(el => el.classList.remove('drag-over'));
+}
+
+function cardDrop(e, targetIdx) {
+  e.preventDefault();
+  document.querySelectorAll('.wf-card').forEach(el => el.classList.remove('drag-over', 'dragging'));
+
+  const data = e.dataTransfer.getData('text/plain');
+
+  // Palette drop
+  if (data.startsWith('palette:') || paletteType) {
+    const type = paletteType || data.replace('palette:','');
+    paletteType = null;
+    pushUndo();
+    const step = { id: nextId++, type };
+    if (type === 'message')   step.text = '';
+    if (type === 'wait')      { step.duration = 1; step.unit = 'days'; }
+    if (type === 'condition') step.if_condition = 'status = pending';
+    // Insert at target position (not before start)
+    const insertAt = Math.max(1, targetIdx);
+    workflow.splice(insertAt, 0, step);
+    render();
+    toast('✅ Dropped ' + type + ' card');
+    return;
+  }
+
+  // Card reorder
+  if (draggingIdx !== null && draggingIdx !== targetIdx && targetIdx !== 0) {
+    pushUndo();
+    const moved = workflow.splice(draggingIdx, 1)[0];
+    const newTarget = draggingIdx < targetIdx ? targetIdx - 1 : targetIdx;
+    workflow.splice(Math.max(1, newTarget), 0, moved);
+    draggingIdx = null;
+    render();
+    toast('↕ Reordered');
+  }
+}
+
+/* Palette drag */
+function paletteDragStart(e, type) {
+  paletteType = type;
+  draggingIdx = null;
+  e.dataTransfer.effectAllowed = 'copy';
+  e.dataTransfer.setData('text/plain', 'palette:' + type);
+}
+
+function canvasDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = paletteType ? 'copy' : 'move';
+}
+
+function canvasDrop(e) {
+  // If dropped on canvas but not on a card, add to end
+  if (paletteType) {
+    const type = paletteType;
+    paletteType = null;
+    addCard(type);
+  }
+}
+
+function canvasDragLeave(e) {
+  document.querySelectorAll('.wf-card').forEach(el => el.classList.remove('drag-over'));
+}
+
+/* ======================================================
+   UNDO
+====================================================== */
+function pushUndo() {
+  undoStack.push(JSON.stringify(workflow));
+  if (undoStack.length > 20) undoStack.shift();
+}
+
+function undoLast() {
+  if (!undoStack.length) { toast('Nothing to undo', '⚠️'); return; }
+  workflow = JSON.parse(undoStack.pop());
+  render();
+  toast('↩ Undone');
+}
+
+/* ======================================================
+   MODALS
+====================================================== */
+function openAddModal() {
+  document.getElementById('addModal').classList.add('open');
+}
+
+function closeAddModal() {
+  document.getElementById('addModal').classList.remove('open');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeAddModal();
+  if ((e.metaKey || e.ctrlKey) && e.key === 'z') { e.preventDefault(); undoLast(); }
+});
+
+document.getElementById('addModal').addEventListener('click', e => {
+  if (e.target === document.getElementById('addModal')) closeAddModal();
+});
+
+/* ======================================================
+   RIGHT PANEL
+====================================================== */
+let activeTab = 'timeline';
+
+function switchTab(el, tab) {
+  document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.panel-content').forEach(p => p.style.display = 'none');
+  document.getElementById('tab-' + tab).style.display = 'block';
+  activeTab = tab;
+}
+
+function updateRightPanel() {
+  updateTimeline();
+  updateJsonPanel();
+  updateTestPanel();
+  updateStepCount();
+}
+
+function updateTimeline() {
+  const tl = document.getElementById('timeline-view');
+  if (!tl) return;
+
+  if (!workflow.length) {
+    tl.innerHTML = '<div class="empty-state"><div class="empty-icon">🌀</div><div class="empty-text">No steps yet</div></div>';
+    return;
+  }
+
+  tl.innerHTML = workflow.map(step => {
+    const icons = { start:'🟢', message:'💬', wait:'⏱', condition:'🔀' };
+    const labels = { start:'Trigger Start', message:'Send Message', wait:'Wait', condition:'Branch' };
+    let sub = '';
+    if (step.type === 'start')     sub = step.condition || 'status = pending';
+    if (step.type === 'message')   sub = step.text ? step.text.substring(0,60)+'…' : 'No message set';
+    if (step.type === 'wait')      sub = `Delay: ${step.duration || 1} ${step.unit || 'days'}`;
+    if (step.type === 'condition') sub = `If: ${step.if_condition || 'status = pending'}`;
+
+    return `<div class="tl-item tl-${step.type}">
+      <div class="tl-line">
+        <div class="tl-dot">${icons[step.type]||'●'}</div>
+        <div class="tl-connector"></div>
+      </div>
+      <div class="tl-content">
+        <div class="tl-title">${labels[step.type]||step.type}</div>
+        <div class="tl-subtitle">${sub}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateJsonPanel() {
+  const el = document.getElementById('json-output');
+  if (!el) return;
+  el.innerHTML = syntaxHighlight(JSON.stringify(workflow, null, 2));
+}
+
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/("[\w]+")(\s*:)/g, '<span class="json-key">$1</span>$2')
+    .replace(/:\s*(".*?")/g, ': <span class="json-string">$1</span>')
+    .replace(/:\s*(\d+)/g, ': <span class="json-number">$1</span>')
+    .replace(/:\s*(true|false|null)/g, ': <span class="json-bool">$1</span>');
+}
+
+function updateTestPanel() {
+  const preview = document.getElementById('test-preview');
+  const payload = document.getElementById('test-payload');
+  if (!preview || !payload) return;
+
+  const name = document.getElementById('test-name')?.value || 'Test User';
+  const number = document.getElementById('test-phone')?.value || '9999999999';
+  const msg = getFirstMessageFromWorkflow();
+
+  if (msg) {
+    const resolved = msg.replace(/{{name}}/g, name).replace(/{{number}}/g, number).replace(/{{date}}/g, new Date().toLocaleDateString()).replace(/{{status}}/g,'pending');
+    preview.textContent = resolved;
+    payload.textContent = JSON.stringify({ to: number, name, message: resolved }, null, 2);
+  } else {
+    preview.textContent = 'No message cards in workflow yet.';
+    payload.textContent = '—';
+  }
+}
+
+function updateStepCount() {
+  const count = workflow.length;
+  const el = document.getElementById('step-count');
+  if (el) el.textContent = count;
+}
+
+function updateSidebar() {
+  const msgs  = workflow.filter(s => s.type === 'message').length;
+  const waits = workflow.filter(s => s.type === 'wait').length;
+  const conds = workflow.filter(s => s.type === 'condition').length;
+  const steps = workflow.length;
+  const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+  set('stat-steps', steps);
+  set('stat-msgs', msgs);
+  set('stat-waits', waits);
+  set('stat-conds', conds);
+}
+
+/* ======================================================
+   WHATSAPP FUNCTIONS
+====================================================== */
+function getFirstMessageFromWorkflow() {
+  const messageCard = workflow.find(step => step.type === 'message');
+  return messageCard ? messageCard.text : '';
+}
+
+function testSendMessage() {
+  const userName = document.getElementById('test-name')?.value || 'Test User';
+  const phoneNumber = document.getElementById('test-phone').value;
+  console.log(phoneNumber)
+  sendFirstMessage(phoneNumber);
+}
+
+function sendFirstMessage(phoneNumber) {
+  const firstMessage = getFirstMessageFromWorkflow();
+
+  if (!firstMessage) {
+    toast('⚠️ No message card found in workflow!', '🟡');
+    return;
+  }
+
+  const resolved = firstMessage
+    .replace(/{{number}}/g, phoneNumber)
+    .replace(/{{date}}/g, new Date().toLocaleDateString())
+    .replace(/{{status}}/g, 'pending');
+
+  const payload = {
+    clientId: 'BhuvTest',
+    to: phoneNumber,
+    message: "hi"
+  };
+
+  console.log('📤 FlowCraft — Sending message:', payload);
+
+  // Switch to test tab and show result
+  document.querySelectorAll('.panel-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.panel-content').forEach(p => p.style.display = 'none');
+  document.querySelectorAll('.panel-tab')[2]?.classList.add('active');
+  document.getElementById('tab-test').style.display = 'block';
+  updateTestPanel();
+
+  fetch('https://n8n.phishnix.site/webhook/230442b7-03b3-4b7a-9900-9438954c38ee', {
+    method: 'POST',
+    headers: { 'x-api-key': 'wisnpsns45466654' },
+    body: JSON.stringify(payload)
+  })
+  .then(res => res.json())
+  .then(data => {
+    console.log('✅ Message sent:', data);
+    toast('✅ Message sent! (check console)', '🟢');
+  })
+  .catch(err => {
+    console.log('📋 Payload ready (no server):', payload);
+    toast('📋 Payload logged to console', '🟣');
+  });
+}
+
+/* ======================================================
+   EXPORT / IMPORT
+====================================================== */
+function exportWorkflow() {
+  const json = JSON.stringify(workflow, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'workflow.json';
+  a.click();
+  URL.revokeObjectURL(url);
+  toast('📤 Exported workflow.json');
+}
+
+function importWorkflow() {
+  document.getElementById('importInput').click();
+}
+
+function handleImport(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const imported = JSON.parse(ev.target.result);
+      if (!Array.isArray(imported)) throw new Error('Not an array');
+      pushUndo();
+      workflow = imported;
+      nextId = Math.max(...workflow.map(s => s.id || 0), 0) + 1;
+      render();
+      toast('📥 Workflow imported!');
+    } catch(err) {
+      toast('❌ Invalid JSON file', '🔴');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+}
+
+/* ======================================================
+   UTILS
+====================================================== */
+function clearWorkflow() {
+  if (!confirm('Clear all cards except the Start card?')) return;
+  pushUndo();
+  workflow = workflow.filter(s => s.type === 'start');
+  render();
+  toast('🗑 Workflow cleared');
+}
+
+function loadSampleWorkflow() {
+  pushUndo();
+  workflow = [
+    { id: nextId++, type: 'start',     condition: 'status = pending' },
+    { id: nextId++, type: 'message',   text: 'Hi {{name}}! 👋 Just checking in on your enquiry. Let me know if you have any questions!' },
+    { id: nextId++, type: 'wait',      duration: 2, unit: 'days' },
+    { id: nextId++, type: 'message',   text: 'Hey {{name}}, following up! Are you still interested? I\'d love to help you out 🙂' },
+    { id: nextId++, type: 'wait',      duration: 3, unit: 'days' },
+    { id: nextId++, type: 'condition', if_condition: 'status = interested' },
+    { id: nextId++, type: 'message',   text: 'Great news {{name}}! I\'ve got something special for you. Reply YES to learn more 🚀' },
+  ];
+  render();
+  toast('📋 Sample workflow loaded!');
+}
+
+function toast(msg, icon = '✨') {
+  const container = document.getElementById('toastContainer');
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.innerHTML = `<span>${icon}</span><span>${msg}</span>`;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+</script>
+</body>
+</html>

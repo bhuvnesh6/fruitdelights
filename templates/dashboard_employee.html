@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    {% extends "base.html" %}
+{% block title %}My Route{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h2>Today's Deliveries</h2>
+    <span class="badge" style="background: var(--surface-color); border: 1px solid var(--border-color); color: var(--text-main); font-size: 1rem; padding: 0.5rem 1rem;">
+        {{ deliveries|length }} Tasks
+    </span>
+</div>
+
+<div class="grid grid-2">
+    {% for delivery in deliveries %}
+        {% set cust = delivery.customer[0] %}
+        
+        <!-- Highlight accepted cards with a green border -->
+        <div class="card" style="border-left: 4px solid {% if delivery.status == 'pending' %}var(--warning){% else %}var(--success){% endif %};">
+            
+            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
+                <h3 style="margin: 0;">{{ cust.name }}</h3>
+                <span class="badge {% if delivery.status == 'pending' %}badge-pending{% else %}badge-done{% endif %}">
+                    {{ delivery.status | title }}
+                </span>
+            </div>
+
+            <div style="margin-bottom: 1.5rem;">
+                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.25rem;">📍 Delivery Details</p>
+                
+                {% if delivery.status == 'accepted' %}
+                    <!-- Show data once accepted -->
+                    <p style="font-weight: 500;">{{ cust.address }}</p>
+                    <p style="margin-top: 0.5rem;">📞 {{ cust.phone }}</p>
+                {% else %}
+                    <!-- Mask data while pending -->
+                    <p style="filter: blur(5px); user-select: none;">123 Hidden Street, Block A</p>
+                    <p style="margin-top: 0.5rem; filter: blur(5px); user-select: none;">📞 +1 555 000 0000</p>
+                    <small style="color: var(--accent); display: block; margin-top: 0.5rem;">Accept task to reveal details</small>
+                {% endif %}
+            </div>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                <div>
+                    <p style="color: var(--text-muted); font-size: 0.8rem;">Preferred Time</p>
+                    <p style="font-weight: 600;">⏱ {{ delivery.preferred_time or 'Anytime' }}</p>
+                </div>
+                
+                <div>
+                    {% if delivery.status == 'pending' %}
+                        <a href="{{ url_for('accept_delivery', delivery_id=delivery._id) }}" class="btn btn-primary">Accept</a>
+                    {% elif delivery.status == 'accepted' %}
+                        <a href="{{ url_for('complete_delivery', delivery_id=delivery._id) }}" class="btn btn-success">Mark Delivered</a>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+    {% else %}
+        <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem;">
+            <h3 style="color: var(--text-muted);">No pending deliveries for your team today! 🎉</h3>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
+</body>
+</html>
