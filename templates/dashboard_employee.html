@@ -1,73 +1,272 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-</head>
-<body>
-    {% extends "base.html" %}
-{% block title %}My Route{% endblock %}
+{% extends "base.html" %}
+
+{% block title %}Employee Dashboard{% endblock %}
 
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-    <h2>Today's Deliveries</h2>
-    <span class="badge" style="background: var(--surface-color); border: 1px solid var(--border-color); color: var(--text-main); font-size: 1rem; padding: 0.5rem 1rem;">
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
+    
+    <div>
+        <h2 style="margin:0;">Today's Deliveries</h2>
+        <p style="color:var(--text-muted); margin-top:0.4rem;">
+            Pending and accepted deliveries for your team
+        </p>
+    </div>
+
+    <span class="badge"
+          style="background:var(--surface-color);
+                 border:1px solid var(--border-color);
+                 color:var(--text-main);
+                 font-size:1rem;
+                 padding:0.6rem 1rem;">
         {{ deliveries|length }} Tasks
     </span>
+
 </div>
 
 <div class="grid grid-2">
+
     {% for delivery in deliveries %}
+
         {% set cust = delivery.customer[0] %}
-        
-        <!-- Highlight accepted cards with a green border -->
-        <div class="card" style="border-left: 4px solid {% if delivery.status == 'pending' %}var(--warning){% else %}var(--success){% endif %};">
-            
-            <div style="display: flex; justify-content: space-between; margin-bottom: 1rem;">
-                <h3 style="margin: 0;">{{ cust.name }}</h3>
-                <span class="badge {% if delivery.status == 'pending' %}badge-pending{% else %}badge-done{% endif %}">
+
+        <div class="card"
+             style="border-left:5px solid
+             {% if delivery.status == 'pending' %}
+                var(--warning)
+             {% elif delivery.status == 'accepted' %}
+                var(--accent)
+             {% else %}
+                var(--success)
+             {% endif %}; position: relative; overflow: hidden;">
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+
+                <div>
+                    <h3 style="margin:0;">
+                        {{ cust.name }}
+                    </h3>
+
+                    <p style="margin-top:0.3rem; color:var(--text-muted); font-size:0.9rem;">
+                        Team Delivery
+                    </p>
+                </div>
+
+                <span class="badge
+                    {% if delivery.status == 'pending' %}
+                        badge-pending
+                    {% elif delivery.status == 'accepted' %}
+                        badge-warning
+                    {% else %}
+                        badge-done
+                    {% endif %}">
+                    
                     {{ delivery.status | title }}
+
                 </span>
+
             </div>
 
-            <div style="margin-bottom: 1.5rem;">
-                <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 0.25rem;">📍 Delivery Details</p>
-                
-                {% if delivery.status == 'accepted' %}
-                    <!-- Show data once accepted -->
-                    <p style="font-weight: 500;">{{ cust.address }}</p>
-                    <p style="margin-top: 0.5rem;">📞 {{ cust.phone }}</p>
+            <div style="margin-bottom:1.5rem;">
+
+                <p style="color:var(--text-muted);
+                          font-size:0.9rem;
+                          margin-bottom:0.5rem;">
+                    📍 Delivery Details
+                </p>
+
+                {% if delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
+
+                    <p style="font-weight:600;" id="address-text-{{ loop.index }}">
+                        {{ cust.address }}
+                    </p>
+
+                    <p style="margin-top:0.7rem; margin-bottom: 1rem;">
+                        📞 <a href="tel:{{ cust.phone }}" style="color: var(--accent); text-decoration: none; font-weight: 600;">{{ cust.phone }}</a>
+                    </p>
+
+                    <div style="margin-top: 1rem; border-top: 1px dashed var(--border-color); padding-top: 1rem;">
+                        <button type="button" 
+        class="btn" 
+        id="route-btn-{{ loop.index }}"
+        style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: var(--surface-color); border: 1px solid var(--accent); color: var(--accent); font-weight: 600; padding: 0.75rem;"
+        onclick='loadLiveRoute({{ cust.address | tojson }}, {{ loop.index }})'>
+    🗺️ Calculate Live Route Path
+</button>
+
+                        <div id="map-container-{{ loop.index }}" style="display: none; margin-top: 1rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color);">
+                            <div style="background: var(--surface-color); padding: 0.5rem 0.75rem; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);">
+                                <span id="gps-status-{{ loop.index }}" style="color: var(--success); font-weight: 600;">● Live GPS Connection Active</span>
+                                <a id="external-nav-{{ loop.index }}" href="#" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">Open Native App ↗</a>
+                            </div>
+                            <iframe 
+                                id="iframe-map-{{ loop.index }}"
+                                width="100%" 
+                                height="220" 
+                                style="border:0; display: block;" 
+                                allowfullscreen="" 
+                                loading="lazy">
+                            </iframe>
+                        </div>
+                    </div>
+
                 {% else %}
-                    <!-- Mask data while pending -->
-                    <p style="filter: blur(5px); user-select: none;">123 Hidden Street, Block A</p>
-                    <p style="margin-top: 0.5rem; filter: blur(5px); user-select: none;">📞 +1 555 000 0000</p>
-                    <small style="color: var(--accent); display: block; margin-top: 0.5rem;">Accept task to reveal details</small>
+
+                    <p style="filter:blur(5px); user-select:none;">
+                        123 Hidden Street, Block A
+                    </p>
+
+                    <p style="margin-top:0.7rem; filter:blur(5px); user-select:none;">
+                        📞 +91 XXXXX XXXXX
+                    </p>
+
+                    <small style="color:var(--accent); display:block; margin-top:0.6rem;">
+                        Accept task to reveal customer details & map routing
+                    </small>
+
                 {% endif %}
+
             </div>
-            
-            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+
+            <div style="margin-bottom:1.5rem;">
+
+                <p style="color:var(--text-muted); font-size:0.85rem;">
+                    Preferred Time
+                </p>
+
+                <p style="font-weight:600; margin-top:0.3rem;">
+                    ⏱ {{ delivery.preferred_time or 'Anytime' }}
+                </p>
+
+            </div>
+
+            <div style="display:flex;
+                        justify-content:space-between;
+                        align-items:center;
+                        border-top:1px solid var(--border-color);
+                        padding-top:1rem;">
+
                 <div>
-                    <p style="color: var(--text-muted); font-size: 0.8rem;">Preferred Time</p>
-                    <p style="font-weight: 600;">⏱ {{ delivery.preferred_time or 'Anytime' }}</p>
-                </div>
-                
-                <div>
-                    {% if delivery.status == 'pending' %}
-                        <a href="{{ url_for('accept_delivery', delivery_id=delivery._id) }}" class="btn btn-primary">Accept</a>
-                    {% elif delivery.status == 'accepted' %}
-                        <a href="{{ url_for('complete_delivery', delivery_id=delivery._id) }}" class="btn btn-success">Mark Delivered</a>
+                    {% if delivery.status == "accepted" and delivery.assigned_to|string == session['user_id']|string %}
+                        <small style="color:var(--success); font-weight:600;">
+                            Assigned To You
+                        </small>
+                    {% elif delivery.status == "accepted" %}
+                        <small style="color:var(--warning); font-weight:600;">
+                            Already Accepted By Another Employee
+                        </small>
+                    {% elif delivery.status == "delivered" %}
+                        <small style="color:var(--success); font-weight:600;">
+                            ✓ Successfully Delivered
+                        </small>
+                    {% else %}
+                        <small style="color:var(--text-muted);">
+                            Waiting for pickup
+                        </small>
                     {% endif %}
                 </div>
+
+                <div>
+                    {% if delivery.status == 'pending' %}
+                        <a href="{{ url_for('accept_delivery', delivery_id=delivery._id|string) }}"
+                           class="btn btn-primary">
+                            Accept
+                        </a>
+                    {% elif delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
+                        <a href="{{ url_for('complete_delivery', delivery_id=delivery._id|string) }}"
+                           class="btn btn-success">
+                            Mark Delivered
+                        </a>
+                    {% endif %}
+                </div>
+
             </div>
 
         </div>
+
     {% else %}
-        <div class="card" style="grid-column: 1 / -1; text-align: center; padding: 4rem 2rem;">
-            <h3 style="color: var(--text-muted);">No pending deliveries for your team today! 🎉</h3>
+
+        <div class="card"
+             style="grid-column:1/-1;
+                    text-align:center;
+                    padding:4rem 2rem;">
+
+            <h3 style="margin-bottom:1rem;">
+                🎉 No deliveries pending today
+            </h3>
+
+            <p style="color:var(--text-muted);">
+                All customer deliveries for your team are completed.
+            </p>
+
         </div>
+
     {% endfor %}
+
 </div>
+
+<script>
+function loadLiveRoute(customerAddress, index) {
+    const container  = document.getElementById(`map-container-${index}`);
+    const iframe     = document.getElementById(`iframe-map-${index}`);
+    const appLink    = document.getElementById(`external-nav-${index}`);
+    const gpsStatus  = document.getElementById(`gps-status-${index}`);
+    const btn        = document.getElementById(`route-btn-${index}`);
+
+    // Show loading state on button
+    btn.disabled     = true;
+    btn.innerHTML    = '⏳ Getting your location...';
+
+    if (!navigator.geolocation) {
+        alert("Geolocation is not supported by your browser. Loading destination view instead.");
+        fallbackStaticMap(customerAddress, iframe, container, appLink, gpsStatus, btn);
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            // ✅ Free keyless route embed: saddr = current GPS, daddr = customer address
+            const routeEmbedUrl = `https://maps.google.com/maps?saddr=${lat},${lng}&daddr=${encodeURIComponent(customerAddress)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+
+            // Native app deep link for turn-by-turn on phone
+            const nativeLink = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${encodeURIComponent(customerAddress)}&travelmode=driving`;
+
+            iframe.src             = routeEmbedUrl;
+            appLink.href           = nativeLink;
+            gpsStatus.textContent  = '● Live GPS Connection Active';
+            gpsStatus.style.color  = 'var(--success)';
+            container.style.display = 'block';
+
+            // Reset button to allow refresh
+            btn.disabled  = false;
+            btn.innerHTML = '🔄 Refresh Route';
+        },
+        (error) => {
+            console.warn("GPS error:", error.message);
+            let msg = "Location access denied.";
+            if (error.code === error.TIMEOUT)           msg = "Location request timed out.";
+            if (error.code === error.POSITION_UNAVAILABLE) msg = "Location unavailable.";
+            alert(`${msg} Showing destination pin instead. Allow location permission for full route.`);
+            fallbackStaticMap(customerAddress, iframe, container, appLink, gpsStatus, btn);
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+}
+
+function fallbackStaticMap(address, iframe, container, appLink, gpsStatus, btn) {
+    // Destination-only pin (no route) — used when GPS is denied/unavailable
+    iframe.src              = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+    appLink.href            = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+    gpsStatus.textContent   = '⚠ GPS unavailable — destination pin only';
+    gpsStatus.style.color   = 'var(--warning)';
+    container.style.display = 'block';
+
+    btn.disabled  = false;
+    btn.innerHTML = '🗺️ Calculate Live Route Path';
+}
+</script>
+
 {% endblock %}
-</body>
-</html>

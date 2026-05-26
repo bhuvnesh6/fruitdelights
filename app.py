@@ -207,7 +207,55 @@ def dashboard_admin():
                            stats=stats, teams=teams, plans=plans,
                            active_page="home")
 
+@app.route("/api/admin/employees")
+@login_required
+@role_required("admin", "manager")
+def api_employees():
+    employees = list(users_col.find({"role": "employee"}))
+    teams     = list(teams_col.find())
+    team_map  = {str(t["_id"]): t for t in teams}
 
+    result = []
+    for e in employees:
+        team = team_map.get(str(e.get("team_id", "")), {})
+        result.append({
+            "id":        str(e["_id"]),
+            "name":      e.get("name", ""),
+            "email":     e.get("email", ""),
+            "phone":     e.get("phone", "—"),
+            "team_id":   str(e.get("team_id", "")),
+            "team_name": team.get("name", "—"),
+            "team_city": team.get("city", ""),
+        })
+    return jsonify(result)
+
+
+@app.route("/api/admin/customers")
+@login_required
+@role_required("admin", "manager")
+def api_customers():
+    customers = list(users_col.find({"role": "customer"}))
+    teams     = list(teams_col.find())
+    plans     = list(plans_col.find())
+    team_map  = {str(t["_id"]): t for t in teams}
+    plan_map  = {str(p["_id"]): p for p in plans}
+
+    result = []
+    for c in customers:
+        team = team_map.get(str(c.get("team_id", "")), {})
+        plan = plan_map.get(str(c.get("plan_id", "")), {})
+        result.append({
+            "id":        str(c["_id"]),
+            "name":      c.get("name", ""),
+            "email":     c.get("email", ""),
+            "phone":     c.get("phone", "—"),
+            "team_id":   str(c.get("team_id", "")),
+            "team_name": team.get("name", "—"),
+            "team_city": team.get("city", ""),
+            "plan_name": plan.get("name", "—"),
+            "off_days":  c.get("off_days", []),
+        })
+    return jsonify(result)
 # ---------------------------------------------------------------------------
 # ADMIN – analytics API (for charts with date-range filter)
 # ---------------------------------------------------------------------------
@@ -544,33 +592,104 @@ def customer_detail(customer_id):
 @login_required
 @role_required("employee")
 def dashboard_employee():
-    employee  = users_col.find_one({"_id": ObjectId(session["user_id"])})
+    employee = users_col.find_one({"_id": ObjectId(session["user_id"])})
+    if not employee or "team_id" not in employee:
+        flash("You are not assigned to any team.", "danger")
+        return redirect(url_for("home"))
+
     today_str = datetime.now().strftime("%Y-%m-%d")
+    day_name = datetime.now().strftime("%A")
+    emp_id_str = str(employee["_id"])
 
-    deliveries = list(deliveries_col.aggregate([
-        {"$match": {
-            "team_id": employee["team_id"],
-            "date":    today_str,
-            "$or":     [{"status": "pending"}, {"assigned_to": ObjectId(session["user_id"])}]
-        }},
-        {"$lookup": {
-            "from":         "users",
-            "localField":   "customer_id",
-            "foreignField": "_id",
-            "as":           "customer"
-        }}
-    ]))
-    return render_template("dashboard_employee.html", deliveries=deliveries)
+    # 1. Fetch all real delivery entries created for this team today
+    existing_deliveries = list(deliveries_col.find({
+        "team_id": employee["team_id"],
+        "date": today_str
+    }))
+    
+    # Map existing entries by customer_id string for easy lookup
+    delivery_map = {str(d["customer_id"]): d for d in existing_deliveries}
 
+    # 2. Fetch all customers belonging to this same team
+    customers = list(users_col.find({
+        "role": "customer",
+        "team_id": employee["team_id"]
+    }))
+
+    final_deliveries = []
+
+    for cust in customers:
+        cust_id_str = str(cust["_id"])
+        
+        # Skip if today is one of the customer's scheduled off days or holidays
+        if day_name in cust.get("off_days", []):
+            continue
+        if today_str in cust.get("holidays", []):
+            continue
+
+        if cust_id_str in delivery_map:
+            delivery = delivery_map[cust_id_str]
+            assigned_to = delivery.get("assigned_to")
+            assigned_to_str = str(assigned_to) if assigned_to else None
+            
+            # Skip if it was cancelled
+            if delivery.get("status") == "cancelled_holiday":
+                continue
+                
+            # Foolproof string comparison for assigned tasks
+            # If it's assigned, but NOT to this logged-in employee, skip it!
+            if assigned_to_str and assigned_to_str != emp_id_str:
+                continue
+                
+            # Attach the customer record directly for the template lookup loop
+            delivery["customer"] = [cust]
+            final_deliveries.append(delivery)
+        else:
+            # VIRTUAL DOCUMENT: No document in delivery collection yet!
+            virtual_delivery = {
+                "_id": f"virtual_{cust_id_str}", 
+                "customer_id": cust["_id"],
+                "team_id": employee["team_id"],
+                "date": today_str,
+                "status": "pending",
+                "assigned_to": None,
+                "preferred_time": cust.get("preferred_time", "Anytime"),
+                "customer": [cust] 
+            }
+            final_deliveries.append(virtual_delivery)
+
+    return render_template("dashboard_employee.html", deliveries=final_deliveries)
 
 @app.route("/employee/accept/<delivery_id>")
 @login_required
 @role_required("employee")
 def accept_delivery(delivery_id):
-    deliveries_col.update_one(
-        {"_id": ObjectId(delivery_id), "status": "pending"},
-        {"$set": {"status": "accepted", "assigned_to": ObjectId(session["user_id"])}}
-    )
+    employee_id = ObjectId(session["user_id"])
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    if delivery_id.startswith("virtual_"):
+        # Extract the real customer id from the string
+        customer_id_str = delivery_id.replace("virtual_", "")
+        customer = users_col.find_one({"_id": ObjectId(customer_id_str)})
+        
+        # Double check to prevent race conditions (if another employee grabbed it first)
+        exists = deliveries_col.find_one({"customer_id": customer["_id"], "date": today_str})
+        if not exists:
+            deliveries_col.insert_one({
+                "customer_id": customer["_id"],
+                "team_id": customer["team_id"],
+                "date": today_str,
+                "status": "accepted",
+                "assigned_to": employee_id,
+                "preferred_time": customer.get("preferred_time")
+            })
+    else:
+        # It's an actual document inside MongoDB
+        deliveries_col.update_one(
+            {"_id": ObjectId(delivery_id), "status": "pending"},
+            {"$set": {"status": "accepted", "assigned_to": employee_id}}
+        )
+        
     return redirect(url_for("dashboard_employee"))
 
 
@@ -578,11 +697,34 @@ def accept_delivery(delivery_id):
 @login_required
 @role_required("employee")
 def complete_delivery(delivery_id):
-    deliveries_col.update_one(
-        {"_id": ObjectId(delivery_id), "assigned_to": ObjectId(session["user_id"])},
-        {"$set": {"status": "delivered", "delivered_at": datetime.now()}}
-    )
+    employee_id = ObjectId(session["user_id"])
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    if delivery_id.startswith("virtual_"):
+        # Directly completing an un-accepted item
+        customer_id_str = delivery_id.replace("virtual_", "")
+        customer = users_col.find_one({"_id": ObjectId(customer_id_str)})
+        
+        exists = deliveries_col.find_one({"customer_id": customer["_id"], "date": today_str})
+        if not exists:
+            deliveries_col.insert_one({
+                "customer_id": customer["_id"],
+                "team_id": customer["team_id"],
+                "date": today_str,
+                "status": "delivered",
+                "assigned_to": employee_id,
+                "preferred_time": customer.get("preferred_time"),
+                "delivered_at": datetime.now()
+            })
+    else:
+        # Standard update structure
+        deliveries_col.update_one(
+            {"_id": ObjectId(delivery_id), "assigned_to": employee_id},
+            {"$set": {"status": "delivered", "delivered_at": datetime.now()}}
+        )
+        
     return redirect(url_for("dashboard_employee"))
+
 
 # ---------------------------------------------------------------------------
 # CUSTOMER ROUTES
