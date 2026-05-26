@@ -142,8 +142,15 @@ def estimate_upcoming_bill(customer, month, year):
 # ---------------------------------------------------------------------------
 @app.route("/")
 def home():
-    
-     return render_template("index.html")
+    if "user_id" in session:
+        role = session.get("role")
+        if role in ["admin", "manager"]:
+            return redirect(url_for("dashboard_admin"))
+        elif role == "employee":
+            return redirect(url_for("dashboard_employee"))
+        elif role == "customer":
+            return redirect(url_for("dashboard_customer"))
+    return render_template("index.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
