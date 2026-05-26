@@ -12,7 +12,7 @@ from mail import send_invoice_email
 
 
 load_dotenv()
-print("CRON_SECRET:", os.getenv("CRON_SECRET"))
+#print("CRON_SECRET:", os.getenv("CRON_SECRET"))
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "super-secret-key-change-in-production")
@@ -29,7 +29,7 @@ teams_col     = db.teams
 plans_col     = db.plans
 deliveries_col = db.deliveries
 invoices_col = db.invoices
-
+enquiries_col = db.enquiries
 # ---------------------------------------------------------------------------
 # DECORATORS
 # ---------------------------------------------------------------------------
@@ -142,15 +142,8 @@ def estimate_upcoming_bill(customer, month, year):
 # ---------------------------------------------------------------------------
 @app.route("/")
 def home():
-    if "user_id" in session:
-        role = session.get("role")
-        if role in ["admin", "manager"]:
-            return redirect(url_for("dashboard_admin"))
-        elif role == "employee":
-            return redirect(url_for("dashboard_employee"))
-        elif role == "customer":
-            return redirect(url_for("dashboard_customer"))
-    return redirect(url_for("login"))
+    
+     return render_template("index.html")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -399,6 +392,8 @@ def delete_team(team_id):
     flash("Team deleted.", "warning")
     return redirect(url_for("dashboard_admin"))
 
+
+
 # ---------------------------------------------------------------------------
 # ADMIN – employees
 # ---------------------------------------------------------------------------
@@ -584,6 +579,133 @@ def customer_detail(customer_id):
                            next_billing=next_billing,
                            billing_history=billing_history,
                            active_page="customers")
+
+# PUBLIC – Web Form Enquiry (from index.html contact form)
+# ---------------------------------------------------------------------------
+@app.route("/enquiry/submit", methods=["POST"])
+def submit_enquiry():
+    name          = request.form.get("fullName", "").strip()
+    phone         = request.form.get("mobile", "").strip()
+    address       = request.form.get("address", "").strip()
+    delivery_time = request.form.get("deliveryTime", "").strip()
+    start_date    = request.form.get("startDate", "").strip()
+    plan          = request.form.get("selectedPlan") or request.form.get("planSelect", "")
+ 
+    if not name or not phone:
+        flash("Name and phone are required.", "danger")
+        return redirect(url_for("home") + "#order")
+ 
+    enquiries_col.insert_one({
+        "name":           name,
+        "phone":          phone,
+        "address":        address,
+        "delivery_time":  delivery_time,
+        "start_date":     start_date,
+        "plan":           plan,
+        "status":         "pending",       # pending | approved
+        "source":         "web_form",
+        "tag":            "form_enquiry",
+        "created_at":     datetime.now(),
+    })
+ 
+    flash("Thanks! We'll reach you on WhatsApp shortly. 🍓", "success")
+    return redirect(url_for("home") + "#order")
+ 
+ 
+# ---------------------------------------------------------------------------
+# ADMIN – List enquiries
+# ---------------------------------------------------------------------------
+@app.route("/admin/enquiries")
+@login_required
+@role_required("admin", "manager")
+def list_enquiries():
+    enquiries = list(enquiries_col.find({"tag": "form_enquiry"}).sort("created_at", -1))
+    return render_template("enquiries.html", enquiries=enquiries, active_page="enquiries")
+ 
+ 
+# ---------------------------------------------------------------------------
+# ADMIN – Approve enquiry → create real customer
+# ---------------------------------------------------------------------------
+@app.route("/admin/enquiries/approve/<enquiry_id>", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def approve_enquiry(enquiry_id):
+    enq = enquiries_col.find_one({"_id": ObjectId(enquiry_id)})
+    if not enq:
+        flash("Enquiry not found.", "danger")
+        return redirect(url_for("list_enquiries"))
+ 
+    # Build customer record from enquiry data
+    raw_password = secrets.token_urlsafe(8)
+ 
+    # Try to resolve plan_id from name
+    plan = plans_col.find_one({"name": {"$regex": enq.get("plan", ""), "$options": "i"}}) if enq.get("plan") else None
+ 
+    # Generate a placeholder email if none
+    safe_phone = "".join(filter(str.isdigit, enq.get("phone", "unknown")))
+    email      = f"{safe_phone}@fruitedelights.local"
+ 
+    # Avoid duplicate email
+    existing = users_col.find_one({"email": email})
+    if existing:
+        email = f"{safe_phone}_{secrets.token_hex(3)}@fruitedelights.local"
+ 
+    user_data = {
+        "name":           enq.get("name"),
+        "email":          email,
+        "phone":          enq.get("phone"),
+        "role":           "customer",
+        "password":       generate_password_hash(raw_password),
+        "address":        enq.get("address"),
+        "preferred_time": enq.get("delivery_time"),
+        "plan_id":        plan["_id"] if plan else None,
+        "off_days":       [],
+        "holidays":       [],
+        "created_at":     datetime.now(),
+        "source":         "web_enquiry",
+    }
+ 
+    users_col.insert_one(user_data)
+ 
+    # Mark enquiry as approved
+    enquiries_col.update_one(
+        {"_id": ObjectId(enquiry_id)},
+        {"$set": {"status": "approved", "approved_at": datetime.now()}}
+    )
+ 
+    flash(f"✅ '{enq['name']}' approved and added as customer. Temp password: {raw_password}", "success")
+    return redirect(url_for("list_enquiries"))
+ 
+ 
+# ---------------------------------------------------------------------------
+# ADMIN – Delete enquiry
+# ---------------------------------------------------------------------------
+@app.route("/admin/enquiries/delete/<enquiry_id>", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def delete_enquiry(enquiry_id):
+    enquiries_col.delete_one({"_id": ObjectId(enquiry_id)})
+    flash("Enquiry removed.", "warning")
+    return redirect(url_for("list_enquiries"))
+ 
+ 
+# ---------------------------------------------------------------------------
+# API – Enquiry count for sidebar badge
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/enquiry_count")
+@login_required
+@role_required("admin", "manager")
+def enquiry_count():
+    count = enquiries_col.count_documents({"tag": "form_enquiry", "status": "pending"})
+    return jsonify({"pending": count})
+ 
+
+
+
+
+
+
+
 
 # ---------------------------------------------------------------------------
 # EMPLOYEE ROUTES

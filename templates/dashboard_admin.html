@@ -591,6 +591,12 @@ tbody tr:hover td { background: var(--bg-3); }
         <span class="nav-icon">👥</span> Customers
         <span class="nav-badge" id="cust-badge">{{ stats.total_customers }}</span>
       </div>
+      
+      <div class="nav-item" data-page="enquiries" onclick="navigate('enquiries', this)">
+  <span class="nav-icon">📩</span> Enquiries
+  <span class="nav-badge" id="enq-badge" style="background:#f97316;display:none;">0</span>
+</div>
+
     </div>
 
     <div class="sidebar-section">
@@ -924,6 +930,69 @@ tbody tr:hover td { background: var(--bg-3); }
           </table>
         </div>
       </div>
+
+      <div class="page-section" id="page-enquiries">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+    <h2 style="font-family:var(--font-disp);font-size:22px;">Web Form Enquiries</h2>
+    <a href="/admin/enquiries" class="btn btn-ghost btn-sm">Open Full Page ↗</a>
+  </div>
+ 
+  <!-- Mini stats -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:22px;" id="enq-stats-row">
+    <div class="stat-card c-yellow">
+      <div class="stat-icon">📩</div>
+      <div class="stat-value" id="enq-stat-total">—</div>
+      <div class="stat-label">Total Enquiries</div>
+    </div>
+    <div class="stat-card c-orange">
+      <div class="stat-icon">⏳</div>
+      <div class="stat-value" id="enq-stat-pending">—</div>
+      <div class="stat-label">Pending Approval</div>
+    </div>
+    <div class="stat-card c-green">
+      <div class="stat-icon">✅</div>
+      <div class="stat-value" id="enq-stat-approved">—</div>
+      <div class="stat-label">Converted</div>
+    </div>
+  </div>
+ 
+  <!-- Filter -->
+  <div class="filter-bar">
+    <div class="search-wrap">
+      <input class="form-control" id="enq-search" placeholder="Search name / phone…"
+             oninput="filterEnqTable()" style="max-width:220px;">
+    </div>
+    <select class="form-control" id="enq-status-filter" onchange="filterEnqTable()" style="max-width:160px;">
+      <option value="">All</option>
+      <option value="pending">Pending</option>
+      <option value="approved">Approved</option>
+    </select>
+  </div>
+ 
+  <div class="table-wrap">
+    <table id="enq-table">
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Phone</th>
+          <th>Plan</th>
+          <th>Time Pref.</th>
+          <th>Start Date</th>
+          <th>Received</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="enq-tbody">
+        <tr>
+          <td colspan="8" style="text-align:center;padding:32px;color:var(--text-3);">
+            Loading enquiries…
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
 
     </div><!-- /page-content -->
   </div><!-- /main -->
@@ -1520,6 +1589,119 @@ setTimeout(() => {
     setTimeout(() => f.remove(), 400);
   });
 }, 4000);
+
+
+
+/* ---- Enquiries section ---- */
+const _enqLoaded = { done: false };
+ 
+async function loadEnquiries() {
+  if (_enqLoaded.done) return;
+  try {
+    const res  = await fetch('/api/admin/enquiries_data');
+    const data = await res.json();
+    _enqLoaded.done = true;
+ 
+    // Stats
+    const total    = data.length;
+    const pending  = data.filter(e => e.status === 'pending').length;
+    const approved = data.filter(e => e.status === 'approved').length;
+    document.getElementById('enq-stat-total').textContent   = total;
+    document.getElementById('enq-stat-pending').textContent = pending;
+    document.getElementById('enq-stat-approved').textContent = approved;
+ 
+    // Badge
+    const badge = document.getElementById('enq-badge');
+    if (pending > 0) { badge.textContent = pending; badge.style.display = 'inline-flex'; }
+ 
+    // Table
+    const tbody = document.getElementById('enq-tbody');
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-3);">No enquiries yet.</td></tr>`;
+      return;
+    }
+ 
+    tbody.innerHTML = data.map(e => {
+      const date = e.created_at ? new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}) : '—';
+      const statusBadge = e.status === 'pending'
+        ? `<span class="badge badge-yellow">⏳ Pending</span>`
+        : `<span class="badge badge-green">✅ Approved</span>`;
+      const approveBtn = e.status === 'pending'
+        ? `<form method="POST" action="/admin/enquiries/approve/${e.id}"
+                onsubmit="return confirm('Convert ${escHtml(e.name)} to customer?');" style="display:inline;">
+             <button class="btn btn-success btn-sm">✅ Approve</button>
+           </form>`
+        : '';
+      return `
+        <tr data-name="${e.name.toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}"
+            class="${e.status==='approved'?'opacity-60':''}">
+          <td>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${e.name.charAt(0).toUpperCase()}</div>
+              <div>
+                <div style="font-weight:600;">${escHtml(e.name)}</div>
+                ${e.address ? `<div style="font-size:11px;color:var(--text-3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.address)}</div>` : ''}
+              </div>
+            </div>
+          </td>
+          <td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td>
+          <td>${e.plan ? `<span class="badge badge-orange" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;" title="${escHtml(e.plan)}">${escHtml(e.plan.substring(0,24))}${e.plan.length>24?'…':''}</span>` : '<span class="badge badge-gray">—</span>'}</td>
+          <td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td>
+          <td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td>
+          <td style="font-size:12px;color:var(--text-3);">${date}</td>
+          <td>${statusBadge}</td>
+          <td>
+            <div style="display:flex;gap:5px;align-items:center;">
+              ${approveBtn}
+              <form method="POST" action="/admin/enquiries/delete/${e.id}"
+                    onsubmit="return confirm('Delete this enquiry?');" style="display:inline;">
+                <button class="btn btn-danger btn-sm">🗑️</button>
+              </form>
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
+  } catch(err) {
+    document.getElementById('enq-tbody').innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--red);">Failed to load. Refresh.</td></tr>`;
+  }
+}
+ 
+function filterEnqTable() {
+  const q  = document.getElementById('enq-search').value.toLowerCase();
+  const st = document.getElementById('enq-status-filter').value;
+  document.querySelectorAll('#enq-table tbody tr').forEach(r => {
+    const name  = (r.getAttribute('data-name') ||'').toLowerCase();
+    const phone = (r.getAttribute('data-phone')||'').toLowerCase();
+    const rs    = (r.getAttribute('data-status')||'');
+    r.style.display = ((!q||(name+phone).includes(q)) && (!st||rs===st)) ? '' : 'none';
+  });
+}
+ 
+/* Hook into existing navigate() to lazy-load enquiries */
+const _origNavigate = navigate;
+window.navigate = function(page, el) {
+  _origNavigate(page, el);
+  if (page === 'enquiries') loadEnquiries();
+};
+ 
+/* Also load badge count on boot */
+(async function loadEnqBadge() {
+  try {
+    const d = await fetch('/api/admin/enquiry_count').then(r => r.json());
+    if (d.pending > 0) {
+      const b = document.getElementById('enq-badge');
+      if (b) { b.textContent = d.pending; b.style.display = 'inline-flex'; }
+    }
+  } catch {}
+})();
+ 
+/* Add enquiries to pageTitles */
+if (typeof pageTitles !== 'undefined') pageTitles['enquiries'] = 'Web Enquiries';
+
+
+
+
+
 
 /* ---- Boot ---- */
 window.addEventListener('DOMContentLoaded', () => {

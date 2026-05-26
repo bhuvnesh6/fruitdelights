@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FruiteDelight – Enquiries</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f9fafb;--bg-2:#ffffff;--bg-3:#f3f4f6;
+  --border:#e5e7eb;--border-s:#d1d5db;
+  --accent:#4f46e5;--accent-hover:#4338ca;--accent-soft:#eef2ff;
+  --green:#10b981;--green-soft:#d1fae5;
+  --yellow:#f59e0b;--yellow-soft:#fef3c7;
+  --red:#ef4444;--red-soft:#fee2e2;
+  --blue:#3b82f6;--blue-soft:#dbeafe;
+  --orange-soft:#fff7ed;
+  --text:#111827;--text-2:#6b7280;--text-3:#9ca3af;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
+  --shadow-md:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
+  --shadow-lg:0 10px 15px -3px rgb(0 0 0/.1),0 4px 6px -4px rgb(0 0 0/.1);
+  --sidebar-w:256px;--radius:12px;--radius-sm:8px;
+  --font-body:'DM Sans',sans-serif;--font-disp:'Fraunces',serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html{height:100%;}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100%;display:flex;font-size:14px;line-height:1.6;}
+a{color:inherit;text-decoration:none;}
+button,input,select,textarea{font-family:var(--font-body);font-size:14px;}
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--bg-3);border-radius:99px;}
+
+/* Layout */
+.layout{display:flex;min-height:100vh;}
+.sidebar{width:var(--sidebar-w);background:var(--bg-2);border-right:1px solid var(--border);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;overflow-x:hidden;}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px;}
+.sidebar-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),#7c3aed);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.sidebar-logo-name{font-family:var(--font-disp);font-size:17px;font-weight:700;letter-spacing:-.3px;line-height:1.2;}
+.sidebar-logo-name span{color:var(--accent);}
+.sidebar-section{padding:16px 12px 8px;}
+.sidebar-section-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);padding:0 8px;margin-bottom:6px;}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-2);font-weight:500;transition:background .15s,color .15s;white-space:nowrap;text-decoration:none;}
+.nav-item:hover{background:var(--bg-3);color:var(--text);}
+.nav-item.active{background:var(--accent-soft);color:var(--accent);}
+.nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0;}
+.nav-badge{margin-left:auto;background:var(--accent);color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px;}
+.nav-badge.orange{background:#f97316;}
+.sidebar-bottom{margin-top:auto;padding:16px 12px;border-top:1px solid var(--border);}
+.user-pill{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--bg-3);}
+.user-pill-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:white;flex-shrink:0;}
+.user-pill-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.user-pill-role{font-size:11px;color:var(--text-3);}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;}
+.topbar-title{font-family:var(--font-disp);font-size:18px;font-weight:700;}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;gap:4px;}
+.hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px;}
+.overlay{display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.3);}
+.overlay.open{display:block;}
+.page-content{padding:28px;flex:1;}
+
+/* Components */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);font-weight:600;font-size:13px;cursor:pointer;border:none;transition:opacity .15s,transform .1s;white-space:nowrap;}
+.btn:active{transform:scale(.97);}
+.btn-primary{background:var(--accent);color:white;}
+.btn-primary:hover{background:var(--accent-hover);}
+.btn-ghost{background:var(--bg-3);color:var(--text);border:1px solid var(--border);}
+.btn-ghost:hover{background:var(--border);}
+.btn-danger{background:var(--red-soft);color:var(--red);}
+.btn-danger:hover{background:#fecaca;}
+.btn-success{background:var(--green-soft);color:#065f46;border:1px solid #a7f3d0;}
+.btn-success:hover{background:#a7f3d0;}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm);}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600;}
+.badge-green{background:var(--green-soft);color:var(--green);}
+.badge-yellow{background:var(--yellow-soft);color:var(--yellow);}
+.badge-red{background:var(--red-soft);color:var(--red);}
+.badge-blue{background:var(--blue-soft);color:var(--blue);}
+.badge-gray{background:var(--bg-3);color:var(--text-2);}
+.badge-orange{background:var(--orange-soft);color:#f97316;}
+.table-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border);box-shadow:var(--shadow-sm);}
+table{width:100%;border-collapse:collapse;}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);background:var(--bg-3);border-bottom:1px solid var(--border);white-space:nowrap;}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle;}
+tbody tr:last-child td{border-bottom:none;}
+tbody tr:hover td{background:var(--bg-3);}
+.flash-wrap{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:12px;}
+.flash{min-width:320px;padding:16px 18px;border-radius:16px;font-weight:600;font-size:14px;backdrop-filter:blur(12px);animation:slideIn .35s ease;box-shadow:0 10px 30px rgba(0,0,0,.12);}
+.flash-success{background:linear-gradient(135deg,#10b981,#059669);color:white;}
+.flash-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:white;}
+.flash-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:white;}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px);}to{opacity:1;transform:translateX(0);}}
+.filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px;}
+.form-control{background:var(--bg-3);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;font-family:var(--font-body);font-size:14px;}
+.form-control:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1);background:#fff;}
+.search-wrap{position:relative;}
+.search-wrap input{padding-left:34px;}
+.search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px;}
+
+/* Enquiry-specific */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-bottom:24px;}
+.stat-mini{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s;}
+.stat-mini:hover{box-shadow:var(--shadow-md);transform:translateY(-2px);}
+.stat-mini-icon{font-size:1.5rem;margin-bottom:10px;}
+.stat-mini-val{font-size:26px;font-weight:700;line-height:1;margin-bottom:4px;}
+.stat-mini-label{font-size:12px;color:var(--text-2);font-weight:500;}
+.enq-plan{max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12px;color:var(--text-2);}
+.approved-row td{opacity:.6;}
+.approved-row:hover td{opacity:1;}
+
+/* Modal */
+.modal-backdrop{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px;}
+.modal-backdrop.open{display:flex;}
+.modal{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:520px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .2s ease;}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97);}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px;}
+.modal-title{font-family:var(--font-disp);font-size:20px;font-weight:700;}
+.modal-close{background:none;border:none;color:var(--text-2);font-size:20px;cursor:pointer;}
+.modal-close:hover{color:var(--text);}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.detail-item{background:var(--bg-3);border-radius:var(--radius-sm);padding:12px 14px;}
+.detail-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3);margin-bottom:4px;}
+.detail-value{font-size:14px;font-weight:600;color:var(--text);}
+
+/* Responsive */
+@media(max-width:768px){
+  :root{--sidebar-w:0px;}
+  .sidebar{width:260px;transform:translateX(-100%);box-shadow:var(--shadow-lg);}
+  .sidebar.open{transform:translateX(0);}
+  .main{margin-left:0;}
+  .hamburger{display:flex;}
+  .page-content{padding:16px;}
+  .topbar{padding:0 16px;}
+  .stats-row{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🍊</div>
+      <div class="sidebar-logo-name">Fruite<span>Delight</span></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Main</div>
+      <a class="nav-item" href="/admin"><span class="nav-icon">📊</span> Dashboard</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Manage</div>
+      <a class="nav-item" href="/admin/plans"><span class="nav-icon">📋</span> Plans</a>
+      <a class="nav-item" href="/admin/teams"><span class="nav-icon">🏘️</span> Teams</a>
+      <a class="nav-item" href="/admin/employees"><span class="nav-icon">🚴</span> Employees</a>
+      <a class="nav-item" href="/admin/customers">
+        <span class="nav-icon">👥</span> Customers
+      </a>
+      <a class="nav-item active" href="/admin/enquiries">
+        <span class="nav-icon">📩</span> Enquiries
+        {% set pending_count = enquiries | selectattr('status','equalto','pending') | list | length %}
+        {% if pending_count > 0 %}
+        <span class="nav-badge orange">{{ pending_count }}</span>
+        {% endif %}
+      </a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="user-pill">
+        <div class="user-pill-avatar">{{ session.name[0] | upper }}</div>
+        <div style="flex:1;overflow:hidden;">
+          <div class="user-pill-name">{{ session.name }}</div>
+          <div class="user-pill-role">{{ session.role | capitalize }}</div>
+        </div>
+        <a href="/logout" style="color:var(--text-3);font-size:18px;line-height:1;" title="Logout">⏻</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay" onclick="document.getElementById('sidebar').classList.remove('open');this.classList.remove('open');"></div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <button class="hamburger" onclick="document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');">
+          <span></span><span></span><span></span>
+        </button>
+        <div class="topbar-title">Web Enquiries</div>
+      </div>
+    </header>
+
+    <!-- Flash -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-wrap">
+      {% for cat, msg in messages %}
+      <div class="flash flash-{{ cat }}">
+        {% if cat == 'success' %}✅{% elif cat == 'danger' %}❌{% else %}⚠️{% endif %}
+        {{ msg }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="page-content">
+
+      <!-- Stats row -->
+      {% set total      = enquiries | length %}
+      {% set pending    = enquiries | selectattr('status','equalto','pending')  | list | length %}
+      {% set approved   = enquiries | selectattr('status','equalto','approved') | list | length %}
+
+      <div class="stats-row">
+        <div class="stat-mini">
+          <div class="stat-mini-icon">📩</div>
+          <div class="stat-mini-val">{{ total }}</div>
+          <div class="stat-mini-label">Total Enquiries</div>
+        </div>
+        <div class="stat-mini" style="border-color:#fcd34d;">
+          <div class="stat-mini-icon">⏳</div>
+          <div class="stat-mini-val" style="color:var(--yellow);">{{ pending }}</div>
+          <div class="stat-mini-label">Awaiting Approval</div>
+        </div>
+        <div class="stat-mini" style="border-color:#a7f3d0;">
+          <div class="stat-mini-icon">✅</div>
+          <div class="stat-mini-val" style="color:var(--green);">{{ approved }}</div>
+          <div class="stat-mini-label">Converted to Customer</div>
+        </div>
+      </div>
+
+      <!-- Filter bar -->
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <input class="form-control" id="enq-search" placeholder="Search by name or phone…" oninput="filterEnquiries()" style="max-width:240px;">
+        </div>
+        <select class="form-control" id="enq-status" onchange="filterEnquiries()" style="max-width:180px;">
+          <option value="">All Statuses</option>
+          <option value="pending">Pending</option>
+          <option value="approved">Approved</option>
+        </select>
+      </div>
+
+      {% if enquiries %}
+      <div class="table-wrap">
+        <table id="enq-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Phone</th>
+              <th>Plan Interested In</th>
+              <th>Delivery Time</th>
+              <th>Start Date</th>
+              <th>Received</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for enq in enquiries %}
+            <tr class="{{ 'approved-row' if enq.status == 'approved' else '' }}"
+                data-name="{{ enq.name | lower }}"
+                data-phone="{{ enq.phone | lower }}"
+                data-status="{{ enq.status }}">
+              <td>
+                <div style="display:flex;align-items:center;gap:10px;">
+                  <div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#f97316,#f59e0b);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:white;flex-shrink:0;">
+                    {{ enq.name[0] | upper }}
+                  </div>
+                  <div>
+                    <div style="font-weight:600;">{{ enq.name }}</div>
+                    {% if enq.address %}
+                    <div style="font-size:11px;color:var(--text-3);max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ enq.address }}</div>
+                    {% endif %}
+                  </div>
+                </div>
+              </td>
+              <td>
+                <a href="tel:{{ enq.phone }}" style="color:var(--accent);font-weight:600;">{{ enq.phone }}</a>
+              </td>
+              <td>
+                {% if enq.plan %}
+                <span class="badge badge-orange" title="{{ enq.plan }}" style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;">
+                  {{ enq.plan | truncate(28) }}
+                </span>
+                {% else %}
+                <span class="badge badge-gray">Not specified</span>
+                {% endif %}
+              </td>
+              <td style="color:var(--text-2);">{{ enq.delivery_time or '—' }}</td>
+              <td style="color:var(--text-2);">{{ enq.start_date or '—' }}</td>
+              <td style="font-size:12px;color:var(--text-3);">
+                {{ enq.created_at.strftime('%d %b %Y, %I:%M %p') if enq.created_at else '—' }}
+              </td>
+              <td>
+                {% if enq.status == 'pending' %}
+                <span class="badge badge-yellow">⏳ Pending</span>
+                {% else %}
+                <span class="badge badge-green">✅ Approved</span>
+                {% endif %}
+              </td>
+              <td>
+                <div style="display:flex;gap:6px;align-items:center;">
+                  <button class="btn btn-ghost btn-sm" onclick='showDetail({{ enq | tojson }})'>👁 View</button>
+                  {% if enq.status == 'pending' %}
+                  <form method="POST" action="/admin/enquiries/approve/{{ enq._id }}"
+                        onsubmit="return confirm('Convert {{ enq.name }} to a customer?');" style="display:inline;">
+                    <button class="btn btn-success btn-sm">✅ Approve</button>
+                  </form>
+                  {% endif %}
+                  <form method="POST" action="/admin/enquiries/delete/{{ enq._id }}"
+                        onsubmit="return confirm('Delete this enquiry?');" style="display:inline;">
+                    <button class="btn btn-danger btn-sm">🗑️</button>
+                  </form>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div style="text-align:center;padding:64px 20px;color:var(--text-2);">
+        <div style="font-size:3rem;margin-bottom:16px;">📩</div>
+        <div style="font-size:1.1rem;font-weight:600;margin-bottom:8px;">No enquiries yet</div>
+        <p style="font-size:0.9rem;">When visitors fill out the order form on your website, they'll appear here.</p>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<!-- Detail Modal -->
+<div class="modal-backdrop" id="detail-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="dm-name">Enquiry Details</div>
+      <button class="modal-close" onclick="document.getElementById('detail-modal').classList.remove('open')">✕</button>
+    </div>
+    <div class="detail-grid">
+      <div class="detail-item"><div class="detail-label">Phone</div><div class="detail-value" id="dm-phone">—</div></div>
+      <div class="detail-item"><div class="detail-label">Status</div><div class="detail-value" id="dm-status">—</div></div>
+      <div class="detail-item" style="grid-column:1/-1;"><div class="detail-label">Address</div><div class="detail-value" id="dm-address">—</div></div>
+      <div class="detail-item"><div class="detail-label">Preferred Delivery Time</div><div class="detail-value" id="dm-time">—</div></div>
+      <div class="detail-item"><div class="detail-label">Start Date</div><div class="detail-value" id="dm-date">—</div></div>
+      <div class="detail-item" style="grid-column:1/-1;"><div class="detail-label">Plan Interested In</div><div class="detail-value" id="dm-plan">—</div></div>
+      <div class="detail-item" style="grid-column:1/-1;"><div class="detail-label">Submitted At</div><div class="detail-value" id="dm-created">—</div></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="document.getElementById('detail-modal').classList.remove('open')">Close</button>
+      <div id="dm-approve-btn"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function filterEnquiries() {
+  const q      = document.getElementById('enq-search').value.toLowerCase();
+  const status = document.getElementById('enq-status').value;
+  document.querySelectorAll('#enq-table tbody tr').forEach(r => {
+    const name  = (r.getAttribute('data-name')  || '').toLowerCase();
+    const phone = (r.getAttribute('data-phone') || '').toLowerCase();
+    const st    = (r.getAttribute('data-status')|| '');
+    const matchQ = !q      || name.includes(q) || phone.includes(q);
+    const matchS = !status || st === status;
+    r.style.display = (matchQ && matchS) ? '' : 'none';
+  });
+}
+
+function showDetail(enq) {
+  document.getElementById('dm-name').textContent    = enq.name || '—';
+  document.getElementById('dm-phone').textContent   = enq.phone || '—';
+  document.getElementById('dm-address').textContent = enq.address || '—';
+  document.getElementById('dm-time').textContent    = enq.delivery_time || '—';
+  document.getElementById('dm-date').textContent    = enq.start_date || '—';
+  document.getElementById('dm-plan').textContent    = enq.plan || 'Not specified';
+  document.getElementById('dm-status').innerHTML    = enq.status === 'pending'
+    ? '<span style="color:#f59e0b;font-weight:700;">⏳ Pending</span>'
+    : '<span style="color:#10b981;font-weight:700;">✅ Approved</span>';
+
+  const created = enq.created_at ? new Date(enq.created_at.$date || enq.created_at).toLocaleString('en-IN') : '—';
+  document.getElementById('dm-created').textContent = created;
+
+  const approveBtn = document.getElementById('dm-approve-btn');
+  if (enq.status === 'pending') {
+    const id = enq._id.$oid || enq._id;
+    approveBtn.innerHTML = `
+      <form method="POST" action="/admin/enquiries/approve/${id}"
+            onsubmit="return confirm('Convert to customer?');">
+        <button class="btn btn-success">✅ Approve & Add as Customer</button>
+      </form>`;
+  } else {
+    approveBtn.innerHTML = '';
+  }
+
+  document.getElementById('detail-modal').classList.add('open');
+}
+
+document.getElementById('detail-modal').addEventListener('click', function(e) {
+  if (e.target === this) this.classList.remove('open');
+});
+
+// Flash auto-dismiss
+setTimeout(() => {
+  document.querySelectorAll('.flash').forEach(f => {
+    f.style.transition = '0.4s';
+    f.style.opacity = '0';
+    f.style.transform = 'translateX(40px)';
+    setTimeout(() => f.remove(), 400);
+  });
+}, 4000);
+</script>
+</body>
+</html>
