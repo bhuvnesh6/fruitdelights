@@ -12,7 +12,6 @@ from mail import send_invoice_email
 
 
 load_dotenv()
-#print("CRON_SECRET:", os.getenv("CRON_SECRET"))
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "super-secret-key-change-in-production")
@@ -24,12 +23,13 @@ client = MongoClient(MONGO_URI)
 db = client[DB_NAME]
 
 # Collections
-users_col     = db.users
-teams_col     = db.teams
-plans_col     = db.plans
+users_col      = db.users
+teams_col      = db.teams
+plans_col      = db.plans
 deliveries_col = db.deliveries
-invoices_col = db.invoices
-enquiries_col = db.enquiries
+invoices_col   = db.invoices
+enquiries_col  = db.enquiries
+
 # ---------------------------------------------------------------------------
 # DECORATORS
 # ---------------------------------------------------------------------------
@@ -65,8 +65,9 @@ def generate_monthly_bill(customer, month, year):
     if not plan:
         return 0
 
-    price_per_day = float(plan.get("price_per_day", 0))
-    tax_pct       = float(plan.get("tax_percent", 0))
+    # Support both price_per_month (new) and legacy price_per_day
+    price_total = float(plan.get("price_per_month", plan.get("price_per_day", 0)))
+    tax_pct     = float(plan.get("tax_percent", 0))
 
     joined_date = customer.get("created_at", datetime.min)
     start_day   = 1
@@ -75,8 +76,11 @@ def generate_monthly_bill(customer, month, year):
 
     _, num_days = calendar.monthrange(year, month)
 
-    billable_days = 0
-    for day in range(start_day, num_days + 1):
+    # Count total schedulable days this month for this customer
+    total_schedulable = 0
+    delivered_days    = 0
+
+    for day in range(1, num_days + 1):
         current_date = datetime(year, month, day)
         date_str     = current_date.strftime("%Y-%m-%d")
         day_name     = current_date.strftime("%A")
@@ -85,16 +89,22 @@ def generate_monthly_bill(customer, month, year):
             continue
         if date_str in customer.get("holidays", []):
             continue
+        total_schedulable += 1
 
-        delivery = deliveries_col.find_one({
-            "customer_id": ObjectId(customer["_id"]),
-            "date": date_str,
-            "status": "delivered"
-        })
-        if delivery:
-            billable_days += 1
+        if day >= start_day:
+            delivery = deliveries_col.find_one({
+                "customer_id": ObjectId(customer["_id"]),
+                "date": date_str,
+                "status": "delivered"
+            })
+            if delivery:
+                delivered_days += 1
 
-    subtotal = billable_days * price_per_day
+    if total_schedulable == 0:
+        return 0
+
+    # Pro-rate: (delivered / total_schedulable) * price_total
+    subtotal = (delivered_days / total_schedulable) * price_total
     tax      = subtotal * (tax_pct / 100)
     return round(subtotal + tax, 2)
 
@@ -105,16 +115,16 @@ def estimate_upcoming_bill(customer, month, year):
     if not plan:
         return {"days": 0, "subtotal": 0, "tax": 0, "total": 0}
 
-    price_per_day = float(plan.get("price_per_day", 0))
-    tax_pct       = float(plan.get("tax_percent", 0))
+    price_total = float(plan.get("price_per_month", plan.get("price_per_day", 0)))
+    tax_pct     = float(plan.get("tax_percent", 0))
 
     joined_date = customer.get("created_at", datetime.min)
     start_day   = 1
     if joined_date.year == year and joined_date.month == month:
         start_day = joined_date.day
 
-    _, num_days     = calendar.monthrange(year, month)
-    billable_days   = 0
+    _, num_days   = calendar.monthrange(year, month)
+    billable_days = 0
 
     for day in range(start_day, num_days + 1):
         current_date = datetime(year, month, day)
@@ -127,7 +137,7 @@ def estimate_upcoming_bill(customer, month, year):
             continue
         billable_days += 1
 
-    subtotal = round(billable_days * price_per_day, 2)
+    subtotal = round(price_total, 2)          # full plan price
     tax      = round(subtotal * tax_pct / 100, 2)
     return {
         "days":     billable_days,
@@ -192,20 +202,19 @@ def dashboard_admin():
         "on_holiday_today":   deliveries_col.count_documents({"status": "cancelled_holiday", "date": today}),
         "active_teams":       teams_col.count_documents({}),
     }
-    
+
     teams = list(teams_col.find())
     plans = list(plans_col.find())
 
-    # Convert ObjectId to string
     for team in teams:
-     team["_id"] = str(team["_id"])
-
+        team["_id"] = str(team["_id"])
     for plan in plans:
-     plan["_id"] = str(plan["_id"])
-    
+        plan["_id"] = str(plan["_id"])
+
     return render_template("dashboard_admin.html",
                            stats=stats, teams=teams, plans=plans,
                            active_page="home")
+
 
 @app.route("/api/admin/employees")
 @login_required
@@ -249,21 +258,47 @@ def api_customers():
             "name":      c.get("name", ""),
             "email":     c.get("email", ""),
             "phone":     c.get("phone", "—"),
+            "address":   c.get("address", ""),
+            "preferred_time": c.get("preferred_time", ""),
             "team_id":   str(c.get("team_id", "")),
             "team_name": team.get("name", "—"),
             "team_city": team.get("city", ""),
+            "plan_id":   str(c.get("plan_id", "")),
             "plan_name": plan.get("name", "—"),
             "off_days":  c.get("off_days", []),
         })
     return jsonify(result)
+
 # ---------------------------------------------------------------------------
-# ADMIN – analytics API (for charts with date-range filter)
+# ADMIN – enquiries DATA API (used by JS to load enquiries section)
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/enquiries_data")
+@login_required
+@role_required("admin", "manager")
+def api_enquiries_data():
+    enquiries = list(enquiries_col.find({"tag": "form_enquiry"}).sort("created_at", -1))
+    result = []
+    for e in enquiries:
+        result.append({
+            "id":            str(e["_id"]),
+            "name":          e.get("name", ""),
+            "phone":         e.get("phone", ""),
+            "address":       e.get("address", ""),
+            "plan":          e.get("plan", ""),
+            "delivery_time": e.get("delivery_time", ""),
+            "start_date":    e.get("start_date", ""),
+            "status":        e.get("status", "pending"),
+            "created_at":    e["created_at"].isoformat() if e.get("created_at") else None,
+        })
+    return jsonify(result)
+
+# ---------------------------------------------------------------------------
+# ADMIN – analytics API
 # ---------------------------------------------------------------------------
 @app.route("/api/admin/analytics")
 @login_required
 @role_required("admin", "manager")
 def admin_analytics():
-    """Returns delivery stats for charting. ?range=7|30|today"""
     range_days = request.args.get("range", "7")
     try:
         days = int(range_days)
@@ -272,15 +307,14 @@ def admin_analytics():
 
     results = []
     for i in range(days - 1, -1, -1):
-        d        = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
+        d = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
         results.append({
             "date":      d,
-            "delivered": deliveries_col.count_documents({"status": "delivered",        "date": d}),
-            "pending":   deliveries_col.count_documents({"status": "pending",          "date": d}),
-            "holiday":   deliveries_col.count_documents({"status": "cancelled_holiday","date": d}),
+            "delivered": deliveries_col.count_documents({"status": "delivered",         "date": d}),
+            "pending":   deliveries_col.count_documents({"status": "pending",           "date": d}),
+            "holiday":   deliveries_col.count_documents({"status": "cancelled_holiday", "date": d}),
         })
 
-    # Area-wise pending for today
     today = datetime.now().strftime("%Y-%m-%d")
     teams = list(teams_col.find())
     area_data = []
@@ -291,7 +325,7 @@ def admin_analytics():
     return jsonify({"timeseries": results, "area_pending": area_data})
 
 # ---------------------------------------------------------------------------
-# ADMIN – plans
+# ADMIN – plans  (price_per_month replaces price_per_day)
 # ---------------------------------------------------------------------------
 @app.route("/admin/plans")
 @login_required
@@ -306,15 +340,13 @@ def list_plans():
 @role_required("admin", "manager")
 def add_plan():
     plans_col.insert_one({
-        "name":          request.form.get("name"),
-        "description":   request.form.get("description"),
-        "price_per_day": float(request.form.get("price_per_day", 0)),
-        "tax_percent":   float(request.form.get("tax_percent", 0)),
-        "created_at":    datetime.now()
+        "name":            request.form.get("name"),
+        "description":     request.form.get("description"),
+        "price_per_month": float(request.form.get("price_per_month", 0)),
+        "tax_percent":     float(request.form.get("tax_percent", 0)),
+        "created_at":      datetime.now()
     })
-    plan_name = request.form.get("name")
-
-    flash(f"✅ Plan '{plan_name}' created successfully.", "success")
+    flash(f"✅ Plan '{request.form.get('name')}' created successfully.", "success")
     return redirect(url_for("dashboard_admin"))
 
 
@@ -323,13 +355,13 @@ def add_plan():
 @role_required("admin", "manager")
 def edit_plan(plan_id):
     plans_col.update_one({"_id": ObjectId(plan_id)}, {"$set": {
-        "name":          request.form.get("name"),
-        "description":   request.form.get("description"),
-        "price_per_day": float(request.form.get("price_per_day", 0)),
-        "tax_percent":   float(request.form.get("tax_percent", 0)),
+        "name":            request.form.get("name"),
+        "description":     request.form.get("description"),
+        "price_per_month": float(request.form.get("price_per_month", 0)),
+        "tax_percent":     float(request.form.get("tax_percent", 0)),
     }})
     flash("Plan updated.", "success")
-    return redirect(url_for("list_plans"))
+    return redirect(url_for("dashboard_admin"))
 
 
 @app.route("/admin/plans/delete/<plan_id>", methods=["POST"])
@@ -338,7 +370,7 @@ def edit_plan(plan_id):
 def delete_plan(plan_id):
     plans_col.delete_one({"_id": ObjectId(plan_id)})
     flash("Plan deleted.", "warning")
-    return redirect(url_for("list_plans"))
+    return redirect(url_for("dashboard_admin"))
 
 # ---------------------------------------------------------------------------
 # ADMIN – teams
@@ -352,11 +384,8 @@ def list_teams():
     if city_filter:
         query["city"] = {"$regex": city_filter, "$options": "i"}
     teams = list(teams_col.find(query))
-
-    # Enrich with employee count
     for t in teams:
         t["employee_count"] = users_col.count_documents({"role": "employee", "team_id": t["_id"]})
-
     cities = teams_col.distinct("city")
     return render_template("teams.html", teams=teams, cities=cities,
                            city_filter=city_filter, active_page="teams")
@@ -372,9 +401,7 @@ def add_team():
         "city":       request.form.get("city"),
         "created_at": datetime.now()
     })
-    team_name = request.form.get("name")
-
-    flash(f"✅ Team '{team_name}' added successfully.", "success")
+    flash(f"✅ Team '{request.form.get('name')}' added successfully.", "success")
     return redirect(url_for("dashboard_admin"))
 
 
@@ -399,8 +426,6 @@ def delete_team(team_id):
     flash("Team deleted.", "warning")
     return redirect(url_for("dashboard_admin"))
 
-
-
 # ---------------------------------------------------------------------------
 # ADMIN – employees
 # ---------------------------------------------------------------------------
@@ -411,19 +436,14 @@ def list_employees():
     team_filter = request.args.get("team_id", "")
     city_filter = request.args.get("city", "")
     query       = {"role": "employee"}
-
     if team_filter:
         query["team_id"] = ObjectId(team_filter)
-
     employees = list(users_col.find(query))
     teams     = list(teams_col.find())
     team_map  = {str(t["_id"]): t for t in teams}
-
-    # Filter by city via team
     if city_filter:
         city_team_ids = [t["_id"] for t in teams if t.get("city", "").lower() == city_filter.lower()]
         employees     = [e for e in employees if e.get("team_id") in city_team_ids]
-
     cities = teams_col.distinct("city")
     return render_template("employees.html",
                            employees=employees, teams=teams, team_map=team_map,
@@ -449,7 +469,9 @@ def add_user():
     }
 
     if role in ["employee", "customer"]:
-        user_data["team_id"] = ObjectId(request.form.get("team_id"))
+        tid = request.form.get("team_id")
+        if tid:
+            user_data["team_id"] = ObjectId(tid)
 
     if role == "customer":
         plan_name = request.form.get("plan_name")
@@ -464,10 +486,7 @@ def add_user():
 
     users_col.insert_one(user_data)
     send_credentials_email(email, raw_password, role)
-    user_name = request.form.get("name")
-
-    flash(f"✅ {role.capitalize()} '{user_name}' added successfully.", "success")
-
+    flash(f"✅ {role.capitalize()} '{request.form.get('name')}' added successfully.", "success")
     return redirect(url_for("dashboard_admin"))
 
 
@@ -481,6 +500,12 @@ def edit_user(user_id):
         "phone": request.form.get("phone"),
     }
     role = request.form.get("role")
+
+    if role in ["employee", "customer"]:
+        tid = request.form.get("team_id")
+        if tid:
+            update["team_id"] = ObjectId(tid)
+
     if role == "customer":
         plan_name = request.form.get("plan_name")
         plan      = plans_col.find_one({"name": plan_name})
@@ -490,8 +515,6 @@ def edit_user(user_id):
             "preferred_time": request.form.get("preferred_time"),
             "off_days":       request.form.getlist("off_days"),
         })
-        if request.form.get("team_id"):
-            update["team_id"] = ObjectId(request.form.get("team_id"))
 
     users_col.update_one({"_id": ObjectId(user_id)}, {"$set": update})
     flash("User updated.", "success")
@@ -520,16 +543,13 @@ def list_customers():
     query       = {"role": "customer"}
     if team_filter:
         query["team_id"] = ObjectId(team_filter)
-
     customers = list(users_col.find(query))
     teams     = list(teams_col.find())
     team_map  = {str(t["_id"]): t for t in teams}
     plan_map  = {str(p["_id"]): p for p in plans_col.find()}
-
     if city_filter:
         city_team_ids = [t["_id"] for t in teams if t.get("city", "").lower() == city_filter.lower()]
         customers     = [c for c in customers if c.get("team_id") in city_team_ids]
-
     cities = teams_col.distinct("city")
     return render_template("customers.html",
                            customers=customers, teams=teams, team_map=team_map,
@@ -547,8 +567,7 @@ def customer_detail(customer_id):
         flash("Customer not found.", "danger")
         return redirect(url_for("list_customers"))
 
-    now        = datetime.now()
-    # Next billing date = 1st of next month
+    now = datetime.now()
     if now.month == 12:
         next_billing = datetime(now.year + 1, 1, 1)
     else:
@@ -557,7 +576,6 @@ def customer_detail(customer_id):
     current_bill   = generate_monthly_bill(customer, now.month, now.year)
     estimated_bill = estimate_upcoming_bill(customer, now.month, now.year)
 
-    # Last 3 months history
     billing_history = []
     for delta in range(1, 4):
         m = now.month - delta
@@ -566,28 +584,24 @@ def customer_detail(customer_id):
             m += 12
             y -= 1
         billing_history.append({
-            "label": datetime(y, m, 1).strftime("%B %Y"),
+            "label":  datetime(y, m, 1).strftime("%B %Y"),
             "amount": generate_monthly_bill(customer, m, y)
         })
 
-    plan     = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
-    team     = teams_col.find_one({"_id": customer.get("team_id")})
-    plans    = list(plans_col.find())
-    teams    = list(teams_col.find())
+    plan  = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
+    team  = teams_col.find_one({"_id": customer.get("team_id")})
+    plans = list(plans_col.find())
+    teams = list(teams_col.find())
 
     return render_template("customer_detail.html",
-                           customer=customer,
-                           plan=plan,
-                           team=team,
-                           plans=plans,
-                           teams=teams,
-                           current_bill=current_bill,
-                           estimated_bill=estimated_bill,
-                           next_billing=next_billing,
-                           billing_history=billing_history,
+                           customer=customer, plan=plan, team=team,
+                           plans=plans, teams=teams,
+                           current_bill=current_bill, estimated_bill=estimated_bill,
+                           next_billing=next_billing, billing_history=billing_history,
                            active_page="customers")
 
-# PUBLIC – Web Form Enquiry (from index.html contact form)
+# ---------------------------------------------------------------------------
+# PUBLIC – Enquiry submit
 # ---------------------------------------------------------------------------
 @app.route("/enquiry/submit", methods=["POST"])
 def submit_enquiry():
@@ -597,30 +611,29 @@ def submit_enquiry():
     delivery_time = request.form.get("deliveryTime", "").strip()
     start_date    = request.form.get("startDate", "").strip()
     plan          = request.form.get("selectedPlan") or request.form.get("planSelect", "")
- 
+
     if not name or not phone:
         flash("Name and phone are required.", "danger")
         return redirect(url_for("home") + "#order")
- 
+
     enquiries_col.insert_one({
-        "name":           name,
-        "phone":          phone,
-        "address":        address,
-        "delivery_time":  delivery_time,
-        "start_date":     start_date,
-        "plan":           plan,
-        "status":         "pending",       # pending | approved
-        "source":         "web_form",
-        "tag":            "form_enquiry",
-        "created_at":     datetime.now(),
+        "name":          name,
+        "phone":         phone,
+        "address":       address,
+        "delivery_time": delivery_time,
+        "start_date":    start_date,
+        "plan":          plan,
+        "status":        "pending",
+        "source":        "web_form",
+        "tag":           "form_enquiry",
+        "created_at":    datetime.now(),
     })
- 
+
     flash("Thanks! We'll reach you on WhatsApp shortly. 🍓", "success")
     return redirect(url_for("home") + "#order")
- 
- 
+
 # ---------------------------------------------------------------------------
-# ADMIN – List enquiries
+# ADMIN – List enquiries (full page, kept for /admin/enquiries route)
 # ---------------------------------------------------------------------------
 @app.route("/admin/enquiries")
 @login_required
@@ -628,10 +641,9 @@ def submit_enquiry():
 def list_enquiries():
     enquiries = list(enquiries_col.find({"tag": "form_enquiry"}).sort("created_at", -1))
     return render_template("enquiries.html", enquiries=enquiries, active_page="enquiries")
- 
- 
+
 # ---------------------------------------------------------------------------
-# ADMIN – Approve enquiry → create real customer
+# ADMIN – Approve enquiry → create real customer, remove from enquiries
 # ---------------------------------------------------------------------------
 @app.route("/admin/enquiries/approve/<enquiry_id>", methods=["POST"])
 @login_required
@@ -640,23 +652,16 @@ def approve_enquiry(enquiry_id):
     enq = enquiries_col.find_one({"_id": ObjectId(enquiry_id)})
     if not enq:
         flash("Enquiry not found.", "danger")
-        return redirect(url_for("list_enquiries"))
- 
-    # Build customer record from enquiry data
+        return redirect(url_for("dashboard_admin"))
+
     raw_password = secrets.token_urlsafe(8)
- 
-    # Try to resolve plan_id from name
     plan = plans_col.find_one({"name": {"$regex": enq.get("plan", ""), "$options": "i"}}) if enq.get("plan") else None
- 
-    # Generate a placeholder email if none
+
     safe_phone = "".join(filter(str.isdigit, enq.get("phone", "unknown")))
     email      = f"{safe_phone}@fruitedelights.local"
- 
-    # Avoid duplicate email
-    existing = users_col.find_one({"email": email})
-    if existing:
+    if users_col.find_one({"email": email}):
         email = f"{safe_phone}_{secrets.token_hex(3)}@fruitedelights.local"
- 
+
     user_data = {
         "name":           enq.get("name"),
         "email":          email,
@@ -671,19 +676,15 @@ def approve_enquiry(enquiry_id):
         "created_at":     datetime.now(),
         "source":         "web_enquiry",
     }
- 
+
     users_col.insert_one(user_data)
- 
-    # Mark enquiry as approved
-    enquiries_col.update_one(
-        {"_id": ObjectId(enquiry_id)},
-        {"$set": {"status": "approved", "approved_at": datetime.now()}}
-    )
- 
+
+    # Delete enquiry so it disappears from list
+    enquiries_col.delete_one({"_id": ObjectId(enquiry_id)})
+
     flash(f"✅ '{enq['name']}' approved and added as customer. Temp password: {raw_password}", "success")
-    return redirect(url_for("list_enquiries"))
- 
- 
+    return redirect(url_for("dashboard_admin"))
+
 # ---------------------------------------------------------------------------
 # ADMIN – Delete enquiry
 # ---------------------------------------------------------------------------
@@ -693,9 +694,8 @@ def approve_enquiry(enquiry_id):
 def delete_enquiry(enquiry_id):
     enquiries_col.delete_one({"_id": ObjectId(enquiry_id)})
     flash("Enquiry removed.", "warning")
-    return redirect(url_for("list_enquiries"))
- 
- 
+    return redirect(url_for("dashboard_admin"))
+
 # ---------------------------------------------------------------------------
 # API – Enquiry count for sidebar badge
 # ---------------------------------------------------------------------------
@@ -705,14 +705,6 @@ def delete_enquiry(enquiry_id):
 def enquiry_count():
     count = enquiries_col.count_documents({"tag": "form_enquiry", "status": "pending"})
     return jsonify({"pending": count})
- 
-
-
-
-
-
-
-
 
 # ---------------------------------------------------------------------------
 # EMPLOYEE ROUTES
@@ -726,22 +718,18 @@ def dashboard_employee():
         flash("You are not assigned to any team.", "danger")
         return redirect(url_for("home"))
 
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    day_name = datetime.now().strftime("%A")
-    emp_id_str = str(employee["_id"])
+    today_str   = datetime.now().strftime("%Y-%m-%d")
+    day_name    = datetime.now().strftime("%A")
+    emp_id_str  = str(employee["_id"])
 
-    # 1. Fetch all real delivery entries created for this team today
     existing_deliveries = list(deliveries_col.find({
         "team_id": employee["team_id"],
-        "date": today_str
+        "date":    today_str
     }))
-    
-    # Map existing entries by customer_id string for easy lookup
     delivery_map = {str(d["customer_id"]): d for d in existing_deliveries}
 
-    # 2. Fetch all customers belonging to this same team
     customers = list(users_col.find({
-        "role": "customer",
+        "role":    "customer",
         "team_id": employee["team_id"]
     }))
 
@@ -749,8 +737,7 @@ def dashboard_employee():
 
     for cust in customers:
         cust_id_str = str(cust["_id"])
-        
-        # Skip if today is one of the customer's scheduled off days or holidays
+
         if day_name in cust.get("off_days", []):
             continue
         if today_str in cust.get("holidays", []):
@@ -758,67 +745,57 @@ def dashboard_employee():
 
         if cust_id_str in delivery_map:
             delivery = delivery_map[cust_id_str]
-            assigned_to = delivery.get("assigned_to")
+            assigned_to     = delivery.get("assigned_to")
             assigned_to_str = str(assigned_to) if assigned_to else None
-            
-            # Skip if it was cancelled
+
             if delivery.get("status") == "cancelled_holiday":
                 continue
-                
-            # Foolproof string comparison for assigned tasks
-            # If it's assigned, but NOT to this logged-in employee, skip it!
             if assigned_to_str and assigned_to_str != emp_id_str:
                 continue
-                
-            # Attach the customer record directly for the template lookup loop
+
             delivery["customer"] = [cust]
             final_deliveries.append(delivery)
         else:
-            # VIRTUAL DOCUMENT: No document in delivery collection yet!
             virtual_delivery = {
-                "_id": f"virtual_{cust_id_str}", 
-                "customer_id": cust["_id"],
-                "team_id": employee["team_id"],
-                "date": today_str,
-                "status": "pending",
-                "assigned_to": None,
+                "_id":            f"virtual_{cust_id_str}",
+                "customer_id":    cust["_id"],
+                "team_id":        employee["team_id"],
+                "date":           today_str,
+                "status":         "pending",
+                "assigned_to":    None,
                 "preferred_time": cust.get("preferred_time", "Anytime"),
-                "customer": [cust] 
+                "customer":       [cust]
             }
             final_deliveries.append(virtual_delivery)
 
     return render_template("dashboard_employee.html", deliveries=final_deliveries)
+
 
 @app.route("/employee/accept/<delivery_id>")
 @login_required
 @role_required("employee")
 def accept_delivery(delivery_id):
     employee_id = ObjectId(session["user_id"])
-    today_str = datetime.now().strftime("%Y-%m-%d")
+    today_str   = datetime.now().strftime("%Y-%m-%d")
 
     if delivery_id.startswith("virtual_"):
-        # Extract the real customer id from the string
         customer_id_str = delivery_id.replace("virtual_", "")
-        customer = users_col.find_one({"_id": ObjectId(customer_id_str)})
-        
-        # Double check to prevent race conditions (if another employee grabbed it first)
-        exists = deliveries_col.find_one({"customer_id": customer["_id"], "date": today_str})
+        customer        = users_col.find_one({"_id": ObjectId(customer_id_str)})
+        exists          = deliveries_col.find_one({"customer_id": customer["_id"], "date": today_str})
         if not exists:
             deliveries_col.insert_one({
-                "customer_id": customer["_id"],
-                "team_id": customer["team_id"],
-                "date": today_str,
-                "status": "accepted",
-                "assigned_to": employee_id,
+                "customer_id":    customer["_id"],
+                "team_id":        customer["team_id"],
+                "date":           today_str,
+                "status":         "accepted",
+                "assigned_to":    employee_id,
                 "preferred_time": customer.get("preferred_time")
             })
     else:
-        # It's an actual document inside MongoDB
         deliveries_col.update_one(
             {"_id": ObjectId(delivery_id), "status": "pending"},
             {"$set": {"status": "accepted", "assigned_to": employee_id}}
         )
-        
     return redirect(url_for("dashboard_employee"))
 
 
@@ -827,33 +804,28 @@ def accept_delivery(delivery_id):
 @role_required("employee")
 def complete_delivery(delivery_id):
     employee_id = ObjectId(session["user_id"])
-    today_str = datetime.now().strftime("%Y-%m-%d")
+    today_str   = datetime.now().strftime("%Y-%m-%d")
 
     if delivery_id.startswith("virtual_"):
-        # Directly completing an un-accepted item
         customer_id_str = delivery_id.replace("virtual_", "")
-        customer = users_col.find_one({"_id": ObjectId(customer_id_str)})
-        
-        exists = deliveries_col.find_one({"customer_id": customer["_id"], "date": today_str})
+        customer        = users_col.find_one({"_id": ObjectId(customer_id_str)})
+        exists          = deliveries_col.find_one({"customer_id": customer["_id"], "date": today_str})
         if not exists:
             deliveries_col.insert_one({
-                "customer_id": customer["_id"],
-                "team_id": customer["team_id"],
-                "date": today_str,
-                "status": "delivered",
-                "assigned_to": employee_id,
+                "customer_id":  customer["_id"],
+                "team_id":      customer["team_id"],
+                "date":         today_str,
+                "status":       "delivered",
+                "assigned_to":  employee_id,
                 "preferred_time": customer.get("preferred_time"),
                 "delivered_at": datetime.now()
             })
     else:
-        # Standard update structure
         deliveries_col.update_one(
             {"_id": ObjectId(delivery_id), "assigned_to": employee_id},
             {"$set": {"status": "delivered", "delivered_at": datetime.now()}}
         )
-        
     return redirect(url_for("dashboard_employee"))
-
 
 # ---------------------------------------------------------------------------
 # CUSTOMER ROUTES
@@ -867,28 +839,16 @@ def dashboard_customer():
 
     today_delivery = deliveries_col.find_one({
         "customer_id": customer["_id"],
-        "date": today_str
+        "date":        today_str
     })
 
     partner = None
     if today_delivery and today_delivery.get("assigned_to"):
-        partner = users_col.find_one({
-            "_id": today_delivery["assigned_to"]
-        })
+        partner = users_col.find_one({"_id": today_delivery["assigned_to"]})
 
-    now = datetime.now()
-
-    current_bill = generate_monthly_bill(
-        customer,
-        now.month,
-        now.year
-    )
-
-    estimated_bill = estimate_upcoming_bill(
-        customer,
-        now.month,
-        now.year
-    )
+    now            = datetime.now()
+    current_bill   = generate_monthly_bill(customer, now.month, now.year)
+    estimated_bill = estimate_upcoming_bill(customer, now.month, now.year)
 
     return render_template(
         "dashboard_customer.html",
@@ -936,12 +896,12 @@ def generate_daily_deliveries():
         exists = deliveries_col.find_one({"customer_id": cust["_id"], "date": date_str})
         if not exists:
             deliveries_col.insert_one({
-                "customer_id":     cust["_id"],
-                "team_id":         cust["team_id"],
-                "date":            date_str,
-                "status":          "pending",
-                "assigned_to":     None,
-                "preferred_time":  cust.get("preferred_time")
+                "customer_id":    cust["_id"],
+                "team_id":        cust["team_id"],
+                "date":           date_str,
+                "status":         "pending",
+                "assigned_to":    None,
+                "preferred_time": cust.get("preferred_time")
             })
             count += 1
 
@@ -949,128 +909,70 @@ def generate_daily_deliveries():
 
 
 def get_previous_month_year():
-
     now = datetime.now()
-
     if now.month == 1:
         return 12, now.year - 1
-
     return now.month - 1, now.year
 
 
 @app.route("/api/system/generate_monthly_bills")
 def generate_monthly_bills():
-
     token = request.args.get("token")
-
     if token != os.getenv("CRON_SECRET"):
         return jsonify({"error": "Unauthorized"}), 401
 
     month, year = get_previous_month_year()
-
-    customers = users_col.find(
-        {"role": "customer"},
-        no_cursor_timeout=True
-    ).batch_size(100)
-
-    generated = 0
-    failed = 0
+    customers   = users_col.find({"role": "customer"}, no_cursor_timeout=True).batch_size(100)
+    generated   = 0
+    failed      = 0
 
     for customer in customers:
-
         try:
-
             existing = invoices_col.find_one({
                 "customer_id": customer["_id"],
                 "month": month,
-                "year": year
+                "year":  year
             })
-
             if existing:
                 continue
 
-            estimate = estimate_upcoming_bill(
-                customer,
-                month,
-                year
-            )
-
-            total = generate_monthly_bill(
-                customer,
-                month,
-                year
-            )
+            estimate = estimate_upcoming_bill(customer, month, year)
+            total    = generate_monthly_bill(customer, month, year)
 
             invoice = {
-                "customer_id": customer["_id"],
-                "month": month,
-                "year": year,
-
+                "customer_id":   customer["_id"],
+                "month":         month,
+                "year":          year,
                 "billable_days": estimate["days"],
-
-                "subtotal": estimate["subtotal"],
-                "tax": estimate["tax"],
-                "total": total,
-
-                "status": "sent",
-
-                "generated_at": datetime.now()
+                "subtotal":      estimate["subtotal"],
+                "tax":           estimate["tax"],
+                "total":         total,
+                "status":        "sent",
+                "generated_at":  datetime.now()
             }
 
             invoices_col.insert_one(invoice)
-
             send_invoice_email(customer, invoice)
-
             generated += 1
 
         except Exception as e:
-
             failed += 1
-
             print("INVOICE ERROR:", str(e))
 
-    return jsonify({
-        "success": True,
-        "generated": generated,
-        "failed": failed
-    })  
-  
-  
-  
-    
+    return jsonify({"success": True, "generated": generated, "failed": failed})
+
+
 @app.route("/test-invoice", methods=["GET", "POST"])
 def test_invoice():
-
     if request.method == "POST":
-
-        name = request.form.get("name")
-        email = request.form.get("email")
-
-        customer = {
-            "name": name,
-            "email": email
-        }
-
-        invoice = {
-            "month": 5,
-            "year": 2026,
-
-            "billable_days": 24,
-
-            "subtotal": 2400,
-            "tax": 120,
-            "total": 2520
-        }
-
+        customer = {"name": request.form.get("name"), "email": request.form.get("email")}
+        invoice  = {"month": 5, "year": 2026, "billable_days": 24,
+                    "subtotal": 2400, "tax": 120, "total": 2520}
         send_invoice_email(customer, invoice)
-
         flash("Mock invoice email sent successfully!", "success")
-
         return redirect(url_for("test_invoice"))
+    return render_template("test_invoice.html")
 
-    return render_template("test_invoice.html")   
-    
-    
-    
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5757)

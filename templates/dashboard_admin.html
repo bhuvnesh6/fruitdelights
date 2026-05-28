@@ -9,596 +9,196 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
-/* ============================================================
-   DESIGN TOKENS – Light Theme
-   ============================================================ */
 :root {
-  /* Surfaces */
-  --bg:          #f9fafb;
-  --bg-2:        #ffffff;
-  --bg-3:        #f3f4f6;
-  --border:      #e5e7eb;
-  --border-s:    #d1d5db;
-
-  /* Accent – Indigo */
-  --accent:      #4f46e5;
-  --accent-hover:#4338ca;
-  --accent-soft: #eef2ff;
-  --accent-glow: rgba(79,70,229,0.18);
-
-  /* Semantic */
-  --green:       #10b981;
-  --green-soft:  #d1fae5;
-  --yellow:      #f59e0b;
-  --yellow-soft: #fef3c7;
-  --red:         #ef4444;
-  --red-soft:    #fee2e2;
-  --blue:        #3b82f6;
-  --blue-soft:   #dbeafe;
-
-  /* Text */
-  --text:        #111827;
-  --text-2:      #6b7280;
-  --text-3:      #9ca3af;
-
-  /* Shadows */
-  --shadow-sm:   0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow-md:   0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-  --shadow-lg:   0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-
-  --sidebar-w:   256px;
-  --radius:      12px;
-  --radius-sm:   8px;
-
-  --font-body:   'DM Sans', sans-serif;
-  --font-disp:   'Fraunces', serif;
+  --bg:#f9fafb;--bg-2:#ffffff;--bg-3:#f3f4f6;--border:#e5e7eb;--border-s:#d1d5db;
+  --accent:#4f46e5;--accent-hover:#4338ca;--accent-soft:#eef2ff;--accent-glow:rgba(79,70,229,.18);
+  --green:#10b981;--green-soft:#d1fae5;--yellow:#f59e0b;--yellow-soft:#fef3c7;
+  --red:#ef4444;--red-soft:#fee2e2;--blue:#3b82f6;--blue-soft:#dbeafe;
+  --text:#111827;--text-2:#6b7280;--text-3:#9ca3af;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
+  --shadow-md:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
+  --shadow-lg:0 10px 15px -3px rgb(0 0 0/.1),0 4px 6px -4px rgb(0 0 0/.1);
+  --sidebar-w:256px;--radius:12px;--radius-sm:8px;
+  --font-body:'DM Sans',sans-serif;--font-disp:'Fraunces',serif;
 }
-
-/* ============================================================
-   RESET & BASE
-   ============================================================ */
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-html { height: 100%; }
-body {
-  font-family: var(--font-body);
-  background: var(--bg);
-  color: var(--text);
-  min-height: 100%;
-  display: flex;
-  font-size: 14px;
-  line-height: 1.6;
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{height:100%}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);min-height:100%;display:flex;font-size:14px;line-height:1.6}
+a{color:inherit;text-decoration:none}
+button,input,select,textarea{font-family:var(--font-body);font-size:14px}
+img{display:block;max-width:100%}
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bg-3);border-radius:99px}
+.layout{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--bg-2);border-right:1px solid var(--border);box-shadow:var(--shadow-sm);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:transform .3s cubic-bezier(.4,0,.2,1);overflow-y:auto;overflow-x:hidden}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),#7c3aed);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sidebar-logo-name{font-family:var(--font-disp);font-size:17px;font-weight:700;letter-spacing:-.3px;line-height:1.2}
+.sidebar-logo-name span{color:var(--accent)}
+.sidebar-section{padding:16px 12px 8px}
+.sidebar-section-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-2);font-weight:500;transition:background .15s,color .15s;white-space:nowrap}
+.nav-item:hover{background:var(--bg-3);color:var(--text)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent)}
+.nav-item .nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.nav-item .nav-badge{margin-left:auto;background:var(--accent);color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px}
+.sidebar-bottom{margin-top:auto;padding:16px 12px;border-top:1px solid var(--border)}
+.user-pill{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--bg-3)}
+.user-pill-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:white;flex-shrink:0}
+.user-pill-info{flex:1;overflow:hidden}
+.user-pill-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-pill-role{font-size:11px;color:var(--text-3)}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);box-shadow:var(--shadow-sm);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between}
+.topbar-title{font-family:var(--font-disp);font-size:18px;font-weight:700}
+.topbar-actions{display:flex;align-items:center;gap:10px}
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;gap:4px}
+.hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px}
+.page-content{padding:28px;flex:1}
+.overlay{display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.3)}
+.overlay.open{display:block}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);font-weight:600;font-size:13px;cursor:pointer;border:none;transition:opacity .15s,transform .1s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:white}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-ghost{background:var(--bg-3);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--border)}
+.btn-danger{background:var(--red-soft);color:var(--red)}
+.btn-danger:hover{background:#fecaca}
+.btn-success{background:var(--green-soft);color:var(--green)}
+.btn-success:hover{background:#a7f3d0}
+.btn-warning{background:var(--yellow-soft);color:var(--yellow)}
+.btn-sm{padding:5px 10px;font-size:12px}
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm)}
+.card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.card-title{font-size:15px;font-weight:600}
+.stat-cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+.stat-card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;position:relative;overflow:hidden;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s}
+.stat-card:hover{box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.stat-card::before{content:'';position:absolute;top:0;right:0;width:80px;height:80px;border-radius:50%;opacity:.08;transform:translate(20px,-20px)}
+.stat-card.c-orange::before{background:#f97316;opacity:.12}
+.stat-card.c-green::before{background:var(--green)}
+.stat-card.c-yellow::before{background:var(--yellow)}
+.stat-card.c-red::before{background:var(--red)}
+.stat-card.c-blue::before{background:var(--blue)}
+.stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px}
+.stat-card.c-orange .stat-icon{background:#fff7ed}
+.stat-card.c-green  .stat-icon{background:var(--green-soft)}
+.stat-card.c-yellow .stat-icon{background:var(--yellow-soft)}
+.stat-card.c-red    .stat-icon{background:var(--red-soft)}
+.stat-card.c-blue   .stat-icon{background:var(--blue-soft)}
+.stat-value{font-size:28px;font-weight:700;line-height:1;margin-bottom:4px;color:var(--text)}
+.stat-label{font-size:12px;color:var(--text-2);font-weight:500}
+.charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;letter-spacing:.3px;text-transform:uppercase}
+.form-control{width:100%;background:var(--bg-3);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
+.form-control:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1);background:#fff}
+.form-control[multiple]{height:80px}
+select.form-control option{background:#fff;color:var(--text)}
+textarea.form-control{resize:vertical}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.range-pills{display:flex;gap:6px;flex-wrap:wrap}
+.range-pill{padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--bg-3);color:var(--text-2);transition:all .15s}
+.range-pill.active,.range-pill:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.table-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border);box-shadow:var(--shadow-sm)}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);background:var(--bg-3);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg-3)}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-green{background:var(--green-soft);color:var(--green)}
+.badge-yellow{background:var(--yellow-soft);color:var(--yellow)}
+.badge-red{background:var(--red-soft);color:var(--red)}
+.badge-blue{background:var(--blue-soft);color:var(--blue)}
+.badge-gray{background:var(--bg-3);color:var(--text-2)}
+.badge-orange{background:var(--accent-soft);color:var(--accent)}
+.avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ff9a35);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:white;flex-shrink:0}
+.avatar-sm{width:26px;height:26px;font-size:10px}
+.flash-wrap{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:12px}
+.flash{min-width:320px;padding:16px 18px;border-radius:16px;font-weight:600;font-size:14px;backdrop-filter:blur(12px);animation:slideIn .35s ease;box-shadow:0 10px 30px rgba(0,0,0,.12);border:1px solid rgba(255,255,255,.2)}
+.flash-success{background:linear-gradient(135deg,#10b981,#059669);color:white}
+.flash-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:white}
+.flash-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:white}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}to{opacity:1;transform:translateX(0)}}
+.modal-backdrop{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:540px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.modal-title{font-family:var(--font-disp);font-size:20px;font-weight:700;color:var(--text)}
+.modal-close{background:none;border:none;color:var(--text-2);font-size:20px;cursor:pointer;line-height:1}
+.modal-close:hover{color:var(--text)}
+.filter-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.filter-bar .form-control{max-width:200px}
+.search-wrap{position:relative}
+.search-wrap input{padding-left:34px}
+.search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:13px}
+.page-section{display:none}
+.page-section.active{display:block}
+.divider{height:1px;background:var(--border);margin:20px 0}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text-2)}
+.empty-state .empty-icon{font-size:40px;margin-bottom:12px}
+.empty-state p{font-size:14px}
+@media(max-width:1024px){.charts-grid{grid-template-columns:1fr}}
+@media(max-width:768px){
+  :root{--sidebar-w:0px}
+  .sidebar{width:260px;transform:translateX(-100%);border-right:1px solid var(--border);box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .hamburger{display:flex}
+  .stat-cards{grid-template-columns:repeat(2,1fr)}
+  .form-row,.form-row-3{grid-template-columns:1fr}
+  .page-content{padding:16px}
+  .topbar{padding:0 16px}
+  .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:80;background:var(--bg-2);border-top:1px solid var(--border);box-shadow:0 -4px 12px rgba(0,0,0,.08);padding:8px 0 12px}
+  .bottom-nav-item{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;cursor:pointer;color:var(--text-2);font-size:10px;font-weight:500;padding:4px 2px}
+  .bottom-nav-item.active{color:var(--accent)}
+  .bottom-nav-item .bn-icon{font-size:20px}
+  .main{padding-bottom:70px}
 }
-a { color: inherit; text-decoration: none; }
-button, input, select, textarea {
-  font-family: var(--font-body);
-  font-size: 14px;
-}
-img { display: block; max-width: 100%; }
-
-/* ============================================================
-   SCROLLBAR
-   ============================================================ */
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--bg-3); border-radius: 99px; }
-
-/* ============================================================
-   LAYOUT
-   ============================================================ */
-.layout { display: flex; min-height: 100vh; }
-
-/* ============================================================
-   SIDEBAR
-   ============================================================ */
-.sidebar {
-  width: var(--sidebar-w);
-  background: var(--bg-2);
-  border-right: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-  display: flex;
-  flex-direction: column;
-  position: fixed;
-  top: 0; left: 0; bottom: 0;
-  z-index: 100;
-  transition: transform .3s cubic-bezier(.4,0,.2,1);
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-.sidebar-logo {
-  padding: 22px 20px 18px;
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 10px;
-}
-.sidebar-logo-icon {
-  width: 36px; height: 36px;
-  background: linear-gradient(135deg, var(--accent), #7c3aed);
-  border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px;
-  flex-shrink: 0;
-}
-.sidebar-logo-name {
-  font-family: var(--font-disp);
-  font-size: 17px;
-  font-weight: 700;
-  letter-spacing: -0.3px;
-  line-height: 1.2;
-}
-.sidebar-logo-name span { color: var(--accent); }
-
-.sidebar-section { padding: 16px 12px 8px; }
-.sidebar-section-label {
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  color: var(--text-3);
-  padding: 0 8px;
-  margin-bottom: 6px;
-}
-.nav-item {
-  display: flex; align-items: center; gap: 10px;
-  padding: 9px 12px;
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  color: var(--text-2);
-  font-weight: 500;
-  transition: background .15s, color .15s;
-  white-space: nowrap;
-}
-.nav-item:hover { background: var(--bg-3); color: var(--text); }
-.nav-item.active { background: var(--accent-soft); color: var(--accent); }
-.nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; flex-shrink: 0; }
-.nav-item .nav-badge {
-  margin-left: auto;
-  background: var(--accent);
-  color: white;
-  font-size: 10px; font-weight: 700;
-  padding: 2px 6px;
-  border-radius: 99px;
-}
-
-.sidebar-bottom {
-  margin-top: auto;
-  padding: 16px 12px;
-  border-top: 1px solid var(--border);
-}
-.user-pill {
-  display: flex; align-items: center; gap: 10px;
-  padding: 8px 10px;
-  border-radius: var(--radius-sm);
-  background: var(--bg-3);
-}
-.user-pill-avatar {
-  width: 32px; height: 32px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #7c3aed);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 13px; color: white;
-  flex-shrink: 0;
-}
-.user-pill-info { flex: 1; overflow: hidden; }
-.user-pill-name { font-weight: 600; font-size: 13px; truncate: ellipsis; white-space: nowrap; overflow: hidden; }
-.user-pill-role { font-size: 11px; color: var(--text-3); }
-
-/* ============================================================
-   MAIN CONTENT
-   ============================================================ */
-.main {
-  margin-left: var(--sidebar-w);
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.topbar {
-  position: sticky; top: 0; z-index: 50;
-  background: rgba(255,255,255,0.9);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid var(--border);
-  box-shadow: var(--shadow-sm);
-  padding: 0 28px;
-  height: 60px;
-  display: flex; align-items: center; justify-content: space-between;
-}
-.topbar-title { font-family: var(--font-disp); font-size: 18px; font-weight: 700; }
-.topbar-actions { display: flex; align-items: center; gap: 10px; }
-
-/* hamburger – hidden on desktop */
-.hamburger {
-  display: none;
-  background: none; border: none; cursor: pointer;
-  padding: 6px;
-  flex-direction: column; gap: 4px;
-}
-.hamburger span {
-  display: block; width: 22px; height: 2px;
-  background: var(--text); border-radius: 2px;
-  transition: transform .3s;
-}
-
-.page-content { padding: 28px; flex: 1; }
-
-/* ============================================================
-   OVERLAY
-   ============================================================ */
-.overlay {
-  display: none; position: fixed; inset: 0; z-index: 90;
-  background: rgba(0,0,0,.3);
-}
-.overlay.open { display: block; }
-
-/* ============================================================
-   COMPONENTS
-   ============================================================ */
-
-/* Buttons */
-.btn {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 9px 16px;
-  border-radius: var(--radius-sm);
-  font-weight: 600; font-size: 13px;
-  cursor: pointer; border: none;
-  transition: opacity .15s, transform .1s;
-  white-space: nowrap;
-}
-.btn:active { transform: scale(.97); }
-.btn-primary  { background: var(--accent); color: white; }
-.btn-primary:hover { background: var(--accent-hover); }
-.btn-ghost    { background: var(--bg-3); color: var(--text); border: 1px solid var(--border); }
-.btn-ghost:hover { background: var(--border); }
-.btn-danger   { background: var(--red-soft); color: var(--red); }
-.btn-danger:hover { background: #fecaca; }
-.btn-success  { background: var(--green-soft); color: var(--green); }
-.btn-sm { padding: 5px 10px; font-size: 12px; }
-
-/* Card */
-.card {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 22px;
-  box-shadow: var(--shadow-sm);
-}
-.card-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 18px;
-}
-.card-title {
-  font-size: 15px; font-weight: 600;
-}
-
-/* Stat cards */
-.stat-cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
-.stat-card {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 18px 20px;
-  position: relative;
-  overflow: hidden;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow .2s, transform .2s;
-}
-.stat-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
-.stat-card::before {
-  content: '';
-  position: absolute; top: 0; right: 0;
-  width: 80px; height: 80px;
-  border-radius: 50%;
-  opacity: 0.08;
-  transform: translate(20px, -20px);
-}
-.stat-card.c-orange::before { background: #f97316; opacity: .12; }
-.stat-card.c-green::before  { background: var(--green); }
-.stat-card.c-yellow::before { background: var(--yellow); }
-.stat-card.c-red::before    { background: var(--red); }
-.stat-card.c-blue::before   { background: var(--blue); }
-.stat-icon {
-  width: 40px; height: 40px; border-radius: 10px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 18px; margin-bottom: 14px;
-}
-.stat-card.c-orange .stat-icon { background: #fff7ed; }
-.stat-card.c-green  .stat-icon { background: var(--green-soft); }
-.stat-card.c-yellow .stat-icon { background: var(--yellow-soft); }
-.stat-card.c-red    .stat-icon { background: var(--red-soft); }
-.stat-card.c-blue   .stat-icon { background: var(--blue-soft); }
-.stat-value { font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; color: var(--text); }
-.stat-label { font-size: 12px; color: var(--text-2); font-weight: 500; }
-
-/* Charts grid */
-.charts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 22px; }
-
-/* Forms */
-.form-group { margin-bottom: 14px; }
-.form-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-2); margin-bottom: 6px; letter-spacing: .3px; text-transform: uppercase; }
-.form-control {
-  width: 100%;
-  background: var(--bg-3);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 9px 12px;
-  color: var(--text);
-  outline: none;
-  transition: border-color .15s, box-shadow .15s;
-}
-.form-control:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,70,229,0.1); background: #fff; }
-.form-control[multiple] { height: 80px; }
-select.form-control option { background: #fff; color: var(--text); }
-textarea.form-control { resize: vertical; }
-
-.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.form-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-
-/* Range filter pill */
-.range-pills { display: flex; gap: 6px; flex-wrap: wrap; }
-.range-pill {
-  padding: 5px 12px; border-radius: 99px; font-size: 12px; font-weight: 600;
-  cursor: pointer; border: 1.5px solid var(--border);
-  background: var(--bg-3); color: var(--text-2);
-  transition: all .15s;
-}
-.range-pill.active, .range-pill:hover { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
-
-/* Tables */
-.table-wrap { overflow-x: auto; border-radius: var(--radius-sm); border: 1px solid var(--border); box-shadow: var(--shadow-sm); }
-table { width: 100%; border-collapse: collapse; }
-thead th {
-  padding: 10px 14px;
-  text-align: left;
-  font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
-  color: var(--text-2);
-  background: var(--bg-3);
-  border-bottom: 1px solid var(--border);
-  white-space: nowrap;
-}
-tbody td {
-  padding: 12px 14px;
-  border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-tbody tr:last-child td { border-bottom: none; }
-tbody tr:hover td { background: var(--bg-3); }
-
-/* Badges */
-.badge {
-  display: inline-flex; align-items: center;
-  padding: 3px 9px; border-radius: 99px;
-  font-size: 11px; font-weight: 600;
-}
-.badge-green  { background: var(--green-soft);  color: var(--green); }
-.badge-yellow { background: var(--yellow-soft); color: var(--yellow); }
-.badge-red    { background: var(--red-soft);    color: var(--red); }
-.badge-blue   { background: var(--blue-soft);   color: var(--blue); }
-.badge-gray   { background: var(--bg-3);        color: var(--text-2); }
-.badge-orange { background: var(--accent-soft); color: var(--accent); }
-
-/* Avatar circle */
-.avatar {
-  width: 34px; height: 34px; border-radius: 50%;
-  background: linear-gradient(135deg, var(--accent), #ff9a35);
-  display: flex; align-items: center; justify-content: center;
-  font-weight: 700; font-size: 12px; color: white;
-  flex-shrink: 0;
-}
-.avatar-sm { width: 26px; height: 26px; font-size: 10px; }
-
-/* Flash messages */
-.flash-wrap { padding: 0 28px; margin-top: 14px; }
-.flash {
-  padding: 12px 16px; border-radius: var(--radius-sm);
-  font-size: 13px; font-weight: 500;
-  display: flex; align-items: center; gap: 8px;
-  margin-bottom: 8px;
-  box-shadow: var(--shadow-sm);
-}
-.flash-success { background: var(--green-soft);  color: #065f46;  border: 1px solid #a7f3d0; }
-.flash-danger  { background: var(--red-soft);    color: #991b1b;  border: 1px solid #fca5a5; }
-.flash-warning { background: var(--yellow-soft); color: #92400e;  border: 1px solid #fcd34d; }
-
-/* Modal */
-.modal-backdrop {
-  display: none; position: fixed; inset: 0; z-index: 200;
-  background: rgba(0,0,0,.4); backdrop-filter: blur(4px);
-  align-items: center; justify-content: center; padding: 20px;
-}
-.modal-backdrop.open { display: flex; }
-.modal {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 28px;
-  width: 100%; max-width: 540px;
-  max-height: 90vh; overflow-y: auto;
-  box-shadow: var(--shadow-lg);
-  animation: modalIn .2s ease;
-}
-@keyframes modalIn { from { opacity:0; transform: translateY(16px) scale(.97); } }
-.modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 22px; }
-.modal-title { font-family: var(--font-disp); font-size: 20px; font-weight: 700; color: var(--text); }
-.modal-close { background: none; border: none; color: var(--text-2); font-size: 20px; cursor: pointer; line-height: 1; }
-.modal-close:hover { color: var(--text); }
-
-/* Filter bar */
-.filter-bar {
-  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-  margin-bottom: 18px;
-}
-.filter-bar .form-control { max-width: 200px; }
-.search-wrap { position: relative; }
-.search-wrap input { padding-left: 34px; }
-.search-wrap::before { content: '🔍'; position: absolute; left: 10px; top: 50%; transform: translateY(-50%); font-size: 13px; }
-
-/* Tabs */
-.tabs { display: flex; gap: 2px; padding: 4px; background: var(--bg-3); border-radius: var(--radius-sm); width: fit-content; margin-bottom: 22px; }
-.tab {
-  padding: 7px 16px; border-radius: 6px; font-size: 13px; font-weight: 600;
-  cursor: pointer; color: var(--text-2); border: none; background: none;
-  transition: all .15s;
-}
-.tab.active { background: var(--bg-2); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,.3); }
-
-/* Divider */
-.divider { height: 1px; background: var(--border); margin: 20px 0; }
-
-/* Empty state */
-.empty-state { text-align: center; padding: 48px 20px; color: var(--text-2); }
-.empty-state .empty-icon { font-size: 40px; margin-bottom: 12px; }
-.empty-state p { font-size: 14px; }
-
-/* ============================================================
-   PAGE SECTIONS (toggle display)
-   ============================================================ */
-.page-section { display: none; }
-.page-section.active { display: block; }
-
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
-@media (max-width: 1024px) {
-  .charts-grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 768px) {
-  :root { --sidebar-w: 0px; }
-
-  .sidebar {
-    width: 260px;
-    transform: translateX(-100%);
-    border-right: 1px solid var(--border);
-    box-shadow: var(--shadow-lg);
-  }
-  .sidebar.open { transform: translateX(0); }
-
-  .main { margin-left: 0; }
-  .hamburger { display: flex; }
-
-  .stat-cards { grid-template-columns: repeat(2, 1fr); }
-  .form-row, .form-row-3 { grid-template-columns: 1fr; }
-  .page-content { padding: 16px; }
-  .topbar { padding: 0 16px; }
-
-  /* Bottom nav on mobile */
-  .bottom-nav {
-    display: flex;
-    position: fixed; bottom: 0; left: 0; right: 0; z-index: 80;
-    background: var(--bg-2);
-    border-top: 1px solid var(--border);
-    box-shadow: 0 -4px 12px rgba(0,0,0,.08);
-    padding: 8px 0 12px;
-  }
-  .bottom-nav-item {
-    flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
-    cursor: pointer; color: var(--text-2);
-    font-size: 10px; font-weight: 500;
-    padding: 4px 2px;
-  }
-  .bottom-nav-item.active { color: var(--accent); }
-  .bottom-nav-item .bn-icon { font-size: 20px; }
-  .main { padding-bottom: 70px; }
-}
-
-@media (min-width: 769px) {
-  .bottom-nav { display: none; }
-}
-
-@media (max-width: 480px) {
-  .stat-cards { grid-template-columns: 1fr 1fr; }
-  .modal { padding: 20px; }
-}
-
-.flash-wrap{
-  position:fixed;
-  top:20px;
-  right:20px;
-  z-index:9999;
-  display:flex;
-  flex-direction:column;
-  gap:12px;
-}
-
-.flash{
-  min-width:320px;
-  padding:16px 18px;
-  border-radius:16px;
-  font-weight:600;
-  font-size:14px;
-  backdrop-filter:blur(12px);
-  animation:slideIn .35s ease;
-  box-shadow:0 10px 30px rgba(0,0,0,.12);
-  border:1px solid rgba(255,255,255,.2);
-}
-
-.flash-success{
-  background:linear-gradient(135deg,#10b981,#059669);
-  color:white;
-}
-
-.flash-danger{
-  background:linear-gradient(135deg,#ef4444,#dc2626);
-  color:white;
-}
-
-.flash-warning{
-  background:linear-gradient(135deg,#f59e0b,#d97706);
-  color:white;
-}
-
-@keyframes slideIn{
-  from{
-    opacity:0;
-    transform:translateX(40px);
-  }
-  to{
-    opacity:1;
-    transform:translateX(0);
-  }
-}
+@media(min-width:769px){.bottom-nav{display:none}}
+@media(max-width:480px){.stat-cards{grid-template-columns:1fr 1fr}.modal{padding:20px}}
 </style>
 </head>
-
 <body>
 <div class="layout">
 
-  <!-- ===== SIDEBAR ===== -->
+  <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
       <div class="sidebar-logo-icon">🍊</div>
       <div class="sidebar-logo-name">Fruite<span>Delight</span></div>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-section-label">Main</div>
-      <div class="nav-item active" data-page="home" onclick="navigate('home', this)">
+      <div class="nav-item active" data-page="home" onclick="navigate('home',this)">
         <span class="nav-icon">📊</span> Dashboard
       </div>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-section-label">Manage</div>
-      <div class="nav-item" data-page="plans" onclick="navigate('plans', this)">
+      <div class="nav-item" data-page="plans" onclick="navigate('plans',this)">
         <span class="nav-icon">📋</span> Plans
       </div>
-      <div class="nav-item" data-page="teams" onclick="navigate('teams', this)">
+      <div class="nav-item" data-page="teams" onclick="navigate('teams',this)">
         <span class="nav-icon">🏘️</span> Teams
       </div>
-      <div class="nav-item" data-page="employees" onclick="navigate('employees', this)">
+      <div class="nav-item" data-page="employees" onclick="navigate('employees',this)">
         <span class="nav-icon">🚴</span> Employees
       </div>
-      <div class="nav-item" data-page="customers" onclick="navigate('customers', this)">
+      <div class="nav-item" data-page="customers" onclick="navigate('customers',this)">
         <span class="nav-icon">👥</span> Customers
         <span class="nav-badge" id="cust-badge">{{ stats.total_customers }}</span>
       </div>
-      
-      <div class="nav-item" data-page="enquiries" onclick="navigate('enquiries', this)">
-  <span class="nav-icon">📩</span> Enquiries
-  <span class="nav-badge" id="enq-badge" style="background:#f97316;display:none;">0</span>
-</div>
-
+      <div class="nav-item" data-page="enquiries" onclick="navigate('enquiries',this)">
+        <span class="nav-icon">📩</span> Enquiries
+        <span class="nav-badge" id="enq-badge" style="background:#f97316;display:none;">0</span>
+      </div>
     </div>
-
     <div class="sidebar-section">
       <div class="sidebar-section-label">Quick Add</div>
       <div class="nav-item" onclick="openModal('modal-add-plan')">
@@ -607,11 +207,10 @@ tbody tr:hover td { background: var(--bg-3); }
       <div class="nav-item" onclick="openModal('modal-add-team')">
         <span class="nav-icon">＋</span> New Team
       </div>
-      <div class="nav-item" onclick="openModal('modal-add-user')">
+      <div class="nav-item" onclick="openAddUserModal('customer')">
         <span class="nav-icon">＋</span> Add User
       </div>
     </div>
-
     <div class="sidebar-bottom">
       <div class="user-pill">
         <div class="user-pill-avatar" id="user-avatar-init">A</div>
@@ -624,13 +223,10 @@ tbody tr:hover td { background: var(--bg-3); }
     </div>
   </aside>
 
-  <!-- Overlay for mobile sidebar -->
   <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
 
-  <!-- ===== MAIN ===== -->
+  <!-- MAIN -->
   <div class="main">
-
-    <!-- Top bar -->
     <header class="topbar">
       <div style="display:flex;align-items:center;gap:14px;">
         <button class="hamburger" id="hamburger" onclick="toggleSidebar()">
@@ -639,11 +235,10 @@ tbody tr:hover td { background: var(--bg-3); }
         <div class="topbar-title" id="page-title">Dashboard</div>
       </div>
       <div class="topbar-actions">
-        <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-user')">＋ Add User</button>
+        <button class="btn btn-primary btn-sm" onclick="openAddUserModal('customer')">＋ Add User</button>
       </div>
     </header>
 
-    <!-- Flash messages -->
     {% with messages = get_flashed_messages(with_categories=true) %}
     {% if messages %}
     <div class="flash-wrap">
@@ -657,15 +252,10 @@ tbody tr:hover td { background: var(--bg-3); }
     {% endif %}
     {% endwith %}
 
-    <!-- ============================================================
-         PAGE CONTENT
-         ============================================================ -->
     <div class="page-content">
 
-      <!-- ==================== HOME PAGE ==================== -->
+      <!-- ===== HOME ===== -->
       <div class="page-section active" id="page-home">
-
-        <!-- Stat Cards -->
         <div class="stat-cards">
           <div class="stat-card c-orange">
             <div class="stat-icon">👥</div>
@@ -698,41 +288,33 @@ tbody tr:hover td { background: var(--bg-3); }
             <div class="stat-label">Active Teams</div>
           </div>
         </div>
-
-        <!-- Charts -->
         <div class="charts-grid">
-
-          <!-- Delivery Trends -->
           <div class="card">
             <div class="card-header">
               <div class="card-title">📈 Delivery Trends</div>
               <div class="range-pills">
-                <div class="range-pill active" onclick="loadChart(1, this)">Today</div>
-                <div class="range-pill" onclick="loadChart(7, this)">7d</div>
-                <div class="range-pill" onclick="loadChart(30, this)">30d</div>
+                <div class="range-pill active" onclick="loadChart(1,this)">Today</div>
+                <div class="range-pill" onclick="loadChart(7,this)">7d</div>
+                <div class="range-pill" onclick="loadChart(30,this)">30d</div>
               </div>
             </div>
             <canvas id="deliveryChart" height="200"></canvas>
           </div>
-
-          <!-- Area-wise Pending -->
           <div class="card">
             <div class="card-header">
               <div class="card-title">🗺️ Pending by Area</div>
             </div>
             <canvas id="areaChart" height="200"></canvas>
           </div>
-
         </div>
       </div>
 
-      <!-- ==================== PLANS PAGE ==================== -->
+      <!-- ===== PLANS ===== -->
       <div class="page-section" id="page-plans">
         <div class="card-header" style="margin-bottom:18px;">
           <h2 style="font-family:var(--font-disp);font-size:22px;">Subscription Plans</h2>
           <button class="btn btn-primary" onclick="openModal('modal-add-plan')">＋ New Plan</button>
         </div>
-
         {% if plans %}
         <div class="table-wrap">
           <table>
@@ -740,9 +322,9 @@ tbody tr:hover td { background: var(--bg-3); }
               <tr>
                 <th>Plan Name</th>
                 <th>Description</th>
-                <th>Price / Day</th>
+                <th>Monthly Price</th>
                 <th>Tax %</th>
-                <th>Est. Monthly</th>
+                <th>Total (incl. tax)</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -751,9 +333,11 @@ tbody tr:hover td { background: var(--bg-3); }
               <tr>
                 <td><strong>{{ plan.name }}</strong></td>
                 <td style="color:var(--text-2);max-width:200px;">{{ plan.description or '—' }}</td>
-                <td><span style="color:var(--accent);font-weight:700;">₹{{ plan.price_per_day }}</span></td>
+                <td><span style="color:var(--accent);font-weight:700;">₹{{ plan.price_per_month or plan.price_per_day or 0 }}</span></td>
                 <td>{{ plan.tax_percent or 0 }}%</td>
-                <td style="color:var(--green);">₹{{ ((plan.price_per_day | float) * 26 * (1 + (plan.tax_percent | float)/100)) | round(0) | int }}</td>
+                <td style="color:var(--green);">
+                  ₹{{ (((plan.price_per_month or plan.price_per_day or 0) | float) * (1 + (plan.tax_percent | float)/100)) | round(2) }}
+                </td>
                 <td>
                   <div style="display:flex;gap:6px;">
                     <button class="btn btn-ghost btn-sm" onclick='openEditPlan({{ plan | tojson }})'>✏️ Edit</button>
@@ -772,36 +356,28 @@ tbody tr:hover td { background: var(--bg-3); }
         {% endif %}
       </div>
 
-      <!-- ==================== TEAMS PAGE ==================== -->
+      <!-- ===== TEAMS ===== -->
       <div class="page-section" id="page-teams">
         <div class="card-header" style="margin-bottom:18px;">
           <h2 style="font-family:var(--font-disp);font-size:22px;">Teams</h2>
           <button class="btn btn-primary" onclick="openModal('modal-add-team')">＋ New Team</button>
         </div>
-
         <div class="filter-bar">
           <div class="search-wrap">
             <input class="form-control" id="team-search" placeholder="Search teams…" oninput="filterTeams()" style="max-width:220px;">
           </div>
           <select class="form-control" id="team-city-filter" onchange="filterTeams()" style="max-width:180px;">
             <option value="">All Cities</option>
-            {% for city in teams | map(attribute='city') | select | unique | list %}
-            <option value="{{ city }}">{{ city }}</option>
-            {% endfor %}
+            {% for team in teams %}{% if team.city %}
+            <option value="{{ team.city }}">{{ team.city }}</option>
+            {% endif %}{% endfor %}
           </select>
         </div>
-
         {% if teams %}
         <div class="table-wrap">
           <table id="teams-table">
             <thead>
-              <tr>
-                <th>Team Name</th>
-                <th>Area</th>
-                <th>City</th>
-                <th>Employees</th>
-                <th>Actions</th>
-              </tr>
+              <tr><th>Team Name</th><th>Area</th><th>City</th><th>Actions</th></tr>
             </thead>
             <tbody>
               {% for team in teams %}
@@ -814,10 +390,6 @@ tbody tr:hover td { background: var(--bg-3); }
                 </td>
                 <td style="color:var(--text-2);">{{ team.area or '—' }}</td>
                 <td><span class="badge badge-blue">{{ team.city or '—' }}</span></td>
-                <td>
-                  {% set emp_count = team.get('employee_count', 0) %}
-                  <span class="badge badge-gray">{{ emp_count }} partners</span>
-                </td>
                 <td>
                   <div style="display:flex;gap:6px;">
                     <button class="btn btn-ghost btn-sm" onclick='openEditTeam({{ team | tojson }})'>✏️ Edit</button>
@@ -836,22 +408,21 @@ tbody tr:hover td { background: var(--bg-3); }
         {% endif %}
       </div>
 
-      <!-- ==================== EMPLOYEES PAGE ==================== -->
+      <!-- ===== EMPLOYEES ===== -->
       <div class="page-section" id="page-employees">
         <div class="card-header" style="margin-bottom:18px;">
           <h2 style="font-family:var(--font-disp);font-size:22px;">Delivery Partners</h2>
           <button class="btn btn-primary" onclick="openAddUserModal('employee')">＋ Add Partner</button>
         </div>
-
         <div class="filter-bar">
           <div class="search-wrap">
             <input class="form-control" id="emp-search" placeholder="Search employees…" oninput="filterTable('emp-search','employees-table','data-name')" style="max-width:220px;">
           </div>
           <select class="form-control" id="emp-city-filter" onchange="filterByCity('emp-city-filter','employees-table')" style="max-width:180px;">
             <option value="">All Cities</option>
-            {% for city in teams | map(attribute='city') | select | unique | list %}
-            <option value="{{ city }}">{{ city }}</option>
-            {% endfor %}
+            {% for team in teams %}{% if team.city %}
+            <option value="{{ team.city | lower }}">{{ team.city }}</option>
+            {% endif %}{% endfor %}
           </select>
           <select class="form-control" id="emp-team-filter" onchange="filterByTeam('emp-team-filter','employees-table')" style="max-width:200px;">
             <option value="">All Teams</option>
@@ -860,23 +431,15 @@ tbody tr:hover td { background: var(--bg-3); }
             {% endfor %}
           </select>
         </div>
-
         <div class="table-wrap">
           <table id="employees-table">
             <thead>
-              <tr>
-                <th>Name</th>
-                <th>Email</th>
-                <th>Phone</th>
-                <th>Team</th>
-                <th>Actions</th>
-              </tr>
+              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Team</th><th>Actions</th></tr>
             </thead>
             <tbody>
-              {# This table is populated server-side on /admin/employees route but we show placeholder here for SPA feel #}
               <tr id="emp-loading-row">
                 <td colspan="5" style="text-align:center;color:var(--text-3);padding:32px;">
-                  <div>Click <strong style="color:var(--accent);">Employees</strong> in the sidebar to load data.</div>
+                  Loading delivery partners…
                 </td>
               </tr>
             </tbody>
@@ -884,22 +447,21 @@ tbody tr:hover td { background: var(--bg-3); }
         </div>
       </div>
 
-      <!-- ==================== CUSTOMERS PAGE ==================== -->
+      <!-- ===== CUSTOMERS ===== -->
       <div class="page-section" id="page-customers">
         <div class="card-header" style="margin-bottom:18px;">
           <h2 style="font-family:var(--font-disp);font-size:22px;">Customers</h2>
           <button class="btn btn-primary" onclick="openAddUserModal('customer')">＋ Add Customer</button>
         </div>
-
         <div class="filter-bar">
           <div class="search-wrap">
             <input class="form-control" id="cust-search" placeholder="Search customers…" oninput="filterTable('cust-search','customers-table','data-name')" style="max-width:220px;">
           </div>
           <select class="form-control" id="cust-city-filter" onchange="filterByCity('cust-city-filter','customers-table')" style="max-width:180px;">
             <option value="">All Cities</option>
-            {% for city in teams | map(attribute='city') | select | unique | list %}
-            <option value="{{ city }}">{{ city }}</option>
-            {% endfor %}
+            {% for team in teams %}{% if team.city %}
+            <option value="{{ team.city | lower }}">{{ team.city }}</option>
+            {% endif %}{% endfor %}
           </select>
           <select class="form-control" id="cust-team-filter" onchange="filterByTeam('cust-team-filter','customers-table')" style="max-width:200px;">
             <option value="">All Teams</option>
@@ -908,22 +470,15 @@ tbody tr:hover td { background: var(--bg-3); }
             {% endfor %}
           </select>
         </div>
-
         <div class="table-wrap">
           <table id="customers-table">
             <thead>
-              <tr>
-                <th>Customer</th>
-                <th>Plan</th>
-                <th>Team</th>
-                <th>Off Days</th>
-                <th>Actions</th>
-              </tr>
+              <tr><th>Customer</th><th>Plan</th><th>Team</th><th>Off Days</th><th>Actions</th></tr>
             </thead>
             <tbody>
               <tr id="cust-loading-row">
                 <td colspan="5" style="text-align:center;color:var(--text-3);padding:32px;">
-                  Click <strong style="color:var(--accent);">Customers</strong> in the sidebar to load data.
+                  Loading customers…
                 </td>
               </tr>
             </tbody>
@@ -931,98 +486,72 @@ tbody tr:hover td { background: var(--bg-3); }
         </div>
       </div>
 
+      <!-- ===== ENQUIRIES ===== -->
       <div class="page-section" id="page-enquiries">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
-    <h2 style="font-family:var(--font-disp);font-size:22px;">Web Form Enquiries</h2>
-    <a href="/admin/enquiries" class="btn btn-ghost btn-sm">Open Full Page ↗</a>
-  </div>
- 
-  <!-- Mini stats -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:22px;" id="enq-stats-row">
-    <div class="stat-card c-yellow">
-      <div class="stat-icon">📩</div>
-      <div class="stat-value" id="enq-stat-total">—</div>
-      <div class="stat-label">Total Enquiries</div>
-    </div>
-    <div class="stat-card c-orange">
-      <div class="stat-icon">⏳</div>
-      <div class="stat-value" id="enq-stat-pending">—</div>
-      <div class="stat-label">Pending Approval</div>
-    </div>
-    <div class="stat-card c-green">
-      <div class="stat-icon">✅</div>
-      <div class="stat-value" id="enq-stat-approved">—</div>
-      <div class="stat-label">Converted</div>
-    </div>
-  </div>
- 
-  <!-- Filter -->
-  <div class="filter-bar">
-    <div class="search-wrap">
-      <input class="form-control" id="enq-search" placeholder="Search name / phone…"
-             oninput="filterEnqTable()" style="max-width:220px;">
-    </div>
-    <select class="form-control" id="enq-status-filter" onchange="filterEnqTable()" style="max-width:160px;">
-      <option value="">All</option>
-      <option value="pending">Pending</option>
-      <option value="approved">Approved</option>
-    </select>
-  </div>
- 
-  <div class="table-wrap">
-    <table id="enq-table">
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Phone</th>
-          <th>Plan</th>
-          <th>Time Pref.</th>
-          <th>Start Date</th>
-          <th>Received</th>
-          <th>Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="enq-tbody">
-        <tr>
-          <td colspan="8" style="text-align:center;padding:32px;color:var(--text-3);">
-            Loading enquiries…
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
-</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+          <h2 style="font-family:var(--font-disp);font-size:22px;">Web Form Enquiries</h2>
+          <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">🔄 Refresh</button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:22px;">
+          <div class="stat-card c-yellow">
+            <div class="stat-icon">📩</div>
+            <div class="stat-value" id="enq-stat-total">—</div>
+            <div class="stat-label">Total Enquiries</div>
+          </div>
+          <div class="stat-card c-orange">
+            <div class="stat-icon">⏳</div>
+            <div class="stat-value" id="enq-stat-pending">—</div>
+            <div class="stat-label">Pending Approval</div>
+          </div>
+          <div class="stat-card c-green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-value" id="enq-stat-approved">—</div>
+            <div class="stat-label">Converted</div>
+          </div>
+        </div>
+        <div class="filter-bar">
+          <div class="search-wrap">
+            <input class="form-control" id="enq-search" placeholder="Search name / phone…" oninput="filterEnqTable()" style="max-width:220px;">
+          </div>
+          <select class="form-control" id="enq-status-filter" onchange="filterEnqTable()" style="max-width:160px;">
+            <option value="">All</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table id="enq-table">
+            <thead>
+              <tr>
+                <th>Name</th><th>Phone</th><th>Plan</th><th>Time Pref.</th>
+                <th>Start Date</th><th>Received</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="enq-tbody">
+              <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-3);">Loading enquiries…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
     </div><!-- /page-content -->
   </div><!-- /main -->
 
-  <!-- ===== BOTTOM NAV (mobile) ===== -->
+  <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
-    <div class="bottom-nav-item active" data-page="home" onclick="navigate('home', this)">
-      <span class="bn-icon">📊</span>Home
-    </div>
-    <div class="bottom-nav-item" data-page="plans" onclick="navigate('plans', this)">
-      <span class="bn-icon">📋</span>Plans
-    </div>
-    <div class="bottom-nav-item" data-page="teams" onclick="navigate('teams', this)">
-      <span class="bn-icon">🏘️</span>Teams
-    </div>
-    <div class="bottom-nav-item" data-page="employees" onclick="navigate('employees', this)">
-      <span class="bn-icon">🚴</span>Staff
-    </div>
-    <div class="bottom-nav-item" data-page="customers" onclick="navigate('customers', this)">
-      <span class="bn-icon">👥</span>Customers
-    </div>
+    <div class="bottom-nav-item active" data-page="home" onclick="navigate('home',this)"><span class="bn-icon">📊</span>Home</div>
+    <div class="bottom-nav-item" data-page="plans" onclick="navigate('plans',this)"><span class="bn-icon">📋</span>Plans</div>
+    <div class="bottom-nav-item" data-page="teams" onclick="navigate('teams',this)"><span class="bn-icon">🏘️</span>Teams</div>
+    <div class="bottom-nav-item" data-page="employees" onclick="navigate('employees',this)"><span class="bn-icon">🚴</span>Staff</div>
+    <div class="bottom-nav-item" data-page="customers" onclick="navigate('customers',this)"><span class="bn-icon">👥</span>Customers</div>
   </nav>
-
-</div><!-- /layout -->
+</div>
 
 <!-- ============================================================
      MODALS
      ============================================================ -->
 
-<!-- Add Plan Modal -->
+<!-- Add Plan -->
 <div class="modal-backdrop" id="modal-add-plan">
   <div class="modal">
     <div class="modal-header">
@@ -1036,12 +565,12 @@ tbody tr:hover td { background: var(--bg-3); }
       </div>
       <div class="form-group">
         <label class="form-label">Description</label>
-        <textarea name="description" class="form-control" rows="2" placeholder="Short description customers will see…"></textarea>
+        <textarea name="description" class="form-control" rows="2" placeholder="Short description…"></textarea>
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Price per Delivery Day (₹) *</label>
-          <input type="number" name="price_per_day" class="form-control" required min="0" step="0.01" placeholder="50.00">
+          <label class="form-label">Monthly Price (₹) *</label>
+          <input type="number" name="price_per_month" class="form-control" required min="0" step="0.01" placeholder="1500.00">
         </div>
         <div class="form-group">
           <label class="form-label">Tax (%)</label>
@@ -1056,7 +585,7 @@ tbody tr:hover td { background: var(--bg-3); }
   </div>
 </div>
 
-<!-- Edit Plan Modal -->
+<!-- Edit Plan -->
 <div class="modal-backdrop" id="modal-edit-plan">
   <div class="modal">
     <div class="modal-header">
@@ -1074,8 +603,8 @@ tbody tr:hover td { background: var(--bg-3); }
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Price per Day (₹) *</label>
-          <input type="number" name="price_per_day" id="ep-price" class="form-control" required step="0.01">
+          <label class="form-label">Monthly Price (₹) *</label>
+          <input type="number" name="price_per_month" id="ep-price" class="form-control" required step="0.01">
         </div>
         <div class="form-group">
           <label class="form-label">Tax (%)</label>
@@ -1090,7 +619,7 @@ tbody tr:hover td { background: var(--bg-3); }
   </div>
 </div>
 
-<!-- Add Team Modal -->
+<!-- Add Team -->
 <div class="modal-backdrop" id="modal-add-team">
   <div class="modal">
     <div class="modal-header">
@@ -1105,11 +634,11 @@ tbody tr:hover td { background: var(--bg-3); }
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Sub-Area *</label>
-          <input type="text" name="area" class="form-control" required placeholder="e.g. Sector 62, Indiranagar">
+          <input type="text" name="area" class="form-control" required placeholder="e.g. Sector 62">
         </div>
         <div class="form-group">
           <label class="form-label">City *</label>
-          <input type="text" name="city" class="form-control" required placeholder="e.g. Delhi, Bangalore">
+          <input type="text" name="city" class="form-control" required placeholder="e.g. Delhi">
         </div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
@@ -1120,7 +649,7 @@ tbody tr:hover td { background: var(--bg-3); }
   </div>
 </div>
 
-<!-- Edit Team Modal -->
+<!-- Edit Team -->
 <div class="modal-backdrop" id="modal-edit-team">
   <div class="modal">
     <div class="modal-header">
@@ -1150,73 +679,84 @@ tbody tr:hover td { background: var(--bg-3); }
   </div>
 </div>
 
-<!-- Add / Onboard User Modal -->
+<!-- Add / Edit User (unified) -->
 <div class="modal-backdrop" id="modal-add-user">
-  <div class="modal" style="max-width:600px;">
+  <div class="modal" style="max-width:620px;">
     <div class="modal-header">
-      <div class="modal-title">Onboard User</div>
+      <div class="modal-title" id="user-modal-title">Onboard User</div>
       <button class="modal-close" onclick="closeModal('modal-add-user')">✕</button>
     </div>
-    <form method="POST" action="/admin/users/add">
-      <div class="form-group">
+    <form method="POST" id="user-form" action="/admin/users/add">
+      <input type="hidden" name="role" id="hiddenRole" value="">
+      <input type="hidden" name="next" value="dashboard_admin">
+
+      <!-- Role selector (hidden when editing) -->
+      <div class="form-group" id="rf-role-group">
         <label class="form-label">Role *</label>
-        <select name="role" id="roleSelect" class="form-control" required onchange="toggleRoleFields()">
+        <select id="roleSelect" class="form-control" onchange="onRoleChange()">
           <option value="" disabled selected>Select role…</option>
           <option value="manager">Manager</option>
           <option value="employee">Delivery Partner</option>
           <option value="customer">Customer</option>
         </select>
       </div>
+
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Full Name *</label>
-          <input type="text" name="name" class="form-control" required>
+          <input type="text" name="name" id="uf-name" class="form-control" required>
         </div>
         <div class="form-group">
           <label class="form-label">Phone *</label>
-          <input type="text" name="phone" class="form-control" required>
+          <input type="text" name="phone" id="uf-phone" class="form-control" required>
         </div>
       </div>
       <div class="form-group">
         <label class="form-label">Email *</label>
-        <input type="email" name="email" class="form-control" required>
+        <input type="email" name="email" id="uf-email" class="form-control" required>
       </div>
 
-      <!-- Team field (employee & customer) -->
+      <!-- Team -->
       <div id="rf-team" class="form-group" style="display:none;">
         <label class="form-label">Assign Team</label>
-        <select name="team_id" class="form-control">
+        <select name="team_id" id="uf-team" class="form-control">
+          <option value="">— No team —</option>
           {% for team in teams %}
           <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
           {% endfor %}
         </select>
       </div>
 
-      <!-- Customer-specific -->
+      <!-- Customer extras -->
       <div id="rf-customer" style="display:none;">
         <div class="divider"></div>
         <div style="font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;">Customer Details</div>
         <div class="form-group">
-          <label class="form-label">Delivery Plan *</label>
-          <select name="plan_name" class="form-control">
-            <option value="" disabled selected>Select plan…</option>
+          <label class="form-label">Delivery Plan</label>
+          <select name="plan_name" id="uf-plan" class="form-control">
+            <option value="">— No plan —</option>
             {% for plan in plans %}
-            <option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_day }}/day</option>
+            <option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo</option>
             {% endfor %}
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Delivery Address</label>
-          <textarea name="address" class="form-control" rows="2"></textarea>
+          <textarea name="address" id="uf-address" class="form-control" rows="2"></textarea>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Preferred Time</label>
-            <input type="time" name="preferred_time" class="form-control">
+            <input type="time" name="preferred_time" id="uf-ptime" class="form-control">
           </div>
           <div class="form-group">
             <label class="form-label">Planned Off-Days</label>
-            <select name="off_days" class="form-control" multiple>
+            <select name="off_days" id="uf-offdays" class="form-control" multiple>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
               <option value="Saturday">Saturday</option>
               <option value="Sunday">Sunday</option>
             </select>
@@ -1227,7 +767,121 @@ tbody tr:hover td { background: var(--bg-3); }
 
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-add-user')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Add & Send Credentials</button>
+        <button type="submit" class="btn btn-primary" id="user-submit-btn">Add & Send Credentials</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Employee (quick inline) -->
+<div class="modal-backdrop" id="modal-edit-employee">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Delivery Partner</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-employee')">✕</button>
+    </div>
+    <form method="POST" id="edit-emp-form">
+      <input type="hidden" name="role" value="employee">
+      <input type="hidden" name="next" value="dashboard_admin">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" name="name" id="ee-name" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="text" name="phone" id="ee-phone" class="form-control">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input type="email" name="email" id="ee-email" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign Team</label>
+        <select name="team_id" id="ee-team" class="form-control">
+          <option value="">— No team —</option>
+          {% for team in teams %}
+          <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-employee')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Customer (inline) -->
+<div class="modal-backdrop" id="modal-edit-customer">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <div class="modal-title">Edit Customer</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-customer')">✕</button>
+    </div>
+    <form method="POST" id="edit-cust-form">
+      <input type="hidden" name="role" value="customer">
+      <input type="hidden" name="next" value="dashboard_admin">
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" name="name" id="ec-name" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="text" name="phone" id="ec-phone" class="form-control">
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email *</label>
+        <input type="email" name="email" id="ec-email" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign Team</label>
+        <select name="team_id" id="ec-team" class="form-control">
+          <option value="">— No team —</option>
+          {% for team in teams %}
+          <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Delivery Plan</label>
+        <select name="plan_name" id="ec-plan" class="form-control">
+          <option value="">— No plan —</option>
+          {% for plan in plans %}
+          <option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Delivery Address</label>
+        <textarea name="address" id="ec-address" class="form-control" rows="2"></textarea>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Preferred Time</label>
+          <input type="time" name="preferred_time" id="ec-ptime" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Off Days</label>
+          <select name="off_days" id="ec-offdays" class="form-control" multiple>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+          </select>
+          <small style="color:var(--text-3);">Ctrl/Cmd to multi-select</small>
+        </div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-customer')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
       </div>
     </form>
   </div>
@@ -1237,72 +891,63 @@ tbody tr:hover td { background: var(--bg-3); }
      JAVASCRIPT
      ============================================================ -->
 <script>
-/* ---- Navigation ---- */
 const pageTitles = {
-  home: 'Dashboard', plans: 'Subscription Plans',
-  teams: 'Teams', employees: 'Delivery Partners', customers: 'Customers',
+  home:'Dashboard', plans:'Subscription Plans', teams:'Teams',
+  employees:'Delivery Partners', customers:'Customers', enquiries:'Web Enquiries'
 };
+const _loaded = { employees:false, customers:false };
 
-// Track what's already been loaded so we don't re-fetch on every click
-const _loaded = { employees: false, customers: false };
-
+/* ---- Navigate ---- */
 function navigate(page, el) {
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-  document.getElementById('page-' + page).classList.add('active');
-
+  document.getElementById('page-'+page).classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('[data-page="' + page + '"]').forEach(n => n.classList.add('active'));
-
+  document.querySelectorAll('[data-page="'+page+'"]').forEach(n => n.classList.add('active'));
   document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.bottom-nav-item[data-page="' + page + '"]')
-          .forEach(n => n.classList.add('active'));
-
+  document.querySelectorAll('.bottom-nav-item[data-page="'+page+'"]').forEach(n => n.classList.add('active'));
   document.getElementById('page-title').textContent = pageTitles[page] || 'Dashboard';
   closeSidebar();
-
-  // Lazy-load tables
   if (page === 'employees' && !_loaded.employees) loadEmployees();
-  if (page === 'customers' && !_loaded.customers) loadCustomers();
+  if (page === 'customers' && !_loaded.customers)  loadCustomers();
+  if (page === 'enquiries') loadEnquiries(false);
+}
+
+/* ---- XSS helper ---- */
+function escHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
 /* ---- Load Employees ---- */
 async function loadEmployees() {
   const tbody = document.querySelector('#employees-table tbody');
   tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
-
   try {
-    const res  = await fetch('/api/admin/employees');
-    const data = await res.json();
+    const data = await fetch('/api/admin/employees').then(r=>r.json());
     _loaded.employees = true;
-
     if (!data.length) {
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No employees found.</td></tr>`;
       return;
     }
-
     tbody.innerHTML = data.map(e => `
-      <tr data-name="${e.name.toLowerCase()}" data-city="${e.team_city.toLowerCase()}" data-team="${e.team_id}">
+      <tr data-name="${e.name.toLowerCase()}" data-city="${(e.team_city||'').toLowerCase()}" data-team="${e.team_id}">
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
             <div class="avatar avatar-sm">${e.name.charAt(0).toUpperCase()}</div>
             <div>
-              <div style="font-weight:600;">${e.name}</div>
-              <div style="font-size:11px;color:var(--text-3);">${e.email}</div>
+              <div style="font-weight:600;">${escHtml(e.name)}</div>
+              <div style="font-size:11px;color:var(--text-3);">${escHtml(e.email)}</div>
             </div>
           </div>
         </td>
-        <td>${e.email}</td>
-        <td>${e.phone}</td>
-        <td>
-          <span class="badge badge-blue">${e.team_name}</span>
-          ${e.team_city ? `<span style="font-size:11px;color:var(--text-3);margin-left:4px;">${e.team_city}</span>` : ''}
-        </td>
+        <td>${escHtml(e.email)}</td>
+        <td>${escHtml(e.phone)}</td>
+        <td><span class="badge badge-blue">${escHtml(e.team_name)}</span></td>
         <td>
           <div style="display:flex;gap:6px;">
-            <a href="#" class="btn btn-ghost btn-sm"
-               onclick="openEditUserModal('${e.id}','employee','${escHtml(e.name)}','${escHtml(e.email)}','${escHtml(e.phone)}','${e.team_id}')">
+            <button class="btn btn-ghost btn-sm"
+              onclick="openEditEmployee('${e.id}','${escHtml(e.name)}','${escHtml(e.email)}','${escHtml(e.phone)}','${e.team_id}')">
               ✏️ Edit
-            </a>
+            </button>
             <form method="POST" action="/admin/users/delete/${e.id}"
                   onsubmit="return confirm('Remove ${escHtml(e.name)}?');" style="display:inline;">
               <input type="hidden" name="next" value="dashboard_admin">
@@ -1320,47 +965,33 @@ async function loadEmployees() {
 async function loadCustomers() {
   const tbody = document.querySelector('#customers-table tbody');
   tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
-
   try {
-    const res  = await fetch('/api/admin/customers');
-    const data = await res.json();
+    const data = await fetch('/api/admin/customers').then(r=>r.json());
     _loaded.customers = true;
-
+    const badge = document.getElementById('cust-badge');
+    if (badge) badge.textContent = data.length;
     if (!data.length) {
       tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No customers found.</td></tr>`;
       return;
     }
-
-    // Update badge count
-    const badge = document.getElementById('cust-badge');
-    if (badge) badge.textContent = data.length;
-
     tbody.innerHTML = data.map(c => `
-      <tr data-name="${c.name.toLowerCase()}" data-city="${c.team_city.toLowerCase()}" data-team="${c.team_id}">
+      <tr data-name="${c.name.toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id}">
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
-            <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">
-              ${c.name.charAt(0).toUpperCase()}
-            </div>
+            <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${c.name.charAt(0).toUpperCase()}</div>
             <div>
               <div style="font-weight:600;">${escHtml(c.name)}</div>
               <div style="font-size:11px;color:var(--text-3);">${escHtml(c.email)}</div>
             </div>
           </div>
         </td>
-        <td>
-          ${c.plan_name !== '—'
-            ? `<span class="badge badge-orange">${escHtml(c.plan_name)}</span>`
-            : `<span class="badge badge-gray">No plan</span>`}
-        </td>
-        <td>
-          <span class="badge badge-blue">${escHtml(c.team_name)}</span>
-        </td>
-        <td style="font-size:12px;color:var(--text-2);">
-          ${c.off_days.length ? c.off_days.join(', ') : '<span style="color:var(--text-3);">None</span>'}
-        </td>
+        <td>${c.plan_name!=='—'?`<span class="badge badge-orange">${escHtml(c.plan_name)}</span>`:`<span class="badge badge-gray">No plan</span>`}</td>
+        <td><span class="badge badge-blue">${escHtml(c.team_name)}</span></td>
+        <td style="font-size:12px;color:var(--text-2);">${c.off_days.length?c.off_days.join(', '):'<span style="color:var(--text-3);">None</span>'}</td>
         <td>
           <div style="display:flex;gap:6px;">
+            <button class="btn btn-ghost btn-sm"
+              onclick='openEditCustomer(${JSON.stringify(c)})'>✏️ Edit</button>
             <a href="/admin/customers/${c.id}" class="btn btn-ghost btn-sm">👁 View</a>
             <form method="POST" action="/admin/users/delete/${c.id}"
                   onsubmit="return confirm('Remove ${escHtml(c.name)}?');" style="display:inline;">
@@ -1375,277 +1006,61 @@ async function loadCustomers() {
   }
 }
 
-/* ---- XSS helper ---- */
-function escHtml(str) {
-  return String(str || '').replace(/[&<>"']/g, m =>
-    ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
-
-/* ---- Edit User Modal (inline quick-edit) ---- */
-function openEditUserModal(id, role, name, email, phone, teamId) {
-  // Reuse the add-user modal as an edit modal by swapping action
-  const form = document.querySelector('#modal-add-user form');
-  form.action = `/admin/users/edit/${id}`;
-
-  // Pre-fill common fields
-  form.querySelector('[name=role]').value  = role;
-  form.querySelector('[name=name]').value  = name;
-  form.querySelector('[name=email]').value = email;
-  form.querySelector('[name=phone]').value = phone;
-
-  // Set team if present
-  const teamSel = form.querySelector('[name=team_id]');
-  if (teamSel) teamSel.value = teamId;
-
-  // Add hidden next field
-  let nextInput = form.querySelector('[name=next]');
-  if (!nextInput) {
-    nextInput = document.createElement('input');
-    nextInput.type = 'hidden';
-    nextInput.name = 'next';
-    form.appendChild(nextInput);
-  }
-  nextInput.value = 'dashboard_admin';
-
-  // Update modal title & button
-  document.querySelector('#modal-add-user .modal-title').textContent = 'Edit User';
-  document.querySelector('#modal-add-user [type=submit]').textContent = 'Save Changes';
-
-  toggleRoleFields();
-  openModal('modal-add-user');
-}
-
-// Reset modal when opening fresh "Add User"
-function openAddUserModal(role) {
-  const form = document.querySelector('#modal-add-user form');
-  form.action = '/admin/users/add';
-  form.reset();
-  document.querySelector('#modal-add-user .modal-title').textContent = 'Onboard User';
-  document.querySelector('#modal-add-user [type=submit]').textContent = 'Add & Send Credentials';
-  const nextInput = form.querySelector('[name=next]');
-  if (nextInput) nextInput.remove();
-
-  document.getElementById('roleSelect').value = role;
-  toggleRoleFields();
-  openModal('modal-add-user');
-}
-
-/* ---- Sidebar ---- */
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('open');
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
-}
-
-/* ---- Modals ---- */
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-backdrop').forEach(m => {
-  m.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('open'); });
-});
-
-/* ---- Role-based form toggle ---- */
-function toggleRoleFields() {
-  const role = document.getElementById('roleSelect').value;
-  document.getElementById('rf-team').style.display     = (role==='employee'||role==='customer') ? 'block' : 'none';
-  document.getElementById('rf-customer').style.display = role==='customer' ? 'block' : 'none';
-}
-
-/* ---- Edit Plan ---- */
-function openEditPlan(plan) {
-  document.getElementById('ep-name').value  = plan.name || '';
-  document.getElementById('ep-desc').value  = plan.description || '';
-  document.getElementById('ep-price').value = plan.price_per_day || '';
-  document.getElementById('ep-tax').value   = plan.tax_percent || 0;
-  document.getElementById('edit-plan-form').action = '/admin/plans/edit/' + plan._id.$oid;
-  openModal('modal-edit-plan');
-}
-
-/* ---- Edit Team ---- */
-function openEditTeam(team) {
-  document.getElementById('et-name').value = team.name || '';
-  document.getElementById('et-area').value = team.area || '';
-  document.getElementById('et-city').value = team.city || '';
-  document.getElementById('edit-team-form').action = '/admin/teams/edit/' + team._id.$oid;
-  openModal('modal-edit-team');
-}
-
-/* ---- Table search/filter helpers ---- */
-function filterTable(inputId, tableId, attr) {
-  const q = document.getElementById(inputId).value.toLowerCase();
-  document.querySelectorAll('#' + tableId + ' tbody tr').forEach(r => {
-    r.style.display = (r.getAttribute(attr)||'').toLowerCase().includes(q) ? '' : 'none';
-  });
-}
-function filterTeams() {
-  const q    = document.getElementById('team-search').value.toLowerCase();
-  const city = document.getElementById('team-city-filter').value.toLowerCase();
-  document.querySelectorAll('#teams-table tbody tr').forEach(r => {
-    const name = (r.getAttribute('data-name')||'').toLowerCase();
-    const rc   = (r.getAttribute('data-city')||'').toLowerCase();
-    r.style.display = name.includes(q) && (!city || rc === city) ? '' : 'none';
-  });
-}
-function filterByCity(selectId, tableId) {
-  const city = document.getElementById(selectId).value.toLowerCase();
-  document.querySelectorAll('#' + tableId + ' tbody tr').forEach(r => {
-    r.style.display = (!city || (r.getAttribute('data-city')||'').toLowerCase() === city) ? '' : 'none';
-  });
-}
-function filterByTeam(selectId, tableId) {
-  const team = document.getElementById(selectId).value;
-  document.querySelectorAll('#' + tableId + ' tbody tr').forEach(r => {
-    r.style.display = (!team || r.getAttribute('data-team') === team) ? '' : 'none';
-  });
-}
-
-/* ---- Charts ---- */
-let deliveryChart, areaChart;
-Chart.defaults.color = '#6b7280';
-Chart.defaults.font  = { family: 'DM Sans, sans-serif', size: 12 };
-
-function initAreaChart(data) {
-  const ctx = document.getElementById('areaChart').getContext('2d');
-  if (areaChart) areaChart.destroy();
-  const palette = ['rgba(79,70,229,.85)','rgba(124,58,237,.85)','rgba(37,99,235,.85)',
-                   'rgba(8,145,178,.85)','rgba(5,150,105,.85)','rgba(217,119,6,.85)'];
-  areaChart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: data.map(d => d.area),
-      datasets: [{
-        label: 'Pending',
-        data: data.map(d => d.pending),
-        backgroundColor: data.map((_, i) => palette[i % palette.length]),
-        borderRadius: { topLeft: 8, topRight: 8 },
-        borderSkipped: false,
-      }]
-    },
-    options: {
-      responsive: true,
-      plugins: { legend: { display: false } },
-      scales: {
-        x: { grid: { display: false }, border: { display: false } },
-        y: { grid: { color: '#f3f4f6' }, border: { display: false }, beginAtZero: true }
-      }
-    }
-  });
-}
-
-function initDeliveryChart(ts) {
-  const ctx = document.getElementById('deliveryChart').getContext('2d');
-  if (deliveryChart) deliveryChart.destroy();
-  const grad = (c) => { const g = ctx.createLinearGradient(0,0,0,250); g.addColorStop(0,c); g.addColorStop(1,'rgba(255,255,255,0)'); return g; };
-  deliveryChart = new Chart(ctx, {
-    type: 'line',
-    data: {
-      labels: ts.map(d => new Date(d.date).toLocaleDateString('en-IN', { month:'short', day:'numeric' })),
-      datasets: [
-        { label:'Delivered', data: ts.map(d=>d.delivered), borderColor:'#10b981', backgroundColor: grad('rgba(16,185,129,.15)'), fill:true, tension:.4, pointRadius:4, pointBackgroundColor:'#10b981', pointBorderColor:'#fff', pointBorderWidth:2 },
-        { label:'Pending',   data: ts.map(d=>d.pending),   borderColor:'#f59e0b', backgroundColor: grad('rgba(245,158,11,.12)'), fill:true, tension:.4, pointRadius:4, pointBackgroundColor:'#f59e0b', pointBorderColor:'#fff', pointBorderWidth:2 },
-        { label:'Holiday',   data: ts.map(d=>d.holiday),   borderColor:'#ef4444', backgroundColor: grad('rgba(239,68,68,.10)'),  fill:true, tension:.4, pointRadius:4, pointBackgroundColor:'#ef4444', pointBorderColor:'#fff', pointBorderWidth:2 },
-      ]
-    },
-    options: {
-      responsive: true, interaction: { mode:'index', intersect:false },
-      plugins: { legend: { labels: { boxWidth:10, padding:18, usePointStyle:true } } },
-      scales: {
-        x: { grid:{ display:false }, border:{ display:false } },
-        y: { grid:{ color:'#f3f4f6' }, border:{ display:false }, beginAtZero:true }
-      }
-    }
-  });
-}
-
-async function loadChart(days, pill) {
-  document.querySelectorAll('.range-pill').forEach(p => p.classList.remove('active'));
-  if (pill) pill.classList.add('active');
+/* ---- Load Enquiries ---- */
+let _enqLoaded = false;
+async function loadEnquiries(force) {
+  if (_enqLoaded && !force) return;
+  const tbody = document.getElementById('enq-tbody');
+  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try {
-    const data = await fetch(`/api/admin/analytics?range=${days}`).then(r => r.json());
-    initDeliveryChart(data.timeseries);
-    initAreaChart(data.area_pending);
-  } catch { initDeliveryChart([]); initAreaChart([]); }
-}
+    const data = await fetch('/api/admin/enquiries_data').then(r => {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+    _enqLoaded = true;
 
-/* ---- Avatar initials ---- */
-(function() {
-  const name = document.getElementById('session-name');
-  const av   = document.getElementById('user-avatar-init');
-  if (name && av) {
-    const w = (name.textContent || '').trim().split(' ');
-    av.textContent = w.length >= 2 ? w[0][0].toUpperCase() + w[1][0].toUpperCase() : (w[0]||'A')[0].toUpperCase();
-  }
-})();
-
-/* ---- Flash auto-dismiss ---- */
-setTimeout(() => {
-  document.querySelectorAll('.flash').forEach(f => {
-    f.style.transition = '0.4s';
-    f.style.opacity = '0';
-    f.style.transform = 'translateX(40px)';
-    setTimeout(() => f.remove(), 400);
-  });
-}, 4000);
-
-
-
-/* ---- Enquiries section ---- */
-const _enqLoaded = { done: false };
- 
-async function loadEnquiries() {
-  if (_enqLoaded.done) return;
-  try {
-    const res  = await fetch('/api/admin/enquiries_data');
-    const data = await res.json();
-    _enqLoaded.done = true;
- 
-    // Stats
     const total    = data.length;
     const pending  = data.filter(e => e.status === 'pending').length;
     const approved = data.filter(e => e.status === 'approved').length;
-    document.getElementById('enq-stat-total').textContent   = total;
-    document.getElementById('enq-stat-pending').textContent = pending;
+    document.getElementById('enq-stat-total').textContent    = total;
+    document.getElementById('enq-stat-pending').textContent  = pending;
     document.getElementById('enq-stat-approved').textContent = approved;
- 
-    // Badge
+
     const badge = document.getElementById('enq-badge');
     if (pending > 0) { badge.textContent = pending; badge.style.display = 'inline-flex'; }
- 
-    // Table
-    const tbody = document.getElementById('enq-tbody');
+    else { badge.style.display = 'none'; }
+
     if (!data.length) {
       tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-3);">No enquiries yet.</td></tr>`;
       return;
     }
- 
+
     tbody.innerHTML = data.map(e => {
-      const date = e.created_at ? new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}) : '—';
-      const statusBadge = e.status === 'pending'
+      const date = e.created_at
+        ? new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'})
+        : '—';
+      const statusBadge = e.status==='pending'
         ? `<span class="badge badge-yellow">⏳ Pending</span>`
-        : `<span class="badge badge-green">✅ Approved</span>`;
-      const approveBtn = e.status === 'pending'
+        : `<span class="badge badge-green">✅ Converted</span>`;
+      const approveBtn = e.status==='pending'
         ? `<form method="POST" action="/admin/enquiries/approve/${e.id}"
-                onsubmit="return confirm('Convert ${escHtml(e.name)} to customer?');" style="display:inline;">
+               onsubmit="return confirm('Convert ${escHtml(e.name)} to a customer?');" style="display:inline;">
              <button class="btn btn-success btn-sm">✅ Approve</button>
            </form>`
         : '';
       return `
-        <tr data-name="${e.name.toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}"
-            class="${e.status==='approved'?'opacity-60':''}">
+        <tr data-name="${e.name.toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}">
           <td>
             <div style="display:flex;align-items:center;gap:8px;">
               <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${e.name.charAt(0).toUpperCase()}</div>
               <div>
                 <div style="font-weight:600;">${escHtml(e.name)}</div>
-                ${e.address ? `<div style="font-size:11px;color:var(--text-3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.address)}</div>` : ''}
+                ${e.address?`<div style="font-size:11px;color:var(--text-3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.address)}</div>`:''}
               </div>
             </div>
           </td>
           <td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td>
-          <td>${e.plan ? `<span class="badge badge-orange" style="max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:inline-block;" title="${escHtml(e.plan)}">${escHtml(e.plan.substring(0,24))}${e.plan.length>24?'…':''}</span>` : '<span class="badge badge-gray">—</span>'}</td>
+          <td>${e.plan?`<span class="badge badge-orange">${escHtml(e.plan.substring(0,24))}${e.plan.length>24?'…':''}</span>`:`<span class="badge badge-gray">—</span>`}</td>
           <td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td>
           <td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td>
           <td style="font-size:12px;color:var(--text-3);">${date}</td>
@@ -1662,10 +1077,11 @@ async function loadEnquiries() {
         </tr>`;
     }).join('');
   } catch(err) {
-    document.getElementById('enq-tbody').innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--red);">Failed to load. Refresh.</td></tr>`;
+    console.error('Enquiries load error:', err);
+    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--red);">Failed to load enquiries. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;
   }
 }
- 
+
 function filterEnqTable() {
   const q  = document.getElementById('enq-search').value.toLowerCase();
   const st = document.getElementById('enq-status-filter').value;
@@ -1676,36 +1092,223 @@ function filterEnqTable() {
     r.style.display = ((!q||(name+phone).includes(q)) && (!st||rs===st)) ? '' : 'none';
   });
 }
- 
-/* Hook into existing navigate() to lazy-load enquiries */
-const _origNavigate = navigate;
-window.navigate = function(page, el) {
-  _origNavigate(page, el);
-  if (page === 'enquiries') loadEnquiries();
-};
- 
-/* Also load badge count on boot */
-(async function loadEnqBadge() {
+
+/* ---- Edit Employee Modal ---- */
+function openEditEmployee(id, name, email, phone, teamId) {
+  document.getElementById('ee-name').value  = name;
+  document.getElementById('ee-email').value = email;
+  document.getElementById('ee-phone').value = phone;
+  document.getElementById('ee-team').value  = teamId;
+  document.getElementById('edit-emp-form').action = '/admin/users/edit/' + id;
+  openModal('modal-edit-employee');
+}
+
+/* ---- Edit Customer Modal ---- */
+function openEditCustomer(c) {
+  document.getElementById('ec-name').value    = c.name || '';
+  document.getElementById('ec-email').value   = c.email || '';
+  document.getElementById('ec-phone').value   = c.phone || '';
+  document.getElementById('ec-team').value    = c.team_id || '';
+  document.getElementById('ec-plan').value    = c.plan_name !== '—' ? c.plan_name : '';
+  document.getElementById('ec-address').value = c.address || '';
+  document.getElementById('ec-ptime').value   = c.preferred_time || '';
+
+  // Set off days multi-select
+  const sel = document.getElementById('ec-offdays');
+  for (let opt of sel.options) {
+    opt.selected = (c.off_days || []).includes(opt.value);
+  }
+
+  document.getElementById('edit-cust-form').action = '/admin/users/edit/' + c.id;
+  openModal('modal-edit-customer');
+}
+
+/* ---- Add/Edit User unified modal ---- */
+function openAddUserModal(role) {
+  const form = document.getElementById('user-form');
+  form.action = '/admin/users/add';
+  form.reset();
+  document.getElementById('user-modal-title').textContent   = 'Onboard User';
+  document.getElementById('user-submit-btn').textContent    = 'Add & Send Credentials';
+  document.getElementById('rf-role-group').style.display    = 'block';
+  document.getElementById('roleSelect').value               = role || '';
+  document.getElementById('hiddenRole').value               = role || '';
+  applyRoleFields(role || '');
+  openModal('modal-add-user');
+}
+
+function onRoleChange() {
+  const r = document.getElementById('roleSelect').value;
+  document.getElementById('hiddenRole').value = r;
+  applyRoleFields(r);
+}
+
+function applyRoleFields(role) {
+  document.getElementById('rf-team').style.display     = (role==='employee'||role==='customer') ? 'block' : 'none';
+  document.getElementById('rf-customer').style.display = role==='customer' ? 'block' : 'none';
+}
+
+/* ---- Plan edit ---- */
+function openEditPlan(plan) {
+  document.getElementById('ep-name').value  = plan.name || '';
+  document.getElementById('ep-desc').value  = plan.description || '';
+  // Support both field names
+  document.getElementById('ep-price').value = plan.price_per_month || plan.price_per_day || '';
+  document.getElementById('ep-tax').value   = plan.tax_percent || 0;
+  // _id might be string (already converted in Jinja) or object
+  const id = typeof plan._id === 'object' ? plan._id.$oid : plan._id;
+  document.getElementById('edit-plan-form').action = '/admin/plans/edit/' + id;
+  openModal('modal-edit-plan');
+}
+
+/* ---- Team edit ---- */
+function openEditTeam(team) {
+  document.getElementById('et-name').value = team.name || '';
+  document.getElementById('et-area').value = team.area || '';
+  document.getElementById('et-city').value = team.city || '';
+  const id = typeof team._id === 'object' ? team._id.$oid : team._id;
+  document.getElementById('edit-team-form').action = '/admin/teams/edit/' + id;
+  openModal('modal-edit-team');
+}
+
+/* ---- Sidebar ---- */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+/* ---- Modals ---- */
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', function(e) { if (e.target===this) this.classList.remove('open'); });
+});
+
+/* ---- Table filters ---- */
+function filterTable(inputId, tableId, attr) {
+  const q = document.getElementById(inputId).value.toLowerCase();
+  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => {
+    r.style.display = (r.getAttribute(attr)||'').toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+function filterTeams() {
+  const q    = document.getElementById('team-search').value.toLowerCase();
+  const city = document.getElementById('team-city-filter').value.toLowerCase();
+  document.querySelectorAll('#teams-table tbody tr').forEach(r => {
+    const name = (r.getAttribute('data-name')||'').toLowerCase();
+    const rc   = (r.getAttribute('data-city')||'').toLowerCase();
+    r.style.display = name.includes(q) && (!city||rc===city) ? '' : 'none';
+  });
+}
+function filterByCity(selectId, tableId) {
+  const city = document.getElementById(selectId).value.toLowerCase();
+  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => {
+    r.style.display = (!city||(r.getAttribute('data-city')||'').toLowerCase()===city) ? '' : 'none';
+  });
+}
+function filterByTeam(selectId, tableId) {
+  const team = document.getElementById(selectId).value;
+  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => {
+    r.style.display = (!team||r.getAttribute('data-team')===team) ? '' : 'none';
+  });
+}
+
+/* ---- Charts ---- */
+let deliveryChart, areaChart;
+Chart.defaults.color = '#6b7280';
+Chart.defaults.font  = { family:'DM Sans, sans-serif', size:12 };
+
+function initAreaChart(data) {
+  const ctx = document.getElementById('areaChart').getContext('2d');
+  if (areaChart) areaChart.destroy();
+  const palette = ['rgba(79,70,229,.85)','rgba(124,58,237,.85)','rgba(37,99,235,.85)',
+                   'rgba(8,145,178,.85)','rgba(5,150,105,.85)','rgba(217,119,6,.85)'];
+  areaChart = new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels: data.map(d=>d.area),
+      datasets:[{label:'Pending',data:data.map(d=>d.pending),
+        backgroundColor:data.map((_,i)=>palette[i%palette.length]),
+        borderRadius:{topLeft:8,topRight:8},borderSkipped:false}]
+    },
+    options:{responsive:true,plugins:{legend:{display:false}},
+      scales:{x:{grid:{display:false},border:{display:false}},
+              y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}
+  });
+}
+
+function initDeliveryChart(ts) {
+  const ctx = document.getElementById('deliveryChart').getContext('2d');
+  if (deliveryChart) deliveryChart.destroy();
+  const grad = c => { const g=ctx.createLinearGradient(0,0,0,250); g.addColorStop(0,c); g.addColorStop(1,'rgba(255,255,255,0)'); return g; };
+  deliveryChart = new Chart(ctx, {
+    type:'line',
+    data:{
+      labels: ts.map(d=>new Date(d.date).toLocaleDateString('en-IN',{month:'short',day:'numeric'})),
+      datasets:[
+        {label:'Delivered',data:ts.map(d=>d.delivered),borderColor:'#10b981',backgroundColor:grad('rgba(16,185,129,.15)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#10b981',pointBorderColor:'#fff',pointBorderWidth:2},
+        {label:'Pending',  data:ts.map(d=>d.pending),  borderColor:'#f59e0b',backgroundColor:grad('rgba(245,158,11,.12)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#f59e0b',pointBorderColor:'#fff',pointBorderWidth:2},
+        {label:'Holiday',  data:ts.map(d=>d.holiday),  borderColor:'#ef4444',backgroundColor:grad('rgba(239,68,68,.10)'), fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#ef4444',pointBorderColor:'#fff',pointBorderWidth:2},
+      ]
+    },
+    options:{responsive:true,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{labels:{boxWidth:10,padding:18,usePointStyle:true}}},
+      scales:{x:{grid:{display:false},border:{display:false}},
+              y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}
+  });
+}
+
+async function loadChart(days, pill) {
+  document.querySelectorAll('.range-pill').forEach(p=>p.classList.remove('active'));
+  if (pill) pill.classList.add('active');
   try {
-    const d = await fetch('/api/admin/enquiry_count').then(r => r.json());
-    if (d.pending > 0) {
+    const data = await fetch(`/api/admin/analytics?range=${days}`).then(r=>r.json());
+    initDeliveryChart(data.timeseries);
+    initAreaChart(data.area_pending);
+  } catch { initDeliveryChart([]); initAreaChart([]); }
+}
+
+/* ---- Avatar initials ---- */
+(function(){
+  const name = document.getElementById('session-name');
+  const av   = document.getElementById('user-avatar-init');
+  if (name && av) {
+    const w = (name.textContent||'').trim().split(' ');
+    av.textContent = w.length>=2 ? w[0][0].toUpperCase()+w[1][0].toUpperCase() : (w[0]||'A')[0].toUpperCase();
+  }
+})();
+
+/* ---- Flash auto-dismiss ---- */
+setTimeout(() => {
+  document.querySelectorAll('.flash').forEach(f => {
+    f.style.transition = '0.4s';
+    f.style.opacity = '0';
+    f.style.transform = 'translateX(40px)';
+    setTimeout(() => f.remove(), 400);
+  });
+}, 4000);
+
+/* ---- Enquiry badge on boot ---- */
+(async function(){
+  try {
+    const d = await fetch('/api/admin/enquiry_count').then(r=>r.json());
+    if (d.pending>0) {
       const b = document.getElementById('enq-badge');
-      if (b) { b.textContent = d.pending; b.style.display = 'inline-flex'; }
+      if (b) { b.textContent=d.pending; b.style.display='inline-flex'; }
     }
   } catch {}
 })();
- 
-/* Add enquiries to pageTitles */
-if (typeof pageTitles !== 'undefined') pageTitles['enquiries'] = 'Web Enquiries';
-
-
-
-
-
 
 /* ---- Boot ---- */
 window.addEventListener('DOMContentLoaded', () => {
   loadChart(1, document.querySelector('.range-pill.active'));
+  // Auto-load employees and customers so they're ready
+  loadEmployees();
+  loadCustomers();
 });
 </script>
 </body>
