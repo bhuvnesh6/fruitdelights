@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{{ customer.name }} — Customer Profile</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg:#f9fafb;--bg-2:#ffffff;--bg-3:#f3f4f6;--border:#e5e7eb;--border-s:#d1d5db;
+  --accent:#4f46e5;--accent-hover:#4338ca;--accent-soft:#eef2ff;
+  --green:#10b981;--green-soft:#d1fae5;--yellow:#f59e0b;--yellow-soft:#fef3c7;
+  --red:#ef4444;--red-soft:#fee2e2;--blue:#3b82f6;--blue-soft:#dbeafe;
+  --orange:#f97316;--orange-soft:#fff7ed;
+  --text:#111827;--text-2:#6b7280;--text-3:#9ca3af;
+  --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
+  --shadow-md:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
+  --shadow-lg:0 10px 15px -3px rgb(0 0 0/.1),0 4px 6px -4px rgb(0 0 0/.1);
+  --sidebar-w:256px;--radius:12px;--radius-sm:8px;
+  --font-body:'DM Sans',sans-serif;--font-disp:'Fraunces',serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font-body);background:var(--bg);color:var(--text);font-size:14px;line-height:1.6}
+a{color:inherit;text-decoration:none}
+
+/* Layout */
+.layout{display:flex;min-height:100vh}
+.sidebar{width:var(--sidebar-w);background:var(--bg-2);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;overflow-y:auto}
+.sidebar-logo{padding:22px 20px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px}
+.sidebar-logo-icon{width:36px;height:36px;background:linear-gradient(135deg,var(--accent),#7c3aed);border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.sidebar-logo-name{font-family:var(--font-disp);font-size:17px;font-weight:700;letter-spacing:-.3px;line-height:1.2}
+.sidebar-logo-name span{color:var(--accent)}
+.sidebar-section{padding:16px 12px 8px}
+.sidebar-section-label{font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--text-3);padding:0 8px;margin-bottom:6px}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--radius-sm);cursor:pointer;color:var(--text-2);font-weight:500;transition:background .15s,color .15s}
+.nav-item:hover{background:var(--bg-3);color:var(--text)}
+.nav-item.active{background:var(--accent-soft);color:var(--accent)}
+.nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
+.sidebar-bottom{margin-top:auto;padding:16px 12px;border-top:1px solid var(--border)}
+.user-pill{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--bg-3)}
+.user-pill-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:white;flex-shrink:0}
+.user-pill-name{font-weight:600;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.user-pill-role{font-size:11px;color:var(--text-3)}
+.main{margin-left:var(--sidebar-w);flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;box-shadow:var(--shadow-sm)}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.breadcrumb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text-2)}
+.breadcrumb a{color:var(--text-2);font-weight:500}
+.breadcrumb a:hover{color:var(--accent)}
+.breadcrumb-sep{color:var(--text-3)}
+.breadcrumb-current{font-weight:600;color:var(--text)}
+.page-content{padding:28px;flex:1}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);font-weight:600;font-size:13px;cursor:pointer;border:none;transition:all .15s;white-space:nowrap}
+.btn:active{transform:scale(.97)}
+.btn-primary{background:var(--accent);color:white}
+.btn-primary:hover{background:var(--accent-hover)}
+.btn-ghost{background:var(--bg-3);color:var(--text);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--border)}
+.btn-danger{background:var(--red-soft);color:var(--red)}
+.btn-danger:hover{background:#fecaca}
+.btn-success{background:var(--green-soft);color:var(--green)}
+.btn-sm{padding:6px 12px;font-size:12px}
+.btn-xs{padding:4px 9px;font-size:11px;border-radius:6px}
+
+/* Cards */
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm)}
+.card-title{font-size:14px;font-weight:600;color:var(--text);margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.card-title-lg{font-family:var(--font-disp);font-size:17px;font-weight:700}
+
+/* Grid layouts */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+
+/* Stat mini cards */
+.mini-stat{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;display:flex;align-items:center;gap:14px;box-shadow:var(--shadow-sm);transition:box-shadow .2s,transform .2s}
+.mini-stat:hover{box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.mini-stat-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.ms-green .mini-stat-icon{background:var(--green-soft)}
+.ms-yellow .mini-stat-icon{background:var(--yellow-soft)}
+.ms-red .mini-stat-icon{background:var(--red-soft)}
+.ms-blue .mini-stat-icon{background:var(--blue-soft)}
+.ms-orange .mini-stat-icon{background:var(--orange-soft)}
+.ms-purple .mini-stat-icon{background:var(--accent-soft)}
+.mini-stat-val{font-size:26px;font-weight:700;line-height:1;color:var(--text)}
+.mini-stat-lbl{font-size:11px;color:var(--text-2);font-weight:500;margin-top:2px}
+
+/* Profile hero */
+.hero{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow-sm);position:relative;overflow:hidden;margin-bottom:24px}
+.hero::before{content:'';position:absolute;top:0;left:0;right:0;height:4px;background:linear-gradient(90deg,var(--accent),#7c3aed,#f97316)}
+.hero-inner{display:flex;align-items:flex-start;gap:20px}
+.hero-avatar{width:72px;height:72px;border-radius:18px;background:linear-gradient(135deg,var(--orange),#f59e0b);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:28px;color:white;flex-shrink:0;letter-spacing:-1px}
+.hero-info{flex:1;min-width:0}
+.hero-name{font-family:var(--font-disp);font-size:26px;font-weight:700;line-height:1.2;margin-bottom:6px}
+.hero-meta{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px}
+.hero-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.hero-badges{display:flex;gap:6px;flex-wrap:wrap}
+
+/* Info rows */
+.info-row{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.info-row:last-child{border-bottom:none}
+.info-label{font-size:12px;font-weight:600;color:var(--text-2);text-transform:uppercase;letter-spacing:.4px;min-width:130px;padding-top:1px}
+.info-value{color:var(--text);font-size:13px;flex:1;word-break:break-word}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-green{background:var(--green-soft);color:var(--green)}
+.badge-yellow{background:var(--yellow-soft);color:var(--yellow)}
+.badge-red{background:var(--red-soft);color:var(--red)}
+.badge-blue{background:var(--blue-soft);color:var(--blue)}
+.badge-gray{background:var(--bg-3);color:var(--text-2);border:1px solid var(--border)}
+.badge-orange{background:var(--orange-soft);color:var(--orange)}
+.badge-purple{background:var(--accent-soft);color:var(--accent)}
+
+/* Billing card accent */
+.bill-card{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 100%);border-radius:var(--radius);padding:22px;color:white;position:relative;overflow:hidden}
+.bill-card::after{content:'₹';position:absolute;right:-10px;bottom:-20px;font-size:120px;font-weight:900;opacity:.07;font-family:var(--font-disp);line-height:1}
+.bill-amount{font-family:var(--font-disp);font-size:40px;font-weight:700;line-height:1;margin:8px 0 4px}
+.bill-label{font-size:12px;opacity:.8;font-weight:500;letter-spacing:.5px;text-transform:uppercase}
+.bill-sub{font-size:12px;opacity:.7;margin-top:6px}
+
+/* Billing history bars */
+.bill-bar-wrap{display:flex;flex-direction:column;gap:10px}
+.bill-bar-row{display:flex;align-items:center;gap:10px}
+.bill-bar-label{font-size:12px;color:var(--text-2);min-width:90px;font-weight:500}
+.bill-bar-track{flex:1;height:8px;background:var(--bg-3);border-radius:99px;overflow:hidden}
+.bill-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),#7c3aed);border-radius:99px;transition:width .6s ease}
+.bill-bar-val{font-size:12px;font-weight:700;color:var(--text);min-width:64px;text-align:right}
+
+/* Delivery table */
+.table-wrap{overflow-x:auto;border-radius:var(--radius-sm);border:1px solid var(--border)}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-2);background:var(--bg-3);border-bottom:1px solid var(--border);white-space:nowrap}
+tbody td{padding:11px 14px;border-bottom:1px solid var(--border);vertical-align:middle;font-size:13px}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg-3)}
+
+/* Form elements */
+.form-group{margin-bottom:14px}
+.form-label{display:block;font-size:11px;font-weight:600;color:var(--text-2);margin-bottom:6px;letter-spacing:.4px;text-transform:uppercase}
+.form-label .opt{color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0}
+.form-control{width:100%;background:var(--bg-3);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;font-family:var(--font-body);font-size:14px}
+.form-control:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1);background:#fff}
+.form-control[multiple]{height:80px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.divider-label{display:flex;align-items:center;gap:10px;margin:16px 0 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-3)}
+.divider-label::before,.divider-label::after{content:'';flex:1;height:1px;background:var(--border)}
+
+/* Modal */
+.modal-backdrop{display:none;position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.4);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px}
+.modal-backdrop.open{display:flex}
+.modal{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:28px;width:100%;max-width:620px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:translateY(16px) scale(.97)}}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:22px}
+.modal-title{font-family:var(--font-disp);font-size:20px;font-weight:700}
+.modal-close{background:none;border:none;color:var(--text-2);font-size:20px;cursor:pointer;line-height:1}
+.modal-close:hover{color:var(--text)}
+
+/* Flash */
+.flash-wrap{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:12px}
+.flash{min-width:300px;padding:14px 18px;border-radius:14px;font-weight:600;font-size:14px;animation:slideIn .3s ease;box-shadow:0 8px 24px rgba(0,0,0,.12)}
+.flash-success{background:linear-gradient(135deg,#10b981,#059669);color:white}
+.flash-danger{background:linear-gradient(135deg,#ef4444,#dc2626);color:white}
+.flash-warning{background:linear-gradient(135deg,#f59e0b,#d97706);color:white}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+
+/* Off-days chips */
+.day-chips{display:flex;flex-wrap:wrap;gap:6px}
+.day-chip{padding:4px 10px;border-radius:99px;font-size:11px;font-weight:600;background:var(--yellow-soft);color:var(--yellow)}
+
+/* Delivery status dot */
+.del-dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:6px;flex-shrink:0}
+.del-dot-green{background:var(--green)}
+.del-dot-yellow{background:var(--yellow)}
+.del-dot-red{background:var(--red)}
+.del-dot-gray{background:var(--text-3)}
+
+/* Progress ring for delivered % */
+.ring-wrap{position:relative;width:80px;height:80px;flex-shrink:0}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-label{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:var(--text);line-height:1}
+.ring-sublabel{font-size:9px;color:var(--text-3);font-weight:500}
+
+/* Estimated bill breakdown */
+.breakdown-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.breakdown-row:last-child{border-bottom:none;font-weight:700;font-size:15px}
+.breakdown-row.total-row{color:var(--accent)}
+
+/* Invoice chip */
+.inv-row{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:var(--radius-sm);background:var(--bg-3);margin-bottom:8px;transition:background .15s}
+.inv-row:hover{background:var(--border)}
+.inv-month{font-weight:600;font-size:13px}
+.inv-amount{font-weight:700;color:var(--accent);font-size:14px}
+.inv-status{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px}
+
+/* Section spacing */
+.section-gap{display:flex;flex-direction:column;gap:20px}
+
+/* Hamburger */
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:6px;flex-direction:column;gap:4px}
+.hamburger span{display:block;width:22px;height:2px;background:var(--text);border-radius:2px}
+.overlay{display:none;position:fixed;inset:0;z-index:90;background:rgba(0,0,0,.3)}
+.overlay.open{display:block}
+
+@media(max-width:1100px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:860px){.grid-3{grid-template-columns:1fr 1fr}.grid-2{grid-template-columns:1fr}}
+@media(max-width:768px){
+  :root{--sidebar-w:0px}
+  .sidebar{width:260px;transform:translateX(-100%);box-shadow:var(--shadow-lg)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .hamburger{display:flex}
+  .page-content{padding:16px}
+  .topbar{padding:0 16px}
+  .hero-inner{flex-direction:column;gap:14px}
+  .grid-4{grid-template-columns:1fr 1fr}
+  .grid-3{grid-template-columns:1fr 1fr}
+  .grid-2{grid-template-columns:1fr}
+  .hero-actions{flex-wrap:wrap}
+  .bill-amount{font-size:30px}
+}
+@media(max-width:480px){.grid-4,.grid-3{grid-template-columns:1fr}.form-row{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+{% set status_color = {'active': 'green', 'paused': 'yellow', 'inactive': 'red'} %}
+{% set status_icon  = {'active': '✅', 'paused': '⏸️', 'inactive': '❌'} %}
+{% set cust_status  = customer.status | default('active') %}
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">🍊</div>
+      <div class="sidebar-logo-name">Fruite<span>Delight</span></div>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Main</div>
+      <a href="/admin" class="nav-item"><span class="nav-icon">📊</span> Dashboard</a>
+    </div>
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Manage</div>
+      <a href="/admin" class="nav-item"><span class="nav-icon">📋</span> Plans</a>
+      <a href="/admin" class="nav-item"><span class="nav-icon">🏘️</span> Teams</a>
+      <a href="/admin" class="nav-item"><span class="nav-icon">🚴</span> Employees</a>
+      <a href="/admin/customers" class="nav-item active"><span class="nav-icon">👥</span> Customers</a>
+      <a href="/admin/enquiries" class="nav-item"><span class="nav-icon">📩</span> Enquiries</a>
+    </div>
+    <div class="sidebar-bottom">
+      <div class="user-pill">
+        <div class="user-pill-avatar" id="user-avatar-init">A</div>
+        <div style="flex:1;overflow:hidden;">
+          <div class="user-pill-name" id="session-name">{{ session.name }}</div>
+          <div class="user-pill-role">{{ session.role | capitalize }}</div>
+        </div>
+        <a href="/logout" style="color:var(--text-3);font-size:18px;line-height:1;" title="Logout">⏻</a>
+      </div>
+    </div>
+  </aside>
+
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <header class="topbar">
+      <div class="topbar-left">
+        <button class="hamburger" onclick="toggleSidebar()"><span></span><span></span><span></span></button>
+        <div class="breadcrumb">
+          <a href="/admin">Dashboard</a>
+          <span class="breadcrumb-sep">/</span>
+          <a href="/admin/customers">Customers</a>
+          <span class="breadcrumb-sep">/</span>
+          <span class="breadcrumb-current">{{ customer.name }}</span>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="openModal('modal-edit-cust')">✏️ Edit</button>
+        <form method="POST" action="/admin/users/delete/{{ customer._id }}"
+              onsubmit="return confirm('Permanently delete {{ customer.name }}? This cannot be undone.');">
+          <input type="hidden" name="next" value="list_customers">
+          <button class="btn btn-danger btn-sm">🗑️ Delete</button>
+        </form>
+      </div>
+    </header>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+    <div class="flash-wrap">
+      {% for cat, msg in messages %}
+      <div class="flash flash-{{ cat }}">
+        {% if cat == 'success' %}✅{% elif cat == 'danger' %}❌{% else %}⚠️{% endif %} {{ msg }}
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+    {% endwith %}
+
+    <div class="page-content">
+
+      <!-- HERO -->
+      <div class="hero">
+        <div class="hero-inner">
+          <div class="hero-avatar">{{ customer.name[0] | upper }}</div>
+          <div class="hero-info">
+            <div class="hero-name">{{ customer.name }}</div>
+            <div class="hero-meta">
+              <span class="badge badge-{{ status_color[cust_status] | default('gray') }}">
+                {{ status_icon[cust_status] | default('') }} {{ cust_status | capitalize }}
+              </span>
+              {% if plan %}
+              <span class="badge badge-orange">📋 {{ plan.name }}</span>
+              {% else %}
+              <span class="badge badge-gray">No plan</span>
+              {% endif %}
+              {% if team %}
+              <span class="badge badge-blue">🏘️ {{ team.name }}</span>
+              {% endif %}
+              {% if customer.phone %}
+              <span class="badge badge-gray">📞 {{ customer.phone }}</span>
+              {% endif %}
+              <span class="badge badge-gray" style="color:var(--text-3);">Member since {{ member_since_str }}</span>
+            </div>
+            {% if customer.address %}
+            <div style="font-size:13px;color:var(--text-2);margin-top:2px;">📍 {{ customer.address }}</div>
+            {% endif %}
+            <div class="hero-actions">
+              <button class="btn btn-primary btn-sm" onclick="openModal('modal-edit-cust')">✏️ Edit Profile</button>
+              {% if customer.phone %}
+              <a href="https://wa.me/91{{ customer.phone | replace(' ','') }}" target="_blank" class="btn btn-success btn-sm">💬 WhatsApp</a>
+              {% endif %}
+              <a href="/admin/customers" class="btn btn-ghost btn-sm">← All Customers</a>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- THIS MONTH STATS -->
+      <div class="grid-4" style="margin-bottom:20px;">
+        <div class="mini-stat ms-green">
+          <div class="mini-stat-icon">✅</div>
+          <div>
+            <div class="mini-stat-val">{{ month_stats.delivered }}</div>
+            <div class="mini-stat-lbl">Delivered This Month</div>
+          </div>
+        </div>
+        <div class="mini-stat ms-yellow">
+          <div class="mini-stat-icon">⏳</div>
+          <div>
+            <div class="mini-stat-val">{{ month_stats.pending }}</div>
+            <div class="mini-stat-lbl">Pending This Month</div>
+          </div>
+        </div>
+        <div class="mini-stat ms-red">
+          <div class="mini-stat-icon">🏖️</div>
+          <div>
+            <div class="mini-stat-val">{{ month_stats.holiday }}</div>
+            <div class="mini-stat-lbl">Holidays This Month</div>
+          </div>
+        </div>
+        <div class="mini-stat ms-purple">
+          <div class="mini-stat-icon">📅</div>
+          <div>
+            <div class="mini-stat-val">{{ estimated_bill.days }}</div>
+            <div class="mini-stat-lbl">Billable Days</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MAIN CONTENT GRID -->
+      <div style="display:grid;grid-template-columns:1fr 360px;gap:20px;align-items:start;">
+
+        <!-- LEFT COLUMN -->
+        <div class="section-gap">
+
+          <!-- CUSTOMER INFO -->
+          <div class="card">
+            <div class="card-title card-title-lg">👤 Customer Information</div>
+            <div class="info-row">
+              <div class="info-label">Full Name</div>
+              <div class="info-value"><strong>{{ customer.name }}</strong></div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Phone</div>
+              <div class="info-value">
+                {% if customer.phone %}
+                <a href="tel:{{ customer.phone }}" style="color:var(--accent);font-weight:600;">{{ customer.phone }}</a>
+                {% else %}<span style="color:var(--text-3);">—</span>{% endif %}
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Email</div>
+              <div class="info-value">
+                {% if customer.email and not customer.email.endswith('@fruitedelights.local') %}
+                <a href="mailto:{{ customer.email }}" style="color:var(--accent);">{{ customer.email }}</a>
+                {% else %}<span style="color:var(--text-3);">Not provided</span>{% endif %}
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Address</div>
+              <div class="info-value">{{ customer.address or '—' }}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Delivery Team</div>
+              <div class="info-value">
+                {% if team %}
+                <span class="badge badge-blue">{{ team.name }}</span>
+                <span style="color:var(--text-3);font-size:12px;margin-left:6px;">{{ team.area }}, {{ team.city }}</span>
+                {% else %}<span style="color:var(--text-3);">Not assigned</span>{% endif %}
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Time Slot</div>
+              <div class="info-value">
+                {% if customer.preferred_time %}
+                <span class="badge badge-blue">🕐 {{ customer.preferred_time }}</span>
+                {% else %}<span style="color:var(--text-3);">Any time</span>{% endif %}
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Start Date</div>
+              <div class="info-value">{{ start_date_str or '—' }}</div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Off Days</div>
+              <div class="info-value">
+                {% if customer.off_days %}
+                <div class="day-chips">
+                  {% for d in customer.off_days %}<span class="day-chip">{{ d }}</span>{% endfor %}
+                </div>
+                {% else %}<span style="color:var(--text-3);">None (delivers every day)</span>{% endif %}
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Upcoming Holidays</div>
+              <div class="info-value">
+                {% set future_holidays = [] %}
+                {% if customer.holidays %}
+                  {% for h in customer.holidays %}
+                    {% if h >= now.strftime('%Y-%m-%d') %}
+                      {% set _ = future_holidays.append(h) %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+                {% if future_holidays %}
+                <div style="display:flex;flex-wrap:wrap;gap:5px;">
+                  {% for h in future_holidays | sort %}
+                  <span class="badge badge-red">🏖️ {{ h }}</span>
+                  {% endfor %}
+                </div>
+                {% else %}<span style="color:var(--text-3);">None scheduled</span>{% endif %}
+              </div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Account Status</div>
+              <div class="info-value">
+                <span class="badge badge-{{ status_color[cust_status] | default('gray') }}">
+                  {{ status_icon[cust_status] | default('') }} {{ cust_status | capitalize }}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <!-- PLAN DETAILS -->
+          {% if plan %}
+          <div class="card">
+            <div class="card-title card-title-lg">📋 Subscription Plan</div>
+            <div class="info-row">
+              <div class="info-label">Plan Name</div>
+              <div class="info-value"><span class="badge badge-orange" style="font-size:13px;padding:5px 12px;">{{ plan.name }}</span></div>
+            </div>
+            {% if plan.description %}
+            <div class="info-row">
+              <div class="info-label">Description</div>
+              <div class="info-value" style="color:var(--text-2);">{{ plan.description }}</div>
+            </div>
+            {% endif %}
+            <div class="info-row">
+              <div class="info-label">Monthly Price</div>
+              <div class="info-value"><strong style="font-size:16px;color:var(--accent);">₹{{ plan.price_per_month or plan.price_per_day or 0 }}</strong></div>
+            </div>
+            {% if plan.duration_days %}
+            <div class="info-row">
+              <div class="info-label">Duration</div>
+              <div class="info-value"><span class="badge badge-blue">{{ plan.duration_days }} days/month</span></div>
+            </div>
+            {% endif %}
+            <div class="info-row">
+              <div class="info-label">Tax</div>
+              <div class="info-value">{{ plan.tax_percent or 0 }}%</div>
+            </div>
+            {% set gross = ((plan.price_per_month or plan.price_per_day or 0) | float) * (1 + (plan.tax_percent | float) / 100) %}
+            <div class="info-row">
+              <div class="info-label">Total (incl. tax)</div>
+              <div class="info-value"><strong style="color:var(--green);">₹{{ gross | round(2) }}</strong></div>
+            </div>
+            <div class="info-row">
+              <div class="info-label">Discount</div>
+              <div class="info-value">
+                {% if customer.get('discount_percent', 0) > 0 or customer.get('discount_amount', 0) > 0 %}
+                  {% if customer.discount_percent > 0 %}
+                  <span class="badge badge-green">{{ customer.discount_percent }}% off</span>
+                  {% endif %}
+                  {% if customer.discount_amount > 0 %}
+                  <span class="badge badge-green">₹{{ customer.discount_amount }} flat off</span>
+                  {% endif %}
+                {% else %}
+                <span style="color:var(--text-3);">No discount</span>
+                {% endif %}
+              </div>
+            </div>
+          </div>
+          {% endif %}
+
+          <!-- RECENT DELIVERIES -->
+          <div class="card">
+            <div class="card-title card-title-lg" style="margin-bottom:14px;">
+              🚚 Recent Deliveries
+              <span style="font-size:12px;font-weight:400;color:var(--text-3);margin-left:4px;">(last 30 days)</span>
+            </div>
+            {% if recent_deliveries %}
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Day</th>
+                    <th>Status</th>
+                    <th>Time</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for d in recent_deliveries %}
+                  {% set ds = d.status | default('pending') %}
+                  <tr>
+                    <td style="font-weight:600;">{{ d.date }}</td>
+                    <td style="color:var(--text-2);">
+                      {% if d.date %}
+                        {{ d.date | strptime('%Y-%m-%d') | strftime('%A') if d.date else '' }}
+                      {% endif %}
+                    </td>
+                    <td>
+                      {% if ds == 'delivered' %}
+                      <span style="display:inline-flex;align-items:center;font-size:12px;font-weight:600;color:var(--green);">
+                        <span class="del-dot del-dot-green"></span>Delivered
+                      </span>
+                      {% elif ds == 'pending' %}
+                      <span style="display:inline-flex;align-items:center;font-size:12px;font-weight:600;color:var(--yellow);">
+                        <span class="del-dot del-dot-yellow"></span>Pending
+                      </span>
+                      {% elif ds == 'accepted' %}
+                      <span style="display:inline-flex;align-items:center;font-size:12px;font-weight:600;color:var(--blue);">
+                        <span class="del-dot" style="background:var(--blue)"></span>Accepted
+                      </span>
+                      {% elif ds == 'cancelled_holiday' %}
+                      <span style="display:inline-flex;align-items:center;font-size:12px;font-weight:600;color:var(--text-3);">
+                        <span class="del-dot del-dot-gray"></span>Holiday
+                      </span>
+                      {% else %}
+                      <span style="font-size:12px;color:var(--text-3);">{{ ds }}</span>
+                      {% endif %}
+                    </td>
+                    <td style="color:var(--text-2);font-size:12px;">{{ d.preferred_time or '—' }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:32px;color:var(--text-3);">
+              <div style="font-size:32px;margin-bottom:8px;">📦</div>
+              <div>No deliveries in the last 30 days.</div>
+            </div>
+            {% endif %}
+          </div>
+
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="section-gap">
+
+          <!-- CURRENT BILL -->
+          <div class="bill-card">
+            <div class="bill-label">{{ now.strftime('%B %Y') }} — Actual Bill</div>
+            <div class="bill-amount">₹{{ current_bill }}</div>
+            <div class="bill-sub">Based on deliveries completed this month</div>
+          </div>
+
+          <!-- ESTIMATED BILL BREAKDOWN -->
+          <div class="card">
+            <div class="card-title">📊 Bill Breakdown</div>
+            <div class="breakdown-row">
+              <span style="color:var(--text-2);">Plan price</span>
+              <span>₹{{ estimated_bill.subtotal }}</span>
+            </div>
+            <div class="breakdown-row">
+              <span style="color:var(--text-2);">Tax ({{ plan.tax_percent if plan else 0 }}%)</span>
+              <span>₹{{ estimated_bill.tax }}</span>
+            </div>
+            {% if estimated_bill.discount > 0 %}
+            <div class="breakdown-row">
+              <span style="color:var(--green);">Discount</span>
+              <span style="color:var(--green);">− ₹{{ estimated_bill.discount }}</span>
+            </div>
+            {% endif %}
+            <div class="breakdown-row total-row">
+              <span>Estimated Total</span>
+              <span>₹{{ estimated_bill.total }}</span>
+            </div>
+            <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border);font-size:12px;color:var(--text-3);">
+              Next billing date: <strong style="color:var(--text);">{{ next_billing.strftime('%d %b %Y') }}</strong>
+            </div>
+          </div>
+
+          <!-- DELIVERY PERFORMANCE RING -->
+          {% set total_del = month_stats.delivered + month_stats.pending + month_stats.holiday %}
+          {% if total_del > 0 %}
+          {% set del_pct = ((month_stats.delivered / total_del) * 100) | round(0) | int %}
+          {% else %}
+          {% set del_pct = 0 %}
+          {% endif %}
+          <div class="card">
+            <div class="card-title">📈 This Month's Performance</div>
+            <div style="display:flex;align-items:center;gap:16px;">
+              <div class="ring-wrap">
+                <svg viewBox="0 0 80 80" width="80" height="80">
+                  <circle cx="40" cy="40" r="32" fill="none" stroke="var(--bg-3)" stroke-width="8"/>
+                  <circle cx="40" cy="40" r="32" fill="none" stroke="var(--green)" stroke-width="8"
+                    stroke-dasharray="{{ (del_pct / 100 * 201.06) | round(2) }} 201.06"
+                    stroke-linecap="round"/>
+                </svg>
+                <div class="ring-label">
+                  {{ del_pct }}%
+                  <div class="ring-sublabel">done</div>
+                </div>
+              </div>
+              <div style="flex:1;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <span style="font-size:12px;color:var(--text-2);">✅ Delivered</span>
+                  <strong style="color:var(--green);">{{ month_stats.delivered }}</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <span style="font-size:12px;color:var(--text-2);">⏳ Pending</span>
+                  <strong style="color:var(--yellow);">{{ month_stats.pending }}</strong>
+                </div>
+                <div style="display:flex;justify-content:space-between;align-items:center;">
+                  <span style="font-size:12px;color:var(--text-2);">🏖️ Holiday</span>
+                  <strong style="color:var(--text-3);">{{ month_stats.holiday }}</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BILLING HISTORY -->
+          <div class="card">
+            <div class="card-title">🕐 Billing History</div>
+            {% if billing_history %}
+            {% set max_amount = billing_history | map(attribute='amount') | max %}
+            <div class="bill-bar-wrap">
+              {% for bh in billing_history %}
+              <div class="bill-bar-row">
+                <div class="bill-bar-label">{{ bh.label }}</div>
+                <div class="bill-bar-track">
+                  <div class="bill-bar-fill" style="width:{{ ((bh.amount / max_amount * 100) if max_amount > 0 else 0) | round(1) }}%;"></div>
+                </div>
+                <div class="bill-bar-val">₹{{ bh.amount }}</div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div style="text-align:center;padding:24px;color:var(--text-3);font-size:13px;">No billing history yet.</div>
+            {% endif %}
+          </div>
+
+          <!-- INVOICES -->
+          {% if invoices %}
+          <div class="card">
+            <div class="card-title">🧾 Invoices</div>
+            {% for inv in invoices %}
+            {% set months = ['','Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'] %}
+            <div class="inv-row">
+              <div>
+                <div class="inv-month">{{ months[inv.month] }} {{ inv.year }}</div>
+                <div style="font-size:11px;color:var(--text-3);">{{ inv.billable_days }} days billed</div>
+              </div>
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span class="inv-amount">₹{{ inv.total }}</span>
+                <span class="inv-status badge badge-green">Sent</span>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+        </div>
+      </div>
+
+    </div><!-- /page-content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<!-- ============================================================
+     EDIT CUSTOMER MODAL
+     ============================================================ -->
+<div class="modal-backdrop" id="modal-edit-cust">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Edit Customer</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-cust')">✕</button>
+    </div>
+    <form method="POST" action="/admin/users/edit/{{ customer._id }}">
+      <input type="hidden" name="role" value="customer">
+      <input type="hidden" name="next" value="customer_detail">
+      <input type="hidden" name="customer_id" value="{{ customer._id }}">
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Full Name *</label>
+          <input type="text" name="name" class="form-control" required value="{{ customer.name }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone * <span class="opt">(required)</span></label>
+          <input type="text" name="phone" class="form-control" required value="{{ customer.phone or '' }}">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email <span class="opt">(optional — auto-generated if blank)</span></label>
+        <input type="email" name="email" class="form-control"
+          value="{% if customer.email and not customer.email.endswith('@fruitedelights.local') %}{{ customer.email }}{% endif %}"
+          placeholder="Leave blank to keep existing">
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Assign Team</label>
+          <select name="team_id" class="form-control">
+            <option value="">— No team —</option>
+            {% for t in teams %}
+            <option value="{{ t._id }}" {% if customer.team_id and customer.team_id|string == t._id|string %}selected{% endif %}>
+              {{ t.name }} – {{ t.area }}, {{ t.city }}
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Delivery Plan</label>
+          <select name="plan_name" class="form-control">
+            <option value="">— No plan —</option>
+            {% for p in plans %}
+            <option value="{{ p.name }}" {% if plan and plan.name == p.name %}selected{% endif %}>
+              {{ p.name }} — ₹{{ p.price_per_month or p.price_per_day or 0 }}/mo
+            </option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Start Date</label>
+          <input type="date" name="start_date" class="form-control" value="{{ start_date_str }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Account Status</label>
+          <select name="customer_status" class="form-control">
+            <option value="active"   {% if cust_status == 'active'   %}selected{% endif %}>✅ Active</option>
+            <option value="paused"   {% if cust_status == 'paused'   %}selected{% endif %}>⏸️ Paused</option>
+            <option value="inactive" {% if cust_status == 'inactive' %}selected{% endif %}>❌ Inactive</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Delivery Address</label>
+        <textarea name="address" class="form-control" rows="2">{{ customer.address or '' }}</textarea>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Preferred Time Slot</label>
+          <select name="preferred_time" class="form-control">
+            <option value="">— Any time —</option>
+            {% for slot in ['07:00–09:00','09:00–11:00','11:00–13:00'] %}
+            <option value="{{ slot }}" {% if customer.preferred_time == slot %}selected{% endif %}>{{ slot }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Off Days</label>
+          <select name="off_days" class="form-control" multiple>
+            {% for day in ['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'] %}
+            <option value="{{ day }}" {% if day in (customer.off_days or []) %}selected{% endif %}>{{ day }}</option>
+            {% endfor %}
+          </select>
+          <small style="color:var(--text-3);font-size:11px;">Ctrl/Cmd to multi-select</small>
+        </div>
+      </div>
+
+      <div class="divider-label">Discount</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Discount %</label>
+          <input type="number" name="discount_percent" class="form-control" min="0" max="100" step="0.01"
+            value="{{ customer.discount_percent or 0 }}">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Flat Discount ₹</label>
+          <input type="number" name="discount_amount" class="form-control" min="0" step="0.01"
+            value="{{ customer.discount_amount or 0 }}">
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:12px;">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-cust')">Cancel</button>
+        <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+/* Sidebar */
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('open');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('open');
+}
+
+/* Modals */
+function openModal(id)  { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+document.querySelectorAll('.modal-backdrop').forEach(m => {
+  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
+});
+
+/* Avatar initials */
+(function(){
+  const name = document.getElementById('session-name');
+  const av   = document.getElementById('user-avatar-init');
+  if (name && av) {
+    const w = (name.textContent || '').trim().split(' ');
+    av.textContent = w.length >= 2
+      ? w[0][0].toUpperCase() + w[1][0].toUpperCase()
+      : (w[0] || 'A')[0].toUpperCase();
+  }
+})();
+
+/* Flash auto-dismiss */
+setTimeout(() => {
+  document.querySelectorAll('.flash').forEach(f => {
+    f.style.transition = '0.4s';
+    f.style.opacity = '0';
+    f.style.transform = 'translateX(30px)';
+    setTimeout(() => f.remove(), 400);
+  });
+}, 4000);
+
+/* Animate billing bars on load */
+window.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.bill-bar-fill').forEach(bar => {
+    const target = bar.style.width;
+    bar.style.width = '0%';
+    setTimeout(() => { bar.style.width = target; }, 200);
+  });
+});
+</script>
+</body>
+</html>

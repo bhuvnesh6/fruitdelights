@@ -93,6 +93,7 @@ img{display:block;max-width:100%}
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
 .form-group{margin-bottom:14px}
 .form-label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;letter-spacing:.3px;text-transform:uppercase}
+.form-label .opt{color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0;font-size:11px}
 .form-control{width:100%;background:var(--bg-3);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s}
 .form-control:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(79,70,229,.1);background:#fff}
 .form-control[multiple]{height:80px}
@@ -100,6 +101,7 @@ select.form-control option{background:#fff;color:var(--text)}
 textarea.form-control{resize:vertical}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.form-row-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
 .range-pills{display:flex;gap:6px;flex-wrap:wrap}
 .range-pill{padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--bg-3);color:var(--text-2);transition:all .15s}
 .range-pill.active,.range-pill:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
@@ -115,7 +117,7 @@ tbody tr:hover td{background:var(--bg-3)}
 .badge-red{background:var(--red-soft);color:var(--red)}
 .badge-blue{background:var(--blue-soft);color:var(--blue)}
 .badge-gray{background:var(--bg-3);color:var(--text-2)}
-.badge-orange{background:var(--accent-soft);color:var(--accent)}
+.badge-orange{background:#fff7ed;color:#f97316}
 .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ff9a35);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:white;flex-shrink:0}
 .avatar-sm{width:26px;height:26px;font-size:10px}
 .flash-wrap{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:12px}
@@ -140,9 +142,15 @@ tbody tr:hover td{background:var(--bg-3)}
 .page-section{display:none}
 .page-section.active{display:block}
 .divider{height:1px;background:var(--border);margin:20px 0}
+.divider-label{display:flex;align-items:center;gap:10px;margin:16px 0 12px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-3)}
+.divider-label::before,.divider-label::after{content:'';flex:1;height:1px;background:var(--border)}
 .empty-state{text-align:center;padding:48px 20px;color:var(--text-2)}
 .empty-state .empty-icon{font-size:40px;margin-bottom:12px}
 .empty-state p{font-size:14px}
+.section-title-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.section-title-bar h2{font-family:var(--font-disp);font-size:22px;}
+/* Email optional hint */
+.email-hint{font-size:11px;color:var(--text-3);margin-top:4px;font-weight:400;}
 @media(max-width:1024px){.charts-grid{grid-template-columns:1fr}}
 @media(max-width:768px){
   :root{--sidebar-w:0px}
@@ -151,7 +159,7 @@ tbody tr:hover td{background:var(--bg-3)}
   .main{margin-left:0}
   .hamburger{display:flex}
   .stat-cards{grid-template-columns:repeat(2,1fr)}
-  .form-row,.form-row-3{grid-template-columns:1fr}
+  .form-row,.form-row-3,.form-row-4{grid-template-columns:1fr}
   .page-content{padding:16px}
   .topbar{padding:0 16px}
   .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:80;background:var(--bg-2);border-top:1px solid var(--border);box-shadow:0 -4px 12px rgba(0,0,0,.08);padding:8px 0 12px}
@@ -311,8 +319,8 @@ tbody tr:hover td{background:var(--bg-3)}
 
       <!-- ===== PLANS ===== -->
       <div class="page-section" id="page-plans">
-        <div class="card-header" style="margin-bottom:18px;">
-          <h2 style="font-family:var(--font-disp);font-size:22px;">Subscription Plans</h2>
+        <div class="section-title-bar">
+          <h2>Subscription Plans</h2>
           <button class="btn btn-primary" onclick="openModal('modal-add-plan')">＋ New Plan</button>
         </div>
         {% if plans %}
@@ -322,6 +330,7 @@ tbody tr:hover td{background:var(--bg-3)}
               <tr>
                 <th>Plan Name</th>
                 <th>Description</th>
+                <th>Duration (Days)</th>
                 <th>Monthly Price</th>
                 <th>Tax %</th>
                 <th>Total (incl. tax)</th>
@@ -332,7 +341,14 @@ tbody tr:hover td{background:var(--bg-3)}
               {% for plan in plans %}
               <tr>
                 <td><strong>{{ plan.name }}</strong></td>
-                <td style="color:var(--text-2);max-width:200px;">{{ plan.description or '—' }}</td>
+                <td style="color:var(--text-2);max-width:180px;">{{ plan.description or '—' }}</td>
+                <td>
+                  {% if plan.duration_days %}
+                  <span class="badge badge-blue">{{ plan.duration_days }} days</span>
+                  {% else %}
+                  <span style="color:var(--text-3);">—</span>
+                  {% endif %}
+                </td>
                 <td><span style="color:var(--accent);font-weight:700;">₹{{ plan.price_per_month or plan.price_per_day or 0 }}</span></td>
                 <td>{{ plan.tax_percent or 0 }}%</td>
                 <td style="color:var(--green);">
@@ -358,8 +374,8 @@ tbody tr:hover td{background:var(--bg-3)}
 
       <!-- ===== TEAMS ===== -->
       <div class="page-section" id="page-teams">
-        <div class="card-header" style="margin-bottom:18px;">
-          <h2 style="font-family:var(--font-disp);font-size:22px;">Teams</h2>
+        <div class="section-title-bar">
+          <h2>Teams</h2>
           <button class="btn btn-primary" onclick="openModal('modal-add-team')">＋ New Team</button>
         </div>
         <div class="filter-bar">
@@ -410,8 +426,8 @@ tbody tr:hover td{background:var(--bg-3)}
 
       <!-- ===== EMPLOYEES ===== -->
       <div class="page-section" id="page-employees">
-        <div class="card-header" style="margin-bottom:18px;">
-          <h2 style="font-family:var(--font-disp);font-size:22px;">Delivery Partners</h2>
+        <div class="section-title-bar">
+          <h2>Delivery Partners</h2>
           <button class="btn btn-primary" onclick="openAddUserModal('employee')">＋ Add Partner</button>
         </div>
         <div class="filter-bar">
@@ -438,9 +454,7 @@ tbody tr:hover td{background:var(--bg-3)}
             </thead>
             <tbody>
               <tr id="emp-loading-row">
-                <td colspan="5" style="text-align:center;color:var(--text-3);padding:32px;">
-                  Loading delivery partners…
-                </td>
+                <td colspan="5" style="text-align:center;color:var(--text-3);padding:32px;">Loading delivery partners…</td>
               </tr>
             </tbody>
           </table>
@@ -449,8 +463,8 @@ tbody tr:hover td{background:var(--bg-3)}
 
       <!-- ===== CUSTOMERS ===== -->
       <div class="page-section" id="page-customers">
-        <div class="card-header" style="margin-bottom:18px;">
-          <h2 style="font-family:var(--font-disp);font-size:22px;">Customers</h2>
+        <div class="section-title-bar">
+          <h2>Customers</h2>
           <button class="btn btn-primary" onclick="openAddUserModal('customer')">＋ Add Customer</button>
         </div>
         <div class="filter-bar">
@@ -469,17 +483,21 @@ tbody tr:hover td{background:var(--bg-3)}
             <option value="{{ team._id }}">{{ team.name }}</option>
             {% endfor %}
           </select>
+          <select class="form-control" id="cust-status-filter" onchange="filterByStatus('cust-status-filter','customers-table')" style="max-width:160px;">
+            <option value="">All Statuses</option>
+            <option value="active">Active</option>
+            <option value="paused">Paused</option>
+            <option value="inactive">Inactive</option>
+          </select>
         </div>
         <div class="table-wrap">
           <table id="customers-table">
             <thead>
-              <tr><th>Customer</th><th>Plan</th><th>Team</th><th>Off Days</th><th>Actions</th></tr>
+              <tr><th>Customer</th><th>Plan</th><th>Start Date</th><th>Discount</th><th>Status</th><th>Team</th><th>Actions</th></tr>
             </thead>
             <tbody>
               <tr id="cust-loading-row">
-                <td colspan="5" style="text-align:center;color:var(--text-3);padding:32px;">
-                  Loading customers…
-                </td>
+                <td colspan="7" style="text-align:center;color:var(--text-3);padding:32px;">Loading customers…</td>
               </tr>
             </tbody>
           </table>
@@ -570,12 +588,17 @@ tbody tr:hover td{background:var(--bg-3)}
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Monthly Price (₹) *</label>
-          <input type="number" name="price_per_month" class="form-control" required min="0" step="0.01" placeholder="1500.00">
+          <input type="number" name="price_per_month" class="form-control" required min="0" step="0.01" placeholder="1199.00">
         </div>
         <div class="form-group">
-          <label class="form-label">Tax (%)</label>
-          <input type="number" name="tax_percent" class="form-control" min="0" step="0.01" value="0" placeholder="5">
+          <label class="form-label">Duration (Days) *</label>
+          <input type="number" name="duration_days" class="form-control" required min="1" max="31" placeholder="e.g. 22">
+          <small style="color:var(--text-3);font-size:11px;">Billable days in the plan period</small>
         </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tax (%)</label>
+        <input type="number" name="tax_percent" class="form-control" min="0" step="0.01" value="0" placeholder="5">
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-add-plan')">Cancel</button>
@@ -607,9 +630,14 @@ tbody tr:hover td{background:var(--bg-3)}
           <input type="number" name="price_per_month" id="ep-price" class="form-control" required step="0.01">
         </div>
         <div class="form-group">
-          <label class="form-label">Tax (%)</label>
-          <input type="number" name="tax_percent" id="ep-tax" class="form-control" step="0.01">
+          <label class="form-label">Duration (Days) *</label>
+          <input type="number" name="duration_days" id="ep-duration" class="form-control" required min="1" max="31">
+          <small style="color:var(--text-3);font-size:11px;">Billable days in the plan period</small>
         </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Tax (%)</label>
+        <input type="number" name="tax_percent" id="ep-tax" class="form-control" step="0.01">
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-plan')">Cancel</button>
@@ -681,7 +709,7 @@ tbody tr:hover td{background:var(--bg-3)}
 
 <!-- Add / Edit User (unified) -->
 <div class="modal-backdrop" id="modal-add-user">
-  <div class="modal" style="max-width:620px;">
+  <div class="modal" style="max-width:660px;">
     <div class="modal-header">
       <div class="modal-title" id="user-modal-title">Onboard User</div>
       <button class="modal-close" onclick="closeModal('modal-add-user')">✕</button>
@@ -690,7 +718,7 @@ tbody tr:hover td{background:var(--bg-3)}
       <input type="hidden" name="role" id="hiddenRole" value="">
       <input type="hidden" name="next" value="dashboard_admin">
 
-      <!-- Role selector (hidden when editing) -->
+      <!-- Role selector -->
       <div class="form-group" id="rf-role-group">
         <label class="form-label">Role *</label>
         <select id="roleSelect" class="form-control" onchange="onRoleChange()">
@@ -708,12 +736,17 @@ tbody tr:hover td{background:var(--bg-3)}
         </div>
         <div class="form-group">
           <label class="form-label">Phone *</label>
-          <input type="text" name="phone" id="uf-phone" class="form-control" required>
+          <input type="text" name="phone" id="uf-phone" class="form-control" required placeholder="Required">
         </div>
       </div>
+
+      <!-- Email — required for employees/managers, optional for customers -->
       <div class="form-group">
-        <label class="form-label">Email *</label>
-        <input type="email" name="email" id="uf-email" class="form-control" required>
+        <label class="form-label" id="email-label">Email</label>
+        <input type="email" name="email" id="uf-email" class="form-control" placeholder="user@example.com">
+        <div class="email-hint" id="email-hint" style="display:none;">
+          Optional for customers — a system email will be auto-generated from their phone number if left blank.
+        </div>
       </div>
 
       <!-- Team -->
@@ -729,38 +762,75 @@ tbody tr:hover td{background:var(--bg-3)}
 
       <!-- Customer extras -->
       <div id="rf-customer" style="display:none;">
-        <div class="divider"></div>
-        <div style="font-size:13px;font-weight:600;color:var(--text-2);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px;">Customer Details</div>
-        <div class="form-group">
-          <label class="form-label">Delivery Plan</label>
-          <select name="plan_name" id="uf-plan" class="form-control">
-            <option value="">— No plan —</option>
-            {% for plan in plans %}
-            <option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo</option>
-            {% endfor %}
-          </select>
+        <div class="divider-label">Customer Details</div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Delivery Plan</label>
+            <select name="plan_name" id="uf-plan" class="form-control">
+              <option value="">— No plan —</option>
+              {% for plan in plans %}
+              <option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Start Date *</label>
+            <input type="date" name="start_date" id="uf-startdate" class="form-control">
+            <small style="color:var(--text-3);font-size:11px;">First invoice generated from this date</small>
+          </div>
         </div>
+
         <div class="form-group">
           <label class="form-label">Delivery Address</label>
           <textarea name="address" id="uf-address" class="form-control" rows="2"></textarea>
         </div>
+
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Preferred Time</label>
-            <input type="time" name="preferred_time" id="uf-ptime" class="form-control">
+            <label class="form-label">Preferred Time Slot</label>
+            <select name="preferred_time" id="uf-ptime" class="form-control">
+              <option value="">— Select slot —</option>
+              <option value="07:00–09:00">7:00 AM – 9:00 AM</option>
+              <option value="09:00–11:00">9:00 AM – 11:00 AM</option>
+              <option value="11:00–13:00">11:00 AM – 1:00 PM</option>
+            </select>
           </div>
           <div class="form-group">
-            <label class="form-label">Planned Off-Days</label>
-            <select name="off_days" id="uf-offdays" class="form-control" multiple>
-              <option value="Monday">Monday</option>
-              <option value="Tuesday">Tuesday</option>
-              <option value="Wednesday">Wednesday</option>
-              <option value="Thursday">Thursday</option>
-              <option value="Friday">Friday</option>
-              <option value="Saturday">Saturday</option>
-              <option value="Sunday">Sunday</option>
+            <label class="form-label">Account Status</label>
+            <select name="customer_status" id="uf-status" class="form-control">
+              <option value="active">✅ Active</option>
+              <option value="paused">⏸️ Paused</option>
+              <option value="inactive">❌ Inactive</option>
             </select>
-            <small style="color:var(--text-3);">Ctrl/Cmd to multi-select</small>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Planned Off-Days</label>
+          <select name="off_days" id="uf-offdays" class="form-control" multiple>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+          </select>
+          <small style="color:var(--text-3);">Ctrl/Cmd to multi-select</small>
+        </div>
+
+        <div class="divider-label">Discount</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Discount % (off final bill)</label>
+            <input type="number" name="discount_percent" id="uf-discpct" class="form-control" min="0" max="100" step="0.01" value="0" placeholder="0">
+            <small style="color:var(--text-3);font-size:11px;">Applied as % of gross total</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Flat Discount ₹ (fixed amount)</label>
+            <input type="number" name="discount_amount" id="uf-discamt" class="form-control" min="0" step="0.01" value="0" placeholder="0">
+            <small style="color:var(--text-3);font-size:11px;">Fixed ₹ deducted from bill</small>
           </div>
         </div>
       </div>
@@ -773,7 +843,7 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- Edit Employee (quick inline) -->
+<!-- Edit Employee -->
 <div class="modal-backdrop" id="modal-edit-employee">
   <div class="modal">
     <div class="modal-header">
@@ -789,8 +859,8 @@ tbody tr:hover td{background:var(--bg-3)}
           <input type="text" name="name" id="ee-name" class="form-control" required>
         </div>
         <div class="form-group">
-          <label class="form-label">Phone</label>
-          <input type="text" name="phone" id="ee-phone" class="form-control">
+          <label class="form-label">Phone *</label>
+          <input type="text" name="phone" id="ee-phone" class="form-control" required>
         </div>
       </div>
       <div class="form-group">
@@ -814,9 +884,9 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- Edit Customer (inline) -->
+<!-- Edit Customer -->
 <div class="modal-backdrop" id="modal-edit-customer">
-  <div class="modal" style="max-width:620px;">
+  <div class="modal" style="max-width:660px;">
     <div class="modal-header">
       <div class="modal-title">Edit Customer</div>
       <button class="modal-close" onclick="closeModal('modal-edit-customer')">✕</button>
@@ -830,31 +900,48 @@ tbody tr:hover td{background:var(--bg-3)}
           <input type="text" name="name" id="ec-name" class="form-control" required>
         </div>
         <div class="form-group">
-          <label class="form-label">Phone</label>
-          <input type="text" name="phone" id="ec-phone" class="form-control">
+          <label class="form-label">Phone * <span class="opt">(required)</span></label>
+          <input type="text" name="phone" id="ec-phone" class="form-control" required>
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Email *</label>
-        <input type="email" name="email" id="ec-email" class="form-control" required>
+        <label class="form-label">Email <span class="opt">(optional)</span></label>
+        <input type="email" name="email" id="ec-email" class="form-control" placeholder="Leave blank to keep existing">
+        <div class="email-hint">If blank, the existing email is preserved.</div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Assign Team</label>
-        <select name="team_id" id="ec-team" class="form-control">
-          <option value="">— No team —</option>
-          {% for team in teams %}
-          <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
-          {% endfor %}
-        </select>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Assign Team</label>
+          <select name="team_id" id="ec-team" class="form-control">
+            <option value="">— No team —</option>
+            {% for team in teams %}
+            <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Delivery Plan</label>
+          <select name="plan_name" id="ec-plan" class="form-control">
+            <option value="">— No plan —</option>
+            {% for plan in plans %}
+            <option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo</option>
+            {% endfor %}
+          </select>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Delivery Plan</label>
-        <select name="plan_name" id="ec-plan" class="form-control">
-          <option value="">— No plan —</option>
-          {% for plan in plans %}
-          <option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo</option>
-          {% endfor %}
-        </select>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Start Date</label>
+          <input type="date" name="start_date" id="ec-startdate" class="form-control">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Account Status</label>
+          <select name="customer_status" id="ec-status" class="form-control">
+            <option value="active">✅ Active</option>
+            <option value="paused">⏸️ Paused</option>
+            <option value="inactive">❌ Inactive</option>
+          </select>
+        </div>
       </div>
       <div class="form-group">
         <label class="form-label">Delivery Address</label>
@@ -862,8 +949,13 @@ tbody tr:hover td{background:var(--bg-3)}
       </div>
       <div class="form-row">
         <div class="form-group">
-          <label class="form-label">Preferred Time</label>
-          <input type="time" name="preferred_time" id="ec-ptime" class="form-control">
+          <label class="form-label">Preferred Time Slot</label>
+          <select name="preferred_time" id="ec-ptime" class="form-control">
+            <option value="">— Select slot —</option>
+            <option value="07:00–09:00">7:00 AM – 9:00 AM</option>
+            <option value="09:00–11:00">9:00 AM – 11:00 AM</option>
+            <option value="11:00–13:00">11:00 AM – 1:00 PM</option>
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label">Off Days</label>
@@ -879,6 +971,21 @@ tbody tr:hover td{background:var(--bg-3)}
           <small style="color:var(--text-3);">Ctrl/Cmd to multi-select</small>
         </div>
       </div>
+
+      <div class="divider-label">Discount</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Discount % (off final bill)</label>
+          <input type="number" name="discount_percent" id="ec-discpct" class="form-control" min="0" max="100" step="0.01" value="0">
+          <small style="color:var(--text-3);font-size:11px;">Applied as % of gross total</small>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Flat Discount ₹</label>
+          <input type="number" name="discount_amount" id="ec-discamt" class="form-control" min="0" step="0.01" value="0">
+          <small style="color:var(--text-3);font-size:11px;">Fixed ₹ deducted from bill</small>
+        </div>
+      </div>
+
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-customer')">Cancel</button>
         <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -961,38 +1068,56 @@ async function loadEmployees() {
   }
 }
 
+/* ---- Status badge helper ---- */
+function statusBadge(status) {
+  const map = {
+    'active':   '<span class="badge badge-green">✅ Active</span>',
+    'paused':   '<span class="badge badge-yellow">⏸️ Paused</span>',
+    'inactive': '<span class="badge badge-red">❌ Inactive</span>',
+  };
+  return map[status] || `<span class="badge badge-gray">${escHtml(status||'—')}</span>`;
+}
+
 /* ---- Load Customers ---- */
 async function loadCustomers() {
   const tbody = document.querySelector('#customers-table tbody');
-  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try {
     const data = await fetch('/api/admin/customers').then(r=>r.json());
     _loaded.customers = true;
     const badge = document.getElementById('cust-badge');
     if (badge) badge.textContent = data.length;
     if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No customers found.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">No customers found.</td></tr>`;
       return;
     }
-    tbody.innerHTML = data.map(c => `
-      <tr data-name="${c.name.toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id}">
+    tbody.innerHTML = data.map(c => {
+      const discDisplay = [];
+      if (c.discount_percent > 0) discDisplay.push(`${c.discount_percent}%`);
+      if (c.discount_amount > 0)  discDisplay.push(`₹${c.discount_amount}`);
+      const discStr = discDisplay.length ? `<span class="badge badge-green">${discDisplay.join(' + ')}</span>` : `<span style="color:var(--text-3);">—</span>`;
+      const startStr = c.start_date ? `<span style="font-size:12px;color:var(--text-2);">${c.start_date}</span>` : `<span style="color:var(--text-3);">—</span>`;
+      return `
+      <tr data-name="${c.name.toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id}" data-status="${c.status||'active'}">
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
             <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${c.name.charAt(0).toUpperCase()}</div>
             <div>
               <div style="font-weight:600;">${escHtml(c.name)}</div>
-              <div style="font-size:11px;color:var(--text-3);">${escHtml(c.email)}</div>
+              <div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div>
             </div>
           </div>
         </td>
         <td>${c.plan_name!=='—'?`<span class="badge badge-orange">${escHtml(c.plan_name)}</span>`:`<span class="badge badge-gray">No plan</span>`}</td>
+        <td>${startStr}</td>
+        <td>${discStr}</td>
+        <td>${statusBadge(c.status)}</td>
         <td><span class="badge badge-blue">${escHtml(c.team_name)}</span></td>
-        <td style="font-size:12px;color:var(--text-2);">${c.off_days.length?c.off_days.join(', '):'<span style="color:var(--text-3);">None</span>'}</td>
         <td>
-          <div style="display:flex;gap:6px;">
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
             <button class="btn btn-ghost btn-sm"
               onclick='openEditCustomer(${JSON.stringify(c)})'>✏️ Edit</button>
-            <a href="/admin/customers/${c.id}" class="btn btn-ghost btn-sm">👁 View</a>
+            <a href="/admin/customers/${c.id}" class="btn btn-primary btn-sm">👁 View</a>
             <form method="POST" action="/admin/users/delete/${c.id}"
                   onsubmit="return confirm('Remove ${escHtml(c.name)}?');" style="display:inline;">
               <input type="hidden" name="next" value="dashboard_admin">
@@ -1000,9 +1125,10 @@ async function loadCustomers() {
             </form>
           </div>
         </td>
-      </tr>`).join('');
+      </tr>`;
+    }).join('');
   } catch(err) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load. Please refresh.</td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">Failed to load. Please refresh.</td></tr>`;
   }
 }
 
@@ -1039,7 +1165,7 @@ async function loadEnquiries(force) {
       const date = e.created_at
         ? new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'})
         : '—';
-      const statusBadge = e.status==='pending'
+      const sb = e.status==='pending'
         ? `<span class="badge badge-yellow">⏳ Pending</span>`
         : `<span class="badge badge-green">✅ Converted</span>`;
       const approveBtn = e.status==='pending'
@@ -1064,7 +1190,7 @@ async function loadEnquiries(force) {
           <td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td>
           <td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td>
           <td style="font-size:12px;color:var(--text-3);">${date}</td>
-          <td>${statusBadge}</td>
+          <td>${sb}</td>
           <td>
             <div style="display:flex;gap:5px;align-items:center;">
               ${approveBtn}
@@ -1105,15 +1231,20 @@ function openEditEmployee(id, name, email, phone, teamId) {
 
 /* ---- Edit Customer Modal ---- */
 function openEditCustomer(c) {
-  document.getElementById('ec-name').value    = c.name || '';
-  document.getElementById('ec-email').value   = c.email || '';
-  document.getElementById('ec-phone').value   = c.phone || '';
-  document.getElementById('ec-team').value    = c.team_id || '';
-  document.getElementById('ec-plan').value    = c.plan_name !== '—' ? c.plan_name : '';
-  document.getElementById('ec-address').value = c.address || '';
-  document.getElementById('ec-ptime').value   = c.preferred_time || '';
+  document.getElementById('ec-name').value      = c.name || '';
+  // Show real email only if it's not a system-generated one
+  const realEmail = (c.email||'').endsWith('@fruitedelights.local') ? '' : (c.email||'');
+  document.getElementById('ec-email').value     = realEmail;
+  document.getElementById('ec-phone').value     = c.phone || '';
+  document.getElementById('ec-team').value      = c.team_id || '';
+  document.getElementById('ec-plan').value      = c.plan_name !== '—' ? c.plan_name : '';
+  document.getElementById('ec-address').value   = c.address || '';
+  document.getElementById('ec-ptime').value     = c.preferred_time || '';
+  document.getElementById('ec-startdate').value = c.start_date || '';
+  document.getElementById('ec-status').value    = c.status || 'active';
+  document.getElementById('ec-discpct').value   = c.discount_percent || 0;
+  document.getElementById('ec-discamt').value   = c.discount_amount || 0;
 
-  // Set off days multi-select
   const sel = document.getElementById('ec-offdays');
   for (let opt of sel.options) {
     opt.selected = (c.off_days || []).includes(opt.value);
@@ -1146,16 +1277,32 @@ function onRoleChange() {
 function applyRoleFields(role) {
   document.getElementById('rf-team').style.display     = (role==='employee'||role==='customer') ? 'block' : 'none';
   document.getElementById('rf-customer').style.display = role==='customer' ? 'block' : 'none';
+
+  // Email required for employees/managers, optional for customers
+  const emailInput = document.getElementById('uf-email');
+  const emailLabel = document.getElementById('email-label');
+  const emailHint  = document.getElementById('email-hint');
+
+  if (role === 'customer') {
+    emailInput.required = false;
+    emailInput.placeholder = 'Optional — auto-generated from phone if blank';
+    emailLabel.innerHTML = 'Email <span class="opt">(optional)</span>';
+    emailHint.style.display = 'block';
+  } else {
+    emailInput.required = true;
+    emailInput.placeholder = 'user@example.com';
+    emailLabel.innerHTML = 'Email *';
+    emailHint.style.display = 'none';
+  }
 }
 
 /* ---- Plan edit ---- */
 function openEditPlan(plan) {
-  document.getElementById('ep-name').value  = plan.name || '';
-  document.getElementById('ep-desc').value  = plan.description || '';
-  // Support both field names
-  document.getElementById('ep-price').value = plan.price_per_month || plan.price_per_day || '';
-  document.getElementById('ep-tax').value   = plan.tax_percent || 0;
-  // _id might be string (already converted in Jinja) or object
+  document.getElementById('ep-name').value     = plan.name || '';
+  document.getElementById('ep-desc').value     = plan.description || '';
+  document.getElementById('ep-price').value    = plan.price_per_month || plan.price_per_day || '';
+  document.getElementById('ep-duration').value = plan.duration_days || '';
+  document.getElementById('ep-tax').value      = plan.tax_percent || 0;
   const id = typeof plan._id === 'object' ? plan._id.$oid : plan._id;
   document.getElementById('edit-plan-form').action = '/admin/plans/edit/' + id;
   openModal('modal-edit-plan');
@@ -1214,6 +1361,12 @@ function filterByTeam(selectId, tableId) {
   const team = document.getElementById(selectId).value;
   document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => {
     r.style.display = (!team||r.getAttribute('data-team')===team) ? '' : 'none';
+  });
+}
+function filterByStatus(selectId, tableId) {
+  const status = document.getElementById(selectId).value.toLowerCase();
+  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => {
+    r.style.display = (!status||(r.getAttribute('data-status')||'').toLowerCase()===status) ? '' : 'none';
   });
 }
 
@@ -1306,7 +1459,6 @@ setTimeout(() => {
 /* ---- Boot ---- */
 window.addEventListener('DOMContentLoaded', () => {
   loadChart(1, document.querySelector('.range-pill.active'));
-  // Auto-load employees and customers so they're ready
   loadEmployees();
   loadCustomers();
 });
