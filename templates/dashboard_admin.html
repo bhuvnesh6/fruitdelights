@@ -542,7 +542,7 @@ tbody tr:hover td{background:var(--bg-3)}
             <thead>
               <tr>
                 <th>Name</th><th>Phone</th><th>Plan</th><th>Time Pref.</th>
-                <th>Start Date</th><th>Received</th><th>Status</th><th>Actions</th>
+                <th>Start Date</th><th>Payment</th><th>Received</th><th>Status</th><th>Actions</th>
               </tr>
             </thead>
             <tbody id="enq-tbody">
@@ -1189,7 +1189,12 @@ async function loadEnquiries(force) {
           <td>${e.plan?`<span class="badge badge-orange">${escHtml(e.plan.substring(0,24))}${e.plan.length>24?'…':''}</span>`:`<span class="badge badge-gray">—</span>`}</td>
           <td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td>
           <td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td>
-          <td style="font-size:12px;color:var(--text-3);">${date}</td>
+<td>
+  ${e.payment_method==='cod'
+    ? `<span class="badge badge-yellow">💵 COD</span>`
+    : `<span class="badge badge-blue">📱 UPI</span>`}
+</td>
+<td style="font-size:12px;color:var(--text-3);">${date}</td>
           <td>${sb}</td>
           <td>
             <div style="display:flex;gap:5px;align-items:center;">

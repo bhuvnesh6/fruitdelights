@@ -442,6 +442,7 @@ def api_enquiries_data():
             "delivery_time": e.get("delivery_time", ""),
             "start_date":    e.get("start_date", ""),
             "status":        e.get("status", "pending"),
+            "payment_method": e.get("payment_method", "upi"),
             "created_at":    e["created_at"].isoformat() if e.get("created_at") else None,
         })
     return jsonify(result)
@@ -953,23 +954,25 @@ def submit_enquiry():
     delivery_time = request.form.get("deliveryTime", "").strip()
     start_date    = request.form.get("startDate", "").strip()
     plan          = request.form.get("selectedPlan") or request.form.get("planSelect", "")
+    payment_method = request.form.get("payment_method").strip()
 
     if not name or not phone:
         flash("Name and phone are required.", "danger")
         return redirect(url_for("home") + "#order")
 
     enquiries_col.insert_one({
-        "name":          name,
-        "phone":         phone,
-        "address":       address,
-        "delivery_time": delivery_time,
-        "start_date":    start_date,
-        "plan":          plan,
-        "status":        "pending",
-        "source":        "web_form",
-        "tag":           "form_enquiry",
-        "created_at":    datetime.now(),
-    })
+    "name":           name,
+    "phone":          phone,
+    "address":        address,
+    "delivery_time":  delivery_time,
+    "start_date":     start_date,
+    "plan":           plan,
+    "payment_method": payment_method,   # ← NEW
+    "status":         "pending",
+    "source":         "web_form",
+    "tag":            "form_enquiry",
+    "created_at":     datetime.now(),
+})
 
     flash("Thanks! We'll reach you on WhatsApp shortly. 🍓", "success")
     return redirect(url_for("home") + "#order")

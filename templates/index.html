@@ -200,7 +200,61 @@
   @keyframes waFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
   .wa-tooltip { position: fixed; bottom: 94px; right: 24px; z-index: 200; background: var(--green-dark); color: var(--yellow); padding: 8px 14px; border-radius: var(--radius-sm); font-size: 0.8rem; font-weight: 600; white-space: nowrap; opacity: 0; transform: translateY(6px); transition: opacity 0.3s, transform 0.3s; pointer-events: none; }
   .wa-float:hover + .wa-tooltip { opacity: 1; transform: translateY(0); }
-  .popup-overlay { position: fixed; inset: 0; z-index: 500; background: rgba(26,46,13,0.7); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+
+  /* ====== PAYMENT MODAL ====== */
+  .pay-overlay { position: fixed; inset: 0; z-index: 600; background: rgba(26,46,13,0.75); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
+  .pay-overlay.show { opacity: 1; pointer-events: all; }
+  .pay-box { background: var(--white); border-radius: var(--radius); max-width: 500px; width: 100%; transform: scale(0.88) translateY(24px); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); overflow: hidden; max-height: 92vh; overflow-y: auto; }
+  .pay-overlay.show .pay-box { transform: scale(1) translateY(0); }
+  .pay-header { background: var(--green-dark); padding: 22px 28px 18px; display: flex; align-items: center; justify-content: space-between; }
+  .pay-header h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--yellow); font-weight: 900; }
+  .pay-header p { font-size: 0.78rem; color: rgba(245,200,66,0.75); margin-top: 3px; }
+  .pay-close-btn { background: rgba(255,255,255,0.1); border: none; color: var(--yellow); font-size: 1.3rem; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; flex-shrink: 0; }
+  .pay-close-btn:hover { background: rgba(255,255,255,0.2); }
+  .pay-body { padding: 28px; }
+  /* Method toggle */
+  .pay-toggle { display: flex; background: var(--yellow-pale); border-radius: 99px; padding: 4px; margin-bottom: 24px; border: 1.5px solid rgba(45,106,31,0.12); }
+  .pay-toggle-btn { flex: 1; padding: 10px 16px; border-radius: 99px; border: none; background: transparent; font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600; color: var(--text-light); cursor: pointer; transition: var(--transition); text-align: center; }
+  .pay-toggle-btn.active { background: var(--green-dark); color: var(--yellow); box-shadow: 0 2px 12px rgba(45,106,31,0.25); }
+  /* UPI Panel */
+  .pay-panel { display: none; }
+  .pay-panel.active { display: block; }
+  .upi-qr-wrap { text-align: center; margin-bottom: 20px; }
+  .upi-qr-img { width: 200px; height: 200px; border-radius: var(--radius-sm); border: 3px solid var(--yellow); object-fit: contain; margin: 0 auto 14px; display: block; background: var(--yellow-pale); }
+  .upi-qr-placeholder { width: 200px; height: 200px; border-radius: var(--radius-sm); border: 3px dashed var(--green-light); margin: 0 auto 14px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; background: var(--green-pale); }
+  .upi-qr-placeholder span:first-child { font-size: 3.5rem; }
+  .upi-qr-placeholder span:last-child { font-size: 0.75rem; color: var(--text-light); font-weight: 600; text-align: center; padding: 0 12px; }
+  .upi-id-row { display: flex; align-items: center; gap: 10px; background: var(--yellow-pale); border: 1.5px solid rgba(45,106,31,0.18); border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 18px; }
+  .upi-id-label { font-size: 0.75rem; color: var(--text-light); font-weight: 600; white-space: nowrap; }
+  .upi-id-val { font-size: 0.95rem; font-weight: 700; color: var(--green-dark); flex: 1; word-break: break-all; }
+  .upi-copy-btn { background: var(--green-dark); color: var(--yellow); border: none; border-radius: var(--radius-sm); padding: 8px 14px; font-size: 0.78rem; font-weight: 700; cursor: pointer; transition: var(--transition); white-space: nowrap; flex-shrink: 0; }
+  .upi-copy-btn:hover { background: var(--green-mid); }
+  .upi-copy-btn.copied { background: #16a34a; }
+  .pay-amount-chip { background: var(--yellow); color: var(--green-dark); border-radius: var(--radius-sm); padding: 12px 18px; font-weight: 800; font-size: 1.1rem; text-align: center; margin-bottom: 18px; }
+  .pay-steps { list-style: none; margin-bottom: 20px; }
+  .pay-steps li { display: flex; align-items: flex-start; gap: 12px; padding: 8px 0; border-bottom: 1px solid rgba(45,106,31,0.07); font-size: 0.87rem; color: var(--text-mid); line-height: 1.5; }
+  .pay-steps li:last-child { border-bottom: none; }
+  .pay-step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--green-dark); color: var(--yellow); font-size: 0.7rem; font-weight: 800; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; }
+  .wa-proof-banner { background: linear-gradient(135deg, #25D366 0%, #1DA851 100%); border-radius: var(--radius-sm); padding: 14px 16px; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+  .wa-proof-banner svg { width: 26px; height: 26px; fill: white; flex-shrink: 0; }
+  .wa-proof-banner div { font-size: 0.83rem; color: white; line-height: 1.5; }
+  .wa-proof-banner strong { display: block; font-size: 0.9rem; font-weight: 700; }
+  /* COD panel */
+  .cod-icon { font-size: 4rem; text-align: center; margin-bottom: 12px; }
+  .cod-info { background: var(--green-pale); border-radius: var(--radius-sm); padding: 18px 20px; margin-bottom: 20px; }
+  .cod-info h4 { font-weight: 700; color: var(--green-dark); margin-bottom: 8px; font-size: 1rem; }
+  .cod-info ul { list-style: none; }
+  .cod-info ul li { font-size: 0.87rem; color: var(--text-mid); padding: 4px 0; display: flex; align-items: center; gap: 8px; }
+  .cod-info ul li::before { content: "✓"; color: var(--green-mid); font-weight: 700; }
+  .cod-note { font-size: 0.82rem; color: var(--text-light); line-height: 1.65; margin-bottom: 20px; padding: 12px 14px; border-left: 3px solid var(--yellow); background: var(--yellow-pale); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+  .pay-confirm-btn { width: 100%; padding: 15px; border-radius: 99px; border: none; font-family: 'DM Sans', sans-serif; font-size: 0.98rem; font-weight: 700; cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .pay-confirm-upi { background: var(--green-dark); color: var(--yellow); }
+  .pay-confirm-upi:hover { background: var(--green-mid); transform: translateY(-2px); }
+  .pay-confirm-cod { background: var(--yellow); color: var(--green-dark); border: 2px solid var(--green-dark); }
+  .pay-confirm-cod:hover { background: var(--green-dark); color: var(--yellow); transform: translateY(-2px); }
+
+  /* THANK YOU POPUP */
+  .popup-overlay { position: fixed; inset: 0; z-index: 700; background: rgba(26,46,13,0.7); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; padding: 20px; opacity: 0; pointer-events: none; transition: opacity 0.4s; }
   .popup-overlay.show { opacity: 1; pointer-events: all; }
   .popup-box { background: var(--white); border-radius: var(--radius); padding: 48px 36px; text-align: center; max-width: 420px; width: 100%; transform: scale(0.85); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); position: relative; }
   .popup-overlay.show .popup-box { transform: scale(1); }
@@ -212,6 +266,7 @@
   .popup-wa:hover { background: #1DA851; transform: scale(1.04); }
   .popup-close { display: block; font-size: 0.83rem; color: var(--text-light); cursor: pointer; background: none; border: none; margin: 0 auto; transition: color 0.3s; }
   .popup-close:hover { color: var(--green-dark); }
+
   @keyframes fadeUp { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
   @keyframes popIn { from { opacity: 0; transform: scale(0.85) rotate(-4deg); } to { opacity: 1; transform: scale(1) rotate(0deg); } }
   @keyframes slideRight { from { opacity: 0; transform: translateX(-30px); } to { opacity: 1; transform: translateX(0); } }
@@ -227,6 +282,7 @@
     .form-row { grid-template-columns: 1fr; }
     .hero-tag-2 { display: none; }
     .steps::before { left: 22px; }
+    .pay-body { padding: 20px; }
   }
   @media (max-width: 480px) {
     .hero-h1 { font-size: 2.1rem; }
@@ -264,19 +320,9 @@
 <!-- NAV -->
 <nav id="navbar">
   <a href="#" class="nav-brand">
-    <!--
-      NAV LOGO: Replace "logo.png" with the path to your actual logo PNG file.
-      The image will auto-fallback to text if the file is not found.
-    -->
-    <img
-      src="logo.png"
-      alt="Fruite Delights"
-      class="nav-logo-img"
-      onerror="this.style.display='none'; document.getElementById('navLogoFallback').style.display='flex';"
-    >
-    <span id="navLogoFallback" class="nav-logo-fallback" style="display:none;">
-      <span>🍃</span> fruite delights
-    </span>
+    <img src="logo.png" alt="Fruite Delights" class="nav-logo-img"
+      onerror="this.style.display='none'; document.getElementById('navLogoFallback').style.display='flex';">
+    <span id="navLogoFallback" class="nav-logo-fallback" style="display:none;"><span>🍃</span> fruite delights</span>
   </a>
   <ul class="nav-links">
     <li><a href="#products">Plans</a></li>
@@ -286,45 +332,26 @@
     <li><a href="/login" class="nav-login">Login</a></li>
     <li><a href="#order" class="nav-cta">Order Now →</a></li>
   </ul>
-  <div class="nav-hamburger" id="hamburger">
-    <span></span><span></span><span></span>
-  </div>
+  <div class="nav-hamburger" id="hamburger"><span></span><span></span><span></span></div>
 </nav>
 
 <!-- HERO -->
 <section id="hero">
-  <div class="hero-bg-circles">
-    <span></span><span></span><span></span>
-  </div>
+  <div class="hero-bg-circles"><span></span><span></span><span></span></div>
   <div class="hero-inner container">
     <div class="hero-text" id="heroText">
       <div class="hero-badge"><span>🌿</span> Delivered Fresh, Every Day in Indore</div>
       <h1 class="hero-h1">Your Daily Dose of <em>Fresh</em> &amp; Healthy Fruits</h1>
-      <p class="hero-sub">
-        Hand-picked seasonal fruits &amp; power-packed sprouts delivered straight to your home or office — fresh every morning, no hassle, just health.
-      </p>
+      <p class="hero-sub">Hand-picked seasonal fruits &amp; power-packed sprouts delivered straight to your home or office — fresh every morning, no hassle, just health.</p>
       <div class="hero-btns">
         <a href="#products" class="btn btn-primary">🍎 Explore Plans</a>
         <a href="#order" class="btn btn-outline">Get a Sample Box</a>
       </div>
     </div>
-
-    <!-- HERO VISUAL: Fruit Bowl PNG Image -->
     <div class="hero-visual" id="heroVisual">
       <div class="hero-bowl-wrap">
         <div class="hero-tag hero-tag-2">✨ Fresh Daily</div>
-        <!--
-          FRUIT BOWL IMAGE: Replace "fruit-bowl.png" with your actual fruit bowl PNG path.
-          Use a PNG with transparent background for best results.
-          Recommended size: 600x600px or larger.
-          Falls back to 🍱 emoji if image not found.
-        -->
-        <img
-          src="{{ url_for('static', filename='img/herobowl.png') }}"
-          alt="Fresh Fruit Bowl – Fruite Delights Indore"
-          class="hero-bowl-img"
-          id="heroBowlImg"
-        >
+        <img src="{{ url_for('static', filename='img/herobowl.png') }}" alt="Fresh Fruit Bowl – Fruite Delights Indore" class="hero-bowl-img" id="heroBowlImg">
         <span class="hero-bowl-fallback" id="bowlFallback">🍱</span>
         <div class="hero-tag hero-tag-1">📦 Box Delivered</div>
       </div>
@@ -426,38 +453,31 @@
       <div class="order-info reveal">
         <div class="section-label">📝 Order Now</div>
         <h3>Start Your Healthy Journey Today</h3>
-        <p>Fill out the form and we'll confirm your subscription via WhatsApp. No payment required upfront — pay when you're ready to start.</p>
+        <p>Fill out the form and we'll confirm your subscription via WhatsApp. Choose UPI for instant confirmation or Cash on Delivery.</p>
         <div class="contact-chips" id="contact">
           <div class="contact-chip">
             <span class="cc-icon">📞</span>
-            <div>
-              <span class="cc-label">Call / WhatsApp</span>
-              <a href="tel:+919977115233">+91 99 77 115233</a>
-            </div>
+            <div><span class="cc-label">Call / WhatsApp</span><a href="tel:+919977115233">+91 99 77 115233</a></div>
           </div>
           <div class="contact-chip">
             <span class="cc-icon">📧</span>
-            <div>
-              <span class="cc-label">Email Us</span>
-              <a href="mailto:fruitedelightsindia@gmail.com">fruitedelightsindia@gmail.com</a>
-            </div>
+            <div><span class="cc-label">Email Us</span><a href="mailto:fruitedelightsindia@gmail.com">fruitedelightsindia@gmail.com</a></div>
           </div>
           <div class="contact-chip">
             <span class="cc-icon">📍</span>
-            <div>
-              <span class="cc-label">Address</span>
-              <a href="#map-section">Malviya Nagar, near C21, Indore, MP</a>
-            </div>
+            <div><span class="cc-label">Address</span><a href="#map-section">246-B Shraddha Shri colony MR-9 road indore , MP</a></div>
           </div>
-          <a href="https://wa.me/919977115233?text=Hi! I'd like to know more about Fruite Delights plans." target="_blank" class="btn btn-primary" style="margin-top:8px;text-decoration:none">
-            💬 Message on WhatsApp
-          </a>
+          <a href="https://wa.me/919977115233?text=Hi! I'd like to know more about Fruite Delights plans." target="_blank" class="btn btn-primary" style="margin-top:8px;text-decoration:none">💬 Message on WhatsApp</a>
         </div>
       </div>
-      <form id="orderForm" novalidate  method="POST" action="{{ url_for('submit_enquiry') }}">
+
+      <!-- ORDER FORM -->
+      <form id="orderForm" novalidate method="POST" action="{{ url_for('submit_enquiry') }}">
         <div class="form-title">🍓 Place Your Order</div>
         <div class="selected-plan-display" id="planDisplay">Selected: None</div>
         <input type="hidden" id="selectedPlan" name="selectedPlan" value="">
+        <!-- payment_method hidden input — populated by payment modal before submit -->
+        <input type="hidden" id="payment_method" name="payment_method" value="upi">
         <div class="form-group"><label for="fullName">Full Name *</label><input type="text" id="fullName" name="fullName" placeholder="Your full name" required></div>
         <div class="form-group"><label for="mobile">Mobile Number *</label><input type="tel" id="mobile" name="mobile" placeholder="+91 XXXXX XXXXX" required></div>
         <div class="form-group"><label for="address">Delivery Address *</label><textarea id="address" name="address" rows="3" placeholder="Full address with landmark, Indore" required></textarea></div>
@@ -479,7 +499,7 @@
             <option>Office Fresh Bulk – ₹999/box (Min 5 Boxes)</option>
           </select>
         </div>
-        <button type="submit" class="btn-submit" id="submitBtn"><span class="btn-text">🍎 Place My Order</span><div class="spinner"></div></button>
+        <button type="button" class="btn-submit" id="openPayBtn"><span class="btn-text">🍎 Proceed to Payment</span><div class="spinner"></div></button>
       </form>
     </div>
   </div>
@@ -514,20 +534,11 @@
 <footer>
   <div class="footer-grid">
     <div class="footer-brand">
-      <!--
-        FOOTER LOGO: Same logo PNG, rendered in yellow/white via CSS filter.
-        Replace "logo.png" with your actual file path.
-      -->
-      <img
-        src="logo.png"
-        alt="Fruite Delights"
-        class="footer-logo-img"
-        id="footerLogoImg"
-        onerror="this.style.display='none'; document.getElementById('footerLogoFallback').style.display='flex';"
-      >
+      <img src="logo.png" alt="Fruite Delights" class="footer-logo-img" id="footerLogoImg"
+        onerror="this.style.display='none'; document.getElementById('footerLogoFallback').style.display='flex';">
       <div id="footerLogoFallback" class="footer-logo-fallback" style="display:none;"><span>🍃</span> fruite delights</div>
       <p>Bringing fresh, healthy fruits and sprouts to homes and offices in Indore. Every day, without fail.</p>
-      <p style="margin-top:8px;font-size:0.82rem;opacity:0.6">📍 Malviya Nagar, near C21, Indore, MP</p>
+      <p style="margin-top:8px;font-size:0.82rem;opacity:0.6">246-B Shraddha Shri colony MR-9 road indore, MP</p>
       <div style="margin-top:20px;display:flex;gap:12px">
         <a href="https://wa.me/919977115233" target="_blank" style="background:#25D366;color:white;padding:10px 18px;border-radius:99px;text-decoration:none;font-size:0.83rem;font-weight:700">💬 WhatsApp</a>
       </div>
@@ -548,7 +559,7 @@
       <ul>
         <li><a href="tel:+919977115233">📞 +91 99 77 115233</a></li>
         <li><a href="mailto:fruitedelightsindia@gmail.com">📧 fruitedelightsindia@gmail.com</a></li>
-        <li><a href="#map-section">📍 Malviya Nagar, near C21, Indore, MP</a></li>
+        <li><a href="#map-section">246-B Shraddha Shri colony MR-9 road indore, MP</a></li>
         <li><a href="https://wa.me/919977115233">💬 WhatsApp Us</a></li>
       </ul>
     </div>
@@ -565,25 +576,140 @@
 </a>
 <div class="wa-tooltip">Chat with us! 👋</div>
 
+
+<!-- ============================================================
+     PAYMENT MODAL
+     ============================================================ -->
+<div class="pay-overlay" id="payModal">
+  <div class="pay-box">
+    <div class="pay-header">
+      <div>
+        <h2>💳 Complete Payment</h2>
+        <p>Secure your subscription in seconds</p>
+      </div>
+      <button class="pay-close-btn" id="payModalClose">✕</button>
+    </div>
+    <div class="pay-body">
+
+      <!-- Amount chip — updated dynamically -->
+      <div class="pay-amount-chip" id="payAmountChip">🍓 Plan Amount will appear here</div>
+
+      <!-- Method toggle — UPI is default -->
+      <div class="pay-toggle">
+        <button class="pay-toggle-btn active" id="btnUpi" onclick="switchPayMethod('upi')">📱 UPI Payment</button>
+        <button class="pay-toggle-btn" id="btnCod" onclick="switchPayMethod('cod')">💵 Cash on Delivery</button>
+      </div>
+
+      <!-- ---- UPI PANEL ---- -->
+      <div class="pay-panel active" id="panelUpi">
+
+        <!-- QR CODE IMAGE
+             ─────────────────────────────────────────────────────────────────
+             IMPORTANT: Replace the src below with the actual path to your
+             UPI QR code image.
+
+             For a Flask app put the file at:
+               static/img/upi-qr.png
+             and use:
+               src="{{ url_for('static', filename='img/upi-qr.png') }}"
+
+             The image should be a square PNG (min 400×400 px) showing your
+             UPI QR code. Until the file is added, a placeholder is shown.
+             ─────────────────────────────────────────────────────────────────
+        -->
+        <div class="upi-qr-wrap">
+          <img
+            src="{{ url_for('static', filename='img/qr-code.png') }}"
+            alt="Scan to Pay – Fruite Delights UPI QR"
+            class="upi-qr-img"
+            id="upiQrImg"
+            onerror="this.style.display='none'; document.getElementById('upiQrPlaceholder').style.display='flex';"
+          >
+          <div class="upi-qr-placeholder" id="upiQrPlaceholder" style="display:none;">
+            <span>📷</span>
+            <span>Add your UPI QR image at<br>static/img/upi-qr.png</span>
+          </div>
+        </div>
+
+        <!-- UPI ID row with copy button -->
+        <div class="upi-id-row">
+          <span class="upi-id-label">UPI ID</span>
+          <!--
+            ── REPLACE the UPI ID below with your actual UPI ID ──
+          -->
+          <span class="upi-id-val" id="upiIdText">navinsoni07-2@okaxis</span>
+          <button class="upi-copy-btn" id="copyUpiBtn" onclick="copyUpiId()">Copy</button>
+        </div>
+
+        <!-- Step-by-step instructions -->
+        <ol class="pay-steps">
+          <li><div class="pay-step-num">1</div><span>Open any UPI app — GPay, PhonePe, Paytm, or your bank app</span></li>
+          <li><div class="pay-step-num">2</div><span>Scan the QR code above <strong>or</strong> enter the UPI ID manually</span></li>
+          <li><div class="pay-step-num">3</div><span>Enter the exact plan amount and complete the payment</span></li>
+          <li><div class="pay-step-num">4</div><span>Take a screenshot of the payment confirmation screen</span></li>
+          <li><div class="pay-step-num">5</div><span>Send the screenshot to us on WhatsApp — number below</span></li>
+        </ol>
+
+        <!-- WhatsApp proof banner -->
+        <div class="wa-proof-banner">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413Z"/></svg>
+          <div>
+            <strong>📸 Share Payment Screenshot</strong>
+            Send your payment proof to <strong>+91 99 77 115233</strong> on WhatsApp for instant order confirmation.
+          </div>
+        </div>
+
+        <button class="pay-confirm-btn pay-confirm-upi" id="confirmUpiBtn" onclick="confirmPayment('upi')">
+          ✅ I've Made the Payment — Confirm Order
+        </button>
+      </div>
+
+      <!-- ---- COD PANEL ---- -->
+      <div class="pay-panel" id="panelCod">
+        <div class="cod-icon">💵</div>
+        <div class="cod-info">
+          <h4>Cash on Delivery — How it works</h4>
+          <ul>
+            <li>No advance payment needed</li>
+            <li>Pay cash to our delivery person on Day 1</li>
+            <li>Our team will confirm your order via WhatsApp first</li>
+            <li>Available for all plans across Indore</li>
+          </ul>
+        </div>
+        <div class="cod-note">
+          ℹ️ Our team will call/WhatsApp you within a few minutes to confirm your slot and delivery date before starting.
+        </div>
+        <button class="pay-confirm-btn pay-confirm-cod" onclick="confirmPayment('cod')">
+          🚀 Confirm COD Order
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
 <!-- THANK YOU POPUP -->
 <div class="popup-overlay" id="popup">
   <div class="popup-box">
     <div class="popup-fruits">🍓</div>
     <div class="popup-title">Thank You For Choosing</div>
     <div class="popup-brand">FRUITE DELIGHTS 🍓</div>
-    <p class="popup-sub"><strong>Fresh • Healthy • Daily</strong><br><br>We've received your order! Our team will confirm your subscription via WhatsApp within a few minutes. Get ready for your daily dose of freshness! 🌿</p>
+    <p class="popup-sub" id="popupMsg"><strong>Fresh • Healthy • Daily</strong><br><br>We've received your order! Our team will confirm your subscription via WhatsApp within a few minutes. Get ready for your daily dose of freshness! 🌿</p>
     <a id="popupWa" href="#" target="_blank" class="popup-wa">💬 Get Updates on WhatsApp</a>
     <button class="popup-close" id="popupClose">Close ✕</button>
   </div>
 </div>
 
+
 <script>
-  // Handle fruit bowl image error
+  // ── Fruit bowl image error fallback ──
   document.getElementById('heroBowlImg').addEventListener('error', function() {
     this.style.display = 'none';
     document.getElementById('bowlFallback').style.display = 'block';
   });
 
+  // ── Loader ──
   window.addEventListener('load', () => {
     setTimeout(() => {
       document.getElementById('loader').classList.add('hide');
@@ -592,19 +718,20 @@
     }, 2000);
   });
 
+  // ── Sticky nav ──
   const navbar = document.getElementById('navbar');
   window.addEventListener('scroll', () => {
     navbar.classList.toggle('scrolled', window.scrollY > 40);
   }, { passive: true });
 
+  // ── Mobile menu ──
   document.getElementById('hamburger').addEventListener('click', () => {
     document.getElementById('mobileMenu').classList.add('open');
   });
   document.getElementById('menuClose').addEventListener('click', closeMobileMenu);
-  function closeMobileMenu() {
-    document.getElementById('mobileMenu').classList.remove('open');
-  }
+  function closeMobileMenu() { document.getElementById('mobileMenu').classList.remove('open'); }
 
+  // ── Scroll reveal ──
   const revealEls = document.querySelectorAll('.reveal, .why-card, .plan-card, .sample-card, .step, .testi-card');
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
@@ -618,6 +745,7 @@
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
   revealEls.forEach((el, i) => { el.dataset.delay = (i % 6) * 80; observer.observe(el); });
 
+  // ── Product tabs ──
   document.querySelectorAll('.tab-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -632,6 +760,7 @@
     });
   });
 
+  // ── Plan selection ──
   function selectPlan(planName) {
     document.getElementById('selectedPlan').value = planName;
     const display = document.getElementById('planDisplay');
@@ -639,7 +768,6 @@
     display.classList.add('show');
     document.getElementById('order').scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-
   document.getElementById('planSelect').addEventListener('change', function() {
     if (this.value) {
       document.getElementById('selectedPlan').value = this.value;
@@ -649,53 +777,159 @@
     }
   });
 
-document.getElementById('orderForm').addEventListener('submit', function(e) {
-
-  const fullName     = document.getElementById('fullName').value.trim();
-  const mobile       = document.getElementById('mobile').value.trim();
-  const address      = document.getElementById('address').value.trim();
-  const deliveryTime = document.getElementById('deliveryTime').value;
-  const startDate    = document.getElementById('startDate').value;
-  const plan         = document.getElementById('selectedPlan').value ||
-                       document.getElementById('planSelect').value;
-
-  // Validation
-  if (!fullName || !mobile || !address || !deliveryTime || !startDate) {
-    e.preventDefault();
-    shake(document.getElementById('submitBtn'));
-    return;
-  }
-
-  // Phone validation
-  if (!/^[\d\s\+\-]{8,15}$/.test(mobile)) {
-    e.preventDefault();
-    shake(document.getElementById('mobile'));
-    return;
-  }
-
-  // Loading state
-  const btn = document.getElementById('submitBtn');
-  btn.classList.add('loading');
-
-  // OPTIONAL:
-  // disable button to avoid double submit
-  btn.disabled = true;
-});
-
-
-  function shake(el) { el.style.border = '2px solid #e53e3e'; setTimeout(() => { el.style.border = ''; }, 1200); }
-
-  function showPopup(name, mobile, plan, date, time, address) {
-    const msg = encodeURIComponent(`Hi Fruite Delights! 🍓\n\nI've just placed an order:\n\n👤 Name: ${name}\n📱 Mobile: ${mobile}\n📦 Plan: ${plan || 'Not specified'}\n📅 Start Date: ${date}\n⏰ Delivery Time: ${time}\n📍 Address: ${address}\n\nPlease confirm my subscription!`);
-    document.getElementById('popupWa').href = `https://wa.me/919977115233?text=${msg}`;
-    document.getElementById('popup').classList.add('show');
-  }
-
-  document.getElementById('popupClose').addEventListener('click', () => { document.getElementById('popup').classList.remove('show'); });
-  document.getElementById('popup').addEventListener('click', function(e) { if (e.target === this) this.classList.remove('show'); });
-
+  // ── Set min start date ──
   const today = new Date();
   document.getElementById('startDate').min = `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()+1).padStart(2,'0')}`;
+
+  // ── Validation helper ──
+  function shake(el) {
+    el.style.border = '2px solid #e53e3e';
+    el.style.transform = 'translateX(6px)';
+    setTimeout(() => { el.style.border = ''; el.style.transform = ''; }, 600);
+  }
+
+  // ── "Proceed to Payment" button — validates then opens payment modal ──
+  document.getElementById('openPayBtn').addEventListener('click', function() {
+    const fullName     = document.getElementById('fullName').value.trim();
+    const mobile       = document.getElementById('mobile').value.trim();
+    const address      = document.getElementById('address').value.trim();
+    const deliveryTime = document.getElementById('deliveryTime').value;
+    const startDate    = document.getElementById('startDate').value;
+
+    if (!fullName)     { shake(document.getElementById('fullName'));     return; }
+    if (!mobile)       { shake(document.getElementById('mobile'));       return; }
+    if (!/^[\d\s\+\-]{8,15}$/.test(mobile)) { shake(document.getElementById('mobile')); return; }
+    if (!address)      { shake(document.getElementById('address'));      return; }
+    if (!deliveryTime) { shake(document.getElementById('deliveryTime')); return; }
+    if (!startDate)    { shake(document.getElementById('startDate'));    return; }
+
+    // Show amount in modal
+    const plan = document.getElementById('selectedPlan').value || document.getElementById('planSelect').value;
+    const amountChip = document.getElementById('payAmountChip');
+    if (plan) {
+      amountChip.textContent = '🍓 ' + plan;
+    } else {
+      amountChip.textContent = '🍓 Plan not selected — please select a plan';
+    }
+
+    // Reset to UPI tab
+    switchPayMethod('upi');
+    document.getElementById('payModal').classList.add('show');
+  });
+
+  // ── Close payment modal ──
+  document.getElementById('payModalClose').addEventListener('click', () => {
+    document.getElementById('payModal').classList.remove('show');
+  });
+  document.getElementById('payModal').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+
+  // ── Switch payment method tabs ──
+  function switchPayMethod(method) {
+    document.getElementById('btnUpi').classList.toggle('active', method === 'upi');
+    document.getElementById('btnCod').classList.toggle('active', method === 'cod');
+    document.getElementById('panelUpi').classList.toggle('active', method === 'upi');
+    document.getElementById('panelCod').classList.toggle('active', method === 'cod');
+  }
+
+  // ── Copy UPI ID ──
+  function copyUpiId() {
+    const upiId = document.getElementById('upiIdText').textContent;
+    navigator.clipboard.writeText(upiId).then(() => {
+      const btn = document.getElementById('copyUpiBtn');
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    }).catch(() => {
+      // Fallback for older browsers
+      const el = document.createElement('textarea');
+      el.value = upiId;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      const btn = document.getElementById('copyUpiBtn');
+      btn.textContent = '✓ Copied!';
+      btn.classList.add('copied');
+      setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+    });
+  }
+
+  // ── Confirm payment — sets hidden input, closes payment modal, submits form ──
+  function confirmPayment(method) {
+    // Set payment_method hidden input value
+    document.getElementById('payment_method').value = method;
+
+    // Close payment modal
+    document.getElementById('payModal').classList.remove('show');
+
+    // Show loading state on button
+    const btn = document.getElementById('openPayBtn');
+    btn.classList.add('loading');
+    btn.disabled = true;
+
+    // Build WhatsApp message for popup
+    const name         = document.getElementById('fullName').value.trim();
+    const mobile       = document.getElementById('mobile').value.trim();
+    const plan         = document.getElementById('selectedPlan').value || document.getElementById('planSelect').value;
+    const date         = document.getElementById('startDate').value;
+    const time         = document.getElementById('deliveryTime').value;
+    const addr         = document.getElementById('address').value.trim();
+    const payLabel     = method === 'upi' ? 'UPI (Online)' : 'Cash on Delivery (COD)';
+
+    // Update popup message based on method
+    const popupMsg = document.getElementById('popupMsg');
+    if (method === 'upi') {
+      popupMsg.innerHTML = '<strong>Fresh • Healthy • Daily</strong><br><br>We\'ve received your order request! 🌿<br><br>📸 <strong>Don\'t forget to send your UPI payment screenshot</strong> to <strong>+91 99 77 115233</strong> on WhatsApp for instant confirmation. Click the button below to open WhatsApp!';
+    } else {
+      popupMsg.innerHTML = '<strong>Fresh • Healthy • Daily</strong><br><br>Your COD order has been placed! 🌿<br><br>Our team will confirm your order and delivery slot via WhatsApp shortly. No advance payment needed — pay on Day 1 delivery!';
+    }
+
+    const waMsg = encodeURIComponent(
+      `Hi Fruite Delights! 🍓\n\nNew Order Placed:\n\n` +
+      `👤 Name: ${name}\n` +
+      `📱 Mobile: ${mobile}\n` +
+      `📦 Plan: ${plan || 'Not specified'}\n` +
+      `💳 Payment: ${payLabel}\n` +
+      `📅 Start Date: ${date}\n` +
+      `⏰ Delivery Time: ${time}\n` +
+      `📍 Address: ${addr}\n\n` +
+      (method === 'upi' ? `[Payment screenshot is being shared separately]\n\nPlease confirm my subscription!` : `Please confirm my COD subscription!`)
+    );
+    document.getElementById('popupWa').href = `https://wa.me/919977115233?text=${waMsg}`;
+
+    // Submit the actual form to Flask
+    document.getElementById('orderForm').submit();
+  }
+
+  // ── Thank you popup controls ──
+  document.getElementById('popupClose').addEventListener('click', () => {
+    document.getElementById('popup').classList.remove('show');
+  });
+  document.getElementById('popup').addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+  });
+
+  // ── Show popup after redirect (Flask can add ?success=1 to URL) ──
+  // If you want to show the thank-you popup after Flask redirects back,
+  // add ?success=1&method=upi (or cod) to the redirect URL in your Flask view,
+  // then this JS will auto-show the popup.
+  (function() {
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('success') === '1') {
+      const method = params.get('method') || 'upi';
+      const popupMsg = document.getElementById('popupMsg');
+      if (method === 'upi') {
+        popupMsg.innerHTML = '<strong>Fresh • Healthy • Daily</strong><br><br>We\'ve received your order! 🌿<br><br>📸 <strong>Please send your UPI payment screenshot</strong> to <strong>+91 99 77 115233</strong> on WhatsApp for instant confirmation!';
+      } else {
+        popupMsg.innerHTML = '<strong>Fresh • Healthy • Daily</strong><br><br>Your COD order has been placed! 🌿<br><br>Our team will call/WhatsApp you shortly to confirm your delivery slot. Pay cash on Day 1!';
+      }
+      setTimeout(() => { document.getElementById('popup').classList.add('show'); }, 400);
+      // Clean URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  })();
 </script>
 </body>
 </html>
