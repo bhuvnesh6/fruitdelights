@@ -1069,45 +1069,50 @@ def dashboard_employee():
     if not employee or "team_id" not in employee:
         flash("You are not assigned to any team.", "danger")
         return redirect(url_for("home"))
-
-    today_str   = datetime.now().strftime("%Y-%m-%d")
-    day_name    = datetime.now().strftime("%A")
-    emp_id_str  = str(employee["_id"])
-
+ 
+    today_str  = datetime.now().strftime("%Y-%m-%d")
+    day_name   = datetime.now().strftime("%A")
+    emp_id_str = str(employee["_id"])
+ 
+    # All deliveries for this team today (any status, any employee)
     existing_deliveries = list(deliveries_col.find({
         "team_id": employee["team_id"],
         "date":    today_str
     }))
     delivery_map = {str(d["customer_id"]): d for d in existing_deliveries}
-
+ 
+    # All active customers in this team
     customers = list(users_col.find({
         "role":    "customer",
-        "team_id": employee["team_id"]
+        "team_id": employee["team_id"],
+        "status":  {"$ne": "inactive"}   # skip deactivated customers
     }))
-
+ 
     final_deliveries = []
-
+ 
     for cust in customers:
         cust_id_str = str(cust["_id"])
-
+ 
+        # Skip customer's off-day or holiday
         if day_name in cust.get("off_days", []):
             continue
         if today_str in cust.get("holidays", []):
             continue
-
+ 
         if cust_id_str in delivery_map:
             delivery = delivery_map[cust_id_str]
-            assigned_to     = delivery.get("assigned_to")
-            assigned_to_str = str(assigned_to) if assigned_to else None
-
+ 
+            # Skip cancelled holidays
             if delivery.get("status") == "cancelled_holiday":
                 continue
-            if assigned_to_str and assigned_to_str != emp_id_str:
-                continue
-
+ 
+            # ✅ SHOW ALL — pending, accepted by you, accepted by teammate, delivered
+            # (template decides what buttons to show based on assigned_to)
             delivery["customer"] = [cust]
             final_deliveries.append(delivery)
+ 
         else:
+            # No DB record yet → virtual pending delivery
             virtual_delivery = {
                 "_id":            f"virtual_{cust_id_str}",
                 "customer_id":    cust["_id"],
@@ -1119,7 +1124,19 @@ def dashboard_employee():
                 "customer":       [cust]
             }
             final_deliveries.append(virtual_delivery)
-
+ 
+    # Sort: your accepted tasks first, then pending, then teammates', then delivered
+    def sort_key(d):
+        if d["status"] == "accepted" and str(d.get("assigned_to", "")) == emp_id_str:
+            return 0   # my tasks first
+        if d["status"] == "pending":
+            return 1
+        if d["status"] == "accepted":
+            return 2   # teammate's tasks
+        return 3       # delivered last
+ 
+    final_deliveries.sort(key=sort_key)
+ 
     return render_template("dashboard_employee.html", deliveries=final_deliveries)
 
 

@@ -1,272 +1,647 @@
 {% extends "base.html" %}
-
 {% block title %}Employee Dashboard{% endblock %}
-
 {% block content %}
 
-<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem;">
-    
+<style>
+  /* Force white text everywhere — no dark-on-dark */
+  .emp-wrap, .emp-wrap * {
+    color: #f1f5f9;
+  }
+
+  :root {
+    --clr-bg:      #0f1117;
+    --clr-card:    #1a1d27;
+    --clr-border:  #2e3347;
+    --clr-accent:  #6c63ff;
+    --clr-success: #22c55e;
+    --clr-warning: #f59e0b;
+    --clr-text:    #f1f5f9;
+    --clr-muted:   #8892a4;
+    --radius:      14px;
+    --radius-sm:   8px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  .emp-wrap {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    color: #f1f5f9;
+    padding-bottom: 4rem;
+  }
+
+  /* ── HEADER ── */
+  .emp-header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;
+  }
+  .emp-header h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; color: #f1f5f9; }
+  .emp-header p  { color: #8892a4; margin-top: .3rem; font-size: .9rem; }
+  .task-badge {
+    background: #1a1d27; border: 1px solid #2e3347;
+    border-radius: 999px; padding: .5rem 1.1rem;
+    font-size: .95rem; font-weight: 600; color: #f1f5f9;
+  }
+
+  /* ── MAP SECTION ── */
+  .map-section {
+    background: #1a1d27; border: 1px solid #2e3347;
+    border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem;
+  }
+  .map-header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: .9rem 1.25rem; border-bottom: 1px solid #2e3347;
+    flex-wrap: wrap; gap: .75rem;
+  }
+  .map-header-left { display: flex; align-items: center; gap: .75rem; }
+  .map-title   { font-size: 1rem; font-weight: 700; color: #f1f5f9; }
+  .map-subtitle{ font-size: .8rem; color: #8892a4; margin-top: .1rem; }
+
+  .gps-pill {
+    display: inline-flex; align-items: center; gap: .4rem;
+    background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.35);
+    border-radius: 999px; padding: .28rem .85rem;
+    font-size: .78rem; font-weight: 700; color: #22c55e;
+  }
+  .gps-pill.warn { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.35); color: #f59e0b; }
+  .gps-pill.err  { background: rgba(239,68,68,.15);  border-color: rgba(239,68,68,.35);  color: #ef4444; }
+
+  .pulse {
+    width: 7px; height: 7px; border-radius: 50%; background: currentColor;
+    animation: pulseAnim 1.4s ease-in-out infinite; flex-shrink: 0;
+  }
+  @keyframes pulseAnim { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.6)} }
+
+  .map-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
+  .btn-map {
+    background: #6c63ff; color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: .48rem 1rem;
+    font-size: .82rem; font-weight: 700; cursor: pointer; transition: opacity .18s;
+  }
+  .btn-map:hover { opacity: .82; }
+  .btn-map.sec {
+    background: transparent; border: 1px solid #2e3347; color: #8892a4;
+  }
+  .btn-map.sec:hover { border-color: #6c63ff; color: #a5a0ff; }
+
+  #team-map-iframe { width: 100%; height: 330px; border: none; display: block; }
+  .map-placeholder {
+    height: 260px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: .8rem;
+    color: #8892a4; font-size: .9rem; padding: 1rem;
+  }
+  .map-placeholder-icon { font-size: 2.8rem; }
+  .map-placeholder strong { color: #f1f5f9; }
+
+  /* stops row */
+  .stops-row {
+    display: flex; align-items: center;
+    padding: .75rem 1.25rem; overflow-x: auto;
+    border-top: 1px solid #2e3347; gap: 0;
+    scrollbar-width: thin; scrollbar-color: #2e3347 transparent;
+  }
+  .stop-chip {
+    display: inline-flex; align-items: center; gap: .35rem;
+    background: #0f1117; border: 1px solid #2e3347;
+    border-radius: 999px; padding: .28rem .75rem;
+    font-size: .76rem; font-weight: 700; color: #8892a4;
+    white-space: nowrap; transition: all .2s; flex-shrink: 0;
+  }
+  .stop-chip.me    { border-color: #6c63ff; color: #a5a0ff; background: rgba(108,99,255,.15); }
+  .stop-chip.done  { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,.12); }
+  .stop-chip.near  { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,.12); animation: nearGlow 1.6s ease-in-out infinite; }
+  @keyframes nearGlow { 0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.3)} 50%{box-shadow:0 0 0 6px rgba(245,158,11,0)} }
+  .stop-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .dist-lbl { font-size: .68rem; color: #4a5168; margin: 0 5px; flex-shrink: 0; white-space: nowrap; }
+
+  /* ── DELIVERY CARDS ── */
+  .delivery-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1.25rem;
+  }
+
+  .del-card {
+    background: #1a1d27; border: 1px solid #2e3347;
+    border-radius: var(--radius); overflow: hidden; position: relative;
+    transition: transform .18s, border-color .2s;
+  }
+  .del-card:hover { transform: translateY(-2px); border-color: rgba(108,99,255,.5); }
+  .del-card.nearby-card {
+    border-color: #f59e0b !important;
+    box-shadow: 0 0 0 2px rgba(245,158,11,.18);
+  }
+
+  /* stripe */
+  .del-stripe { height: 4px; width: 100%; }
+  .stripe-pending   { background: #f59e0b; }
+  .stripe-accepted  { background: #6c63ff; }
+  .stripe-delivered { background: #22c55e; }
+
+  .del-body { padding: 1rem 1.2rem 1.1rem; }
+
+  /* stop number circle */
+  .stop-num {
+    position: absolute; top: .7rem; left: .7rem;
+    width: 26px; height: 26px; border-radius: 50%;
+    background: #6c63ff; color: #fff;
+    font-size: .72rem; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; z-index: 3;
+  }
+  .stop-num.done { background: #22c55e; }
+
+  /* card top */
+  .del-top {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    margin-bottom: .9rem; padding-left: 2rem;
+  }
+  .del-name { font-size: 1.05rem; font-weight: 700; color: #f1f5f9; }
+  .del-sub  { font-size: .78rem; color: #8892a4; margin-top: .15rem; }
+
+  /* status badge */
+  .status-badge {
+    border-radius: 999px; padding: .22rem .7rem;
+    font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
+    white-space: nowrap; flex-shrink: 0;
+  }
+  .b-pending   { background: rgba(245,158,11,.18); color: #fbbf24; border: 1px solid rgba(245,158,11,.35); }
+  .b-accepted  { background: rgba(108,99,255,.18); color: #a5a0ff; border: 1px solid rgba(108,99,255,.35); }
+  .b-delivered { background: rgba(34,197,94,.18);  color: #4ade80; border: 1px solid rgba(34,197,94,.35);  }
+
+  /* nearby banner */
+  .near-banner {
+    display: flex; align-items: center; gap: .5rem;
+    background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3);
+    border-radius: var(--radius-sm); padding: .5rem .8rem;
+    font-size: .8rem; font-weight: 700; color: #fbbf24;
+    margin-bottom: .8rem;
+  }
+
+  /* address */
+  .addr-zone  { margin-bottom: .9rem; }
+  .addr-label { font-size: .78rem; color: #8892a4; margin-bottom: .35rem; }
+
+  .addr-locked {
+    padding: .6rem .85rem; border-radius: var(--radius-sm);
+    background: rgba(255,255,255,.03); border: 1px dashed #2e3347;
+    text-align: center; color: #4a5168; font-size: .83rem;
+  }
+  .addr-locked .blur-text { filter: blur(5px); user-select: none; pointer-events: none; color: #8892a4; }
+  .addr-locked small { display: block; font-size: .72rem; margin-top: .35rem; color: #6c63ff; }
+
+  .addr-open {
+    padding: .6rem .85rem; border-radius: var(--radius-sm);
+    background: rgba(34,197,94,.07); border: 1px solid rgba(34,197,94,.25);
+  }
+  .addr-full   { font-size: .9rem; font-weight: 700; color: #f1f5f9; line-height: 1.55; }
+  .addr-detail { font-size: .8rem; color: #8892a4; margin-top: .3rem; }
+  .addr-phone a { color: #a5a0ff; text-decoration: none; font-weight: 700; }
+  .addr-phone a:hover { color: #c4c1ff; }
+
+  /* nav button */
+  .btn-nav {
+    width: 100%; display: flex; align-items: center; justify-content: center; gap: .4rem;
+    background: transparent; border: 1px solid #2e3347; color: #8892a4;
+    border-radius: var(--radius-sm); padding: .55rem; font-size: .8rem; font-weight: 700;
+    cursor: pointer; transition: all .18s; margin-top: .55rem; margin-bottom: .4rem;
+  }
+  .btn-nav:hover { border-color: #6c63ff; color: #a5a0ff; }
+
+  /* time */
+  .del-time { font-size: .8rem; color: #8892a4; margin-bottom: .85rem; }
+  .del-time b { color: #d1d5e0; }
+
+  /* footer */
+  .del-footer {
+    display: flex; justify-content: space-between; align-items: center;
+    border-top: 1px solid #2e3347; padding-top: .85rem;
+  }
+  .foot-lbl { font-size: .78rem; font-weight: 700; }
+  .lbl-mine  { color: #4ade80; }
+  .lbl-other { color: #fbbf24; }
+  .lbl-done  { color: #4ade80; }
+  .lbl-wait  { color: #4a5168; }
+
+  .btn-accept {
+    background: #6c63ff; color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: .48rem 1.1rem;
+    font-size: .83rem; font-weight: 800; cursor: pointer; transition: opacity .18s;
+    text-decoration: none; display: inline-block;
+  }
+  .btn-accept:hover { opacity: .82; }
+
+  .btn-deliver {
+    background: #22c55e; color: #fff; border: none;
+    border-radius: var(--radius-sm); padding: .48rem 1.1rem;
+    font-size: .83rem; font-weight: 800; cursor: pointer; transition: opacity .18s;
+    text-decoration: none; display: inline-block;
+  }
+  .btn-deliver:hover { opacity: .82; }
+
+  /* empty */
+  .empty-state {
+    grid-column: 1/-1; text-align: center; padding: 4rem 2rem;
+    background: #1a1d27; border: 1px solid #2e3347; border-radius: var(--radius);
+  }
+  .empty-state h3 { margin-bottom: .75rem; font-size: 1.2rem; color: #f1f5f9; }
+  .empty-state p  { color: #8892a4; }
+
+  @media (max-width: 560px) {
+    .delivery-grid { grid-template-columns: 1fr; }
+    .map-header    { flex-direction: column; }
+  }
+</style>
+
+<div class="emp-wrap">
+
+  <!-- HEADER -->
+  <div class="emp-header">
     <div>
-        <h2 style="margin:0;">Today's Deliveries</h2>
-        <p style="color:var(--text-muted); margin-top:0.4rem;">
-            Pending and accepted deliveries for your team
-        </p>
+      <h2>Today's Deliveries</h2>
+      <p>Team route · stops auto-sorted by nearest distance</p>
+    </div>
+    <span class="task-badge">{{ deliveries|length }} Stops</span>
+  </div>
+
+  <!-- ── TEAM MAP ── -->
+  {% if deliveries %}
+  <div class="map-section">
+    <div class="map-header">
+      <div class="map-header-left">
+        <div>
+          <div class="map-title">🗺 Team Delivery Route</div>
+          <div class="map-subtitle">All {{ deliveries|length }} stops · Live GPS · Distance-sorted</div>
+        </div>
+        <span class="gps-pill warn" id="gps-pill">
+          <span class="pulse"></span> Waiting for GPS
+        </span>
+      </div>
+      <div class="map-actions">
+        <button class="btn-map" onclick="initTeamRoute()">📍 Load Route</button>
+        <a id="open-maps-btn" href="#" target="_blank" class="btn-map sec" style="display:none;">Open Maps ↗</a>
+      </div>
     </div>
 
-    <span class="badge"
-          style="background:var(--surface-color);
-                 border:1px solid var(--border-color);
-                 color:var(--text-main);
-                 font-size:1rem;
-                 padding:0.6rem 1rem;">
-        {{ deliveries|length }} Tasks
-    </span>
+    <div id="map-placeholder" class="map-placeholder">
+      <div class="map-placeholder-icon">🗺️</div>
+      <div>Click <strong>Load Route</strong> to see all {{ deliveries|length }} stops on one map</div>
+      <div style="font-size:.78rem;color:#4a5168;margin-top:.25rem;">GPS required · Stops sorted by closest distance automatically</div>
+    </div>
+    <iframe id="team-map-iframe" style="display:none;" allowfullscreen loading="lazy"></iframe>
 
-</div>
+    <div class="stops-row" id="stops-row">
+      <span style="font-size:.76rem;color:#4a5168;">Stops appear here after route loads</span>
+    </div>
+  </div>
+  {% endif %}
 
-<div class="grid grid-2">
+  <!-- ── DELIVERY CARDS ── -->
+  <div class="delivery-grid" id="delivery-grid">
 
     {% for delivery in deliveries %}
+      {% set cust = delivery.customer[0] %}
+      {% set is_mine      = delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
+      {% set is_delivered = delivery.status == 'delivered' %}
 
-        {% set cust = delivery.customer[0] %}
+      <div class="del-card"
+           id="card-{{ loop.index }}"
+           data-index="{{ loop.index }}"
+           data-address="{{ cust.address }}"
+           data-name="{{ cust.name }}"
+           data-status="{{ delivery.status }}">
 
-        <div class="card"
-             style="border-left:5px solid
-             {% if delivery.status == 'pending' %}
-                var(--warning)
-             {% elif delivery.status == 'accepted' %}
-                var(--accent)
-             {% else %}
-                var(--success)
-             {% endif %}; position: relative; overflow: hidden;">
+        <!-- Stop number -->
+        <div class="stop-num {% if is_delivered %}done{% endif %}" id="stop-num-{{ loop.index }}">{{ loop.index }}</div>
 
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
-
-                <div>
-                    <h3 style="margin:0;">
-                        {{ cust.name }}
-                    </h3>
-
-                    <p style="margin-top:0.3rem; color:var(--text-muted); font-size:0.9rem;">
-                        Team Delivery
-                    </p>
-                </div>
-
-                <span class="badge
-                    {% if delivery.status == 'pending' %}
-                        badge-pending
-                    {% elif delivery.status == 'accepted' %}
-                        badge-warning
-                    {% else %}
-                        badge-done
-                    {% endif %}">
-                    
-                    {{ delivery.status | title }}
-
-                </span>
-
-            </div>
-
-            <div style="margin-bottom:1.5rem;">
-
-                <p style="color:var(--text-muted);
-                          font-size:0.9rem;
-                          margin-bottom:0.5rem;">
-                    📍 Delivery Details
-                </p>
-
-                {% if delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
-
-                    <p style="font-weight:600;" id="address-text-{{ loop.index }}">
-                        {{ cust.address }}
-                    </p>
-
-                    <p style="margin-top:0.7rem; margin-bottom: 1rem;">
-                        📞 <a href="tel:{{ cust.phone }}" style="color: var(--accent); text-decoration: none; font-weight: 600;">{{ cust.phone }}</a>
-                    </p>
-
-                    <div style="margin-top: 1rem; border-top: 1px dashed var(--border-color); padding-top: 1rem;">
-                        <button type="button" 
-        class="btn" 
-        id="route-btn-{{ loop.index }}"
-        style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: var(--surface-color); border: 1px solid var(--accent); color: var(--accent); font-weight: 600; padding: 0.75rem;"
-        onclick='loadLiveRoute({{ cust.address | tojson }}, {{ loop.index }})'>
-    🗺️ Calculate Live Route Path
-</button>
-
-                        <div id="map-container-{{ loop.index }}" style="display: none; margin-top: 1rem; border-radius: 8px; overflow: hidden; border: 1px solid var(--border-color);">
-                            <div style="background: var(--surface-color); padding: 0.5rem 0.75rem; font-size: 0.8rem; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color);">
-                                <span id="gps-status-{{ loop.index }}" style="color: var(--success); font-weight: 600;">● Live GPS Connection Active</span>
-                                <a id="external-nav-{{ loop.index }}" href="#" target="_blank" style="color: var(--accent); text-decoration: none; font-weight: 600;">Open Native App ↗</a>
-                            </div>
-                            <iframe 
-                                id="iframe-map-{{ loop.index }}"
-                                width="100%" 
-                                height="220" 
-                                style="border:0; display: block;" 
-                                allowfullscreen="" 
-                                loading="lazy">
-                            </iframe>
-                        </div>
-                    </div>
-
-                {% else %}
-
-                    <p style="filter:blur(5px); user-select:none;">
-                        123 Hidden Street, Block A
-                    </p>
-
-                    <p style="margin-top:0.7rem; filter:blur(5px); user-select:none;">
-                        📞 +91 XXXXX XXXXX
-                    </p>
-
-                    <small style="color:var(--accent); display:block; margin-top:0.6rem;">
-                        Accept task to reveal customer details & map routing
-                    </small>
-
-                {% endif %}
-
-            </div>
-
-            <div style="margin-bottom:1.5rem;">
-
-                <p style="color:var(--text-muted); font-size:0.85rem;">
-                    Preferred Time
-                </p>
-
-                <p style="font-weight:600; margin-top:0.3rem;">
-                    ⏱ {{ delivery.preferred_time or 'Anytime' }}
-                </p>
-
-            </div>
-
-            <div style="display:flex;
-                        justify-content:space-between;
-                        align-items:center;
-                        border-top:1px solid var(--border-color);
-                        padding-top:1rem;">
-
-                <div>
-                    {% if delivery.status == "accepted" and delivery.assigned_to|string == session['user_id']|string %}
-                        <small style="color:var(--success); font-weight:600;">
-                            Assigned To You
-                        </small>
-                    {% elif delivery.status == "accepted" %}
-                        <small style="color:var(--warning); font-weight:600;">
-                            Already Accepted By Another Employee
-                        </small>
-                    {% elif delivery.status == "delivered" %}
-                        <small style="color:var(--success); font-weight:600;">
-                            ✓ Successfully Delivered
-                        </small>
-                    {% else %}
-                        <small style="color:var(--text-muted);">
-                            Waiting for pickup
-                        </small>
-                    {% endif %}
-                </div>
-
-                <div>
-                    {% if delivery.status == 'pending' %}
-                        <a href="{{ url_for('accept_delivery', delivery_id=delivery._id|string) }}"
-                           class="btn btn-primary">
-                            Accept
-                        </a>
-                    {% elif delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
-                        <a href="{{ url_for('complete_delivery', delivery_id=delivery._id|string) }}"
-                           class="btn btn-success">
-                            Mark Delivered
-                        </a>
-                    {% endif %}
-                </div>
-
-            </div>
-
+        <!-- Stripe -->
+        <div class="del-stripe
+          {% if delivery.status == 'pending' %}stripe-pending
+          {% elif delivery.status == 'accepted' %}stripe-accepted
+          {% else %}stripe-delivered{% endif %}">
         </div>
+
+        <div class="del-body">
+
+          <!-- Top row -->
+          <div class="del-top">
+            <div>
+              <div class="del-name">{{ cust.name }}</div>
+              <div class="del-sub">Stop #<span class="stop-lbl">{{ loop.index }}</span> · Team delivery</div>
+            </div>
+            <span class="status-badge
+              {% if delivery.status == 'pending' %}b-pending
+              {% elif delivery.status == 'accepted' %}b-accepted
+              {% else %}b-delivered{% endif %}">
+              {{ delivery.status | title }}
+            </span>
+          </div>
+
+          <!-- Nearby banner (JS shows this) -->
+          <div class="near-banner" id="near-banner-{{ loop.index }}" style="display:none;">
+            📍 You're nearby — full details revealed!
+          </div>
+
+          <!-- Address zone -->
+          <div class="addr-zone">
+            <div class="addr-label">📦 Delivery Address</div>
+
+            {% if is_mine or is_delivered %}
+              <!-- Always visible -->
+              <div class="addr-open" id="addr-box-{{ loop.index }}">
+                <div class="addr-full">{{ cust.address }}</div>
+                {% if cust.get('floor') %}
+                  <div class="addr-detail">🏢 Floor {{ cust.floor }}</div>
+                {% endif %}
+                {% if cust.get('landmark') %}
+                  <div class="addr-detail">📌 {{ cust.landmark }}</div>
+                {% endif %}
+                <div class="addr-phone" style="margin-top:.5rem;">
+                  📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a>
+                </div>
+              </div>
+              <button class="btn-nav" onclick="navToStop({{ cust.address|tojson }})">🧭 Navigate to this stop</button>
+
+            {% else %}
+              <!-- Locked until accepted or nearby -->
+              <div class="addr-locked" id="addr-locked-{{ loop.index }}">
+                <div class="blur-text">123 Hidden Street · Block A · Floor 2</div>
+                <small>Accept task or get within ~300m to reveal full details</small>
+              </div>
+              <div class="addr-open" id="addr-box-{{ loop.index }}" style="display:none;">
+                <div class="addr-full">{{ cust.address }}</div>
+                {% if cust.get('floor') %}
+                  <div class="addr-detail">🏢 Floor {{ cust.floor }}</div>
+                {% endif %}
+                {% if cust.get('landmark') %}
+                  <div class="addr-detail">📌 {{ cust.landmark }}</div>
+                {% endif %}
+                <div class="addr-phone" style="margin-top:.5rem;">
+                  📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a>
+                </div>
+              </div>
+              <button class="btn-nav" id="nav-btn-{{ loop.index }}" style="display:none;"
+                      onclick="navToStop({{ cust.address|tojson }})">
+                🧭 Navigate to this stop
+              </button>
+            {% endif %}
+          </div>
+
+          <!-- Time -->
+          <div class="del-time">⏱ Preferred time: <b>{{ delivery.preferred_time or 'Anytime' }}</b></div>
+
+          <!-- Footer -->
+          <div class="del-footer">
+            <div class="foot-lbl">
+              {% if is_mine %}
+                <span class="lbl-mine">✓ Assigned To You</span>
+              {% elif delivery.status == 'accepted' %}
+                <span class="lbl-other">⚡ Taken by teammate</span>
+              {% elif is_delivered %}
+                <span class="lbl-done">✓ Delivered</span>
+              {% else %}
+                <span class="lbl-wait">Waiting for pickup</span>
+              {% endif %}
+            </div>
+            <div>
+              {% if delivery.status == 'pending' %}
+                <a href="{{ url_for('accept_delivery', delivery_id=delivery._id|string) }}" class="btn-accept">Accept</a>
+              {% elif is_mine %}
+                <a href="{{ url_for('complete_delivery', delivery_id=delivery._id|string) }}" class="btn-deliver">✓ Mark Delivered</a>
+              {% endif %}
+            </div>
+          </div>
+
+        </div><!-- /.del-body -->
+      </div>
 
     {% else %}
-
-        <div class="card"
-             style="grid-column:1/-1;
-                    text-align:center;
-                    padding:4rem 2rem;">
-
-            <h3 style="margin-bottom:1rem;">
-                🎉 No deliveries pending today
-            </h3>
-
-            <p style="color:var(--text-muted);">
-                All customer deliveries for your team are completed.
-            </p>
-
-        </div>
-
+      <div class="empty-state">
+        <h3>🎉 No deliveries pending today</h3>
+        <p>All customer deliveries for your team are completed.</p>
+      </div>
     {% endfor %}
 
-</div>
+  </div><!-- /.delivery-grid -->
+</div><!-- /.emp-wrap -->
 
 <script>
-function loadLiveRoute(customerAddress, index) {
-    const container  = document.getElementById(`map-container-${index}`);
-    const iframe     = document.getElementById(`iframe-map-${index}`);
-    const appLink    = document.getElementById(`external-nav-${index}`);
-    const gpsStatus  = document.getElementById(`gps-status-${index}`);
-    const btn        = document.getElementById(`route-btn-${index}`);
+/* ── STOP DATA from Jinja ── */
+const RAW_STOPS = [
+  {% for delivery in deliveries %}{% set cust = delivery.customer[0] %}{
+    index:   {{ loop.index }},
+    name:    {{ cust.name | tojson }},
+    address: {{ cust.address | tojson }},
+    phone:   {{ cust.phone | tojson }},
+    status:  {{ delivery.status | tojson }},
+    isMine:  {% if delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}true{% else %}false{% endif %},
+    isDone:  {% if delivery.status == 'delivered' %}true{% else %}false{% endif %},
+    lat: null, lng: null, dist: null,
+  },{% endfor %}
+];
 
-    // Show loading state on button
-    btn.disabled     = true;
-    btn.innerHTML    = '⏳ Getting your location...';
+let SORTED = [...RAW_STOPS];
+let myLat = null, myLng = null;
+let watchId = null;
+const NEARBY_M = 300;
 
-    if (!navigator.geolocation) {
-        alert("Geolocation is not supported by your browser. Loading destination view instead.");
-        fallbackStaticMap(customerAddress, iframe, container, appLink, gpsStatus, btn);
-        return;
+/* ── HAVERSINE ── */
+function hav(a1,o1,a2,o2){
+  const R=6371000, dA=(a2-a1)*Math.PI/180, dO=(o2-o1)*Math.PI/180;
+  const a=Math.sin(dA/2)**2+Math.cos(a1*Math.PI/180)*Math.cos(a2*Math.PI/180)*Math.sin(dO/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+
+/* ── GEOCODE via Nominatim (free, no key) ── */
+async function geocode(addr){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1`,
+      {headers:{'Accept-Language':'en','User-Agent':'DeliveryApp/1.0'}});
+    const d=await r.json();
+    if(d&&d[0]) return {lat:+d[0].lat, lng:+d[0].lon};
+  }catch(e){}
+  return null;
+}
+
+/* ── NEAREST-NEIGHBOUR SORT ── */
+function nnSort(eLat,eLng,stops){
+  const pool=[...stops.filter(s=>s.lat!==null)];
+  const out=[];
+  let cLat=eLat, cLng=eLng;
+  while(pool.length){
+    let bi=-1, bd=Infinity;
+    pool.forEach((s,i)=>{ const d=hav(cLat,cLng,s.lat,s.lng); if(d<bd){bd=d;bi=i;} });
+    pool[bi].dist=Math.round(bd);
+    out.push(pool.splice(bi,1)[0]);
+    cLat=out[out.length-1].lat; cLng=out[out.length-1].lng;
+  }
+  return [...out, ...stops.filter(s=>s.lat===null)];
+}
+
+/* ── STOPS ROW ── */
+function buildStopsRow(sorted){
+  const row=document.getElementById('stops-row');
+  row.innerHTML='';
+  const me=document.createElement('span');
+  me.className='stop-chip me';
+  me.innerHTML='<span class="stop-dot"></span> You';
+  row.appendChild(me);
+
+  sorted.forEach((s,i)=>{
+    const dl=document.createElement('span');
+    dl.className='dist-lbl';
+    dl.textContent=s.dist!=null
+      ?(s.dist>=1000?`—${(s.dist/1000).toFixed(1)}km—`:`—${s.dist}m—`)
+      :'—';
+    row.appendChild(dl);
+
+    const ch=document.createElement('span');
+    ch.id=`chip-${s.index}`;
+    ch.className='stop-chip'+(s.isDone?' done':'');
+    ch.innerHTML=`<span class="stop-dot"></span> ${i+1}. ${s.name.split(' ')[0]}`;
+    row.appendChild(ch);
+  });
+}
+
+/* ── REORDER CARDS ── */
+function reorderCards(sorted){
+  const grid=document.getElementById('delivery-grid');
+  sorted.forEach((s,i)=>{
+    const card=document.getElementById(`card-${s.index}`);
+    if(!card) return;
+    grid.appendChild(card);
+    const nb=document.getElementById(`stop-num-${s.index}`);
+    if(nb) nb.textContent=i+1;
+    const sl=card.querySelector('.stop-lbl');
+    if(sl) sl.textContent=i+1;
+  });
+}
+
+/* ── MAP URL — use OpenStreetMap/OSRM embed for multi-stop ── */
+function buildMapUrl(eLat,eLng,sorted){
+  /* Build a Google Maps embed showing markers for all stops.
+     For multi-waypoint we use the "q" parameter trick — embed shows
+     the destination pin; we'll use the open-in-maps link for full route */
+  if(!sorted.length) return null;
+  // show all coords as markers via OpenStreetMap embed (no key needed)
+  const pts=sorted.filter(s=>s.lat).map(s=>`${s.lat},${s.lng}`);
+  if(!pts.length) return null;
+
+  /* fallback: use Google Maps embed pointing to first undelivered stop,
+     while the open-in-maps link carries all waypoints */
+  const first=sorted.find(s=>!s.isDone && s.lat) || sorted.find(s=>s.lat);
+  if(!first) return null;
+  return `https://maps.google.com/maps?saddr=${eLat},${eLng}&daddr=${encodeURIComponent(first.address)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+}
+
+/* Full multi-stop nav link (opens Google Maps app) */
+function buildFullNavUrl(eLat,eLng,sorted){
+  const withCoords=sorted.filter(s=>s.lat);
+  if(!withCoords.length) return '#';
+  const dest=encodeURIComponent(withCoords[withCoords.length-1].address);
+  const wpts=withCoords.slice(0,-1).map(s=>encodeURIComponent(s.address)).join('|');
+  let url=`https://www.google.com/maps/dir/?api=1&origin=${eLat},${eLng}&destination=${dest}&travelmode=driving`;
+  if(wpts) url+=`&waypoints=${wpts}`;
+  return url;
+}
+
+/* ── PROXIMITY WATCH ── */
+function startWatch(){
+  if(!navigator.geolocation||watchId) return;
+  watchId=navigator.geolocation.watchPosition(onPos,null,
+    {enableHighAccuracy:true, maximumAge:8000});
+}
+
+function onPos(pos){
+  myLat=pos.coords.latitude; myLng=pos.coords.longitude;
+
+  SORTED.forEach(stop=>{
+    if(!stop.lat||!stop.lng) return;
+    const d=hav(myLat,myLng,stop.lat,stop.lng);
+    const near=d<=NEARBY_M;
+    const card=document.getElementById(`card-${stop.index}`);
+    if(!card) return;
+
+    /* chip colour */
+    const chip=document.getElementById(`chip-${stop.index}`);
+    if(chip&&!stop.isDone) chip.className='stop-chip'+(near?' near':'');
+
+    /* card glow */
+    card.classList.toggle('nearby-card', near&&!stop.isDone);
+
+    /* reveal details */
+    if(near||stop.isMine||stop.isDone){
+      const locked =document.getElementById(`addr-locked-${stop.index}`);
+      const box    =document.getElementById(`addr-box-${stop.index}`);
+      const banner =document.getElementById(`near-banner-${stop.index}`);
+      const navBtn =document.getElementById(`nav-btn-${stop.index}`);
+      if(locked)  locked.style.display ='none';
+      if(box)     box.style.display    ='block';
+      if(navBtn)  navBtn.style.display ='flex';
+      if(banner&&near&&!stop.isMine&&!stop.isDone) banner.style.display='flex';
+    }
+  });
+}
+
+/* ── NAVIGATE TO SINGLE STOP ── */
+function navToStop(addr){
+  const url=myLat&&myLng
+    ?`https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${encodeURIComponent(addr)}&travelmode=driving`
+    :`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
+  window.open(url,'_blank');
+}
+
+/* ── INIT TEAM ROUTE ── */
+async function initTeamRoute(){
+  const pill=document.getElementById('gps-pill');
+  pill.className='gps-pill warn';
+  pill.innerHTML='<span class="pulse"></span> Getting GPS…';
+
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    myLat=pos.coords.latitude; myLng=pos.coords.longitude;
+    pill.innerHTML='<span class="pulse"></span> Geocoding '+RAW_STOPS.length+' stops…';
+
+    /* geocode all in parallel */
+    await Promise.all(RAW_STOPS.map(async s=>{
+      const c=await geocode(s.address);
+      if(c){s.lat=c.lat; s.lng=c.lng;}
+    }));
+
+    /* sort */
+    SORTED=nnSort(myLat,myLng,RAW_STOPS);
+
+    buildStopsRow(SORTED);
+    reorderCards(SORTED);
+
+    /* map */
+    const mapUrl=buildMapUrl(myLat,myLng,SORTED);
+    const iframe=document.getElementById('team-map-iframe');
+    const ph=document.getElementById('map-placeholder');
+    if(mapUrl){
+      iframe.src=mapUrl;
+      iframe.style.display='block';
+      ph.style.display='none';
     }
 
-    navigator.geolocation.getCurrentPosition(
-        (position) => {
-            const lat = position.coords.latitude;
-            const lng = position.coords.longitude;
+    /* open-in-maps link */
+    const fullUrl=buildFullNavUrl(myLat,myLng,SORTED);
+    const btn=document.getElementById('open-maps-btn');
+    btn.href=fullUrl; btn.style.display='inline-block';
 
-            // ✅ Free keyless route embed: saddr = current GPS, daddr = customer address
-            const routeEmbedUrl = `https://maps.google.com/maps?saddr=${lat},${lng}&daddr=${encodeURIComponent(customerAddress)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+    pill.className='gps-pill';
+    pill.innerHTML='<span class="pulse"></span> Live GPS Active';
 
-            // Native app deep link for turn-by-turn on phone
-            const nativeLink = `https://www.google.com/maps/dir/?api=1&origin=${lat},${lng}&destination=${encodeURIComponent(customerAddress)}&travelmode=driving`;
+    startWatch();
 
-            iframe.src             = routeEmbedUrl;
-            appLink.href           = nativeLink;
-            gpsStatus.textContent  = '● Live GPS Connection Active';
-            gpsStatus.style.color  = 'var(--success)';
-            container.style.display = 'block';
-
-            // Reset button to allow refresh
-            btn.disabled  = false;
-            btn.innerHTML = '🔄 Refresh Route';
-        },
-        (error) => {
-            console.warn("GPS error:", error.message);
-            let msg = "Location access denied.";
-            if (error.code === error.TIMEOUT)           msg = "Location request timed out.";
-            if (error.code === error.POSITION_UNAVAILABLE) msg = "Location unavailable.";
-            alert(`${msg} Showing destination pin instead. Allow location permission for full route.`);
-            fallbackStaticMap(customerAddress, iframe, container, appLink, gpsStatus, btn);
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+  }, err=>{
+    pill.className='gps-pill err';
+    pill.innerHTML='⚠ GPS denied';
+    alert('Allow location access and try again. Needed for route sorting.');
+  },{enableHighAccuracy:true, timeout:12000, maximumAge:0});
 }
 
-function fallbackStaticMap(address, iframe, container, appLink, gpsStatus, btn) {
-    // Destination-only pin (no route) — used when GPS is denied/unavailable
-    iframe.src              = `https://maps.google.com/maps?q=${encodeURIComponent(address)}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
-    appLink.href            = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
-    gpsStatus.textContent   = '⚠ GPS unavailable — destination pin only';
-    gpsStatus.style.color   = 'var(--warning)';
-    container.style.display = 'block';
-
-    btn.disabled  = false;
-    btn.innerHTML = '🗺️ Calculate Live Route Path';
-}
+/* auto-init if employee already has accepted tasks */
+window.addEventListener('DOMContentLoaded',()=>{
+  if(RAW_STOPS.some(s=>s.isMine)) initTeamRoute();
+});
 </script>
 
 {% endblock %}
