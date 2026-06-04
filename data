@@ -9,3 +9,11 @@ user:
 bhuvi124@gmail.com
 ll2_vFoL2xM
 manager : 
+
+Return EXACTLY in this format:
+
+===SUBJECT===
+<subject line>
+
+===BODY===
+<email body>

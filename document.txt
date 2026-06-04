@@ -1,0 +1,210 @@
+================================================================================
+                    FRUITE DELIGHT CRM - PROJECT OVERVIEW
+================================================================================
+
+PROJECT NAME: Fruite Delight CRM (Customer Relationship Management System)
+REPOSITORY: bhuvnesh6/navinsonijicrmsample
+TYPE: Web Application (Python Flask-based)
+
+================================================================================
+                              PROJECT DESCRIPTION
+================================================================================
+
+Fruite Delight CRM is a comprehensive Customer Relationship Management (CRM) 
+system designed specifically for fruit and related businesses. It provides a 
+robust platform to manage customer relationships, sales operations, deliveries, 
+invoicing, and business inquiries in a streamlined and efficient manner.
+
+The application is built with Flask (lightweight Python web framework) and uses 
+MongoDB as the database backend, ensuring scalability and flexibility for 
+business operations.
+
+================================================================================
+                              KEY FEATURES
+================================================================================
+
+1. USER MANAGEMENT & AUTHENTICATION
+   - Secure user registration and login system
+   - Password hashing using industry-standard encryption (Werkzeug)
+   - Session management for secure user sessions
+   - Role-based access control (RBAC) with different user roles
+   - Admin account creation and management
+
+2. TEAM MANAGEMENT
+   - Create and manage teams within the organization
+   - Team collaboration features
+   - Role-based permissions for different team members
+
+3. SALES PLANNING & MANAGEMENT
+   - Create and manage sales plans
+   - Track sales activities and metrics
+   - Plan-based organization of customer interactions
+
+4. CUSTOMER INQUIRY MANAGEMENT
+   - Capture and track customer inquiries
+   - Inquiry status management
+   - Follow-up tracking and management
+
+5. DELIVERY MANAGEMENT
+   - Track delivery operations
+   - Manage delivery schedules and logistics
+   - Delivery status tracking
+
+6. INVOICE & BILLING SYSTEM
+   - Generate professional invoices
+   - Invoice management and tracking
+   - Email invoice distribution to customers (via email service)
+   - Invoice status monitoring
+
+7. EMAIL COMMUNICATION
+   - Automated invoice sending via email
+   - Customer communication through email integration
+   - Uses Resend email service for reliable delivery
+
+8. ROLE-BASED ACCESS CONTROL
+   - Different permission levels for different user roles
+   - Secure endpoint protection
+   - Role-specific feature access
+
+================================================================================
+                          TECHNOLOGY STACK
+================================================================================
+
+BACKEND:
+- Python 3.x
+- Flask (Web Framework)
+- Gunicorn (WSGI HTTP Server)
+- MongoDB (NoSQL Database)
+- PyMongo (MongoDB Python Driver)
+
+SECURITY & UTILITIES:
+- Werkzeug (Security utilities - password hashing)
+- python-dotenv (Environment variable management)
+- Resend (Email service provider)
+- DNSPython (DNS utilities for MongoDB connections)
+
+FRONTEND:
+- HTML/CSS/JavaScript
+- Bootstrap or custom CSS (static folder)
+
+DEPLOYMENT:
+- Docker (Containerization - Dockerfile included)
+- Supports cloud deployment environments
+
+================================================================================
+                          PROJECT STRUCTURE
+================================================================================
+
+/
+├── app.py                    - Main Flask application with all routes and logic
+├── create_admin.py           - Script to create initial admin user
+├── mail.py                   - Email sending functionality (invoice emails)
+├── requirements.txt          - Python dependencies
+├── Dockerfile                - Docker containerization configuration
+├── .env                      - Environment variables (not in repo, local only)
+├── .gitignore                - Git ignore rules
+├── static/                   - Static files (CSS, JavaScript, images)
+├── templates/                - HTML templates for web pages
+├── data/                     - Data storage directory
+└── .git/                     - Git version control
+
+================================================================================
+                        KEY COMPONENTS & COLLECTIONS
+================================================================================
+
+DATABASE COLLECTIONS (MongoDB):
+- users_col      : User accounts and authentication data
+- teams_col      : Team information and organizational structure
+- plans_col      : Sales plans and planning data
+- deliveries_col : Delivery tracking and logistics information
+- invoices_col   : Invoice records and billing information
+- enquiries_col  : Customer inquiries and follow-ups
+
+================================================================================
+                          HOW TO GET STARTED
+================================================================================
+
+1. INSTALLATION:
+   - Clone the repository
+   - Install dependencies: pip install -r requirements.txt
+   - Create .env file with configuration:
+     * MONGO_URI (MongoDB connection string)
+     * DB_NAME (Database name)
+     * SECRET_KEY (Flask secret key)
+     * Email service credentials (for Resend)
+
+2. DATABASE SETUP:
+   - Ensure MongoDB is running and accessible
+   - Run create_admin.py to create initial admin user
+   - Collections will be created automatically on first use
+
+3. RUN THE APPLICATION:
+   - Development: python app.py
+   - Production: gunicorn app:app
+
+4. DOCKER DEPLOYMENT:
+   - Build: docker build -t fruite-delight-crm .
+   - Run: docker run -p 5000:5000 fruite-delight-crm
+
+================================================================================
+                          SECURITY FEATURES
+================================================================================
+
+- Password hashing with Werkzeug security utilities
+- Session-based authentication
+- Role-based access control for endpoints
+- Environment variable configuration (sensitive data not in code)
+- CSRF protection through Flask sessions
+- Secure secret key management
+
+================================================================================
+                            USE CASES
+================================================================================
+
+This CRM system is ideal for:
+- Fruit and produce businesses
+- Wholesalers and distributors
+- Retail operations with delivery logistics
+- Small to medium-sized enterprises (SMEs)
+- Businesses needing customer relationship management
+- Organizations handling multiple teams and sales operations
+- Companies requiring invoice generation and email distribution
+
+================================================================================
+                          DEPLOYMENT OPTIONS
+================================================================================
+
+- Local development environment
+- Docker containerized deployment
+- Cloud platforms (AWS, Google Cloud, Azure, Heroku, etc.)
+- On-premises servers
+- Production environments with Gunicorn and reverse proxy
+
+================================================================================
+                          FUTURE ENHANCEMENT IDEAS
+================================================================================
+
+- Analytics and reporting dashboard
+- Mobile app development
+- Advanced search and filtering
+- Integration with payment gateways
+- Automated reminders and notifications
+- Bulk operations for invoices and deliveries
+- Multi-language support
+- Advanced reporting and business intelligence
+- API endpoints for third-party integrations
+
+================================================================================
+                          MAINTENANCE & SUPPORT
+================================================================================
+
+Repository Owner: bhuvnesh6
+Project Type: CRM Application
+Status: Active Development
+Last Updated: 2026
+
+For questions or support, refer to repository documentation and commit history.
+
+================================================================================
+                              END OF DOCUMENT
+================================================================================

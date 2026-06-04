@@ -149,8 +149,18 @@ tbody tr:hover td{background:var(--bg-3)}
 .empty-state p{font-size:14px}
 .section-title-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .section-title-bar h2{font-family:var(--font-disp);font-size:22px;}
-/* Email optional hint */
 .email-hint{font-size:11px;color:var(--text-3);margin-top:4px;font-weight:400;}
+
+/* Boxes needed table */
+.boxes-table td .bar-wrap{height:6px;background:var(--bg-3);border-radius:99px;overflow:hidden;margin-top:4px;min-width:80px}
+.boxes-table td .bar-fill{height:100%;border-radius:99px;transition:width .4s}
+.boxes-row-active  .bar-fill{background:var(--green)}
+.boxes-row-sample  .bar-fill{background:#f97316}
+
+/* Active filter indicator */
+.filter-active-indicator{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent-soft);color:var(--accent);border-radius:99px;font-size:11px;font-weight:600;margin-left:4px;}
+.filter-active-indicator button{background:none;border:none;cursor:pointer;color:var(--accent);font-size:13px;line-height:1;padding:0 0 0 2px;}
+
 @media(max-width:1024px){.charts-grid{grid-template-columns:1fr}}
 @media(max-width:768px){
   :root{--sidebar-w:0px}
@@ -296,6 +306,39 @@ tbody tr:hover td{background:var(--bg-3)}
             <div class="stat-label">Active Teams</div>
           </div>
         </div>
+
+        <!-- ===== BOXES NEEDED TODAY ===== -->
+        <div class="card" style="margin-top:22px;">
+          <div class="card-header">
+            <div class="card-title">📦 Boxes to Prepare Today</div>
+            <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">🔄 Refresh</button>
+          </div>
+          <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;margin-top:-8px;">
+            <strong style="color:var(--green);">Active deliveries</strong> = scheduled customers •
+            <strong style="color:#f97316;">Sample boxes</strong> = pending enquiries
+          </p>
+          <div class="table-wrap">
+            <table class="boxes-table">
+              <thead>
+                <tr>
+                  <th>Plan</th>
+                  <th>Duration</th>
+                  <th style="color:var(--green);">🟢 Active Boxes</th>
+                  <th style="color:#f97316;">🟠 Sample Boxes</th>
+                  <th>📦 Total Today</th>
+                </tr>
+              </thead>
+              <tbody id="boxes-tbody">
+                <tr><td colspan="5" style="text-align:center;padding:28px;color:var(--text-3);">Loading…</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="boxes-total-row" style="display:none;margin-top:14px;padding:12px 16px;background:var(--accent-soft);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:space-between;">
+            <span style="font-weight:600;color:var(--accent);">🎯 Grand Total Boxes Today</span>
+            <span id="boxes-grand-total" style="font-size:22px;font-weight:700;color:var(--accent);">—</span>
+          </div>
+        </div>
+
         <div class="charts-grid">
           <div class="card">
             <div class="card-header">
@@ -450,7 +493,7 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="table-wrap">
           <table id="employees-table">
             <thead>
-              <tr><th>Name</th><th>Email</th><th>Phone</th><th>Team</th><th>Actions</th></tr>
+              <tr><th>Name</th><th>User ID</th><th>Phone</th><th>Team</th><th>Actions</th></tr>
             </thead>
             <tbody>
               <tr id="emp-loading-row">
@@ -469,27 +512,30 @@ tbody tr:hover td{background:var(--bg-3)}
         </div>
         <div class="filter-bar">
           <div class="search-wrap">
-            <input class="form-control" id="cust-search" placeholder="Search customers…" oninput="filterTable('cust-search','customers-table','data-name')" style="max-width:220px;">
+            <input class="form-control" id="cust-search" placeholder="Search customers…" oninput="filterCustomers()" style="max-width:220px;">
           </div>
-          <select class="form-control" id="cust-city-filter" onchange="filterByCity('cust-city-filter','customers-table')" style="max-width:180px;">
+          <select class="form-control" id="cust-city-filter" onchange="filterCustomers()" style="max-width:180px;">
             <option value="">All Cities</option>
             {% for team in teams %}{% if team.city %}
             <option value="{{ team.city | lower }}">{{ team.city }}</option>
             {% endif %}{% endfor %}
           </select>
-          <select class="form-control" id="cust-team-filter" onchange="filterByTeam('cust-team-filter','customers-table')" style="max-width:200px;">
+          <select class="form-control" id="cust-team-filter" onchange="filterCustomers()" style="max-width:200px;">
             <option value="">All Teams</option>
             {% for team in teams %}
             <option value="{{ team._id }}">{{ team.name }}</option>
             {% endfor %}
           </select>
-          <select class="form-control" id="cust-status-filter" onchange="filterByStatus('cust-status-filter','customers-table')" style="max-width:160px;">
+          <select class="form-control" id="cust-status-filter" onchange="filterCustomers()" style="max-width:160px;">
             <option value="">All Statuses</option>
             <option value="active">Active</option>
             <option value="paused">Paused</option>
             <option value="inactive">Inactive</option>
           </select>
+          <button class="btn btn-ghost btn-sm" id="cust-clear-filters" onclick="clearCustomerFilters()" style="display:none;">✕ Clear Filters</button>
         </div>
+        <!-- Active filter summary chips -->
+        <div id="cust-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;margin-top:-8px;"></div>
         <div class="table-wrap">
           <table id="customers-table">
             <thead>
@@ -502,6 +548,8 @@ tbody tr:hover td{background:var(--bg-3)}
             </tbody>
           </table>
         </div>
+        <!-- Result count -->
+        <div id="cust-result-count" style="margin-top:10px;font-size:12px;color:var(--text-3);text-align:right;"></div>
       </div>
 
       <!-- ===== ENQUIRIES ===== -->
@@ -546,7 +594,7 @@ tbody tr:hover td{background:var(--bg-3)}
               </tr>
             </thead>
             <tbody id="enq-tbody">
-              <tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-3);">Loading enquiries…</td></tr>
+              <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading enquiries…</td></tr>
             </tbody>
           </table>
         </div>
@@ -565,9 +613,7 @@ tbody tr:hover td{background:var(--bg-3)}
   </nav>
 </div>
 
-<!-- ============================================================
-     MODALS
-     ============================================================ -->
+<!-- ============================================================  MODALS  -->
 
 <!-- Add Plan -->
 <div class="modal-backdrop" id="modal-add-plan">
@@ -718,7 +764,6 @@ tbody tr:hover td{background:var(--bg-3)}
       <input type="hidden" name="role" id="hiddenRole" value="">
       <input type="hidden" name="next" value="dashboard_admin">
 
-      <!-- Role selector -->
       <div class="form-group" id="rf-role-group">
         <label class="form-label">Role *</label>
         <select id="roleSelect" class="form-control" onchange="onRoleChange()">
@@ -740,16 +785,15 @@ tbody tr:hover td{background:var(--bg-3)}
         </div>
       </div>
 
-      <!-- Email — required for employees/managers, optional for customers -->
+      <!-- User ID (email) field -->
       <div class="form-group">
-        <label class="form-label" id="email-label">Email</label>
+        <label class="form-label" id="email-label">User ID <span class="opt">(email used as login ID)</span></label>
         <input type="email" name="email" id="uf-email" class="form-control" placeholder="user@example.com">
         <div class="email-hint" id="email-hint" style="display:none;">
-          Optional for customers — a system email will be auto-generated from their phone number if left blank.
+          Optional for customers — a User ID will be auto-generated from their phone number if left blank (e.g. 9876543210@fruitedelights.local).
         </div>
       </div>
 
-      <!-- Team -->
       <div id="rf-team" class="form-group" style="display:none;">
         <label class="form-label">Assign Team</label>
         <select name="team_id" id="uf-team" class="form-control">
@@ -760,32 +804,28 @@ tbody tr:hover td{background:var(--bg-3)}
         </select>
       </div>
 
-      <!-- Customer extras -->
       <div id="rf-customer" style="display:none;">
         <div class="divider-label">Customer Details</div>
-
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Delivery Plan</label>
             <select name="plan_name" id="uf-plan" class="form-control">
               <option value="">— No plan —</option>
               {% for plan in plans %}
-              <option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo</option>
+              <option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo ({{ plan.duration_days or '?' }} days)</option>
               {% endfor %}
             </select>
           </div>
           <div class="form-group">
             <label class="form-label">Start Date *</label>
             <input type="date" name="start_date" id="uf-startdate" class="form-control">
-            <small style="color:var(--text-3);font-size:11px;">First invoice generated from this date</small>
+            <small style="color:var(--text-3);font-size:11px;">Billing period calculated from this date</small>
           </div>
         </div>
-
         <div class="form-group">
           <label class="form-label">Delivery Address</label>
           <textarea name="address" id="uf-address" class="form-control" rows="2"></textarea>
         </div>
-
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Preferred Time Slot</label>
@@ -805,7 +845,6 @@ tbody tr:hover td{background:var(--bg-3)}
             </select>
           </div>
         </div>
-
         <div class="form-group">
           <label class="form-label">Planned Off-Days</label>
           <select name="off_days" id="uf-offdays" class="form-control" multiple>
@@ -819,7 +858,6 @@ tbody tr:hover td{background:var(--bg-3)}
           </select>
           <small style="color:var(--text-3);">Ctrl/Cmd to multi-select</small>
         </div>
-
         <div class="divider-label">Discount</div>
         <div class="form-row">
           <div class="form-group">
@@ -864,8 +902,9 @@ tbody tr:hover td{background:var(--bg-3)}
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Email *</label>
-        <input type="email" name="email" id="ee-email" class="form-control" required>
+        <label class="form-label">User ID * <span class="opt">(used to login)</span></label>
+        <input type="text" name="email" id="ee-email" class="form-control" required>
+        <div class="email-hint">This is used as the login User ID.</div>
       </div>
       <div class="form-group">
         <label class="form-label">Assign Team</label>
@@ -905,9 +944,9 @@ tbody tr:hover td{background:var(--bg-3)}
         </div>
       </div>
       <div class="form-group">
-        <label class="form-label">Email <span class="opt">(optional)</span></label>
-        <input type="email" name="email" id="ec-email" class="form-control" placeholder="Leave blank to keep existing">
-        <div class="email-hint">If blank, the existing email is preserved.</div>
+        <label class="form-label">User ID <span class="opt">(optional — auto-generated from phone if blank)</span></label>
+        <input type="text" name="email" id="ec-email" class="form-control" placeholder="Leave blank to keep existing" required>
+        <div class="email-hint">The User ID is used to log in. If blank, the existing User ID is preserved.</div>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -971,7 +1010,6 @@ tbody tr:hover td{background:var(--bg-3)}
           <small style="color:var(--text-3);">Ctrl/Cmd to multi-select</small>
         </div>
       </div>
-
       <div class="divider-label">Discount</div>
       <div class="form-row">
         <div class="form-group">
@@ -985,7 +1023,6 @@ tbody tr:hover td{background:var(--bg-3)}
           <small style="color:var(--text-3);font-size:11px;">Fixed ₹ deducted from bill</small>
         </div>
       </div>
-
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-customer')">Cancel</button>
         <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -994,9 +1031,7 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- ============================================================
-     JAVASCRIPT
-     ============================================================ -->
+<!-- ============================================================  JAVASCRIPT  -->
 <script>
 const pageTitles = {
   home:'Dashboard', plans:'Subscription Plans', teams:'Teams',
@@ -1004,7 +1039,6 @@ const pageTitles = {
 };
 const _loaded = { employees:false, customers:false };
 
-/* ---- Navigate ---- */
 function navigate(page, el) {
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
@@ -1019,9 +1053,63 @@ function navigate(page, el) {
   if (page === 'enquiries') loadEnquiries(false);
 }
 
-/* ---- XSS helper ---- */
 function escHtml(s) {
   return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+/* ---- Load Boxes Needed ---- */
+let _boxesLoaded = false;
+async function loadBoxes(force) {
+  if (_boxesLoaded && !force) return;
+  const tbody = document.getElementById('boxes-tbody');
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-3);">Loading…</td></tr>`;
+  try {
+    const data = await fetch('/api/admin/boxes_needed').then(r => r.json());
+    _boxesLoaded = true;
+
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-3);">No plans found.</td></tr>`;
+      return;
+    }
+
+    const maxTotal = Math.max(...data.map(d => d.total_boxes), 1);
+    let grandTotal = 0;
+
+    tbody.innerHTML = data.map(p => {
+      grandTotal += p.total_boxes;
+      const activeW  = Math.round((p.active_customers  / maxTotal) * 100);
+      const sampleW  = Math.round((p.pending_enquiries / maxTotal) * 100);
+      const totalBig = p.total_boxes > 0
+        ? `<span style="font-size:20px;font-weight:700;color:var(--text);">${p.total_boxes}</span>`
+        : `<span style="color:var(--text-3);">0</span>`;
+      return `
+      <tr>
+        <td>
+          <div style="font-weight:600;">${escHtml(p.plan_name)}</div>
+          <div style="font-size:11px;color:var(--text-3);">₹${p.plan_price}</div>
+        </td>
+        <td><span class="badge badge-blue">${p.duration_days || '—'} days</span></td>
+        <td class="boxes-row-active">
+          <div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers}</div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">regular deliveries</div>
+        </td>
+        <td class="boxes-row-sample">
+          <div style="font-weight:700;color:#f97316;font-size:16px;">${p.pending_enquiries}</div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${sampleW}%;background:#f97316;"></div></div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">sample / trial</div>
+        </td>
+        <td>${totalBig}</td>
+      </tr>`;
+    }).join('');
+
+    // Show grand total
+    const row = document.getElementById('boxes-total-row');
+    document.getElementById('boxes-grand-total').textContent = grandTotal;
+    row.style.display = 'flex';
+  } catch(err) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--red);">Failed to load. <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">Retry</button></td></tr>`;
+  }
 }
 
 /* ---- Load Employees ---- */
@@ -1042,11 +1130,14 @@ async function loadEmployees() {
             <div class="avatar avatar-sm">${e.name.charAt(0).toUpperCase()}</div>
             <div>
               <div style="font-weight:600;">${escHtml(e.name)}</div>
-              <div style="font-size:11px;color:var(--text-3);">${escHtml(e.email)}</div>
+              <div style="font-size:11px;color:var(--text-3);">${escHtml(e.phone)}</div>
             </div>
           </div>
         </td>
-        <td>${escHtml(e.email)}</td>
+        <td>
+          <div style="font-size:12px;color:var(--text-2);">${escHtml(e.email)}</div>
+          <div style="font-size:10px;color:var(--text-3);">User ID</div>
+        </td>
         <td>${escHtml(e.phone)}</td>
         <td><span class="badge badge-blue">${escHtml(e.team_name)}</span></td>
         <td>
@@ -1068,7 +1159,6 @@ async function loadEmployees() {
   }
 }
 
-/* ---- Status badge helper ---- */
 function statusBadge(status) {
   const map = {
     'active':   '<span class="badge badge-green">✅ Active</span>',
@@ -1127,40 +1217,126 @@ async function loadCustomers() {
         </td>
       </tr>`;
     }).join('');
+    // Run filters in case any were pre-set
+    filterCustomers();
   } catch(err) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">Failed to load. Please refresh.</td></tr>`;
   }
 }
+
+/* ====================================================================
+   CUSTOMER COMBINED FILTER — AND logic across all four filters
+   Each filter is completely independent; any combination works.
+   ==================================================================== */
+function filterCustomers() {
+  const q      = (document.getElementById('cust-search').value || '').toLowerCase().trim();
+  const city   = (document.getElementById('cust-city-filter').value || '').toLowerCase();
+  const team   = document.getElementById('cust-team-filter').value || '';
+  const status = (document.getElementById('cust-status-filter').value || '').toLowerCase();
+
+  let visible = 0;
+  const total  = document.querySelectorAll('#customers-table tbody tr[data-name]').length;
+
+  document.querySelectorAll('#customers-table tbody tr[data-name]').forEach(r => {
+    const rName   = (r.getAttribute('data-name')   || '').toLowerCase();
+    const rCity   = (r.getAttribute('data-city')   || '').toLowerCase();
+    const rTeam   = (r.getAttribute('data-team')   || '');
+    const rStatus = (r.getAttribute('data-status') || '').toLowerCase();
+
+    const nameOk   = !q      || rName.includes(q);
+    const cityOk   = !city   || rCity   === city;
+    const teamOk   = !team   || rTeam   === team;
+    const statusOk = !status || rStatus === status;
+
+    const show = nameOk && cityOk && teamOk && statusOk;
+    r.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  // Show / hide "Clear Filters" button
+  const hasFilter = q || city || team || status;
+  const clearBtn = document.getElementById('cust-clear-filters');
+  if (clearBtn) clearBtn.style.display = hasFilter ? 'inline-flex' : 'none';
+
+  // Update active filter chips
+  updateCustFilterChips({ q, city, team, status });
+
+  // Result count
+  const countEl = document.getElementById('cust-result-count');
+  if (countEl) {
+    if (hasFilter) {
+      countEl.textContent = `Showing ${visible} of ${total} customers`;
+    } else {
+      countEl.textContent = '';
+    }
+  }
+}
+
+function updateCustFilterChips({ q, city, team, status }) {
+  const wrap = document.getElementById('cust-filter-chips');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+
+  const teamLabel = team
+    ? (document.querySelector(`#cust-team-filter option[value="${team}"]`) || {}).textContent || team
+    : '';
+  const statusLabel = status
+    ? ({ active:'✅ Active', paused:'⏸️ Paused', inactive:'❌ Inactive' }[status] || status)
+    : '';
+  const cityLabel = city
+    ? city.charAt(0).toUpperCase() + city.slice(1)
+    : '';
+
+  const chips = [
+    q          && { label: `"${q}"`,       clear: () => { document.getElementById('cust-search').value = ''; filterCustomers(); } },
+    cityLabel  && { label: `🏙️ ${cityLabel}`,  clear: () => { document.getElementById('cust-city-filter').value = ''; filterCustomers(); } },
+    teamLabel  && { label: `🏘️ ${teamLabel.split('–')[0].trim()}`,  clear: () => { document.getElementById('cust-team-filter').value = ''; filterCustomers(); } },
+    statusLabel && { label: statusLabel,   clear: () => { document.getElementById('cust-status-filter').value = ''; filterCustomers(); } },
+  ].filter(Boolean);
+
+  chips.forEach(chip => {
+    const el = document.createElement('span');
+    el.className = 'filter-active-indicator';
+    el.innerHTML = escHtml(chip.label) + `<button onclick="void(0)" title="Remove filter">✕</button>`;
+    el.querySelector('button').addEventListener('click', chip.clear);
+    wrap.appendChild(el);
+  });
+}
+
+function clearCustomerFilters() {
+  document.getElementById('cust-search').value        = '';
+  document.getElementById('cust-city-filter').value   = '';
+  document.getElementById('cust-team-filter').value   = '';
+  document.getElementById('cust-status-filter').value = '';
+  filterCustomers();
+}
+/* ==================================================================== */
 
 /* ---- Load Enquiries ---- */
 let _enqLoaded = false;
 async function loadEnquiries(force) {
   if (_enqLoaded && !force) return;
   const tbody = document.getElementById('enq-tbody');
-  tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
+  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try {
     const data = await fetch('/api/admin/enquiries_data').then(r => {
       if (!r.ok) throw new Error('HTTP ' + r.status);
       return r.json();
     });
     _enqLoaded = true;
-
     const total    = data.length;
     const pending  = data.filter(e => e.status === 'pending').length;
     const approved = data.filter(e => e.status === 'approved').length;
     document.getElementById('enq-stat-total').textContent    = total;
     document.getElementById('enq-stat-pending').textContent  = pending;
     document.getElementById('enq-stat-approved').textContent = approved;
-
     const badge = document.getElementById('enq-badge');
     if (pending > 0) { badge.textContent = pending; badge.style.display = 'inline-flex'; }
     else { badge.style.display = 'none'; }
-
     if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--text-3);">No enquiries yet.</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">No enquiries yet.</td></tr>`;
       return;
     }
-
     tbody.innerHTML = data.map(e => {
       const date = e.created_at
         ? new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'})
@@ -1186,15 +1362,11 @@ async function loadEnquiries(force) {
             </div>
           </td>
           <td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td>
-          <td>${e.plan?`<span class="badge badge-orange">${escHtml(e.plan.substring(0,24))}${e.plan.length>24?'…':''}</span>`:`<span class="badge badge-gray">—</span>`}</td>
+          <td>${e.plan?`<span class="badge badge-orange" title="${escHtml(e.plan)}">${escHtml(e.plan.substring(0,22))}${e.plan.length>22?'…':''}</span>`:`<span class="badge badge-gray">—</span>`}</td>
           <td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td>
           <td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td>
-<td>
-  ${e.payment_method==='cod'
-    ? `<span class="badge badge-yellow">💵 COD</span>`
-    : `<span class="badge badge-blue">📱 UPI</span>`}
-</td>
-<td style="font-size:12px;color:var(--text-3);">${date}</td>
+          <td>${e.payment_method==='cod'?`<span class="badge badge-yellow">💵 COD</span>`:`<span class="badge badge-blue">📱 UPI</span>`}</td>
+          <td style="font-size:12px;color:var(--text-3);">${date}</td>
           <td>${sb}</td>
           <td>
             <div style="display:flex;gap:5px;align-items:center;">
@@ -1209,7 +1381,7 @@ async function loadEnquiries(force) {
     }).join('');
   } catch(err) {
     console.error('Enquiries load error:', err);
-    tbody.innerHTML = `<tr><td colspan="8" style="text-align:center;padding:32px;color:var(--red);">Failed to load enquiries. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed to load. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;
   }
 }
 
@@ -1224,7 +1396,7 @@ function filterEnqTable() {
   });
 }
 
-/* ---- Edit Employee Modal ---- */
+/* ---- Edit Modals ---- */
 function openEditEmployee(id, name, email, phone, teamId) {
   document.getElementById('ee-name').value  = name;
   document.getElementById('ee-email').value = email;
@@ -1234,10 +1406,8 @@ function openEditEmployee(id, name, email, phone, teamId) {
   openModal('modal-edit-employee');
 }
 
-/* ---- Edit Customer Modal ---- */
 function openEditCustomer(c) {
   document.getElementById('ec-name').value      = c.name || '';
-  // Show real email only if it's not a system-generated one
   const realEmail = (c.email||'').endsWith('@fruitedelights.local') ? '' : (c.email||'');
   document.getElementById('ec-email').value     = realEmail;
   document.getElementById('ec-phone').value     = c.phone || '';
@@ -1249,26 +1419,21 @@ function openEditCustomer(c) {
   document.getElementById('ec-status').value    = c.status || 'active';
   document.getElementById('ec-discpct').value   = c.discount_percent || 0;
   document.getElementById('ec-discamt').value   = c.discount_amount || 0;
-
   const sel = document.getElementById('ec-offdays');
-  for (let opt of sel.options) {
-    opt.selected = (c.off_days || []).includes(opt.value);
-  }
-
+  for (let opt of sel.options) { opt.selected = (c.off_days || []).includes(opt.value); }
   document.getElementById('edit-cust-form').action = '/admin/users/edit/' + c.id;
   openModal('modal-edit-customer');
 }
 
-/* ---- Add/Edit User unified modal ---- */
 function openAddUserModal(role) {
   const form = document.getElementById('user-form');
   form.action = '/admin/users/add';
   form.reset();
-  document.getElementById('user-modal-title').textContent   = 'Onboard User';
-  document.getElementById('user-submit-btn').textContent    = 'Add & Send Credentials';
-  document.getElementById('rf-role-group').style.display    = 'block';
-  document.getElementById('roleSelect').value               = role || '';
-  document.getElementById('hiddenRole').value               = role || '';
+  document.getElementById('user-modal-title').textContent = 'Onboard User';
+  document.getElementById('user-submit-btn').textContent  = 'Add & Send Credentials';
+  document.getElementById('rf-role-group').style.display  = 'block';
+  document.getElementById('roleSelect').value             = role || '';
+  document.getElementById('hiddenRole').value             = role || '';
   applyRoleFields(role || '');
   openModal('modal-add-user');
 }
@@ -1282,26 +1447,22 @@ function onRoleChange() {
 function applyRoleFields(role) {
   document.getElementById('rf-team').style.display     = (role==='employee'||role==='customer') ? 'block' : 'none';
   document.getElementById('rf-customer').style.display = role==='customer' ? 'block' : 'none';
-
-  // Email required for employees/managers, optional for customers
   const emailInput = document.getElementById('uf-email');
   const emailLabel = document.getElementById('email-label');
   const emailHint  = document.getElementById('email-hint');
-
   if (role === 'customer') {
     emailInput.required = false;
     emailInput.placeholder = 'Optional — auto-generated from phone if blank';
-    emailLabel.innerHTML = 'Email <span class="opt">(optional)</span>';
+    emailLabel.innerHTML = 'User ID (Email) <span class="opt">(optional for customers)</span>';
     emailHint.style.display = 'block';
   } else {
     emailInput.required = true;
     emailInput.placeholder = 'user@example.com';
-    emailLabel.innerHTML = 'Email *';
+    emailLabel.innerHTML = 'User ID (Email) *';
     emailHint.style.display = 'none';
   }
 }
 
-/* ---- Plan edit ---- */
 function openEditPlan(plan) {
   document.getElementById('ep-name').value     = plan.name || '';
   document.getElementById('ep-desc').value     = plan.description || '';
@@ -1313,7 +1474,6 @@ function openEditPlan(plan) {
   openModal('modal-edit-plan');
 }
 
-/* ---- Team edit ---- */
 function openEditTeam(team) {
   document.getElementById('et-name').value = team.name || '';
   document.getElementById('et-area').value = team.area || '';
@@ -1340,7 +1500,7 @@ document.querySelectorAll('.modal-backdrop').forEach(m => {
   m.addEventListener('click', function(e) { if (e.target===this) this.classList.remove('open'); });
 });
 
-/* ---- Table filters ---- */
+/* ---- Generic table filters (employees / teams — unchanged) ---- */
 function filterTable(inputId, tableId, attr) {
   const q = document.getElementById(inputId).value.toLowerCase();
   document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => {
@@ -1466,6 +1626,7 @@ window.addEventListener('DOMContentLoaded', () => {
   loadChart(1, document.querySelector('.range-pill.active'));
   loadEmployees();
   loadCustomers();
+  loadBoxes(false);
 });
 </script>
 </body>

@@ -11,8 +11,8 @@
         </div>
         <form method="POST" action="{{ url_for('login') }}">
             <div class="form-group">
-                <label class="form-label">Email Address</label>
-                <input type="email" name="email" class="form-control" required placeholder="name@company.com">
+                <label class="form-label">Login ID</label>
+                <input type="text" name="email" class="form-control" required placeholder="your-id@fruitedelights.local">
             </div>
             <div class="form-group">
                 <label class="form-label">Password</label>
@@ -20,6 +20,142 @@
             </div>
             <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1rem;">Sign In</button>
         </form>
+
+        <div style="text-align: center; margin-top: 1.2rem;">
+            <a href="#" id="forgotPasswordLink" style="font-size: 0.85rem; color: var(--text-muted); text-decoration: none;">
+                Forgot password?
+            </a>
+        </div>
     </div>
 </div>
+
+<!-- ── Forgot Password Modal ───────────────────────────────────────────── -->
+<div id="forgotModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.45);
+     z-index:9999; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:16px; padding:2rem; width:90%; max-width:380px;
+                box-shadow:0 8px 32px rgba(0,0,0,0.18); position:relative;">
+
+        <!-- Close button -->
+        <button id="closeModal" style="position:absolute; top:12px; right:16px; background:none;
+                border:none; font-size:1.4rem; cursor:pointer; color:#888;" aria-label="Close">&times;</button>
+
+        <div style="text-align:center; margin-bottom:1.2rem;">
+            <div style="font-size:2rem; margin-bottom:0.4rem;">🔑</div>
+            <h3 style="margin:0 0 0.3rem;">Forgot Password?</h3>
+            <p style="font-size:0.85rem; color:#666; margin:0;">
+                Enter your registered mobile number.<br>
+                We'll send your login details on WhatsApp.
+            </p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Mobile Number</label>
+            <input type="tel" id="forgotPhone" class="form-control" maxlength="15"
+                   placeholder="e.g. 9876543210" style="letter-spacing:0.05em;">
+        </div>
+
+        <div id="forgotMsg" style="display:none; font-size:0.85rem; border-radius:8px;
+             padding:0.6rem 0.9rem; margin-bottom:0.8rem;"></div>
+
+        <button id="sendForgotBtn" class="btn btn-primary" style="width:100%;">
+            Send via WhatsApp
+        </button>
+    </div>
+</div>
+
+<script>
+(function () {
+    const modal      = document.getElementById('forgotModal');
+    const openLink   = document.getElementById('forgotPasswordLink');
+    const closeBtn   = document.getElementById('closeModal');
+    const sendBtn    = document.getElementById('sendForgotBtn');
+    const phoneInput = document.getElementById('forgotPhone');
+    const msgBox     = document.getElementById('forgotMsg');
+
+    // Open
+    openLink.addEventListener('click', function (e) {
+        e.preventDefault();
+        phoneInput.value = '';
+        hideMsg();
+        modal.style.display = 'flex';
+        setTimeout(() => phoneInput.focus(), 80);
+    });
+
+    // Close
+    closeBtn.addEventListener('click', closeModal);
+    modal.addEventListener('click', function (e) {
+        if (e.target === modal) closeModal();
+    });
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    function closeModal() {
+        modal.style.display = 'none';
+    }
+
+    function showMsg(text, type) {
+        // type: 'success' | 'error' | 'info'
+        const colors = {
+            success: { bg: '#d1fae5', color: '#065f46' },
+            error:   { bg: '#fee2e2', color: '#991b1b' },
+            info:    { bg: '#dbeafe', color: '#1e40af' },
+        };
+        const c = colors[type] || colors.info;
+        msgBox.style.background = c.bg;
+        msgBox.style.color      = c.color;
+        msgBox.textContent      = text;
+        msgBox.style.display    = 'block';
+    }
+
+    function hideMsg() {
+        msgBox.style.display = 'none';
+        msgBox.textContent   = '';
+    }
+
+    // Send request
+    sendBtn.addEventListener('click', async function () {
+        const phone = phoneInput.value.replace(/\D/g, '').trim();
+
+        if (!phone || phone.length < 10) {
+            showMsg('Please enter a valid 10-digit mobile number.', 'error');
+            return;
+        }
+
+        sendBtn.disabled     = true;
+        sendBtn.textContent  = 'Sending…';
+        hideMsg();
+
+        try {
+            const resp = await fetch('/api/forgot-password', {
+                method:  'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body:    JSON.stringify({ phone: phone }),
+            });
+
+            const data = await resp.json();
+
+            if (data.success) {
+                showMsg(data.message || 'Credentials sent! Check WhatsApp.', 'success');
+                sendBtn.textContent = '✅ Sent';
+                // Auto-close after 3 s
+                setTimeout(closeModal, 3000);
+            } else {
+                showMsg(data.message || 'Something went wrong. Try again.', 'error');
+                sendBtn.disabled    = false;
+                sendBtn.textContent = 'Send via WhatsApp';
+            }
+        } catch (err) {
+            showMsg('Network error. Please try again.', 'error');
+            sendBtn.disabled    = false;
+            sendBtn.textContent = 'Send via WhatsApp';
+        }
+    });
+
+    // Allow Enter key inside input
+    phoneInput.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') sendBtn.click();
+    });
+})();
+</script>
 {% endblock %}
