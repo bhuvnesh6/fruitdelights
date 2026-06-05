@@ -151,15 +151,85 @@ tbody tr:hover td{background:var(--bg-3)}
 .section-title-bar h2{font-family:var(--font-disp);font-size:22px;}
 .email-hint{font-size:11px;color:var(--text-3);margin-top:4px;font-weight:400;}
 
-/* Boxes needed table */
+/* ── Boxes table ── */
 .boxes-table td .bar-wrap{height:6px;background:var(--bg-3);border-radius:99px;overflow:hidden;margin-top:4px;min-width:80px}
 .boxes-table td .bar-fill{height:100%;border-radius:99px;transition:width .4s}
-.boxes-row-active  .bar-fill{background:var(--green)}
-.boxes-row-sample  .bar-fill{background:#f97316}
+
+/* ── Box view tabs ── */
+.box-tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;width:fit-content}
+.box-tab{padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--bg-3);color:var(--text-2);transition:background .15s,color .15s}
+.box-tab.active{background:var(--accent);color:#fff}
+.box-tab:not(:last-child){border-right:1px solid var(--border)}
+
+/* ── Per-team mini rows inside boxes ── */
+.team-breakdown{margin-top:6px}
+.team-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-2);padding:2px 0}
+.team-row .t-name{min-width:90px;font-weight:500;color:var(--text)}
+.team-row .t-bar{flex:1;height:4px;background:var(--bg-3);border-radius:99px;overflow:hidden}
+.team-row .t-bar-fill{height:100%;border-radius:99px;background:var(--accent);transition:width .4s}
+.team-row .t-count{min-width:24px;text-align:right;font-weight:700;color:var(--accent)}
 
 /* Active filter indicator */
 .filter-active-indicator{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent-soft);color:var(--accent);border-radius:99px;font-size:11px;font-weight:600;margin-left:4px;}
 .filter-active-indicator button{background:none;border:none;cursor:pointer;color:var(--accent);font-size:13px;line-height:1;padding:0 0 0 2px;}
+
+/* ── Detail View Modal ── */
+.detail-hero{display:flex;align-items:center;gap:18px;padding:20px 22px;background:linear-gradient(135deg,var(--accent-soft),#f5f3ff);border-radius:var(--radius);margin-bottom:22px;border:1px solid #e0e7ff;}
+.detail-hero-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:white;flex-shrink:0;box-shadow:0 4px 12px rgba(79,70,229,.3);}
+.detail-hero-info{flex:1;min-width:0;}
+.detail-hero-name{font-family:var(--font-disp);font-size:20px;font-weight:700;color:var(--text);margin-bottom:4px;}
+.detail-hero-sub{font-size:12px;color:var(--text-2);display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:18px;}
+.detail-field{background:var(--bg-3);border-radius:var(--radius-sm);padding:10px 14px;border:1px solid var(--border);}
+.detail-field-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:var(--text-3);margin-bottom:4px;}
+.detail-field-value{font-size:14px;font-weight:500;color:var(--text);word-break:break-word;}
+.detail-field-value a{color:var(--accent);}
+.detail-field.full-width{grid-column:1 / -1;}
+.detail-section-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--accent);margin:18px 0 10px;display:flex;align-items:center;gap:6px;}
+.detail-section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+.team-assign-select{display:flex;gap:10px;align-items:flex-end;margin-top:6px;}
+.team-assign-select select{flex:1;}
+
+/* ── Sample Customers Modal ── */
+.sample-modal-backdrop{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
+.sample-modal-backdrop.open{display:flex}
+.sample-modal{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:900px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
+.sample-modal-header{padding:20px 24px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;background:linear-gradient(135deg,#fff7ed,#fef3c7);border-radius:var(--radius) var(--radius) 0 0}
+.sample-modal-title{font-family:var(--font-disp);font-size:18px;font-weight:700;color:var(--text)}
+.sample-modal-body{flex:1;overflow-y:auto;padding:20px 24px}
+.sample-customer-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.sample-cust-card{background:var(--bg-2);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px;transition:box-shadow .2s,border-color .2s;position:relative}
+.sample-cust-card:hover{box-shadow:var(--shadow-md);border-color:var(--border-s)}
+.sample-cust-card-header{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:12px}
+.sample-cust-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,#f97316,#f59e0b);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px;color:white;flex-shrink:0}
+.sample-cust-name{font-weight:700;font-size:14px;color:var(--text);line-height:1.3}
+.sample-cust-label{font-size:11px;color:var(--text-3);margin-top:2px}
+.sample-cust-fields{display:flex;flex-direction:column;gap:6px;margin-bottom:14px}
+.sample-cust-field{display:flex;align-items:flex-start;gap:8px;font-size:12px;color:var(--text-2)}
+.sample-cust-field .sf-icon{font-size:13px;flex-shrink:0;margin-top:1px}
+.sample-cust-field .sf-val{flex:1;word-break:break-word;color:var(--text)}
+.sample-cust-field .sf-val a{color:var(--accent);font-weight:600}
+.sample-cust-team-current{display:flex;align-items:center;gap:6px;margin-bottom:10px;padding:6px 10px;background:var(--bg-3);border-radius:var(--radius-sm);border:1px solid var(--border)}
+.sample-cust-team-current .sct-label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-3)}
+.sample-cust-team-current .sct-val{font-size:12px;font-weight:600;color:var(--text)}
+.sample-assign-row{display:flex;gap:6px;align-items:center}
+.sample-assign-row select{flex:1;font-size:12px;padding:6px 10px;background:var(--bg-3);border:1.5px solid var(--border);border-radius:var(--radius-sm);color:var(--text);outline:none}
+.sample-assign-row select:focus{border-color:var(--accent)}
+.sample-assign-btn{padding:6px 12px;font-size:12px;font-weight:700;background:var(--accent);color:white;border:none;border-radius:var(--radius-sm);cursor:pointer;white-space:nowrap;transition:background .15s}
+.sample-assign-btn:hover{background:var(--accent-hover)}
+.sample-assign-btn:disabled{opacity:.5;cursor:not-allowed}
+.sample-modal-summary{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg-3);border-radius:var(--radius-sm);margin-bottom:16px;flex-wrap:wrap}
+.sample-modal-loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;color:var(--text-3)}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 18px;border-radius:12px;font-weight:600;font-size:13px;color:white;animation:slideIn .3s ease;box-shadow:var(--shadow-md);min-width:240px}
+.toast-success{background:linear-gradient(135deg,#10b981,#059669)}
+.toast-danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
+
+/* view btn in boxes table */
+.btn-view-sample{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;font-size:11px;font-weight:700;background:linear-gradient(135deg,#fff7ed,#fef3c7);color:#c2410c;border:1.5px solid #fed7aa;border-radius:99px;cursor:pointer;transition:all .15s;white-space:nowrap}
+.btn-view-sample:hover{background:linear-gradient(135deg,#fed7aa,#fdba74);border-color:#fb923c;color:#7c2d12}
 
 @media(max-width:1024px){.charts-grid{grid-template-columns:1fr}}
 @media(max-width:768px){
@@ -177,6 +247,11 @@ tbody tr:hover td{background:var(--bg-3)}
   .bottom-nav-item.active{color:var(--accent)}
   .bottom-nav-item .bn-icon{font-size:20px}
   .main{padding-bottom:70px}
+  .detail-grid{grid-template-columns:1fr;}
+  .detail-hero{flex-direction:column;text-align:center;}
+  .detail-hero-sub{justify-content:center;}
+  .sample-customer-grid{grid-template-columns:1fr}
+  .sample-modal{max-height:95vh}
 }
 @media(min-width:769px){.bottom-nav{display:none}}
 @media(max-width:480px){.stat-cards{grid-template-columns:1fr 1fr}.modal{padding:20px}}
@@ -309,31 +384,56 @@ tbody tr:hover td{background:var(--bg-3)}
 
         <!-- ===== BOXES NEEDED TODAY ===== -->
         <div class="card" style="margin-top:22px;">
-          <div class="card-header">
+          <div class="card-header" style="flex-wrap:wrap;gap:10px;">
             <div class="card-title">📦 Boxes to Prepare Today</div>
-            <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">🔄 Refresh</button>
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              <div class="box-tabs">
+                <button class="box-tab active" id="tab-plan" onclick="switchBoxView('plan')">By Plan</button>
+                <button class="box-tab" id="tab-team" onclick="switchBoxView('team')">By Team</button>
+              </div>
+              <select class="form-control btn-sm" id="boxes-status-filter" onchange="renderBoxes()" style="max-width:150px;padding:5px 10px;font-size:12px;">
+                <option value="all">All Statuses</option>
+                <option value="active">Active Only</option>
+                <option value="sample">Sample Only</option>
+              </select>
+              <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">🔄 Refresh</button>
+            </div>
           </div>
           <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;margin-top:-8px;">
-            <strong style="color:var(--green);">Active deliveries</strong> = scheduled customers •
-            <strong style="color:#f97316;">Sample boxes</strong> = pending enquiries
+            <strong style="color:var(--green);">Active</strong> = scheduled active-status customers •
+            <strong style="color:#f97316;">Sample</strong> = approved-today enquiries
           </p>
-          <div class="table-wrap">
-            <table class="boxes-table">
-              <thead>
-                <tr>
-                  <th>Plan</th>
-                  <th>Duration</th>
-                  <th style="color:var(--green);">🟢 Active Boxes</th>
-                  <th style="color:#f97316;">🟠 Sample Boxes</th>
-                  <th>📦 Total Today</th>
-                </tr>
-              </thead>
-              <tbody id="boxes-tbody">
-                <tr><td colspan="5" style="text-align:center;padding:28px;color:var(--text-3);">Loading…</td></tr>
-              </tbody>
-            </table>
+          <div id="boxes-plan-view">
+            <div class="table-wrap">
+              <table class="boxes-table">
+                <thead>
+                  <tr>
+                    <th>Plan</th><th>Duration</th>
+                    <th style="color:var(--green);">🟢 Active Boxes</th>
+                    <th style="color:#f97316;">🟠 Sample Boxes</th>
+                    <th>📦 Total</th><th>Teams</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="boxes-tbody">
+                  <tr><td colspan="7" style="text-align:center;padding:28px;color:var(--text-3);">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
           </div>
-          <div id="boxes-total-row" style="display:none;margin-top:14px;padding:12px 16px;background:var(--accent-soft);border-radius:var(--radius-sm);display:flex;align-items:center;justify-content:space-between;">
+          <div id="boxes-team-view" style="display:none;">
+            <div class="table-wrap">
+              <table class="boxes-table">
+                <thead>
+                  <tr><th>Team</th><th>🟢 Active Boxes</th><th>🟠 Sample Boxes</th><th>📦 Total</th><th>Plan Breakdown</th></tr>
+                </thead>
+                <tbody id="boxes-team-tbody">
+                  <tr><td colspan="5" style="text-align:center;padding:28px;color:var(--text-3);">Loading…</td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div id="boxes-total-row" style="display:none;margin-top:14px;padding:12px 16px;background:var(--accent-soft);border-radius:var(--radius-sm);align-items:center;justify-content:space-between;">
             <span style="font-weight:600;color:var(--accent);">🎯 Grand Total Boxes Today</span>
             <span id="boxes-grand-total" style="font-size:22px;font-weight:700;color:var(--accent);">—</span>
           </div>
@@ -352,9 +452,7 @@ tbody tr:hover td{background:var(--bg-3)}
             <canvas id="deliveryChart" height="200"></canvas>
           </div>
           <div class="card">
-            <div class="card-header">
-              <div class="card-title">🗺️ Pending by Area</div>
-            </div>
+            <div class="card-header"><div class="card-title">🗺️ Pending by Area</div></div>
             <canvas id="areaChart" height="200"></canvas>
           </div>
         </div>
@@ -371,13 +469,8 @@ tbody tr:hover td{background:var(--bg-3)}
           <table>
             <thead>
               <tr>
-                <th>Plan Name</th>
-                <th>Description</th>
-                <th>Duration (Days)</th>
-                <th>Monthly Price</th>
-                <th>Tax %</th>
-                <th>Total (incl. tax)</th>
-                <th>Actions</th>
+                <th>Plan Name</th><th>Description</th><th>Duration (Days)</th>
+                <th>Monthly Price</th><th>Tax %</th><th>Total (incl. tax)</th><th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -388,9 +481,7 @@ tbody tr:hover td{background:var(--bg-3)}
                 <td>
                   {% if plan.duration_days %}
                   <span class="badge badge-blue">{{ plan.duration_days }} days</span>
-                  {% else %}
-                  <span style="color:var(--text-3);">—</span>
-                  {% endif %}
+                  {% else %}<span style="color:var(--text-3);">—</span>{% endif %}
                 </td>
                 <td><span style="color:var(--accent);font-weight:700;">₹{{ plan.price_per_month or plan.price_per_day or 0 }}</span></td>
                 <td>{{ plan.tax_percent or 0 }}%</td>
@@ -411,7 +502,7 @@ tbody tr:hover td{background:var(--bg-3)}
           </table>
         </div>
         {% else %}
-        <div class="empty-state"><div class="empty-icon">📋</div><p>No plans yet. Create your first plan above.</p></div>
+        <div class="empty-state"><div class="empty-icon">📋</div><p>No plans yet.</p></div>
         {% endif %}
       </div>
 
@@ -435,9 +526,7 @@ tbody tr:hover td{background:var(--bg-3)}
         {% if teams %}
         <div class="table-wrap">
           <table id="teams-table">
-            <thead>
-              <tr><th>Team Name</th><th>Area</th><th>City</th><th>Actions</th></tr>
-            </thead>
+            <thead><tr><th>Team Name</th><th>Area</th><th>City</th><th>Actions</th></tr></thead>
             <tbody>
               {% for team in teams %}
               <tr data-name="{{ team.name | lower }}" data-city="{{ (team.city or '') | lower }}">
@@ -526,6 +615,12 @@ tbody tr:hover td{background:var(--bg-3)}
             <option value="{{ team._id }}">{{ team.name }}</option>
             {% endfor %}
           </select>
+          <select class="form-control" id="cust-plan-filter" onchange="filterCustomers()" style="max-width:200px;">
+            <option value="">All Plans</option>
+            {% for plan in plans %}
+            <option value="{{ plan._id }}">{{ plan.name }}</option>
+            {% endfor %}
+          </select>
           <select class="form-control" id="cust-status-filter" onchange="filterCustomers()" style="max-width:160px;">
             <option value="">All Statuses</option>
             <option value="active">Active</option>
@@ -534,7 +629,6 @@ tbody tr:hover td{background:var(--bg-3)}
           </select>
           <button class="btn btn-ghost btn-sm" id="cust-clear-filters" onclick="clearCustomerFilters()" style="display:none;">✕ Clear Filters</button>
         </div>
-        <!-- Active filter summary chips -->
         <div id="cust-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;margin-top:-8px;"></div>
         <div class="table-wrap">
           <table id="customers-table">
@@ -548,7 +642,6 @@ tbody tr:hover td{background:var(--bg-3)}
             </tbody>
           </table>
         </div>
-        <!-- Result count -->
         <div id="cust-result-count" style="margin-top:10px;font-size:12px;color:var(--text-3);text-align:right;"></div>
       </div>
 
@@ -559,21 +652,9 @@ tbody tr:hover td{background:var(--bg-3)}
           <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">🔄 Refresh</button>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:22px;">
-          <div class="stat-card c-yellow">
-            <div class="stat-icon">📩</div>
-            <div class="stat-value" id="enq-stat-total">—</div>
-            <div class="stat-label">Total Enquiries</div>
-          </div>
-          <div class="stat-card c-orange">
-            <div class="stat-icon">⏳</div>
-            <div class="stat-value" id="enq-stat-pending">—</div>
-            <div class="stat-label">Pending Approval</div>
-          </div>
-          <div class="stat-card c-green">
-            <div class="stat-icon">✅</div>
-            <div class="stat-value" id="enq-stat-approved">—</div>
-            <div class="stat-label">Converted</div>
-          </div>
+          <div class="stat-card c-yellow"><div class="stat-icon">📩</div><div class="stat-value" id="enq-stat-total">—</div><div class="stat-label">Total Enquiries</div></div>
+          <div class="stat-card c-orange"><div class="stat-icon">⏳</div><div class="stat-value" id="enq-stat-pending">—</div><div class="stat-label">Pending Approval</div></div>
+          <div class="stat-card c-green"><div class="stat-icon">✅</div><div class="stat-value" id="enq-stat-approved">—</div><div class="stat-label">Converted</div></div>
         </div>
         <div class="filter-bar">
           <div class="search-wrap">
@@ -613,7 +694,7 @@ tbody tr:hover td{background:var(--bg-3)}
   </nav>
 </div>
 
-<!-- ============================================================  MODALS  -->
+<!-- ============================================================  STANDARD MODALS  -->
 
 <!-- Add Plan -->
 <div class="modal-backdrop" id="modal-add-plan">
@@ -623,29 +704,13 @@ tbody tr:hover td{background:var(--bg-3)}
       <button class="modal-close" onclick="closeModal('modal-add-plan')">✕</button>
     </div>
     <form method="POST" action="/admin/plans/add">
-      <div class="form-group">
-        <label class="form-label">Plan Name *</label>
-        <input type="text" name="name" class="form-control" required placeholder="e.g. Daily Fresh, Premium Box">
-      </div>
-      <div class="form-group">
-        <label class="form-label">Description</label>
-        <textarea name="description" class="form-control" rows="2" placeholder="Short description…"></textarea>
-      </div>
+      <div class="form-group"><label class="form-label">Plan Name *</label><input type="text" name="name" class="form-control" required placeholder="e.g. Daily Fresh, Premium Box"></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Monthly Price (₹) *</label>
-          <input type="number" name="price_per_month" class="form-control" required min="0" step="0.01" placeholder="1199.00">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Duration (Days) *</label>
-          <input type="number" name="duration_days" class="form-control" required min="1" max="31" placeholder="e.g. 22">
-          <small style="color:var(--text-3);font-size:11px;">Billable days in the plan period</small>
-        </div>
+        <div class="form-group"><label class="form-label">Monthly Price (₹) *</label><input type="number" name="price_per_month" class="form-control" required min="0" step="0.01"></div>
+        <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" class="form-control" required min="1" max="31"><small style="color:var(--text-3);font-size:11px;">Billable days in the plan period</small></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Tax (%)</label>
-        <input type="number" name="tax_percent" class="form-control" min="0" step="0.01" value="0" placeholder="5">
-      </div>
+      <div class="form-group"><label class="form-label">Tax (%)</label><input type="number" name="tax_percent" class="form-control" min="0" step="0.01" value="0"></div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-add-plan')">Cancel</button>
         <button type="submit" class="btn btn-primary">Create Plan</button>
@@ -657,34 +722,15 @@ tbody tr:hover td{background:var(--bg-3)}
 <!-- Edit Plan -->
 <div class="modal-backdrop" id="modal-edit-plan">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Edit Plan</div>
-      <button class="modal-close" onclick="closeModal('modal-edit-plan')">✕</button>
-    </div>
+    <div class="modal-header"><div class="modal-title">Edit Plan</div><button class="modal-close" onclick="closeModal('modal-edit-plan')">✕</button></div>
     <form method="POST" id="edit-plan-form">
-      <div class="form-group">
-        <label class="form-label">Plan Name *</label>
-        <input type="text" name="name" id="ep-name" class="form-control" required>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Description</label>
-        <textarea name="description" id="ep-desc" class="form-control" rows="2"></textarea>
-      </div>
+      <div class="form-group"><label class="form-label">Plan Name *</label><input type="text" name="name" id="ep-name" class="form-control" required></div>
+      <div class="form-group"><label class="form-label">Description</label><textarea name="description" id="ep-desc" class="form-control" rows="2"></textarea></div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Monthly Price (₹) *</label>
-          <input type="number" name="price_per_month" id="ep-price" class="form-control" required step="0.01">
-        </div>
-        <div class="form-group">
-          <label class="form-label">Duration (Days) *</label>
-          <input type="number" name="duration_days" id="ep-duration" class="form-control" required min="1" max="31">
-          <small style="color:var(--text-3);font-size:11px;">Billable days in the plan period</small>
-        </div>
+        <div class="form-group"><label class="form-label">Monthly Price (₹) *</label><input type="number" name="price_per_month" id="ep-price" class="form-control" required step="0.01"></div>
+        <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" id="ep-duration" class="form-control" required min="1" max="31"><small style="color:var(--text-3);font-size:11px;">Billable days</small></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Tax (%)</label>
-        <input type="number" name="tax_percent" id="ep-tax" class="form-control" step="0.01">
-      </div>
+      <div class="form-group"><label class="form-label">Tax (%)</label><input type="number" name="tax_percent" id="ep-tax" class="form-control" step="0.01"></div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-plan')">Cancel</button>
         <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -696,24 +742,12 @@ tbody tr:hover td{background:var(--bg-3)}
 <!-- Add Team -->
 <div class="modal-backdrop" id="modal-add-team">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Create New Team</div>
-      <button class="modal-close" onclick="closeModal('modal-add-team')">✕</button>
-    </div>
+    <div class="modal-header"><div class="modal-title">Create New Team</div><button class="modal-close" onclick="closeModal('modal-add-team')">✕</button></div>
     <form method="POST" action="/admin/teams/add">
-      <div class="form-group">
-        <label class="form-label">Team Name *</label>
-        <input type="text" name="name" class="form-control" required placeholder="e.g. North Squad">
-      </div>
+      <div class="form-group"><label class="form-label">Team Name *</label><input type="text" name="name" class="form-control" required></div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Sub-Area *</label>
-          <input type="text" name="area" class="form-control" required placeholder="e.g. Sector 62">
-        </div>
-        <div class="form-group">
-          <label class="form-label">City *</label>
-          <input type="text" name="city" class="form-control" required placeholder="e.g. Delhi">
-        </div>
+        <div class="form-group"><label class="form-label">Sub-Area *</label><input type="text" name="area" class="form-control" required></div>
+        <div class="form-group"><label class="form-label">City *</label><input type="text" name="city" class="form-control" required></div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-add-team')">Cancel</button>
@@ -726,24 +760,12 @@ tbody tr:hover td{background:var(--bg-3)}
 <!-- Edit Team -->
 <div class="modal-backdrop" id="modal-edit-team">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Edit Team</div>
-      <button class="modal-close" onclick="closeModal('modal-edit-team')">✕</button>
-    </div>
+    <div class="modal-header"><div class="modal-title">Edit Team</div><button class="modal-close" onclick="closeModal('modal-edit-team')">✕</button></div>
     <form method="POST" id="edit-team-form">
-      <div class="form-group">
-        <label class="form-label">Team Name *</label>
-        <input type="text" name="name" id="et-name" class="form-control" required>
-      </div>
+      <div class="form-group"><label class="form-label">Team Name *</label><input type="text" name="name" id="et-name" class="form-control" required></div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Sub-Area</label>
-          <input type="text" name="area" id="et-area" class="form-control">
-        </div>
-        <div class="form-group">
-          <label class="form-label">City</label>
-          <input type="text" name="city" id="et-city" class="form-control">
-        </div>
+        <div class="form-group"><label class="form-label">Sub-Area</label><input type="text" name="area" id="et-area" class="form-control"></div>
+        <div class="form-group"><label class="form-label">City</label><input type="text" name="city" id="et-city" class="form-control"></div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-team')">Cancel</button>
@@ -753,7 +775,7 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- Add / Edit User (unified) -->
+<!-- Add / Edit User -->
 <div class="modal-backdrop" id="modal-add-user">
   <div class="modal" style="max-width:660px;">
     <div class="modal-header">
@@ -763,7 +785,6 @@ tbody tr:hover td{background:var(--bg-3)}
     <form method="POST" id="user-form" action="/admin/users/add">
       <input type="hidden" name="role" id="hiddenRole" value="">
       <input type="hidden" name="next" value="dashboard_admin">
-
       <div class="form-group" id="rf-role-group">
         <label class="form-label">Role *</label>
         <select id="roleSelect" class="form-control" onchange="onRoleChange()">
@@ -773,27 +794,15 @@ tbody tr:hover td{background:var(--bg-3)}
           <option value="customer">Customer</option>
         </select>
       </div>
-
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Full Name *</label>
-          <input type="text" name="name" id="uf-name" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Phone *</label>
-          <input type="text" name="phone" id="uf-phone" class="form-control" required placeholder="Required">
-        </div>
+        <div class="form-group"><label class="form-label">Full Name *</label><input type="text" name="name" id="uf-name" class="form-control" required></div>
+        <div class="form-group"><label class="form-label">Phone *</label><input type="text" name="phone" id="uf-phone" class="form-control" required></div>
       </div>
-
-      <!-- User ID (email) field -->
       <div class="form-group">
         <label class="form-label" id="email-label">User ID <span class="opt">(email used as login ID)</span></label>
-        <input type="email" name="email" id="uf-email" class="form-control" placeholder="user@example.com">
-        <div class="email-hint" id="email-hint" style="display:none;">
-          Optional for customers — a User ID will be auto-generated from their phone number if left blank (e.g. 9876543210@fruitedelights.local).
-        </div>
+        <input type="email" name="email" id="uf-email" class="form-control">
+        <div class="email-hint" id="email-hint" style="display:none;">Optional for customers — auto-generated from phone if blank.</div>
       </div>
-
       <div id="rf-team" class="form-group" style="display:none;">
         <label class="form-label">Assign Team</label>
         <select name="team_id" id="uf-team" class="form-control">
@@ -803,7 +812,6 @@ tbody tr:hover td{background:var(--bg-3)}
           {% endfor %}
         </select>
       </div>
-
       <div id="rf-customer" style="display:none;">
         <div class="divider-label">Customer Details</div>
         <div class="form-row">
@@ -819,13 +827,9 @@ tbody tr:hover td{background:var(--bg-3)}
           <div class="form-group">
             <label class="form-label">Start Date *</label>
             <input type="date" name="start_date" id="uf-startdate" class="form-control">
-            <small style="color:var(--text-3);font-size:11px;">Billing period calculated from this date</small>
           </div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Delivery Address</label>
-          <textarea name="address" id="uf-address" class="form-control" rows="2"></textarea>
-        </div>
+        <div class="form-group"><label class="form-label">Delivery Address</label><textarea name="address" id="uf-address" class="form-control" rows="2"></textarea></div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Preferred Time Slot</label>
@@ -848,31 +852,19 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="form-group">
           <label class="form-label">Planned Off-Days</label>
           <select name="off_days" id="uf-offdays" class="form-control" multiple>
-            <option value="Monday">Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Thursday">Thursday</option>
-            <option value="Friday">Friday</option>
-            <option value="Saturday">Saturday</option>
+            <option value="Monday">Monday</option><option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option><option value="Saturday">Saturday</option>
             <option value="Sunday">Sunday</option>
           </select>
           <small style="color:var(--text-3);">Ctrl/Cmd to multi-select</small>
         </div>
         <div class="divider-label">Discount</div>
         <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Discount % (off final bill)</label>
-            <input type="number" name="discount_percent" id="uf-discpct" class="form-control" min="0" max="100" step="0.01" value="0" placeholder="0">
-            <small style="color:var(--text-3);font-size:11px;">Applied as % of gross total</small>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Flat Discount ₹ (fixed amount)</label>
-            <input type="number" name="discount_amount" id="uf-discamt" class="form-control" min="0" step="0.01" value="0" placeholder="0">
-            <small style="color:var(--text-3);font-size:11px;">Fixed ₹ deducted from bill</small>
-          </div>
+          <div class="form-group"><label class="form-label">Discount % (off final bill)</label><input type="number" name="discount_percent" id="uf-discpct" class="form-control" min="0" max="100" step="0.01" value="0"></div>
+          <div class="form-group"><label class="form-label">Flat Discount ₹</label><input type="number" name="discount_amount" id="uf-discamt" class="form-control" min="0" step="0.01" value="0"></div>
         </div>
       </div>
-
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-add-user')">Cancel</button>
         <button type="submit" class="btn btn-primary" id="user-submit-btn">Add & Send Credentials</button>
@@ -884,27 +876,17 @@ tbody tr:hover td{background:var(--bg-3)}
 <!-- Edit Employee -->
 <div class="modal-backdrop" id="modal-edit-employee">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">Edit Delivery Partner</div>
-      <button class="modal-close" onclick="closeModal('modal-edit-employee')">✕</button>
-    </div>
+    <div class="modal-header"><div class="modal-title">Edit Delivery Partner</div><button class="modal-close" onclick="closeModal('modal-edit-employee')">✕</button></div>
     <form method="POST" id="edit-emp-form">
       <input type="hidden" name="role" value="employee">
       <input type="hidden" name="next" value="dashboard_admin">
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Full Name *</label>
-          <input type="text" name="name" id="ee-name" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Phone *</label>
-          <input type="text" name="phone" id="ee-phone" class="form-control" required>
-        </div>
+        <div class="form-group"><label class="form-label">Full Name *</label><input type="text" name="name" id="ee-name" class="form-control" required></div>
+        <div class="form-group"><label class="form-label">Phone *</label><input type="text" name="phone" id="ee-phone" class="form-control" required></div>
       </div>
       <div class="form-group">
         <label class="form-label">User ID * <span class="opt">(used to login)</span></label>
         <input type="text" name="email" id="ee-email" class="form-control" required>
-        <div class="email-hint">This is used as the login User ID.</div>
       </div>
       <div class="form-group">
         <label class="form-label">Assign Team</label>
@@ -926,27 +908,17 @@ tbody tr:hover td{background:var(--bg-3)}
 <!-- Edit Customer -->
 <div class="modal-backdrop" id="modal-edit-customer">
   <div class="modal" style="max-width:660px;">
-    <div class="modal-header">
-      <div class="modal-title">Edit Customer</div>
-      <button class="modal-close" onclick="closeModal('modal-edit-customer')">✕</button>
-    </div>
+    <div class="modal-header"><div class="modal-title">Edit Customer</div><button class="modal-close" onclick="closeModal('modal-edit-customer')">✕</button></div>
     <form method="POST" id="edit-cust-form">
       <input type="hidden" name="role" value="customer">
       <input type="hidden" name="next" value="dashboard_admin">
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Full Name *</label>
-          <input type="text" name="name" id="ec-name" class="form-control" required>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Phone * <span class="opt">(required)</span></label>
-          <input type="text" name="phone" id="ec-phone" class="form-control" required>
-        </div>
+        <div class="form-group"><label class="form-label">Full Name *</label><input type="text" name="name" id="ec-name" class="form-control" required></div>
+        <div class="form-group"><label class="form-label">Phone *</label><input type="text" name="phone" id="ec-phone" class="form-control" required></div>
       </div>
       <div class="form-group">
-        <label class="form-label">User ID <span class="opt">(optional — auto-generated from phone if blank)</span></label>
-        <input type="text" name="email" id="ec-email" class="form-control" placeholder="Leave blank to keep existing" required>
-        <div class="email-hint">The User ID is used to log in. If blank, the existing User ID is preserved.</div>
+        <label class="form-label">User ID <span class="opt">(optional)</span></label>
+        <input type="text" name="email" id="ec-email" class="form-control" required>
       </div>
       <div class="form-row">
         <div class="form-group">
@@ -969,10 +941,7 @@ tbody tr:hover td{background:var(--bg-3)}
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Start Date</label>
-          <input type="date" name="start_date" id="ec-startdate" class="form-control">
-        </div>
+        <div class="form-group"><label class="form-label">Start Date</label><input type="date" name="start_date" id="ec-startdate" class="form-control"></div>
         <div class="form-group">
           <label class="form-label">Account Status</label>
           <select name="customer_status" id="ec-status" class="form-control">
@@ -982,10 +951,7 @@ tbody tr:hover td{background:var(--bg-3)}
           </select>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Delivery Address</label>
-        <textarea name="address" id="ec-address" class="form-control" rows="2"></textarea>
-      </div>
+      <div class="form-group"><label class="form-label">Delivery Address</label><textarea name="address" id="ec-address" class="form-control" rows="2"></textarea></div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Preferred Time Slot</label>
@@ -999,29 +965,17 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="form-group">
           <label class="form-label">Off Days</label>
           <select name="off_days" id="ec-offdays" class="form-control" multiple>
-            <option value="Monday">Monday</option>
-            <option value="Tuesday">Tuesday</option>
-            <option value="Wednesday">Wednesday</option>
-            <option value="Thursday">Thursday</option>
-            <option value="Friday">Friday</option>
-            <option value="Saturday">Saturday</option>
+            <option value="Monday">Monday</option><option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option><option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option><option value="Saturday">Saturday</option>
             <option value="Sunday">Sunday</option>
           </select>
-          <small style="color:var(--text-3);">Ctrl/Cmd to multi-select</small>
         </div>
       </div>
       <div class="divider-label">Discount</div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Discount % (off final bill)</label>
-          <input type="number" name="discount_percent" id="ec-discpct" class="form-control" min="0" max="100" step="0.01" value="0">
-          <small style="color:var(--text-3);font-size:11px;">Applied as % of gross total</small>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Flat Discount ₹</label>
-          <input type="number" name="discount_amount" id="ec-discamt" class="form-control" min="0" step="0.01" value="0">
-          <small style="color:var(--text-3);font-size:11px;">Fixed ₹ deducted from bill</small>
-        </div>
+        <div class="form-group"><label class="form-label">Discount %</label><input type="number" name="discount_percent" id="ec-discpct" class="form-control" min="0" max="100" step="0.01" value="0"></div>
+        <div class="form-group"><label class="form-label">Flat Discount ₹</label><input type="number" name="discount_amount" id="ec-discamt" class="form-control" min="0" step="0.01" value="0"></div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-customer')">Cancel</button>
@@ -1030,6 +984,170 @@ tbody tr:hover td{background:var(--bg-3)}
     </form>
   </div>
 </div>
+
+<!-- ============================================================
+     VIEW USER DETAIL MODAL
+============================================================ -->
+<div class="modal-backdrop" id="modal-view-user">
+  <div class="modal" style="max-width:680px;">
+    <div class="modal-header">
+      <div class="modal-title" id="view-modal-title">Customer Details</div>
+      <button class="modal-close" onclick="closeModal('modal-view-user')">✕</button>
+    </div>
+    <div class="detail-hero">
+      <div class="detail-hero-avatar" id="view-avatar">?</div>
+      <div class="detail-hero-info">
+        <div class="detail-hero-name" id="view-name">—</div>
+        <div class="detail-hero-sub">
+          <span id="view-role-badge"></span>
+          <span id="view-status-badge"></span>
+          <span id="view-plan-badge"></span>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;">
+        <a id="view-whatsapp-link" href="#" target="_blank" class="btn btn-success btn-sm" style="display:none;">💬 WhatsApp</a>
+        <a id="view-detail-link" href="#" class="btn btn-primary btn-sm" style="display:none;">📄 Full Profile</a>
+      </div>
+    </div>
+    <div class="detail-section-label">📞 Contact Info</div>
+    <div class="detail-grid">
+      <div class="detail-field">
+        <div class="detail-field-label">Phone</div>
+        <div class="detail-field-value"><a id="view-phone" href="#">—</a></div>
+      </div>
+      <div class="detail-field">
+        <div class="detail-field-label">User ID / Login</div>
+        <div class="detail-field-value" id="view-email" style="font-size:12px;color:var(--text-2);">—</div>
+      </div>
+      <div class="detail-field full-width">
+        <div class="detail-field-label">Delivery Address</div>
+        <div class="detail-field-value" id="view-address">—</div>
+      </div>
+    </div>
+    <div id="view-customer-section">
+      <div class="detail-section-label">📋 Plan & Schedule</div>
+      <div class="detail-grid">
+        <div class="detail-field">
+          <div class="detail-field-label">Delivery Plan</div>
+          <div class="detail-field-value" id="view-plan-name">—</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Start Date</div>
+          <div class="detail-field-value" id="view-start-date">—</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Preferred Time</div>
+          <div class="detail-field-value" id="view-pref-time">—</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Off Days</div>
+          <div class="detail-field-value" id="view-off-days">—</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Discount</div>
+          <div class="detail-field-value" id="view-discount">—</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Source</div>
+          <div class="detail-field-value" id="view-source">—</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Member Since</div>
+          <div class="detail-field-value" id="view-created">—</div>
+        </div>
+        <div class="detail-field">
+          <div class="detail-field-label">Account Status</div>
+          <div class="detail-field-value" id="view-acct-status">—</div>
+        </div>
+      </div>
+    </div>
+    <div class="detail-section-label">🏘️ Team Assignment</div>
+    <div class="detail-field" style="margin-bottom:12px;">
+      <div class="detail-field-label">Currently Assigned To</div>
+      <div class="detail-field-value" id="view-current-team">—</div>
+    </div>
+    <form id="view-assign-team-form" method="POST">
+      <input type="hidden" id="view-assign-role"  name="role"             value="customer">
+      <input type="hidden" name="next"                                     value="dashboard_admin">
+      <input type="hidden" id="va-name"            name="name"            value="">
+      <input type="hidden" id="va-phone"           name="phone"           value="">
+      <input type="hidden" id="va-email"           name="email"           value="">
+      <input type="hidden" id="va-status"          name="customer_status" value="active">
+      <input type="hidden" id="va-plan"            name="plan_name"       value="">
+      <input type="hidden" id="va-startdate"       name="start_date"      value="">
+      <input type="hidden" id="va-address"         name="address"         value="">
+      <input type="hidden" id="va-ptime"           name="preferred_time"  value="">
+      <div class="team-assign-select">
+        <div style="flex:1;">
+          <label class="form-label">Reassign to Team</label>
+          <select name="team_id" id="view-team-select" class="form-control">
+            <option value="">— No team —</option>
+            {% for team in teams %}
+            <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary">💾 Save Team</button>
+      </div>
+    </form>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:22px;padding-top:16px;border-top:1px solid var(--border);">
+      <button id="view-edit-btn" class="btn btn-ghost">✏️ Edit Details</button>
+      <button class="btn btn-ghost" onclick="closeModal('modal-view-user')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     SAMPLE CUSTOMERS DETAIL MODAL  ← NEW
+============================================================ -->
+<div class="sample-modal-backdrop" id="modal-sample-customers">
+  <div class="sample-modal">
+
+    <!-- Header -->
+    <div class="sample-modal-header">
+      <div>
+        <div class="sample-modal-title">🧪 Sample Customers</div>
+        <div style="font-size:12px;color:var(--text-2);margin-top:3px;">
+          Plan: <strong id="sm-plan-label">—</strong>
+          &nbsp;·&nbsp;
+          <span id="sm-count-label" style="color:#c2410c;font-weight:700;">0 customers</span> scheduled today
+        </div>
+      </div>
+      <button onclick="closeSampleModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-2);line-height:1;">✕</button>
+    </div>
+
+    <!-- Body -->
+    <div class="sample-modal-body">
+
+      <!-- Loader -->
+      <div id="sm-loader" class="sample-modal-loader">
+        <div class="spinner"></div>
+        <span>Loading sample customers…</span>
+      </div>
+
+      <!-- Empty -->
+      <div id="sm-empty" style="display:none;" class="sample-modal-loader">
+        <div style="font-size:36px;margin-bottom:10px;">📭</div>
+        <span style="color:var(--text-3);">No sample customers scheduled today.</span>
+      </div>
+
+      <!-- Content -->
+      <div id="sm-content" style="display:none;">
+        <div class="sample-modal-summary">
+          <span style="font-size:13px;color:var(--text-2);">
+            🟠 <strong id="sm-summary-count">0</strong> sample boxes need to be packed today for this plan.
+            Assign teams below to schedule deliveries.
+          </span>
+        </div>
+        <div class="sample-customer-grid" id="sm-cards"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
 
 <!-- ============================================================  JAVASCRIPT  -->
 <script>
@@ -1057,59 +1175,412 @@ function escHtml(s) {
   return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* ---- Load Boxes Needed ---- */
-let _boxesLoaded = false;
-async function loadBoxes(force) {
-  if (_boxesLoaded && !force) return;
-  const tbody = document.getElementById('boxes-tbody');
-  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-3);">Loading…</td></tr>`;
+/* ================================================================
+   TOAST
+================================================================ */
+function showToast(msg, type) {
+  const c   = document.getElementById('toast-container');
+  const el  = document.createElement('div');
+  el.className = `toast toast-${type || 'success'}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(40px)'; el.style.transition='.4s'; setTimeout(()=>el.remove(),400); }, 3000);
+}
+
+/* ================================================================
+   VIEW USER DETAIL MODAL
+================================================================ */
+function openViewModal(userData, role) {
+  const name     = userData.name || '—';
+  const initials = name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+
+  document.getElementById('view-avatar').textContent      = initials || '?';
+  document.getElementById('view-name').textContent        = name;
+  document.getElementById('view-modal-title').textContent = role === 'employee' ? 'Delivery Partner Details' : 'Customer Details';
+
+  document.getElementById('view-role-badge').innerHTML = role === 'employee'
+    ? `<span class="badge badge-blue">🚴 Delivery Partner</span>`
+    : `<span class="badge badge-orange">👤 Customer</span>`;
+  document.getElementById('view-status-badge').innerHTML = userData.status ? statusBadge(userData.status) : '';
+  const planEl = document.getElementById('view-plan-badge');
+  planEl.innerHTML = (userData.plan_name && userData.plan_name !== '—')
+    ? `<span class="badge badge-green">📋 ${escHtml(userData.plan_name)}</span>` : '';
+
+  const rawPhone = (userData.phone || '').replace(/\D/g,'');
+  const waPhone  = rawPhone.length === 10 ? '91' + rawPhone : rawPhone;
+  const waLink   = document.getElementById('view-whatsapp-link');
+  if (waPhone.length >= 10) { waLink.href = `https://wa.me/${waPhone}`; waLink.style.display = 'inline-flex'; }
+  else { waLink.style.display = 'none'; }
+
+  const detailLink = document.getElementById('view-detail-link');
+  if (role === 'customer' && userData.id) {
+    detailLink.href = `/admin/customers/${userData.id}`;
+    detailLink.style.display = 'inline-flex';
+  } else { detailLink.style.display = 'none'; }
+
+  const phoneEl = document.getElementById('view-phone');
+  phoneEl.textContent = userData.phone || '—';
+  phoneEl.href = userData.phone ? `tel:${userData.phone}` : '#';
+  document.getElementById('view-email').textContent   = userData.email   || '—';
+  document.getElementById('view-address').textContent = userData.address || '—';
+
+  const custSection = document.getElementById('view-customer-section');
+  if (role === 'customer') {
+    custSection.style.display = 'block';
+    document.getElementById('view-plan-name').textContent  = userData.plan_name  || '—';
+    document.getElementById('view-start-date').textContent = userData.start_date || '—';
+    document.getElementById('view-pref-time').textContent  = userData.preferred_time || '—';
+    const offDays = userData.off_days || [];
+    document.getElementById('view-off-days').textContent   = offDays.length ? offDays.join(', ') : 'None';
+    const discParts = [];
+    if (parseFloat(userData.discount_percent||0) > 0) discParts.push(`${userData.discount_percent}%`);
+    if (parseFloat(userData.discount_amount||0)  > 0) discParts.push(`₹${userData.discount_amount}`);
+    document.getElementById('view-discount').textContent   = discParts.length ? discParts.join(' + ') : 'None';
+    document.getElementById('view-source').textContent     = userData.source     || '—';
+    document.getElementById('view-created').textContent    = userData.created_at || '—';
+    document.getElementById('view-acct-status').innerHTML  = statusBadge(userData.status || 'active');
+  } else {
+    custSection.style.display = 'none';
+  }
+
+  const teamName = (userData.team_name && userData.team_name !== '—') ? userData.team_name : 'Unassigned';
+  const teamCity = userData.team_city ? ` — ${userData.team_city}` : '';
+  const teamArea = userData.team_area ? `, ${userData.team_area}` : '';
+  document.getElementById('view-current-team').textContent = teamName + teamArea + teamCity;
+
+  const form = document.getElementById('view-assign-team-form');
+  form.action = `/admin/users/edit/${userData.id}`;
+  document.getElementById('view-assign-role').value = role;
+  document.getElementById('va-name').value          = userData.name          || '';
+  document.getElementById('va-phone').value         = userData.phone         || '';
+  document.getElementById('va-email').value         = userData.email         || '';
+  document.getElementById('va-status').value        = userData.status        || 'active';
+  document.getElementById('va-plan').value          = (userData.plan_name && userData.plan_name !== '—') ? userData.plan_name : '';
+  document.getElementById('va-startdate').value     = userData.start_date    || '';
+  document.getElementById('va-address').value       = userData.address       || '';
+  document.getElementById('va-ptime').value         = userData.preferred_time|| '';
+  document.getElementById('view-team-select').value = userData.team_id       || '';
+
+  const editBtn = document.getElementById('view-edit-btn');
+  editBtn.onclick = () => {
+    closeModal('modal-view-user');
+    if (role === 'customer') openEditCustomer(userData);
+    else openEditEmployee(userData.id, userData.name, userData.email, userData.phone, userData.team_id);
+  };
+
+  openModal('modal-view-user');
+}
+
+/* ================================================================
+   SAMPLE CUSTOMERS MODAL  ← NEW
+================================================================ */
+let _smAllTeams = [];
+
+function openSampleModal(planLabel, count) {
+  // Update header
+  document.getElementById('sm-plan-label').textContent  = planLabel;
+  document.getElementById('sm-count-label').textContent = count + ' customer' + (count !== 1 ? 's' : '');
+  document.getElementById('sm-summary-count').textContent = count;
+
+  // Reset view
+  document.getElementById('sm-loader').style.display  = 'flex';
+  document.getElementById('sm-empty').style.display   = 'none';
+  document.getElementById('sm-content').style.display = 'none';
+  document.getElementById('sm-cards').innerHTML       = '';
+
+  // Open modal
+  document.getElementById('modal-sample-customers').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  // Fetch
+  fetch('/api/admin/sample_customers?label=' + encodeURIComponent(planLabel))
+    .then(r => r.json())
+    .then(data => {
+      _smAllTeams = data.teams || [];
+      const customers = data.customers || [];
+
+      document.getElementById('sm-loader').style.display = 'none';
+      document.getElementById('sm-summary-count').textContent = customers.length;
+      document.getElementById('sm-count-label').textContent   = customers.length + ' customer' + (customers.length !== 1 ? 's' : '');
+
+      if (!customers.length) {
+        document.getElementById('sm-empty').style.display = 'flex';
+        return;
+      }
+
+      document.getElementById('sm-content').style.display = 'block';
+      const container = document.getElementById('sm-cards');
+      customers.forEach(c => container.insertAdjacentHTML('beforeend', buildSampleCard(c)));
+    })
+    .catch(() => {
+      document.getElementById('sm-loader').style.display = 'none';
+      document.getElementById('sm-empty').style.display  = 'flex';
+      document.getElementById('sm-empty').querySelector('span').textContent = 'Failed to load. Please close and retry.';
+    });
+}
+
+function closeSampleModal() {
+  document.getElementById('modal-sample-customers').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// Close on backdrop click
+document.getElementById('modal-sample-customers').addEventListener('click', function(e) {
+  if (e.target === this) closeSampleModal();
+});
+
+function buildSampleCard(c) {
+  const initials = (c.name||'?').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+  const rawPhone = (c.phone||'').replace(/\D/g,'');
+  const waPhone  = rawPhone.length === 10 ? '91'+rawPhone : rawPhone;
+  const waHref   = waPhone.length >= 10 ? `https://wa.me/${waPhone}` : '#';
+
+  const teamOpts = _smAllTeams.map(t =>
+    `<option value="${escHtml(t.id)}" ${t.id === c.team_id ? 'selected' : ''}>${escHtml(t.name)}${t.area ? ' – ' + escHtml(t.area) : ''}</option>`
+  ).join('');
+
+  const teamBadge = (c.team_name && c.team_name !== '—')
+    ? `<span class="badge badge-blue" id="sm-team-badge-${escHtml(c.id)}">${escHtml(c.team_name)}${c.team_area ? ' / '+escHtml(c.team_area) : ''}</span>`
+    : `<span class="badge badge-gray" id="sm-team-badge-${escHtml(c.id)}">Unassigned</span>`;
+
+  const offDaysStr = (c.off_days && c.off_days.length) ? c.off_days.join(', ') : 'None';
+
+  return `
+  <div class="sample-cust-card" id="sm-card-${escHtml(c.id)}">
+    <div class="sample-cust-card-header">
+      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+        <div class="sample-cust-avatar">${initials}</div>
+        <div style="min-width:0;">
+          <div class="sample-cust-name">${escHtml(c.name)}</div>
+          <div class="sample-cust-label">🧪 ${escHtml(c.sample_label)}</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
+        <a href="${waHref}" target="_blank" class="btn btn-success btn-sm" style="${waPhone.length<10?'display:none;':''}">💬</a>
+        <a href="/admin/customers/${escHtml(c.id)}" target="_blank" class="btn btn-ghost btn-sm" title="Full profile">↗</a>
+      </div>
+    </div>
+
+    <div class="sample-cust-fields">
+      <div class="sample-cust-field">
+        <span class="sf-icon">📞</span>
+        <span class="sf-val"><a href="tel:${escHtml(c.phone)}">${escHtml(c.phone)}</a></span>
+      </div>
+      <div class="sample-cust-field">
+        <span class="sf-icon">📍</span>
+        <span class="sf-val">${escHtml(c.address || '—')}</span>
+      </div>
+      <div class="sample-cust-field">
+        <span class="sf-icon">🕐</span>
+        <span class="sf-val">${escHtml(c.preferred_time || '—')}</span>
+      </div>
+      <div class="sample-cust-field">
+        <span class="sf-icon">📅</span>
+        <span class="sf-val">Starts: ${escHtml(c.start_date || '—')}</span>
+      </div>
+      ${offDaysStr !== 'None' ? `<div class="sample-cust-field"><span class="sf-icon">🚫</span><span class="sf-val">Off: ${escHtml(offDaysStr)}</span></div>` : ''}
+    </div>
+
+    <div class="sample-cust-team-current">
+      <span class="sct-label">Current Team&nbsp;&nbsp;</span>
+      ${teamBadge}
+    </div>
+
+    <div class="sample-assign-row">
+      <select id="sm-team-sel-${escHtml(c.id)}">
+        <option value="">— Assign a team —</option>
+        ${teamOpts}
+      </select>
+      <button class="sample-assign-btn" id="sm-assign-btn-${escHtml(c.id)}" onclick="assignSampleTeam('${escHtml(c.id)}')">
+        ✓ Assign
+      </button>
+    </div>
+  </div>`;
+}
+
+async function assignSampleTeam(customerId) {
+  const sel    = document.getElementById('sm-team-sel-' + customerId);
+  const btn    = document.getElementById('sm-assign-btn-' + customerId);
+  const teamId = sel ? sel.value : '';
+
+  if (!teamId) { showToast('Please select a team first.', 'danger'); return; }
+
+  btn.disabled    = true;
+  btn.textContent = '…';
+
   try {
-    const data = await fetch('/api/admin/boxes_needed').then(r => r.json());
-    _boxesLoaded = true;
+    const res  = await fetch('/api/admin/assign_team', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ customer_id: customerId, team_id: teamId })
+    });
+    const data = await res.json();
 
-    if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-3);">No plans found.</td></tr>`;
-      return;
+    btn.disabled    = false;
+    btn.textContent = '✓ Assign';
+
+    if (data.success) {
+      // Update badge in card
+      const badge = document.getElementById('sm-team-badge-' + customerId);
+      if (badge) {
+        badge.className   = 'badge badge-blue';
+        badge.textContent = data.team_name || 'Assigned';
+      }
+      showToast('✅ Team assigned to ' + (data.team_name || 'customer') + '!', 'success');
+    } else {
+      showToast('❌ ' + (data.message || 'Assignment failed'), 'danger');
     }
+  } catch (err) {
+    btn.disabled    = false;
+    btn.textContent = '✓ Assign';
+    showToast('❌ Network error. Please retry.', 'danger');
+  }
+}
 
-    const maxTotal = Math.max(...data.map(d => d.total_boxes), 1);
-    let grandTotal = 0;
+/* ================================================================
+   BOXES NEEDED
+================================================================ */
+let _boxesData = [];
+let _boxView   = 'plan';
 
+function switchBoxView(view) {
+  _boxView = view;
+  document.getElementById('tab-plan').classList.toggle('active', view === 'plan');
+  document.getElementById('tab-team').classList.toggle('active', view === 'team');
+  document.getElementById('boxes-plan-view').style.display = view === 'plan' ? '' : 'none';
+  document.getElementById('boxes-team-view').style.display = view === 'team' ? '' : 'none';
+  renderBoxes();
+}
+
+async function loadBoxes(force) {
+  if (_boxesData.length && !force) { renderBoxes(); return; }
+  const loadMsg = col => `<tr><td colspan="${col}" style="text-align:center;padding:20px;color:var(--text-3);">Loading…</td></tr>`;
+  document.getElementById('boxes-tbody').innerHTML      = loadMsg(7);
+  document.getElementById('boxes-team-tbody').innerHTML = loadMsg(5);
+  try {
+    _boxesData = await fetch('/api/admin/boxes_needed').then(r => r.json());
+    renderBoxes();
+  } catch(err) {
+    document.getElementById('boxes-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">Retry</button></td></tr>`;
+  }
+}
+
+function renderBoxes() {
+  const statusFilter = document.getElementById('boxes-status-filter').value;
+  const data = _boxesData.filter(p => {
+    if (statusFilter === 'active') return p.active_customers > 0;
+    if (statusFilter === 'sample') return p.sample_boxes > 0;
+    return (p.active_customers + p.sample_boxes) > 0;
+  });
+  let grandActive = 0, grandSample = 0;
+  data.forEach(p => { grandActive += p.active_customers; grandSample += p.sample_boxes; });
+  const grandTotal = grandActive + grandSample;
+
+  const tbody = document.getElementById('boxes-tbody');
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-3);">No boxes today.</td></tr>`;
+  } else {
+    const maxActive = Math.max(...data.map(d => d.active_customers), 1);
     tbody.innerHTML = data.map(p => {
-      grandTotal += p.total_boxes;
-      const activeW  = Math.round((p.active_customers  / maxTotal) * 100);
-      const sampleW  = Math.round((p.pending_enquiries / maxTotal) * 100);
-      const totalBig = p.total_boxes > 0
-        ? `<span style="font-size:20px;font-weight:700;color:var(--text);">${p.total_boxes}</span>`
+      const isSamplePlan = p.is_sample_plan === true;
+      const hasSamples   = p.sample_boxes > 0;
+      const activeW      = Math.round((p.active_customers / maxActive) * 100);
+
+      const teamsHtml = (!isSamplePlan && (p.teams || []).length)
+        ? `<div class="team-breakdown">${p.teams.map(t => {
+            const tw = Math.round((t.count / Math.max(p.active_customers, 1)) * 100);
+            return `<div class="team-row">
+              <span class="t-name">${escHtml(t.team_name)}</span>
+              <span class="t-bar"><span class="t-bar-fill" style="width:${tw}%;"></span></span>
+              <span class="t-count">${t.count}</span>
+            </div>`;
+          }).join('')}</div>`
+        : `<span style="color:var(--text-3);font-size:11px;">—</span>`;
+
+      const activeCell = isSamplePlan
+        ? `<td><span style="color:var(--text-3);">—</span></td>`
+        : `<td><div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers}</div>
+           <div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div>
+           <div style="font-size:10px;color:var(--text-3);margin-top:2px;">active customers</div></td>`;
+
+      const sampleCell = hasSamples
+        ? `<td>
+             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+               <span style="font-weight:700;color:#f97316;font-size:16px;">${p.sample_boxes}</span>
+               <button class="btn-view-sample" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}', ${p.sample_boxes})">
+                 👁 View
+               </button>
+             </div>
+             <div style="font-size:10px;color:var(--text-3);margin-top:4px;">sample box${p.sample_boxes > 1 ? 'es' : ''}</div>
+           </td>`
+        : `<td><span style="color:var(--text-3);">0</span></td>`;
+
+      const totalBig = (p.active_customers + p.sample_boxes) > 0
+        ? `<span style="font-size:20px;font-weight:700;color:var(--text);">${p.active_customers + p.sample_boxes}</span>`
         : `<span style="color:var(--text-3);">0</span>`;
-      return `
-      <tr>
-        <td>
-          <div style="font-weight:600;">${escHtml(p.plan_name)}</div>
-          <div style="font-size:11px;color:var(--text-3);">₹${p.plan_price}</div>
-        </td>
-        <td><span class="badge badge-blue">${p.duration_days || '—'} days</span></td>
-        <td class="boxes-row-active">
-          <div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers}</div>
-          <div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">regular deliveries</div>
-        </td>
-        <td class="boxes-row-sample">
-          <div style="font-weight:700;color:#f97316;font-size:16px;">${p.pending_enquiries}</div>
-          <div class="bar-wrap"><div class="bar-fill" style="width:${sampleW}%;background:#f97316;"></div></div>
-          <div style="font-size:10px;color:var(--text-3);margin-top:2px;">sample / trial</div>
-        </td>
-        <td>${totalBig}</td>
+
+      const rowStyle = isSamplePlan ? 'background:rgba(249,115,22,.04);' : '';
+
+      const planNameCell = isSamplePlan
+        ? `<td><span class="badge badge-orange" style="font-size:12px;">🧪 ${escHtml(p.plan_name)}</span>
+           <div style="font-size:10px;color:var(--text-3);margin-top:3px;">unmatched sample plan</div></td>`
+        : `<td><div style="font-weight:600;">${escHtml(p.plan_name)}</div>
+           <div style="font-size:11px;color:var(--text-3);">₹${p.plan_price}</div></td>`;
+
+      const durationCell = isSamplePlan
+        ? `<td><span style="color:var(--text-3);">—</span></td>`
+        : `<td><span class="badge badge-blue">${p.duration_days || '—'} days</span></td>`;
+
+      // Actions cell — only show for rows with samples
+      const actionsCell = hasSamples
+        ? `<td><button class="btn btn-ghost btn-sm" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}', ${p.sample_boxes})" title="View all sample customers for this plan">
+             👁 View Customers
+           </button></td>`
+        : `<td><span style="color:var(--text-3);font-size:11px;">—</span></td>`;
+
+      return `<tr style="${rowStyle}">${planNameCell}${durationCell}${activeCell}${sampleCell}<td>${totalBig}</td><td>${teamsHtml}</td>${actionsCell}</tr>`;
+    }).join('');
+  }
+
+  // Team view (unchanged)
+  const teamMap = {};
+  _boxesData.forEach(p => {
+    (p.teams || []).forEach(t => {
+      if (!teamMap[t.team_id]) teamMap[t.team_id] = { name: t.team_name, active: 0, sample: 0, plans: {} };
+      teamMap[t.team_id].active += t.count;
+      if (!teamMap[t.team_id].plans[p.plan_name]) teamMap[t.team_id].plans[p.plan_name] = { active: 0 };
+      teamMap[t.team_id].plans[p.plan_name].active += t.count;
+    });
+  });
+  const teamRows = Object.values(teamMap).sort((a, b) => (b.active + b.sample) - (a.active + a.sample));
+  const teamTbody = document.getElementById('boxes-team-tbody');
+  const filteredTeamRows = teamRows.filter(t => {
+    if (statusFilter === 'active') return t.active > 0;
+    if (statusFilter === 'sample') return t.sample > 0;
+    return (t.active + t.sample) > 0;
+  });
+  if (!filteredTeamRows.length) {
+    teamTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-3);">No team data today.</td></tr>`;
+  } else {
+    const maxTeamActive = Math.max(...filteredTeamRows.map(t => t.active), 1);
+    teamTbody.innerHTML = filteredTeamRows.map(t => {
+      const planBreakdown = Object.entries(t.plans).sort((a,b) => b[1].active - a[1].active)
+        .map(([planName, pd]) => `<span class="badge badge-blue" style="margin:1px;">${escHtml(planName.substring(0,18))}… ×${pd.active}</span>`).join('');
+      const tw = Math.round((t.active / maxTeamActive) * 100);
+      return `<tr>
+        <td><div style="font-weight:600;">${escHtml(t.name)}</div></td>
+        <td><div style="font-weight:700;color:var(--green);font-size:16px;">${t.active}</div>
+          <div class="bar-wrap"><div class="bar-fill" style="width:${tw}%;background:var(--green);"></div></div></td>
+        <td><span style="color:var(--text-3);">—</span></td>
+        <td><span style="font-size:20px;font-weight:700;">${t.active + t.sample}</span></td>
+        <td><div style="display:flex;flex-wrap:wrap;gap:2px;">${planBreakdown || '—'}</div></td>
       </tr>`;
     }).join('');
-
-    // Show grand total
-    const row = document.getElementById('boxes-total-row');
-    document.getElementById('boxes-grand-total').textContent = grandTotal;
-    row.style.display = 'flex';
-  } catch(err) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--red);">Failed to load. <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">Retry</button></td></tr>`;
   }
+
+  const row = document.getElementById('boxes-total-row');
+  document.getElementById('boxes-grand-total').textContent = grandTotal;
+  row.style.display = grandTotal > 0 ? 'flex' : 'none';
 }
 
 /* ---- Load Employees ---- */
@@ -1119,10 +1590,7 @@ async function loadEmployees() {
   try {
     const data = await fetch('/api/admin/employees').then(r=>r.json());
     _loaded.employees = true;
-    if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No employees found.</td></tr>`;
-      return;
-    }
+    if (!data.length) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No employees found.</td></tr>`; return; }
     tbody.innerHTML = data.map(e => `
       <tr data-name="${e.name.toLowerCase()}" data-city="${(e.team_city||'').toLowerCase()}" data-team="${e.team_id}">
         <td>
@@ -1134,14 +1602,13 @@ async function loadEmployees() {
             </div>
           </div>
         </td>
-        <td>
-          <div style="font-size:12px;color:var(--text-2);">${escHtml(e.email)}</div>
-          <div style="font-size:10px;color:var(--text-3);">User ID</div>
-        </td>
+        <td><div style="font-size:12px;color:var(--text-2);">${escHtml(e.email)}</div><div style="font-size:10px;color:var(--text-3);">User ID</div></td>
         <td>${escHtml(e.phone)}</td>
         <td><span class="badge badge-blue">${escHtml(e.team_name)}</span></td>
         <td>
-          <div style="display:flex;gap:6px;">
+          <div style="display:flex;gap:6px;flex-wrap:wrap;">
+            <button class="btn btn-ghost btn-sm"
+              onclick='openViewModal(${JSON.stringify(e)},"employee")'>👁 View</button>
             <button class="btn btn-ghost btn-sm"
               onclick="openEditEmployee('${e.id}','${escHtml(e.name)}','${escHtml(e.email)}','${escHtml(e.phone)}','${e.team_id}')">
               ✏️ Edit
@@ -1177,18 +1644,19 @@ async function loadCustomers() {
     _loaded.customers = true;
     const badge = document.getElementById('cust-badge');
     if (badge) badge.textContent = data.length;
-    if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">No customers found.</td></tr>`;
-      return;
-    }
+    if (!data.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">No customers found.</td></tr>`; return; }
     tbody.innerHTML = data.map(c => {
       const discDisplay = [];
       if (c.discount_percent > 0) discDisplay.push(`${c.discount_percent}%`);
       if (c.discount_amount > 0)  discDisplay.push(`₹${c.discount_amount}`);
-      const discStr = discDisplay.length ? `<span class="badge badge-green">${discDisplay.join(' + ')}</span>` : `<span style="color:var(--text-3);">—</span>`;
+      const discStr  = discDisplay.length ? `<span class="badge badge-green">${discDisplay.join(' + ')}</span>` : `<span style="color:var(--text-3);">—</span>`;
       const startStr = c.start_date ? `<span style="font-size:12px;color:var(--text-2);">${c.start_date}</span>` : `<span style="color:var(--text-3);">—</span>`;
       return `
-      <tr data-name="${c.name.toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id}" data-status="${c.status||'active'}">
+      <tr data-name="${c.name.toLowerCase()}"
+          data-city="${(c.team_city||'').toLowerCase()}"
+          data-team="${c.team_id}"
+          data-plan="${c.plan_id||''}"
+          data-status="${c.status||'active'}">
         <td>
           <div style="display:flex;align-items:center;gap:10px;">
             <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${c.name.charAt(0).toUpperCase()}</div>
@@ -1206,8 +1674,9 @@ async function loadCustomers() {
         <td>
           <div style="display:flex;gap:5px;flex-wrap:wrap;">
             <button class="btn btn-ghost btn-sm"
+              onclick='openViewModal(${JSON.stringify(c)},"customer")'>👁 View</button>
+            <button class="btn btn-ghost btn-sm"
               onclick='openEditCustomer(${JSON.stringify(c)})'>✏️ Edit</button>
-            <a href="/admin/customers/${c.id}" class="btn btn-primary btn-sm">👁 View</a>
             <form method="POST" action="/admin/users/delete/${c.id}"
                   onsubmit="return confirm('Remove ${escHtml(c.name)}?');" style="display:inline;">
               <input type="hidden" name="next" value="dashboard_admin">
@@ -1217,87 +1686,58 @@ async function loadCustomers() {
         </td>
       </tr>`;
     }).join('');
-    // Run filters in case any were pre-set
     filterCustomers();
   } catch(err) {
     tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">Failed to load. Please refresh.</td></tr>`;
   }
 }
 
-/* ====================================================================
-   CUSTOMER COMBINED FILTER — AND logic across all four filters
-   Each filter is completely independent; any combination works.
-   ==================================================================== */
+/* ---- Customer Filters ---- */
 function filterCustomers() {
-  const q      = (document.getElementById('cust-search').value || '').toLowerCase().trim();
-  const city   = (document.getElementById('cust-city-filter').value || '').toLowerCase();
-  const team   = document.getElementById('cust-team-filter').value || '';
-  const status = (document.getElementById('cust-status-filter').value || '').toLowerCase();
-
-  let visible = 0;
-  const total  = document.querySelectorAll('#customers-table tbody tr[data-name]').length;
-
-  document.querySelectorAll('#customers-table tbody tr[data-name]').forEach(r => {
-    const rName   = (r.getAttribute('data-name')   || '').toLowerCase();
-    const rCity   = (r.getAttribute('data-city')   || '').toLowerCase();
-    const rTeam   = (r.getAttribute('data-team')   || '');
-    const rStatus = (r.getAttribute('data-status') || '').toLowerCase();
-
-    const nameOk   = !q      || rName.includes(q);
-    const cityOk   = !city   || rCity   === city;
-    const teamOk   = !team   || rTeam   === team;
-    const statusOk = !status || rStatus === status;
-
-    const show = nameOk && cityOk && teamOk && statusOk;
+  const q      = (document.getElementById('cust-search').value       || '').toLowerCase().trim();
+  const city   = (document.getElementById('cust-city-filter').value  || '').toLowerCase();
+  const team   =  document.getElementById('cust-team-filter').value  || '';
+  const plan   =  document.getElementById('cust-plan-filter').value  || '';
+  const status = (document.getElementById('cust-status-filter').value|| '').toLowerCase();
+  let visible  = 0;
+  const rows   = document.querySelectorAll('#customers-table tbody tr[data-name]');
+  const total  = rows.length;
+  rows.forEach(r => {
+    const show = (!q      || (r.getAttribute('data-name')||'').toLowerCase().includes(q))
+              && (!city   || (r.getAttribute('data-city')||'').toLowerCase() === city)
+              && (!team   || r.getAttribute('data-team')  === team)
+              && (!plan   || r.getAttribute('data-plan')  === plan)
+              && (!status || (r.getAttribute('data-status')||'').toLowerCase() === status);
     r.style.display = show ? '' : 'none';
     if (show) visible++;
   });
-
-  // Show / hide "Clear Filters" button
-  const hasFilter = q || city || team || status;
-  const clearBtn = document.getElementById('cust-clear-filters');
+  const hasFilter = q || city || team || plan || status;
+  const clearBtn  = document.getElementById('cust-clear-filters');
   if (clearBtn) clearBtn.style.display = hasFilter ? 'inline-flex' : 'none';
-
-  // Update active filter chips
-  updateCustFilterChips({ q, city, team, status });
-
-  // Result count
+  updateCustFilterChips({ q, city, team, plan, status });
   const countEl = document.getElementById('cust-result-count');
-  if (countEl) {
-    if (hasFilter) {
-      countEl.textContent = `Showing ${visible} of ${total} customers`;
-    } else {
-      countEl.textContent = '';
-    }
-  }
+  if (countEl) countEl.textContent = hasFilter ? `Showing ${visible} of ${total} customers` : '';
 }
 
-function updateCustFilterChips({ q, city, team, status }) {
+function updateCustFilterChips({ q, city, team, plan, status }) {
   const wrap = document.getElementById('cust-filter-chips');
   if (!wrap) return;
   wrap.innerHTML = '';
-
-  const teamLabel = team
-    ? (document.querySelector(`#cust-team-filter option[value="${team}"]`) || {}).textContent || team
-    : '';
-  const statusLabel = status
-    ? ({ active:'✅ Active', paused:'⏸️ Paused', inactive:'❌ Inactive' }[status] || status)
-    : '';
-  const cityLabel = city
-    ? city.charAt(0).toUpperCase() + city.slice(1)
-    : '';
-
+  const teamLabel   = team   ? ((document.querySelector(`#cust-team-filter option[value="${team}"]`) || {}).textContent || team) : '';
+  const planLabel   = plan   ? ((document.querySelector(`#cust-plan-filter option[value="${plan}"]`) || {}).textContent || plan) : '';
+  const statusLabel = status ? ({ active:'✅ Active', paused:'⏸️ Paused', inactive:'❌ Inactive' }[status] || status) : '';
+  const cityLabel   = city   ? city.charAt(0).toUpperCase() + city.slice(1) : '';
   const chips = [
-    q          && { label: `"${q}"`,       clear: () => { document.getElementById('cust-search').value = ''; filterCustomers(); } },
-    cityLabel  && { label: `🏙️ ${cityLabel}`,  clear: () => { document.getElementById('cust-city-filter').value = ''; filterCustomers(); } },
-    teamLabel  && { label: `🏘️ ${teamLabel.split('–')[0].trim()}`,  clear: () => { document.getElementById('cust-team-filter').value = ''; filterCustomers(); } },
-    statusLabel && { label: statusLabel,   clear: () => { document.getElementById('cust-status-filter').value = ''; filterCustomers(); } },
+    q          && { label:`"${q}"`,             clear: () => { document.getElementById('cust-search').value = ''; filterCustomers(); } },
+    cityLabel  && { label:`🏙️ ${cityLabel}`,    clear: () => { document.getElementById('cust-city-filter').value = ''; filterCustomers(); } },
+    teamLabel  && { label:`🏘️ ${teamLabel.split('–')[0].trim()}`, clear: () => { document.getElementById('cust-team-filter').value = ''; filterCustomers(); } },
+    planLabel  && { label:`📋 ${planLabel.substring(0,20)}`, clear: () => { document.getElementById('cust-plan-filter').value = ''; filterCustomers(); } },
+    statusLabel&& { label: statusLabel,          clear: () => { document.getElementById('cust-status-filter').value = ''; filterCustomers(); } },
   ].filter(Boolean);
-
   chips.forEach(chip => {
     const el = document.createElement('span');
     el.className = 'filter-active-indicator';
-    el.innerHTML = escHtml(chip.label) + `<button onclick="void(0)" title="Remove filter">✕</button>`;
+    el.innerHTML = escHtml(chip.label) + `<button title="Remove filter">✕</button>`;
     el.querySelector('button').addEventListener('click', chip.clear);
     wrap.appendChild(el);
   });
@@ -1307,10 +1747,10 @@ function clearCustomerFilters() {
   document.getElementById('cust-search').value        = '';
   document.getElementById('cust-city-filter').value   = '';
   document.getElementById('cust-team-filter').value   = '';
+  document.getElementById('cust-plan-filter').value   = '';
   document.getElementById('cust-status-filter').value = '';
   filterCustomers();
 }
-/* ==================================================================== */
 
 /* ---- Load Enquiries ---- */
 let _enqLoaded = false;
@@ -1319,69 +1759,43 @@ async function loadEnquiries(force) {
   const tbody = document.getElementById('enq-tbody');
   tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try {
-    const data = await fetch('/api/admin/enquiries_data').then(r => {
-      if (!r.ok) throw new Error('HTTP ' + r.status);
-      return r.json();
-    });
+    const data = await fetch('/api/admin/enquiries_data').then(r => { if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
     _enqLoaded = true;
-    const total    = data.length;
-    const pending  = data.filter(e => e.status === 'pending').length;
-    const approved = data.filter(e => e.status === 'approved').length;
+    const total = data.length, pending = data.filter(e=>e.status==='pending').length, approved = data.filter(e=>e.status==='approved').length;
     document.getElementById('enq-stat-total').textContent    = total;
     document.getElementById('enq-stat-pending').textContent  = pending;
     document.getElementById('enq-stat-approved').textContent = approved;
     const badge = document.getElementById('enq-badge');
-    if (pending > 0) { badge.textContent = pending; badge.style.display = 'inline-flex'; }
-    else { badge.style.display = 'none'; }
-    if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">No enquiries yet.</td></tr>`;
-      return;
-    }
+    if (pending > 0) { badge.textContent = pending; badge.style.display = 'inline-flex'; } else { badge.style.display = 'none'; }
+    if (!data.length) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">No enquiries yet.</td></tr>`; return; }
     tbody.innerHTML = data.map(e => {
-      const date = e.created_at
-        ? new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'})
-        : '—';
-      const sb = e.status==='pending'
-        ? `<span class="badge badge-yellow">⏳ Pending</span>`
-        : `<span class="badge badge-green">✅ Converted</span>`;
+      const date = e.created_at ? new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}) : '—';
+      const sb = e.status==='pending' ? `<span class="badge badge-yellow">⏳ Pending</span>` : `<span class="badge badge-green">✅ Converted</span>`;
       const approveBtn = e.status==='pending'
-        ? `<form method="POST" action="/admin/enquiries/approve/${e.id}"
-               onsubmit="return confirm('Convert ${escHtml(e.name)} to a customer?');" style="display:inline;">
+        ? `<form method="POST" action="/admin/enquiries/approve/${e.id}" onsubmit="return confirm('Convert ${escHtml(e.name)} to a customer?');" style="display:inline;">
              <button class="btn btn-success btn-sm">✅ Approve</button>
-           </form>`
-        : '';
-      return `
-        <tr data-name="${e.name.toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}">
-          <td>
-            <div style="display:flex;align-items:center;gap:8px;">
-              <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${e.name.charAt(0).toUpperCase()}</div>
-              <div>
-                <div style="font-weight:600;">${escHtml(e.name)}</div>
-                ${e.address?`<div style="font-size:11px;color:var(--text-3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.address)}</div>`:''}
-              </div>
-            </div>
-          </td>
-          <td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td>
-          <td>${e.plan?`<span class="badge badge-orange" title="${escHtml(e.plan)}">${escHtml(e.plan.substring(0,22))}${e.plan.length>22?'…':''}</span>`:`<span class="badge badge-gray">—</span>`}</td>
-          <td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td>
-          <td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td>
-          <td>${e.payment_method==='cod'?`<span class="badge badge-yellow">💵 COD</span>`:`<span class="badge badge-blue">📱 UPI</span>`}</td>
-          <td style="font-size:12px;color:var(--text-3);">${date}</td>
-          <td>${sb}</td>
-          <td>
-            <div style="display:flex;gap:5px;align-items:center;">
-              ${approveBtn}
-              <form method="POST" action="/admin/enquiries/delete/${e.id}"
-                    onsubmit="return confirm('Delete this enquiry?');" style="display:inline;">
-                <button class="btn btn-danger btn-sm">🗑️</button>
-              </form>
-            </div>
-          </td>
-        </tr>`;
+           </form>` : '';
+      return `<tr data-name="${e.name.toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}">
+        <td><div style="display:flex;align-items:center;gap:8px;">
+          <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${e.name.charAt(0).toUpperCase()}</div>
+          <div><div style="font-weight:600;">${escHtml(e.name)}</div>${e.address?`<div style="font-size:11px;color:var(--text-3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.address)}</div>`:''}</div>
+        </div></td>
+        <td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td>
+        <td>${e.plan?`<span class="badge badge-orange" title="${escHtml(e.plan)}">${escHtml(e.plan.substring(0,22))}${e.plan.length>22?'…':''}</span>`:`<span class="badge badge-gray">—</span>`}</td>
+        <td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td>
+        <td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td>
+        <td>${e.payment_method==='cod'?`<span class="badge badge-yellow">💵 COD</span>`:`<span class="badge badge-blue">📱 UPI</span>`}</td>
+        <td style="font-size:12px;color:var(--text-3);">${date}</td>
+        <td>${sb}</td>
+        <td><div style="display:flex;gap:5px;align-items:center;">${approveBtn}
+          <form method="POST" action="/admin/enquiries/delete/${e.id}" onsubmit="return confirm('Delete this enquiry?');" style="display:inline;">
+            <button class="btn btn-danger btn-sm">🗑️</button>
+          </form>
+        </div></td>
+      </tr>`;
     }).join('');
   } catch(err) {
-    console.error('Enquiries load error:', err);
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed to load. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;
   }
 }
 
@@ -1391,7 +1805,7 @@ function filterEnqTable() {
   document.querySelectorAll('#enq-table tbody tr').forEach(r => {
     const name  = (r.getAttribute('data-name') ||'').toLowerCase();
     const phone = (r.getAttribute('data-phone')||'').toLowerCase();
-    const rs    = (r.getAttribute('data-status')||'');
+    const rs    =  r.getAttribute('data-status')||'';
     r.style.display = ((!q||(name+phone).includes(q)) && (!st||rs===st)) ? '' : 'none';
   });
 }
@@ -1484,28 +1898,20 @@ function openEditTeam(team) {
 }
 
 /* ---- Sidebar ---- */
-function toggleSidebar() {
-  document.getElementById('sidebar').classList.toggle('open');
-  document.getElementById('overlay').classList.toggle('open');
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('open');
-  document.getElementById('overlay').classList.remove('open');
-}
+function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
+function closeSidebar()  { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
 
-/* ---- Modals ---- */
+/* ---- Standard Modals ---- */
 function openModal(id)  { document.getElementById(id).classList.add('open'); }
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('.modal-backdrop').forEach(m => {
   m.addEventListener('click', function(e) { if (e.target===this) this.classList.remove('open'); });
 });
 
-/* ---- Generic table filters (employees / teams — unchanged) ---- */
+/* ---- Generic table filters ---- */
 function filterTable(inputId, tableId, attr) {
   const q = document.getElementById(inputId).value.toLowerCase();
-  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => {
-    r.style.display = (r.getAttribute(attr)||'').toLowerCase().includes(q) ? '' : 'none';
-  });
+  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => { r.style.display = (r.getAttribute(attr)||'').toLowerCase().includes(q) ? '' : 'none'; });
 }
 function filterTeams() {
   const q    = document.getElementById('team-search').value.toLowerCase();
@@ -1518,21 +1924,11 @@ function filterTeams() {
 }
 function filterByCity(selectId, tableId) {
   const city = document.getElementById(selectId).value.toLowerCase();
-  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => {
-    r.style.display = (!city||(r.getAttribute('data-city')||'').toLowerCase()===city) ? '' : 'none';
-  });
+  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => { r.style.display = (!city||(r.getAttribute('data-city')||'').toLowerCase()===city) ? '' : 'none'; });
 }
 function filterByTeam(selectId, tableId) {
   const team = document.getElementById(selectId).value;
-  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => {
-    r.style.display = (!team||r.getAttribute('data-team')===team) ? '' : 'none';
-  });
-}
-function filterByStatus(selectId, tableId) {
-  const status = document.getElementById(selectId).value.toLowerCase();
-  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => {
-    r.style.display = (!status||(r.getAttribute('data-status')||'').toLowerCase()===status) ? '' : 'none';
-  });
+  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => { r.style.display = (!team||r.getAttribute('data-team')===team) ? '' : 'none'; });
 }
 
 /* ---- Charts ---- */
@@ -1543,19 +1939,11 @@ Chart.defaults.font  = { family:'DM Sans, sans-serif', size:12 };
 function initAreaChart(data) {
   const ctx = document.getElementById('areaChart').getContext('2d');
   if (areaChart) areaChart.destroy();
-  const palette = ['rgba(79,70,229,.85)','rgba(124,58,237,.85)','rgba(37,99,235,.85)',
-                   'rgba(8,145,178,.85)','rgba(5,150,105,.85)','rgba(217,119,6,.85)'];
+  const palette = ['rgba(79,70,229,.85)','rgba(124,58,237,.85)','rgba(37,99,235,.85)','rgba(8,145,178,.85)','rgba(5,150,105,.85)','rgba(217,119,6,.85)'];
   areaChart = new Chart(ctx, {
     type:'bar',
-    data:{
-      labels: data.map(d=>d.area),
-      datasets:[{label:'Pending',data:data.map(d=>d.pending),
-        backgroundColor:data.map((_,i)=>palette[i%palette.length]),
-        borderRadius:{topLeft:8,topRight:8},borderSkipped:false}]
-    },
-    options:{responsive:true,plugins:{legend:{display:false}},
-      scales:{x:{grid:{display:false},border:{display:false}},
-              y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}
+    data:{ labels:data.map(d=>d.area), datasets:[{label:'Pending',data:data.map(d=>d.pending),backgroundColor:data.map((_,i)=>palette[i%palette.length]),borderRadius:{topLeft:8,topRight:8},borderSkipped:false}] },
+    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}
   });
 }
 
@@ -1566,17 +1954,14 @@ function initDeliveryChart(ts) {
   deliveryChart = new Chart(ctx, {
     type:'line',
     data:{
-      labels: ts.map(d=>new Date(d.date).toLocaleDateString('en-IN',{month:'short',day:'numeric'})),
+      labels:ts.map(d=>new Date(d.date).toLocaleDateString('en-IN',{month:'short',day:'numeric'})),
       datasets:[
         {label:'Delivered',data:ts.map(d=>d.delivered),borderColor:'#10b981',backgroundColor:grad('rgba(16,185,129,.15)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#10b981',pointBorderColor:'#fff',pointBorderWidth:2},
         {label:'Pending',  data:ts.map(d=>d.pending),  borderColor:'#f59e0b',backgroundColor:grad('rgba(245,158,11,.12)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#f59e0b',pointBorderColor:'#fff',pointBorderWidth:2},
         {label:'Holiday',  data:ts.map(d=>d.holiday),  borderColor:'#ef4444',backgroundColor:grad('rgba(239,68,68,.10)'), fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#ef4444',pointBorderColor:'#fff',pointBorderWidth:2},
       ]
     },
-    options:{responsive:true,interaction:{mode:'index',intersect:false},
-      plugins:{legend:{labels:{boxWidth:10,padding:18,usePointStyle:true}}},
-      scales:{x:{grid:{display:false},border:{display:false}},
-              y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}
+    options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{boxWidth:10,padding:18,usePointStyle:true}}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}
   });
 }
 
@@ -1603,9 +1988,7 @@ async function loadChart(days, pill) {
 /* ---- Flash auto-dismiss ---- */
 setTimeout(() => {
   document.querySelectorAll('.flash').forEach(f => {
-    f.style.transition = '0.4s';
-    f.style.opacity = '0';
-    f.style.transform = 'translateX(40px)';
+    f.style.transition = '0.4s'; f.style.opacity = '0'; f.style.transform = 'translateX(40px)';
     setTimeout(() => f.remove(), 400);
   });
 }, 4000);
@@ -1614,10 +1997,7 @@ setTimeout(() => {
 (async function(){
   try {
     const d = await fetch('/api/admin/enquiry_count').then(r=>r.json());
-    if (d.pending>0) {
-      const b = document.getElementById('enq-badge');
-      if (b) { b.textContent=d.pending; b.style.display='inline-flex'; }
-    }
+    if (d.pending>0) { const b = document.getElementById('enq-badge'); if (b) { b.textContent=d.pending; b.style.display='inline-flex'; } }
   } catch {}
 })();
 

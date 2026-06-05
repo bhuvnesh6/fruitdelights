@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, session, url_for, f
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
-import os
+import os, re
 from bson.objectid import ObjectId
 import secrets
 from datetime import datetime, timedelta, date
@@ -11,16 +11,21 @@ from functools import wraps
 from wp import send_whatsapp
 
 
+
+
 load_dotenv()
+
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "super-secret-key-change-in-production")
+
 
 # Mongo Config
 MONGO_URI = os.getenv("MONGO_URI")
 DB_NAME   = os.getenv("DB_NAME")
 client    = MongoClient(MONGO_URI)
 db        = client[DB_NAME]
+
 
 # Collections
 users_col      = db.users
@@ -29,6 +34,7 @@ plans_col      = db.plans
 deliveries_col = db.deliveries
 invoices_col   = db.invoices
 enquiries_col  = db.enquiries
+
 
 # ---------------------------------------------------------------------------
 # DECORATORS
@@ -41,6 +47,7 @@ def login_required(f):
         return f(*args, **kwargs)
     return decorated_function
 
+
 def role_required(*roles):
     def decorator(f):
         @wraps(f)
@@ -51,6 +58,7 @@ def role_required(*roles):
             return f(*args, **kwargs)
         return decorated_function
     return decorator
+
 
 # ---------------------------------------------------------------------------
 # HELPERS
@@ -71,6 +79,25 @@ def send_credentials_whatsapp(email, password, name, phone):
         f"Thank you."
     )
     send_whatsapp(phone, msg)
+
+
+def _generate_customer_login_id(name: str) -> str:
+    """
+    Generate a short, human-readable login ID from customer name.
+    e.g. "Bhuvnesh Raghav" -> "bhuvneshra4f@fruitedelights.com"
+    Ensures uniqueness by appending a random hex suffix.
+    """
+    # Take first word max 8 chars + first 2 chars of second word if present
+    parts = re.sub(r'[^a-zA-Z0-9 ]', '', name).strip().split()
+    base  = parts[0][:8].lower() if parts else "user"
+    if len(parts) > 1:
+        base += parts[1][:2].lower()
+    suffix  = secrets.token_hex(2)          # 4 hex chars
+    candidate = f"{base}{suffix}@fruitedelights.com"
+    # Collision guard (extremely unlikely but safe)
+    while users_col.find_one({"email": candidate}):
+        candidate = f"{base}{secrets.token_hex(2)}@fruitedelights.com"
+    return candidate
 
 
 def _resolve_customer_email(phone, existing_email=""):
@@ -108,17 +135,12 @@ def _calculate_invoice_period(customer, plan):
     """
     Return (period_start, period_end) as date objects based on
     customer start_date + plan duration_days.
-
-    duration_days is the contracted length of the billing cycle, e.g. 22 or 26.
-    The period ends at start_date + duration_days - 1 (inclusive).
-    If duration_days is 0 or missing, fall back to the calendar month.
     """
     duration_days = int(plan.get("duration_days", 0))
     start         = _parse_start_date(customer)
 
     if not start or duration_days <= 0:
-        # Fallback: current calendar month
-        today       = date.today()
+        today        = date.today()
         period_start = date(today.year, today.month, 1)
         _, last_day  = calendar.monthrange(today.year, today.month)
         period_end   = date(today.year, today.month, last_day)
@@ -130,13 +152,8 @@ def _calculate_invoice_period(customer, plan):
 
 
 def _billable_days_in_period(customer, period_start, period_end):
-    """
-    Count every calendar day in [period_start, period_end] that is NOT
-    in the customer's off_days (weekday names) or holidays (date strings).
-    Returns (schedulable_days, delivered_days).
-    """
-    off_days = customer.get("off_days", [])     # e.g. ["Sunday"]
-    holidays = set(customer.get("holidays", [])) # e.g. {"2026-06-10"}
+    off_days = customer.get("off_days", [])
+    holidays = set(customer.get("holidays", []))
 
     schedulable = 0
     delivered   = 0
@@ -162,7 +179,6 @@ def _billable_days_in_period(customer, period_start, period_end):
 
 
 def _apply_discount(gross, disc_pct, disc_amt):
-    """Apply discount_percent first, then discount_amount. Returns discount total and final amount."""
     discount = 0.0
     if disc_pct and float(disc_pct) > 0:
         discount += gross * (float(disc_pct) / 100)
@@ -172,10 +188,6 @@ def _apply_discount(gross, disc_pct, disc_amt):
 
 
 def generate_monthly_bill(customer, month=None, year=None):
-    """
-    Calculate the actual bill for a completed (or in-progress) billing period.
-    Pro-rates based on delivered_days / schedulable_days × plan_price.
-    """
     plan = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
     if not plan:
         return 0.0
@@ -200,10 +212,6 @@ def generate_monthly_bill(customer, month=None, year=None):
 
 
 def estimate_upcoming_bill(customer, month=None, year=None):
-    """
-    Estimate the full bill for the current billing period (all schedulable days assumed delivered).
-    Used for customer-facing forecast and invoice generation.
-    """
     plan = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
     if not plan:
         return {"days": 0, "subtotal": 0, "tax": 0, "discount": 0, "total": 0}
@@ -213,7 +221,6 @@ def estimate_upcoming_bill(customer, month=None, year=None):
 
     period_start, period_end = _calculate_invoice_period(customer, plan)
 
-    # Count schedulable days (no deliveries needed for estimate)
     off_days = customer.get("off_days", [])
     holidays = set(customer.get("holidays", []))
     billable_days = 0
@@ -244,20 +251,14 @@ def estimate_upcoming_bill(customer, month=None, year=None):
 
 
 def _invoice_due_today(customer):
-    """
-    Returns True if today is the last day of the customer's current billing period
-    (i.e. start_date + duration_days - 1 == today).
-    """
     plan = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
     if not plan or int(plan.get("duration_days", 0)) <= 0:
         return False
-
     _, period_end = _calculate_invoice_period(customer, plan)
     return period_end == date.today()
 
 
 def _send_invoice_whatsapp(customer, invoice):
-    """Send a formatted invoice summary to the customer's WhatsApp."""
     phone = "".join(filter(str.isdigit, str(customer.get("phone", ""))))
     if len(phone) == 10:
         phone = "91" + phone
@@ -326,7 +327,7 @@ def logout():
 
 
 # ---------------------------------------------------------------------------
-# FORGOT PASSWORD – API endpoint (called by login page popup)
+# FORGOT PASSWORD
 # ---------------------------------------------------------------------------
 @app.route("/api/forgot-password", methods=["POST"])
 def forgot_password():
@@ -345,7 +346,6 @@ def forgot_password():
     if not user:
         return jsonify({"success": True, "message": "If this number is registered, you'll receive your credentials on WhatsApp shortly."})
 
-    # Generate new password and update DB
     new_password = secrets.token_urlsafe(8)
     users_col.update_one(
         {"_id": user["_id"]},
@@ -371,6 +371,7 @@ def forgot_password():
     send_whatsapp(wa_phone, msg)
 
     return jsonify({"success": True, "message": "New credentials sent to your WhatsApp."})
+
 
 # ---------------------------------------------------------------------------
 # ADMIN – dashboard & analytics
@@ -465,6 +466,7 @@ def api_customers():
             "discount_percent": float(c.get("discount_percent", 0) or 0),
             "discount_amount":  float(c.get("discount_amount",  0) or 0),
             "status":           c.get("status", "active"),
+            "source":           c.get("source", ""),
             "created_at":       (
                 c["created_at"].strftime("%Y-%m-%d")
                 if isinstance(c.get("created_at"), datetime) else ""
@@ -532,7 +534,7 @@ def admin_analytics():
 
 
 # ---------------------------------------------------------------------------
-# ADMIN – plans (duration_days supported)
+# ADMIN – plans
 # ---------------------------------------------------------------------------
 @app.route("/admin/plans")
 @login_required
@@ -684,7 +686,6 @@ def add_user():
                 "danger"
             )
             return redirect(url_for("dashboard_admin"))
-
 
     raw_password = secrets.token_urlsafe(8)
 
@@ -847,18 +848,16 @@ def customer_detail(customer_id):
 
     now = datetime.now()
 
-    # Next billing = end of current plan period + 1 day
     plan = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
     if plan and int(plan.get("duration_days", 0)) > 0:
-        _, period_end    = _calculate_invoice_period(customer, plan)
-        next_billing     = datetime.combine(period_end + timedelta(days=1), datetime.min.time())
+        _, period_end = _calculate_invoice_period(customer, plan)
+        next_billing  = datetime.combine(period_end + timedelta(days=1), datetime.min.time())
     else:
         next_billing = datetime(now.year, now.month + 1, 1) if now.month < 12 else datetime(now.year + 1, 1, 1)
 
     current_bill   = generate_monthly_bill(customer, now.month, now.year)
     estimated_bill = estimate_upcoming_bill(customer, now.month, now.year)
 
-    # Last 3 billing periods history (approximate by month for display)
     billing_history = []
     for delta in range(1, 4):
         m = now.month - delta
@@ -910,6 +909,10 @@ def customer_detail(customer_id):
     member_since = customer.get("created_at")
     member_since_str = member_since.strftime("%d %b %Y") if isinstance(member_since, datetime) else "—"
 
+    # Flag whether this is a sample customer (has non-empty sample field)
+    is_sample    = bool(customer.get("sample"))
+    sample_label = customer.get("sample", "")
+
     return render_template(
         "customer_detail.html",
         customer=customer,
@@ -926,6 +929,8 @@ def customer_detail(customer_id):
         invoices=invoices,
         start_date_str=start_date_str,
         member_since_str=member_since_str,
+        is_sample=is_sample,
+        sample_label=sample_label,
         now=now,
         active_page="customers"
     )
@@ -987,26 +992,64 @@ def approve_enquiry(enquiry_id):
         return redirect(url_for("dashboard_admin"))
 
     raw_password = secrets.token_urlsafe(8)
-    plan  = plans_col.find_one({"name": {"$regex": enq.get("plan", ""), "$options": "i"}}) if enq.get("plan") else None
-    phone = enq.get("phone", "unknown")
-    email = _resolve_customer_email(phone)
+    name      = enq.get("name", "customer")
+    phone     = enq.get("phone", "unknown")
+    enq_plan  = (enq.get("plan") or "").strip()   # raw plan text from enquiry form
 
+    # ── 1. Try to match enquiry plan text against plans collection ──
+    #       Strategy: exact → prefix (first 20 chars) → any-word substring
+    matched_plan = None
+    if enq_plan:
+        matched_plan = plans_col.find_one({"name": enq_plan})
+        if not matched_plan:
+            matched_plan = plans_col.find_one({
+                "name": {"$regex": re.escape(enq_plan[:20]), "$options": "i"}
+            })
+        if not matched_plan:
+            # Try matching first meaningful word (e.g. "Weekday" from "Weekday Sample – ₹69")
+            first_word = re.split(r'[\s\-–—]', enq_plan)[0].strip()
+            if len(first_word) >= 3:
+                matched_plan = plans_col.find_one({
+                    "name": {"$regex": re.escape(first_word), "$options": "i"}
+                })
+
+    # ── 2. Build sample field ──
+    #   • Plan matched  → plan_id set, sample = None  (will behave as normal plan in future)
+    #   • No match      → plan_id = None, sample = raw enquiry plan text (e.g. "Weekday Sample – ₹69")
+    if matched_plan:
+        plan_id_val  = matched_plan["_id"]
+        sample_val   = None          # not a sample — real plan found
+        plan_label   = matched_plan["name"]
+    else:
+        plan_id_val  = None
+        sample_val   = enq_plan or "Sample"   # store raw text so boxes view can label it
+        plan_label   = enq_plan or "Sample"
+
+    # ── 3. Generate short readable login ID from customer name ──
+    email = _generate_customer_login_id(name)
+
+    # ── 4. Parse start date ──
     start_date = None
     if enq.get("start_date"):
-        try:
-            start_date = datetime.strptime(enq["start_date"], "%Y-%m-%d")
-        except Exception:
-            pass
+        for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y"):
+            try:
+                start_date = datetime.strptime(enq["start_date"], fmt)
+                break
+            except Exception:
+                continue
 
+    # ── 5. Build user document ──
+    #   role = "customer", source = "web_enquiry"
+    #   sample field: present (with label) = sample customer; absent/None = normal customer
     user_data = {
-        "name":             enq.get("name"),
+        "name":             name,
         "email":            email,
         "phone":            phone,
         "role":             "customer",
         "password":         generate_password_hash(raw_password),
         "address":          enq.get("address"),
         "preferred_time":   enq.get("delivery_time"),
-        "plan_id":          plan["_id"] if plan else None,
+        "plan_id":          plan_id_val,
         "off_days":         [],
         "holidays":         [],
         "start_date":       start_date or datetime.now(),
@@ -1016,10 +1059,34 @@ def approve_enquiry(enquiry_id):
         "created_at":       datetime.now(),
         "source":           "web_enquiry",
     }
+    # Only set the sample field when no real plan was matched
+    if sample_val:
+        user_data["sample"] = sample_val
 
     users_col.insert_one(user_data)
+
+    # ── 6. Delete enquiry ──
     enquiries_col.delete_one({"_id": ObjectId(enquiry_id)})
-    flash(f"✅ '{enq['name']}' approved and added as customer.", "success")
+
+    # ── 7. Send login credentials via WhatsApp ──
+    wa_phone = "".join(filter(str.isdigit, str(phone)))
+    if len(wa_phone) == 10:
+        wa_phone = "91" + wa_phone
+
+    msg = (
+        f"🍓 Fruit Delights – Welcome!\n\n"
+        f"Hello {name},\n\n"
+        f"Your sample box is confirmed! 🎉\n"
+        f"Plan: {plan_label}\n\n"
+        f"🔑 Login ID: {email}\n"
+        f"🔒 Password: {raw_password}\n\n"
+        f"👉 Login here:\nhttps://fruitedelights.com/login\n\n"
+        f"Thank you for joining us! 🍉"
+    )
+    send_whatsapp(wa_phone, msg)
+
+    sample_note = f" (Sample: {plan_label})" if sample_val else f" (Plan: {plan_label})"
+    flash(f"✅ '{name}' approved{sample_note} → Login: {email} sent on WhatsApp.", "success")
     return redirect(url_for("dashboard_admin"))
 
 
@@ -1184,12 +1251,18 @@ def dashboard_customer():
     current_bill   = generate_monthly_bill(customer, now.month, now.year)
     estimated_bill = estimate_upcoming_bill(customer, now.month, now.year)
 
+    # Sample customers (have a sample field) show a sample plan banner
+    is_sample    = bool(customer.get("sample"))
+    sample_label = customer.get("sample", "")
+
     return render_template(
         "dashboard_customer.html",
         delivery=today_delivery,
         partner=partner,
         current_bill=current_bill,
         estimated_bill=estimated_bill,
+        is_sample=is_sample,
+        sample_label=sample_label,
         datetime=datetime
     )
 
@@ -1243,17 +1316,10 @@ def generate_daily_deliveries():
 
 
 # ---------------------------------------------------------------------------
-# CRON – Check invoices due today (call daily via cron / scheduler)
+# CRON – Check invoices due today
 # ---------------------------------------------------------------------------
 @app.route("/api/system/check_invoice_due")
 def check_invoice_due():
-    """
-    Called daily (e.g. via cron or an external scheduler).
-    For every active customer whose billing period ends today,
-    generate & send the invoice if not already done.
-
-    Protect with CRON_SECRET to avoid public access.
-    """
     token = request.args.get("token")
     if token != os.getenv("CRON_SECRET"):
         return jsonify({"error": "Unauthorized"}), 401
@@ -1273,12 +1339,10 @@ def check_invoice_due():
 
             period_start, period_end = _calculate_invoice_period(customer, plan)
 
-            # Only generate invoice if today is the last day of the period
             if period_end != today:
                 skipped += 1
                 continue
 
-            # Avoid duplicates
             existing = invoices_col.find_one({
                 "customer_id":  customer["_id"],
                 "period_start": period_start.strftime("%Y-%m-%d"),
@@ -1288,7 +1352,6 @@ def check_invoice_due():
                 skipped += 1
                 continue
 
-            # Calculate amounts
             schedulable, delivered = _billable_days_in_period(customer, period_start, period_end)
             price_total = float(plan.get("price_per_month", plan.get("price_per_day", 0)))
             tax_pct     = float(plan.get("tax_percent", 0))
@@ -1306,22 +1369,21 @@ def check_invoice_due():
             discount, total = _apply_discount(gross, disc_pct, disc_amt)
 
             invoice = {
-                "customer_id":    customer["_id"],
-                "period_start":   period_start.strftime("%Y-%m-%d"),
-                "period_end":     period_end.strftime("%Y-%m-%d"),
-                # Legacy month/year fields kept for compatibility
-                "month":          period_end.month,
-                "year":           period_end.year,
-                "plan_name":      plan.get("name", ""),
-                "duration_days":  int(plan.get("duration_days", 0)),
+                "customer_id":      customer["_id"],
+                "period_start":     period_start.strftime("%Y-%m-%d"),
+                "period_end":       period_end.strftime("%Y-%m-%d"),
+                "month":            period_end.month,
+                "year":             period_end.year,
+                "plan_name":        plan.get("name", ""),
+                "duration_days":    int(plan.get("duration_days", 0)),
                 "schedulable_days": schedulable,
-                "billable_days":  delivered,
-                "subtotal":       subtotal,
-                "tax":            tax,
-                "discount":       discount,
-                "total":          total,
-                "status":         "sent",
-                "generated_at":   datetime.now(),
+                "billable_days":    delivered,
+                "subtotal":         subtotal,
+                "tax":              tax,
+                "discount":         discount,
+                "total":            total,
+                "status":           "sent",
+                "generated_at":     datetime.now(),
             }
 
             invoices_col.insert_one(invoice)
@@ -1342,7 +1404,7 @@ def check_invoice_due():
 
 
 # ---------------------------------------------------------------------------
-# CRON – Legacy monthly bills (kept for backward-compat)
+# CRON – Legacy monthly bills
 # ---------------------------------------------------------------------------
 def get_previous_month_year():
     now = datetime.now()
@@ -1414,9 +1476,10 @@ def test_invoice():
         return redirect(url_for("test_invoice"))
     return render_template("test_invoice.html")
 
-#box needed
 
-
+# ---------------------------------------------------------------------------
+# ADMIN – Boxes needed today
+# ---------------------------------------------------------------------------
 @app.route("/api/admin/boxes_needed")
 @login_required
 @role_required("admin", "manager")
@@ -1424,20 +1487,44 @@ def api_boxes_needed():
     today_str = datetime.now().strftime("%Y-%m-%d")
     day_name  = datetime.now().strftime("%A")
 
-    plans     = list(plans_col.find())
-    customers = list(users_col.find({"role": "customer", "status": {"$ne": "inactive"}}))
+    plans  = list(plans_col.find())
+    teams  = list(teams_col.find())
 
-    # Count pending enquiries per plan name (for sample boxes)
-    pending_enquiries = list(enquiries_col.find({"tag": "form_enquiry", "status": "pending"}))
+    # ── Active customers: role=customer, status=active, NO sample field ──
+    active_customers = list(users_col.find({
+        "role":   "customer",
+        "status": "active",
+        "sample": {"$in": [None, ""]},   # not a sample
+        "plan_id": {"$ne": None},
+    }))
+    # Also include customers where sample field simply doesn't exist
+    active_customers += list(users_col.find({
+        "role":    "customer",
+        "status":  "active",
+        "sample":  {"$exists": False},
+        "plan_id": {"$ne": None},
+    }))
 
+    # ── Sample customers: have a `sample` field set (non-empty string) ──
+    sample_customers = list(users_col.find({
+        "role":   "customer",
+        "status": "active",
+        "sample": {"$exists": True, "$nin": [None, ""]},
+    }))
+
+    team_map = {str(t["_id"]): t for t in teams}
+    plan_map = {str(p["_id"]): p for p in plans}
+
+    # ── Build per-plan rows for active customers ──
     result = []
     for plan in plans:
         plan_id   = str(plan["_id"])
         plan_name = plan.get("name", "")
 
-        # Active customers on this plan scheduled for delivery today
-        active_count = 0
-        for c in customers:
+        team_breakdown = {}
+        active_count   = 0
+
+        for c in active_customers:
             if str(c.get("plan_id", "")) != plan_id:
                 continue
             if day_name in c.get("off_days", []):
@@ -1445,27 +1532,152 @@ def api_boxes_needed():
             if today_str in c.get("holidays", []):
                 continue
             active_count += 1
+            tid = str(c.get("team_id", ""))
+            if tid not in team_breakdown:
+                team_obj = team_map.get(tid, {})
+                team_breakdown[tid] = {
+                    "team_id":   tid,
+                    "team_name": team_obj.get("name", "—"),
+                    "team_area": team_obj.get("area", ""),
+                    "count":     0,
+                }
+            team_breakdown[tid]["count"] += 1
 
-        # Pending enquiries mentioning this plan (sample boxes)
-        sample_count = sum(
-            1 for e in pending_enquiries
-            if plan_name.lower() in (e.get("plan") or "").lower()
-               or (e.get("plan") or "").lower() in plan_name.lower()
-        )
+        # Sample customers whose plan_id matched this plan
+        matched_sample_count = 0
+        for c in sample_customers:
+            if str(c.get("plan_id", "")) == plan_id:
+                if day_name not in c.get("off_days", []) and today_str not in c.get("holidays", []):
+                    matched_sample_count += 1
+
+        # Pending enquiries still in enquiries collection
+        pending_enq_count = enquiries_col.count_documents({
+            "tag":    "form_enquiry",
+            "status": "pending",
+            "plan":   {"$regex": re.escape(plan_name[:20]), "$options": "i"}
+        }) if plan_name else 0
+
+        if active_count == 0 and matched_sample_count == 0 and pending_enq_count == 0:
+            continue
 
         result.append({
-            "plan_name":        plan_name,
-            "plan_price":       plan.get("price_per_month") or plan.get("price_per_day") or 0,
-            "duration_days":    plan.get("duration_days", 0),
-            "active_customers": active_count,
-            "pending_enquiries": sample_count,
-            "total_boxes":      active_count + sample_count,
+            "plan_id":           plan_id,
+            "plan_name":         plan_name,
+            "plan_price":        plan.get("price_per_month") or plan.get("price_per_day") or 0,
+            "duration_days":     plan.get("duration_days", 0),
+            "active_customers":  active_count,
+            "sample_boxes":      matched_sample_count,
+            "pending_enquiries": pending_enq_count,
+            "total_boxes":       active_count + matched_sample_count,
+            "teams":             sorted(team_breakdown.values(), key=lambda x: -x["count"]),
+            "is_sample_plan":    False,
         })
 
-    # Only return plans that have at least some activity OR always show all
+    # ── Build separate rows for UNmatched sample customers (plan_id = None) ──
+    # Group them by their sample field text (e.g. "Weekday Sample – ₹69")
+    unmatched_samples: dict = {}   # sample_label -> count
+    for c in sample_customers:
+        if c.get("plan_id"):   # already counted above under matched plan
+            continue
+        if day_name in c.get("off_days", []):
+            continue
+        if today_str in c.get("holidays", []):
+            continue
+        label = c.get("sample", "Sample")
+        unmatched_samples[label] = unmatched_samples.get(label, 0) + 1
+
+    for label, count in unmatched_samples.items():
+        result.append({
+            "plan_id":           None,
+            "plan_name":         label,          # display the raw sample text as plan name
+            "plan_price":        None,
+            "duration_days":     None,
+            "active_customers":  0,
+            "sample_boxes":      count,
+            "pending_enquiries": 0,
+            "total_boxes":       count,
+            "teams":             [],
+            "is_sample_plan":    True,           # flag so UI can style differently
+        })
+
     return jsonify(result)
 
+# ---------------------------------------------------------------------------
+# ADMIN – Sample customers detail for Boxes view
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/sample_customers")
+@login_required
+@role_required("admin", "manager")
+def api_sample_customers():
+    label     = request.args.get("label", "").strip()
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    day_name  = datetime.now().strftime("%A")
 
+    query = {
+        "role":   "customer",
+        "status": "active",
+        "sample": {"$exists": True, "$nin": [None, ""]},
+    }
+    if label:
+        query["sample"] = label
+
+    customers = list(users_col.find(query))
+    teams     = list(teams_col.find())
+    team_map  = {str(t["_id"]): t for t in teams}
+
+    result = []
+    for c in customers:
+        if day_name in c.get("off_days", []):
+            continue
+        if today_str in c.get("holidays", []):
+            continue
+
+        team = team_map.get(str(c.get("team_id", "")), {})
+        start_date = c.get("start_date")
+        if isinstance(start_date, datetime):
+            start_date = start_date.strftime("%Y-%m-%d")
+
+        result.append({
+            "id":             str(c["_id"]),
+            "name":           c.get("name", ""),
+            "phone":          c.get("phone", "—"),
+            "address":        c.get("address", "—"),
+            "preferred_time": c.get("preferred_time", "—"),
+            "start_date":     start_date or "—",
+            "sample_label":   c.get("sample", ""),
+            "team_id":        str(c.get("team_id", "")),
+            "team_name":      team.get("name", "—"),
+            "team_area":      team.get("area", ""),
+            "team_city":      team.get("city", ""),
+            "off_days":       c.get("off_days", []),
+            "status":         c.get("status", "active"),
+        })
+
+    all_teams = [{"id": str(t["_id"]), "name": t.get("name",""), "area": t.get("area",""), "city": t.get("city","")} for t in teams]
+    return jsonify({"customers": result, "teams": all_teams})
+
+
+@app.route("/api/admin/assign_team", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def assign_team_to_customer():
+    data        = request.get_json(silent=True) or {}
+    customer_id = data.get("customer_id")
+    team_id     = data.get("team_id")
+
+    if not customer_id or not team_id:
+        return jsonify({"success": False, "message": "Missing customer_id or team_id"}), 400
+
+    try:
+        users_col.update_one(
+            {"_id": ObjectId(customer_id)},
+            {"$set": {"team_id": ObjectId(team_id)}}
+        )
+        team = teams_col.find_one({"_id": ObjectId(team_id)})
+        return jsonify({"success": True, "team_name": team.get("name","") if team else ""})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 500
+    
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5757)
