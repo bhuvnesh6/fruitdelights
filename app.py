@@ -1492,18 +1492,15 @@ def api_boxes_needed():
 
     # ── Active customers: role=customer, status=active, NO sample field ──
     active_customers = list(users_col.find({
-        "role":   "customer",
-        "status": "active",
-        "sample": {"$in": [None, ""]},   # not a sample
-        "plan_id": {"$ne": None},
-    }))
-    # Also include customers where sample field simply doesn't exist
-    active_customers += list(users_col.find({
-        "role":    "customer",
-        "status":  "active",
-        "sample":  {"$exists": False},
-        "plan_id": {"$ne": None},
-    }))
+    "role":    "customer",
+    "status":  "active",
+    "plan_id": {"$ne": None},
+    "$or": [
+        {"sample": {"$exists": False}},
+        {"sample": None},
+        {"sample": ""},
+    ]
+}))
 
     # ── Sample customers: have a `sample` field set (non-empty string) ──
     sample_customers = list(users_col.find({
