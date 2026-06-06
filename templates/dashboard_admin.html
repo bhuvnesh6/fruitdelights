@@ -14,6 +14,7 @@
   --accent:#4f46e5;--accent-hover:#4338ca;--accent-soft:#eef2ff;--accent-glow:rgba(79,70,229,.18);
   --green:#10b981;--green-soft:#d1fae5;--yellow:#f59e0b;--yellow-soft:#fef3c7;
   --red:#ef4444;--red-soft:#fee2e2;--blue:#3b82f6;--blue-soft:#dbeafe;
+  --wa:#25d366;--wa-soft:#dcfce7;
   --text:#111827;--text-2:#6b7280;--text-3:#9ca3af;
   --shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);
   --shadow-md:0 4px 6px -1px rgb(0 0 0/.1),0 2px 4px -2px rgb(0 0 0/.1);
@@ -43,6 +44,7 @@ img{display:block;max-width:100%}
 .nav-item.active{background:var(--accent-soft);color:var(--accent)}
 .nav-item .nav-icon{font-size:16px;width:20px;text-align:center;flex-shrink:0}
 .nav-item .nav-badge{margin-left:auto;background:var(--accent);color:white;font-size:10px;font-weight:700;padding:2px 6px;border-radius:99px}
+.nav-item .nav-badge.wa{background:var(--wa)}
 .sidebar-bottom{margin-top:auto;padding:16px 12px;border-top:1px solid var(--border)}
 .user-pill{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:var(--radius-sm);background:var(--bg-3)}
 .user-pill-avatar{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:white;flex-shrink:0}
@@ -68,6 +70,8 @@ img{display:block;max-width:100%}
 .btn-danger:hover{background:#fecaca}
 .btn-success{background:var(--green-soft);color:var(--green)}
 .btn-success:hover{background:#a7f3d0}
+.btn-wa{background:var(--wa-soft);color:#15803d;border:1px solid #bbf7d0}
+.btn-wa:hover{background:#bbf7d0}
 .btn-warning{background:var(--yellow-soft);color:var(--yellow)}
 .btn-sm{padding:5px 10px;font-size:12px}
 .card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm)}
@@ -118,6 +122,7 @@ tbody tr:hover td{background:var(--bg-3)}
 .badge-blue{background:var(--blue-soft);color:var(--blue)}
 .badge-gray{background:var(--bg-3);color:var(--text-2)}
 .badge-orange{background:#fff7ed;color:#f97316}
+.badge-wa{background:var(--wa-soft);color:#15803d}
 .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ff9a35);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:white;flex-shrink:0}
 .avatar-sm{width:26px;height:26px;font-size:10px}
 .flash-wrap{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:12px}
@@ -221,6 +226,7 @@ tbody tr:hover td{background:var(--bg-3)}
 .sample-modal-summary{display:flex;align-items:center;gap:12px;padding:10px 16px;background:var(--bg-3);border-radius:var(--radius-sm);margin-bottom:16px;flex-wrap:wrap}
 .sample-modal-loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;color:var(--text-3)}
 .spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;margin-bottom:12px}
+.spinner-sm{width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;display:inline-block;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 .toast-container{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
 .toast{padding:12px 18px;border-radius:12px;font-weight:600;font-size:13px;color:white;animation:slideIn .3s ease;box-shadow:var(--shadow-md);min-width:240px}
@@ -230,6 +236,37 @@ tbody tr:hover td{background:var(--bg-3)}
 /* view btn in boxes table */
 .btn-view-sample{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;font-size:11px;font-weight:700;background:linear-gradient(135deg,#fff7ed,#fef3c7);color:#c2410c;border:1.5px solid #fed7aa;border-radius:99px;cursor:pointer;transition:all .15s;white-space:nowrap}
 .btn-view-sample:hover{background:linear-gradient(135deg,#fed7aa,#fdba74);border-color:#fb923c;color:#7c2d12}
+
+/* ── WhatsApp Inbox Modal  ── */
+.wa-modal-backdrop{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
+.wa-modal-backdrop.open{display:flex}
+.wa-modal{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:540px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
+.wa-modal-head{padding:14px 20px;background:linear-gradient(135deg,#075e54,#128c7e);border-radius:var(--radius) var(--radius) 0 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
+.wa-modal-head-info{display:flex;align-items:center;gap:12px}
+.wa-modal-head-avatar{width:40px;height:40px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:white;flex-shrink:0}
+.wa-modal-head-name{font-weight:700;font-size:15px;color:white}
+.wa-modal-head-sub{font-size:11px;color:rgba(255,255,255,.7)}
+.wa-modal-close-btn{background:none;border:none;color:rgba(255,255,255,.8);font-size:20px;cursor:pointer;line-height:1;padding:4px}
+.wa-modal-close-btn:hover{color:white}
+.wa-chat-area{flex:1;overflow-y:auto;padding:16px;background:#e5ddd5;display:flex;flex-direction:column;gap:8px;min-height:260px}
+.wa-bubble{max-width:78%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.5;position:relative;word-break:break-word}
+.wa-bubble.in{background:white;border-radius:0 12px 12px 12px;align-self:flex-start;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.wa-bubble.out{background:#d9fdd3;border-radius:12px 0 12px 12px;align-self:flex-end;box-shadow:0 1px 2px rgba(0,0,0,.1)}
+.wa-bubble-time{font-size:10px;color:var(--text-3);margin-top:3px;text-align:right}
+.wa-bubble.in .wa-bubble-time{text-align:left}
+.wa-chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-3);font-size:13px;gap:8px}
+.wa-chat-empty .emoji{font-size:32px}
+.wa-send-area{padding:12px 16px;border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;flex-shrink:0;background:var(--bg-2)}
+.wa-send-input{flex:1;background:var(--bg-3);border:1.5px solid var(--border);border-radius:20px;padding:10px 16px;outline:none;resize:none;font-size:13px;max-height:100px;line-height:1.4}
+.wa-send-input:focus{border-color:var(--wa);background:#fff}
+.wa-send-btn{width:40px;height:40px;border-radius:50%;background:var(--wa);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:background .15s}
+.wa-send-btn:hover{background:#1ebe5d}
+.wa-send-btn:disabled{background:#ccc;cursor:not-allowed}
+.wa-modal-loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;color:var(--text-3);gap:10px}
+
+/* Inbox dot indicator in enquiry table */
+.inbox-dot{width:8px;height:8px;border-radius:50%;background:var(--wa);display:inline-block;margin-right:4px;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
 @media(max-width:1024px){.charts-grid{grid-template-columns:1fr}}
 @media(max-width:768px){
@@ -252,6 +289,7 @@ tbody tr:hover td{background:var(--bg-3)}
   .detail-hero-sub{justify-content:center;}
   .sample-customer-grid{grid-template-columns:1fr}
   .sample-modal{max-height:95vh}
+  .wa-modal{max-height:95vh}
 }
 @media(min-width:769px){.bottom-nav{display:none}}
 @media(max-width:480px){.stat-cards{grid-template-columns:1fr 1fr}.modal{padding:20px}}
@@ -350,39 +388,15 @@ tbody tr:hover td{background:var(--bg-3)}
       <!-- ===== HOME ===== -->
       <div class="page-section active" id="page-home">
         <div class="stat-cards">
-          <div class="stat-card c-orange">
-            <div class="stat-icon">👥</div>
-            <div class="stat-value">{{ stats.total_customers }}</div>
-            <div class="stat-label">Total Customers</div>
-          </div>
-          <div class="stat-card c-blue">
-            <div class="stat-icon">🚴</div>
-            <div class="stat-value">{{ stats.total_employees }}</div>
-            <div class="stat-label">Delivery Partners</div>
-          </div>
-          <div class="stat-card c-green">
-            <div class="stat-icon">✅</div>
-            <div class="stat-value">{{ stats.delivered_today }}</div>
-            <div class="stat-label">Delivered Today</div>
-          </div>
-          <div class="stat-card c-yellow">
-            <div class="stat-icon">⏳</div>
-            <div class="stat-value">{{ stats.pending_deliveries }}</div>
-            <div class="stat-label">Pending Today</div>
-          </div>
-          <div class="stat-card c-red">
-            <div class="stat-icon">🏖️</div>
-            <div class="stat-value">{{ stats.on_holiday_today }}</div>
-            <div class="stat-label">On Holiday Today</div>
-          </div>
-          <div class="stat-card c-blue">
-            <div class="stat-icon">🏘️</div>
-            <div class="stat-value">{{ stats.active_teams }}</div>
-            <div class="stat-label">Active Teams</div>
-          </div>
+          <div class="stat-card c-orange"><div class="stat-icon">👥</div><div class="stat-value">{{ stats.total_customers }}</div><div class="stat-label">Total Customers</div></div>
+          <div class="stat-card c-blue"><div class="stat-icon">🚴</div><div class="stat-value">{{ stats.total_employees }}</div><div class="stat-label">Delivery Partners</div></div>
+          <div class="stat-card c-green"><div class="stat-icon">✅</div><div class="stat-value">{{ stats.delivered_today }}</div><div class="stat-label">Delivered Today</div></div>
+          <div class="stat-card c-yellow"><div class="stat-icon">⏳</div><div class="stat-value">{{ stats.pending_deliveries }}</div><div class="stat-label">Pending Today</div></div>
+          <div class="stat-card c-red"><div class="stat-icon">🏖️</div><div class="stat-value">{{ stats.on_holiday_today }}</div><div class="stat-label">On Holiday Today</div></div>
+          <div class="stat-card c-blue"><div class="stat-icon">🏘️</div><div class="stat-value">{{ stats.active_teams }}</div><div class="stat-label">Active Teams</div></div>
         </div>
 
-        <!-- ===== BOXES NEEDED TODAY ===== -->
+        <!-- BOXES NEEDED TODAY -->
         <div class="card" style="margin-top:22px;">
           <div class="card-header" style="flex-wrap:wrap;gap:10px;">
             <div class="card-title">📦 Boxes to Prepare Today</div>
@@ -407,13 +421,7 @@ tbody tr:hover td{background:var(--bg-3)}
             <div class="table-wrap">
               <table class="boxes-table">
                 <thead>
-                  <tr>
-                    <th>Plan</th><th>Duration</th>
-                    <th style="color:var(--green);">🟢 Active Boxes</th>
-                    <th style="color:#f97316;">🟠 Sample Boxes</th>
-                    <th>📦 Total</th><th>Teams</th>
-                    <th>Actions</th>
-                  </tr>
+                  <tr><th>Plan</th><th>Duration</th><th style="color:var(--green);">🟢 Active Boxes</th><th style="color:#f97316;">🟠 Sample Boxes</th><th>📦 Total</th><th>Teams</th><th>Actions</th></tr>
                 </thead>
                 <tbody id="boxes-tbody">
                   <tr><td colspan="7" style="text-align:center;padding:28px;color:var(--text-3);">Loading…</td></tr>
@@ -467,27 +475,16 @@ tbody tr:hover td{background:var(--bg-3)}
         {% if plans %}
         <div class="table-wrap">
           <table>
-            <thead>
-              <tr>
-                <th>Plan Name</th><th>Description</th><th>Duration (Days)</th>
-                <th>Monthly Price</th><th>Tax %</th><th>Total (incl. tax)</th><th>Actions</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Plan Name</th><th>Description</th><th>Duration (Days)</th><th>Monthly Price</th><th>Tax %</th><th>Total (incl. tax)</th><th>Actions</th></tr></thead>
             <tbody>
               {% for plan in plans %}
               <tr>
                 <td><strong>{{ plan.name }}</strong></td>
                 <td style="color:var(--text-2);max-width:180px;">{{ plan.description or '—' }}</td>
-                <td>
-                  {% if plan.duration_days %}
-                  <span class="badge badge-blue">{{ plan.duration_days }} days</span>
-                  {% else %}<span style="color:var(--text-3);">—</span>{% endif %}
-                </td>
+                <td>{% if plan.duration_days %}<span class="badge badge-blue">{{ plan.duration_days }} days</span>{% else %}<span style="color:var(--text-3);">—</span>{% endif %}</td>
                 <td><span style="color:var(--accent);font-weight:700;">₹{{ plan.price_per_month or plan.price_per_day or 0 }}</span></td>
                 <td>{{ plan.tax_percent or 0 }}%</td>
-                <td style="color:var(--green);">
-                  ₹{{ (((plan.price_per_month or plan.price_per_day or 0) | float) * (1 + (plan.tax_percent | float)/100)) | round(2) }}
-                </td>
+                <td style="color:var(--green);">₹{{ (((plan.price_per_month or plan.price_per_day or 0) | float) * (1 + (plan.tax_percent | float)/100)) | round(2) }}</td>
                 <td>
                   <div style="display:flex;gap:6px;">
                     <button class="btn btn-ghost btn-sm" onclick='openEditPlan({{ plan | tojson }})'>✏️ Edit</button>
@@ -513,14 +510,10 @@ tbody tr:hover td{background:var(--bg-3)}
           <button class="btn btn-primary" onclick="openModal('modal-add-team')">＋ New Team</button>
         </div>
         <div class="filter-bar">
-          <div class="search-wrap">
-            <input class="form-control" id="team-search" placeholder="Search teams…" oninput="filterTeams()" style="max-width:220px;">
-          </div>
+          <div class="search-wrap"><input class="form-control" id="team-search" placeholder="Search teams…" oninput="filterTeams()" style="max-width:220px;"></div>
           <select class="form-control" id="team-city-filter" onchange="filterTeams()" style="max-width:180px;">
             <option value="">All Cities</option>
-            {% for team in teams %}{% if team.city %}
-            <option value="{{ team.city }}">{{ team.city }}</option>
-            {% endif %}{% endfor %}
+            {% for team in teams %}{% if team.city %}<option value="{{ team.city }}">{{ team.city }}</option>{% endif %}{% endfor %}
           </select>
         </div>
         {% if teams %}
@@ -530,20 +523,13 @@ tbody tr:hover td{background:var(--bg-3)}
             <tbody>
               {% for team in teams %}
               <tr data-name="{{ team.name | lower }}" data-city="{{ (team.city or '') | lower }}">
-                <td>
-                  <div style="display:flex;align-items:center;gap:10px;">
-                    <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#60a5fa,#818cf8);">{{ team.name[0] }}</div>
-                    <strong>{{ team.name }}</strong>
-                  </div>
-                </td>
+                <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#60a5fa,#818cf8);">{{ team.name[0] }}</div><strong>{{ team.name }}</strong></div></td>
                 <td style="color:var(--text-2);">{{ team.area or '—' }}</td>
                 <td><span class="badge badge-blue">{{ team.city or '—' }}</span></td>
                 <td>
                   <div style="display:flex;gap:6px;">
                     <button class="btn btn-ghost btn-sm" onclick='openEditTeam({{ team | tojson }})'>✏️ Edit</button>
-                    <form method="POST" action="/admin/teams/delete/{{ team._id }}" onsubmit="return confirm('Delete team?');" style="display:inline;">
-                      <button class="btn btn-danger btn-sm">🗑️</button>
-                    </form>
+                    <form method="POST" action="/admin/teams/delete/{{ team._id }}" onsubmit="return confirm('Delete team?');" style="display:inline;"><button class="btn btn-danger btn-sm">🗑️</button></form>
                   </div>
                 </td>
               </tr>
@@ -563,31 +549,21 @@ tbody tr:hover td{background:var(--bg-3)}
           <button class="btn btn-primary" onclick="openAddUserModal('employee')">＋ Add Partner</button>
         </div>
         <div class="filter-bar">
-          <div class="search-wrap">
-            <input class="form-control" id="emp-search" placeholder="Search employees…" oninput="filterTable('emp-search','employees-table','data-name')" style="max-width:220px;">
-          </div>
+          <div class="search-wrap"><input class="form-control" id="emp-search" placeholder="Search employees…" oninput="filterTable('emp-search','employees-table','data-name')" style="max-width:220px;"></div>
           <select class="form-control" id="emp-city-filter" onchange="filterByCity('emp-city-filter','employees-table')" style="max-width:180px;">
             <option value="">All Cities</option>
-            {% for team in teams %}{% if team.city %}
-            <option value="{{ team.city | lower }}">{{ team.city }}</option>
-            {% endif %}{% endfor %}
+            {% for team in teams %}{% if team.city %}<option value="{{ team.city | lower }}">{{ team.city }}</option>{% endif %}{% endfor %}
           </select>
           <select class="form-control" id="emp-team-filter" onchange="filterByTeam('emp-team-filter','employees-table')" style="max-width:200px;">
             <option value="">All Teams</option>
-            {% for team in teams %}
-            <option value="{{ team._id }}">{{ team.name }}</option>
-            {% endfor %}
+            {% for team in teams %}<option value="{{ team._id }}">{{ team.name }}</option>{% endfor %}
           </select>
         </div>
         <div class="table-wrap">
           <table id="employees-table">
-            <thead>
-              <tr><th>Name</th><th>User ID</th><th>Phone</th><th>Team</th><th>Actions</th></tr>
-            </thead>
+            <thead><tr><th>Name</th><th>User ID</th><th>Phone</th><th>Team</th><th>Actions</th></tr></thead>
             <tbody>
-              <tr id="emp-loading-row">
-                <td colspan="5" style="text-align:center;color:var(--text-3);padding:32px;">Loading delivery partners…</td>
-              </tr>
+              <tr id="emp-loading-row"><td colspan="5" style="text-align:center;color:var(--text-3);padding:32px;">Loading delivery partners…</td></tr>
             </tbody>
           </table>
         </div>
@@ -600,26 +576,18 @@ tbody tr:hover td{background:var(--bg-3)}
           <button class="btn btn-primary" onclick="openAddUserModal('customer')">＋ Add Customer</button>
         </div>
         <div class="filter-bar">
-          <div class="search-wrap">
-            <input class="form-control" id="cust-search" placeholder="Search customers…" oninput="filterCustomers()" style="max-width:220px;">
-          </div>
+          <div class="search-wrap"><input class="form-control" id="cust-search" placeholder="Search customers…" oninput="filterCustomers()" style="max-width:220px;"></div>
           <select class="form-control" id="cust-city-filter" onchange="filterCustomers()" style="max-width:180px;">
             <option value="">All Cities</option>
-            {% for team in teams %}{% if team.city %}
-            <option value="{{ team.city | lower }}">{{ team.city }}</option>
-            {% endif %}{% endfor %}
+            {% for team in teams %}{% if team.city %}<option value="{{ team.city | lower }}">{{ team.city }}</option>{% endif %}{% endfor %}
           </select>
           <select class="form-control" id="cust-team-filter" onchange="filterCustomers()" style="max-width:200px;">
             <option value="">All Teams</option>
-            {% for team in teams %}
-            <option value="{{ team._id }}">{{ team.name }}</option>
-            {% endfor %}
+            {% for team in teams %}<option value="{{ team._id }}">{{ team.name }}</option>{% endfor %}
           </select>
           <select class="form-control" id="cust-plan-filter" onchange="filterCustomers()" style="max-width:200px;">
             <option value="">All Plans</option>
-            {% for plan in plans %}
-            <option value="{{ plan._id }}">{{ plan.name }}</option>
-            {% endfor %}
+            {% for plan in plans %}<option value="{{ plan._id }}">{{ plan.name }}</option>{% endfor %}
           </select>
           <select class="form-control" id="cust-status-filter" onchange="filterCustomers()" style="max-width:160px;">
             <option value="">All Statuses</option>
@@ -632,24 +600,21 @@ tbody tr:hover td{background:var(--bg-3)}
         <div id="cust-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;margin-top:-8px;"></div>
         <div class="table-wrap">
           <table id="customers-table">
-            <thead>
-              <tr><th>Customer</th><th>Plan</th><th>Start Date</th><th>Discount</th><th>Status</th><th>Team</th><th>Actions</th></tr>
-            </thead>
-            <tbody>
-              <tr id="cust-loading-row">
-                <td colspan="7" style="text-align:center;color:var(--text-3);padding:32px;">Loading customers…</td>
-              </tr>
-            </tbody>
+            <thead><tr><th>Customer</th><th>Plan</th><th>Start Date</th><th>Discount</th><th>Status</th><th>Team</th><th>Actions</th></tr></thead>
+            <tbody><tr id="cust-loading-row"><td colspan="7" style="text-align:center;color:var(--text-3);padding:32px;">Loading customers…</td></tr></tbody>
           </table>
         </div>
         <div id="cust-result-count" style="margin-top:10px;font-size:12px;color:var(--text-3);text-align:right;"></div>
       </div>
 
       <!-- ===== ENQUIRIES ===== -->
-      <div class="page-section" id="page-enquiries">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+       <div class="page-section" id="page-enquiries">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
           <h2 style="font-family:var(--font-disp);font-size:22px;">Web Form Enquiries</h2>
-          <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">🔄 Refresh</button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-primary btn-sm" onclick="openBulkEnquiriesModal()">📥 Bulk Import</button>
+            <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">🔄 Refresh</button>
+          </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:22px;">
           <div class="stat-card c-yellow"><div class="stat-icon">📩</div><div class="stat-value" id="enq-stat-total">—</div><div class="stat-label">Total Enquiries</div></div>
@@ -657,9 +622,7 @@ tbody tr:hover td{background:var(--bg-3)}
           <div class="stat-card c-green"><div class="stat-icon">✅</div><div class="stat-value" id="enq-stat-approved">—</div><div class="stat-label">Converted</div></div>
         </div>
         <div class="filter-bar">
-          <div class="search-wrap">
-            <input class="form-control" id="enq-search" placeholder="Search name / phone…" oninput="filterEnqTable()" style="max-width:220px;">
-          </div>
+          <div class="search-wrap"><input class="form-control" id="enq-search" placeholder="Search name / phone…" oninput="filterEnqTable()" style="max-width:220px;"></div>
           <select class="form-control" id="enq-status-filter" onchange="filterEnqTable()" style="max-width:160px;">
             <option value="">All</option>
             <option value="pending">Pending</option>
@@ -669,10 +632,7 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="table-wrap">
           <table id="enq-table">
             <thead>
-              <tr>
-                <th>Name</th><th>Phone</th><th>Plan</th><th>Time Pref.</th>
-                <th>Start Date</th><th>Payment</th><th>Received</th><th>Status</th><th>Actions</th>
-              </tr>
+              <tr><th>Name</th><th>Phone</th><th>Plan</th><th>Time Pref.</th><th>Start Date</th><th>Payment</th><th>Received</th><th>Status</th><th>Actions</th></tr>
             </thead>
             <tbody id="enq-tbody">
               <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading enquiries…</td></tr>
@@ -694,21 +654,18 @@ tbody tr:hover td{background:var(--bg-3)}
   </nav>
 </div>
 
-<!-- ============================================================  STANDARD MODALS  -->
+<!-- ============================================================ MODALS ============================================================ -->
 
 <!-- Add Plan -->
 <div class="modal-backdrop" id="modal-add-plan">
   <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">New Subscription Plan</div>
-      <button class="modal-close" onclick="closeModal('modal-add-plan')">✕</button>
-    </div>
+    <div class="modal-header"><div class="modal-title">New Subscription Plan</div><button class="modal-close" onclick="closeModal('modal-add-plan')">✕</button></div>
     <form method="POST" action="/admin/plans/add">
-      <div class="form-group"><label class="form-label">Plan Name *</label><input type="text" name="name" class="form-control" required placeholder="e.g. Daily Fresh, Premium Box"></div>
+      <div class="form-group"><label class="form-label">Plan Name *</label><input type="text" name="name" class="form-control" required></div>
       <div class="form-group"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Monthly Price (₹) *</label><input type="number" name="price_per_month" class="form-control" required min="0" step="0.01"></div>
-        <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" class="form-control" required min="1" max="31"><small style="color:var(--text-3);font-size:11px;">Billable days in the plan period</small></div>
+        <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" class="form-control" required min="1" max="31"></div>
       </div>
       <div class="form-group"><label class="form-label">Tax (%)</label><input type="number" name="tax_percent" class="form-control" min="0" step="0.01" value="0"></div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
@@ -728,7 +685,7 @@ tbody tr:hover td{background:var(--bg-3)}
       <div class="form-group"><label class="form-label">Description</label><textarea name="description" id="ep-desc" class="form-control" rows="2"></textarea></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Monthly Price (₹) *</label><input type="number" name="price_per_month" id="ep-price" class="form-control" required step="0.01"></div>
-        <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" id="ep-duration" class="form-control" required min="1" max="31"><small style="color:var(--text-3);font-size:11px;">Billable days</small></div>
+        <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" id="ep-duration" class="form-control" required min="1" max="31"></div>
       </div>
       <div class="form-group"><label class="form-label">Tax (%)</label><input type="number" name="tax_percent" id="ep-tax" class="form-control" step="0.01"></div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
@@ -778,10 +735,7 @@ tbody tr:hover td{background:var(--bg-3)}
 <!-- Add / Edit User -->
 <div class="modal-backdrop" id="modal-add-user">
   <div class="modal" style="max-width:660px;">
-    <div class="modal-header">
-      <div class="modal-title" id="user-modal-title">Onboard User</div>
-      <button class="modal-close" onclick="closeModal('modal-add-user')">✕</button>
-    </div>
+    <div class="modal-header"><div class="modal-title" id="user-modal-title">Onboard User</div><button class="modal-close" onclick="closeModal('modal-add-user')">✕</button></div>
     <form method="POST" id="user-form" action="/admin/users/add">
       <input type="hidden" name="role" id="hiddenRole" value="">
       <input type="hidden" name="next" value="dashboard_admin">
@@ -807,9 +761,7 @@ tbody tr:hover td{background:var(--bg-3)}
         <label class="form-label">Assign Team</label>
         <select name="team_id" id="uf-team" class="form-control">
           <option value="">— No team —</option>
-          {% for team in teams %}
-          <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
-          {% endfor %}
+          {% for team in teams %}<option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>{% endfor %}
         </select>
       </div>
       <div id="rf-customer" style="display:none;">
@@ -819,15 +771,10 @@ tbody tr:hover td{background:var(--bg-3)}
             <label class="form-label">Delivery Plan</label>
             <select name="plan_name" id="uf-plan" class="form-control">
               <option value="">— No plan —</option>
-              {% for plan in plans %}
-              <option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo ({{ plan.duration_days or '?' }} days)</option>
-              {% endfor %}
+              {% for plan in plans %}<option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo ({{ plan.duration_days or '?' }} days)</option>{% endfor %}
             </select>
           </div>
-          <div class="form-group">
-            <label class="form-label">Start Date *</label>
-            <input type="date" name="start_date" id="uf-startdate" class="form-control">
-          </div>
+          <div class="form-group"><label class="form-label">Start Date *</label><input type="date" name="start_date" id="uf-startdate" class="form-control"></div>
         </div>
         <div class="form-group"><label class="form-label">Delivery Address</label><textarea name="address" id="uf-address" class="form-control" rows="2"></textarea></div>
         <div class="form-row">
@@ -884,17 +831,12 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="form-group"><label class="form-label">Full Name *</label><input type="text" name="name" id="ee-name" class="form-control" required></div>
         <div class="form-group"><label class="form-label">Phone *</label><input type="text" name="phone" id="ee-phone" class="form-control" required></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">User ID * <span class="opt">(used to login)</span></label>
-        <input type="text" name="email" id="ee-email" class="form-control" required>
-      </div>
+      <div class="form-group"><label class="form-label">User ID *</label><input type="text" name="email" id="ee-email" class="form-control" required></div>
       <div class="form-group">
         <label class="form-label">Assign Team</label>
         <select name="team_id" id="ee-team" class="form-control">
           <option value="">— No team —</option>
-          {% for team in teams %}
-          <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
-          {% endfor %}
+          {% for team in teams %}<option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>{% endfor %}
         </select>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
@@ -916,27 +858,20 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="form-group"><label class="form-label">Full Name *</label><input type="text" name="name" id="ec-name" class="form-control" required></div>
         <div class="form-group"><label class="form-label">Phone *</label><input type="text" name="phone" id="ec-phone" class="form-control" required></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">User ID <span class="opt">(optional)</span></label>
-        <input type="text" name="email" id="ec-email" class="form-control" required>
-      </div>
+      <div class="form-group"><label class="form-label">User ID</label><input type="text" name="email" id="ec-email" class="form-control" required></div>
       <div class="form-row">
         <div class="form-group">
           <label class="form-label">Assign Team</label>
           <select name="team_id" id="ec-team" class="form-control">
             <option value="">— No team —</option>
-            {% for team in teams %}
-            <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
-            {% endfor %}
+            {% for team in teams %}<option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>{% endfor %}
           </select>
         </div>
         <div class="form-group">
           <label class="form-label">Delivery Plan</label>
           <select name="plan_name" id="ec-plan" class="form-control">
             <option value="">— No plan —</option>
-            {% for plan in plans %}
-            <option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo</option>
-            {% endfor %}
+            {% for plan in plans %}<option value="{{ plan.name }}">{{ plan.name }} — ₹{{ plan.price_per_month or plan.price_per_day or 0 }}/mo</option>{% endfor %}
           </select>
         </div>
       </div>
@@ -985,24 +920,15 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- ============================================================
-     VIEW USER DETAIL MODAL
-============================================================ -->
+<!-- View User Detail Modal -->
 <div class="modal-backdrop" id="modal-view-user">
   <div class="modal" style="max-width:680px;">
-    <div class="modal-header">
-      <div class="modal-title" id="view-modal-title">Customer Details</div>
-      <button class="modal-close" onclick="closeModal('modal-view-user')">✕</button>
-    </div>
+    <div class="modal-header"><div class="modal-title" id="view-modal-title">Customer Details</div><button class="modal-close" onclick="closeModal('modal-view-user')">✕</button></div>
     <div class="detail-hero">
       <div class="detail-hero-avatar" id="view-avatar">?</div>
       <div class="detail-hero-info">
         <div class="detail-hero-name" id="view-name">—</div>
-        <div class="detail-hero-sub">
-          <span id="view-role-badge"></span>
-          <span id="view-status-badge"></span>
-          <span id="view-plan-badge"></span>
-        </div>
+        <div class="detail-hero-sub"><span id="view-role-badge"></span><span id="view-status-badge"></span><span id="view-plan-badge"></span></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:6px;align-items:flex-end;flex-shrink:0;">
         <a id="view-whatsapp-link" href="#" target="_blank" class="btn btn-success btn-sm" style="display:none;">💬 WhatsApp</a>
@@ -1011,80 +937,42 @@ tbody tr:hover td{background:var(--bg-3)}
     </div>
     <div class="detail-section-label">📞 Contact Info</div>
     <div class="detail-grid">
-      <div class="detail-field">
-        <div class="detail-field-label">Phone</div>
-        <div class="detail-field-value"><a id="view-phone" href="#">—</a></div>
-      </div>
-      <div class="detail-field">
-        <div class="detail-field-label">User ID / Login</div>
-        <div class="detail-field-value" id="view-email" style="font-size:12px;color:var(--text-2);">—</div>
-      </div>
-      <div class="detail-field full-width">
-        <div class="detail-field-label">Delivery Address</div>
-        <div class="detail-field-value" id="view-address">—</div>
-      </div>
+      <div class="detail-field"><div class="detail-field-label">Phone</div><div class="detail-field-value"><a id="view-phone" href="#">—</a></div></div>
+      <div class="detail-field"><div class="detail-field-label">User ID / Login</div><div class="detail-field-value" id="view-email" style="font-size:12px;color:var(--text-2);">—</div></div>
+      <div class="detail-field full-width"><div class="detail-field-label">Delivery Address</div><div class="detail-field-value" id="view-address">—</div></div>
     </div>
     <div id="view-customer-section">
       <div class="detail-section-label">📋 Plan & Schedule</div>
       <div class="detail-grid">
-        <div class="detail-field">
-          <div class="detail-field-label">Delivery Plan</div>
-          <div class="detail-field-value" id="view-plan-name">—</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Start Date</div>
-          <div class="detail-field-value" id="view-start-date">—</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Preferred Time</div>
-          <div class="detail-field-value" id="view-pref-time">—</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Off Days</div>
-          <div class="detail-field-value" id="view-off-days">—</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Discount</div>
-          <div class="detail-field-value" id="view-discount">—</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Source</div>
-          <div class="detail-field-value" id="view-source">—</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Member Since</div>
-          <div class="detail-field-value" id="view-created">—</div>
-        </div>
-        <div class="detail-field">
-          <div class="detail-field-label">Account Status</div>
-          <div class="detail-field-value" id="view-acct-status">—</div>
-        </div>
+        <div class="detail-field"><div class="detail-field-label">Delivery Plan</div><div class="detail-field-value" id="view-plan-name">—</div></div>
+        <div class="detail-field"><div class="detail-field-label">Start Date</div><div class="detail-field-value" id="view-start-date">—</div></div>
+        <div class="detail-field"><div class="detail-field-label">Preferred Time</div><div class="detail-field-value" id="view-pref-time">—</div></div>
+        <div class="detail-field"><div class="detail-field-label">Off Days</div><div class="detail-field-value" id="view-off-days">—</div></div>
+        <div class="detail-field"><div class="detail-field-label">Discount</div><div class="detail-field-value" id="view-discount">—</div></div>
+        <div class="detail-field"><div class="detail-field-label">Source</div><div class="detail-field-value" id="view-source">—</div></div>
+        <div class="detail-field"><div class="detail-field-label">Member Since</div><div class="detail-field-value" id="view-created">—</div></div>
+        <div class="detail-field"><div class="detail-field-label">Account Status</div><div class="detail-field-value" id="view-acct-status">—</div></div>
       </div>
     </div>
     <div class="detail-section-label">🏘️ Team Assignment</div>
-    <div class="detail-field" style="margin-bottom:12px;">
-      <div class="detail-field-label">Currently Assigned To</div>
-      <div class="detail-field-value" id="view-current-team">—</div>
-    </div>
+    <div class="detail-field" style="margin-bottom:12px;"><div class="detail-field-label">Currently Assigned To</div><div class="detail-field-value" id="view-current-team">—</div></div>
     <form id="view-assign-team-form" method="POST">
-      <input type="hidden" id="view-assign-role"  name="role"             value="customer">
-      <input type="hidden" name="next"                                     value="dashboard_admin">
-      <input type="hidden" id="va-name"            name="name"            value="">
-      <input type="hidden" id="va-phone"           name="phone"           value="">
-      <input type="hidden" id="va-email"           name="email"           value="">
-      <input type="hidden" id="va-status"          name="customer_status" value="active">
-      <input type="hidden" id="va-plan"            name="plan_name"       value="">
-      <input type="hidden" id="va-startdate"       name="start_date"      value="">
-      <input type="hidden" id="va-address"         name="address"         value="">
-      <input type="hidden" id="va-ptime"           name="preferred_time"  value="">
+      <input type="hidden" id="view-assign-role" name="role" value="customer">
+      <input type="hidden" name="next" value="dashboard_admin">
+      <input type="hidden" id="va-name"      name="name"            value="">
+      <input type="hidden" id="va-phone"     name="phone"           value="">
+      <input type="hidden" id="va-email"     name="email"           value="">
+      <input type="hidden" id="va-status"    name="customer_status" value="active">
+      <input type="hidden" id="va-plan"      name="plan_name"       value="">
+      <input type="hidden" id="va-startdate" name="start_date"      value="">
+      <input type="hidden" id="va-address"   name="address"         value="">
+      <input type="hidden" id="va-ptime"     name="preferred_time"  value="">
       <div class="team-assign-select">
         <div style="flex:1;">
           <label class="form-label">Reassign to Team</label>
           <select name="team_id" id="view-team-select" class="form-control">
             <option value="">— No team —</option>
-            {% for team in teams %}
-            <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
-            {% endfor %}
+            {% for team in teams %}<option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>{% endfor %}
           </select>
         </div>
         <button type="submit" class="btn btn-primary">💾 Save Team</button>
@@ -1097,59 +985,131 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- ============================================================
-     SAMPLE CUSTOMERS DETAIL MODAL  ← NEW
-============================================================ -->
+<!-- Sample Customers Modal -->
 <div class="sample-modal-backdrop" id="modal-sample-customers">
   <div class="sample-modal">
-
-    <!-- Header -->
     <div class="sample-modal-header">
       <div>
         <div class="sample-modal-title">🧪 Sample Customers</div>
-        <div style="font-size:12px;color:var(--text-2);margin-top:3px;">
-          Plan: <strong id="sm-plan-label">—</strong>
-          &nbsp;·&nbsp;
-          <span id="sm-count-label" style="color:#c2410c;font-weight:700;">0 customers</span> scheduled today
-        </div>
+        <div style="font-size:12px;color:var(--text-2);margin-top:3px;">Plan: <strong id="sm-plan-label">—</strong> &nbsp;·&nbsp; <span id="sm-count-label" style="color:#c2410c;font-weight:700;">0 customers</span> scheduled today</div>
       </div>
       <button onclick="closeSampleModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-2);line-height:1;">✕</button>
     </div>
-
-    <!-- Body -->
     <div class="sample-modal-body">
-
-      <!-- Loader -->
-      <div id="sm-loader" class="sample-modal-loader">
-        <div class="spinner"></div>
-        <span>Loading sample customers…</span>
-      </div>
-
-      <!-- Empty -->
-      <div id="sm-empty" style="display:none;" class="sample-modal-loader">
-        <div style="font-size:36px;margin-bottom:10px;">📭</div>
-        <span style="color:var(--text-3);">No sample customers scheduled today.</span>
-      </div>
-
-      <!-- Content -->
+      <div id="sm-loader" class="sample-modal-loader"><div class="spinner"></div><span>Loading sample customers…</span></div>
+      <div id="sm-empty" style="display:none;" class="sample-modal-loader"><div style="font-size:36px;margin-bottom:10px;">📭</div><span style="color:var(--text-3);">No sample customers scheduled today.</span></div>
       <div id="sm-content" style="display:none;">
-        <div class="sample-modal-summary">
-          <span style="font-size:13px;color:var(--text-2);">
-            🟠 <strong id="sm-summary-count">0</strong> sample boxes need to be packed today for this plan.
-            Assign teams below to schedule deliveries.
-          </span>
-        </div>
+        <div class="sample-modal-summary"><span style="font-size:13px;color:var(--text-2);">🟠 <strong id="sm-summary-count">0</strong> sample boxes need to be packed today for this plan.</span></div>
         <div class="sample-customer-grid" id="sm-cards"></div>
       </div>
-
     </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     WHATSAPP INBOX MODAL  ← NEW
+============================================================ -->
+<div class="wa-modal-backdrop" id="modal-wa-inbox">
+  <div class="wa-modal">
+
+    <!-- Header (WhatsApp green) -->
+    <div class="wa-modal-head">
+      <div class="wa-modal-head-info">
+        <div class="wa-modal-head-avatar" id="wa-head-avatar">?</div>
+        <div>
+          <div class="wa-modal-head-name" id="wa-head-name">—</div>
+          <div class="wa-modal-head-sub" id="wa-head-sub">Loading…</div>
+        </div>
+      </div>
+      <button class="wa-modal-close-btn" onclick="closeWaModal()">✕</button>
+    </div>
+
+    <!-- Chat area -->
+    <div class="wa-chat-area" id="wa-chat-area">
+      <div class="wa-modal-loader"><div class="spinner"></div><span>Loading messages…</span></div>
+    </div>
+
+    <!-- Send area -->
+    <div class="wa-send-area">
+      <textarea class="wa-send-input" id="wa-send-input" placeholder="Type a message…" rows="1"
+        onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();waSend();}"></textarea>
+      <button class="wa-send-btn" id="wa-send-btn" onclick="waSend()" title="Send">➤</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- Bulk Import Enquiries Modal -->
+
+<div class="modal-backdrop" id="modal-bulk-enquiries">
+  <div class="modal" style="max-width:1100px; max-height:95vh; display:flex; flex-direction:column;">
+    
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">📥 Bulk Import Enquiries</div>
+        <div style="font-size:12px; color:var(--text-2); margin-top:3px;">Add hundreds of enquiries at once using the spreadsheet editor below</div>
+      </div>
+      <button class="modal-close" onclick="closeBulkModal()">✕</button>
+    </div>
+ 
+    <div style="flex:1; display:flex; flex-direction:column; overflow:hidden; padding:20px 24px; background:var(--bg);">
+      
+      <!-- Controls -->
+      <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
+        <button class="btn btn-ghost btn-sm" onclick="addBulkRow()" title="Add empty row">➕ Add Row</button>
+        <button class="btn btn-ghost btn-sm" onclick="addBulkRows(5)" title="Add 5 empty rows">➕ Add 5 Rows</button>
+        <button class="btn btn-ghost btn-sm" onclick="removeBulkRow()" title="Remove last row">➖ Remove Row</button>
+        <button class="btn btn-ghost btn-sm" onclick="downloadBulkTemplate()" title="Download as JSON">📥 Download Template</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearBulkData()" title="Clear all rows">🗑️ Clear All</button>
+        <div style="flex:1;"></div>
+        <span id="bulk-row-count" style="font-size:12px; color:var(--text-3); font-weight:600;">Rows: 0</span>
+      </div>
+ 
+      <!-- Spreadsheet container -->
+      <div id="bulk-spreadsheet-wrap" style="flex:1; overflow:auto; border:1px solid var(--border); border-radius:var(--radius-sm); background:white; position:relative;">
+        <table id="bulk-enquiries-table" style="width:100%; border-collapse:collapse; background:white;">
+          <thead style="position:sticky; top:0; z-index:10; background:var(--bg-3); box-shadow:0 2px 4px rgba(0,0,0,.05);">
+            <tr style="height:44px;">
+              <th style="width:30px; padding:8px 4px; text-align:center; border-right:1px solid var(--border); border-bottom:1px solid var(--border); background:var(--bg-3);">
+                <input type="checkbox" id="bulk-select-all" onchange="toggleBulkSelectAll()" style="cursor:pointer;">
+              </th>
+              <th style="min-width:140px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Name *</th>
+              <th style="min-width:120px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Phone *</th>
+              <th style="min-width:140px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Plan</th>
+              <th style="min-width:140px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Time Pref.</th>
+              <th style="min-width:110px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Start Date</th>
+              <th style="min-width:100px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Payment</th>
+              <th style="min-width:110px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Status</th>
+              <th style="min-width:180px; padding:10px 12px; text-align:left; border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Address</th>
+            </tr>
+          </thead>
+          <tbody id="bulk-tbody">
+            <!-- Rows will be added here -->
+          </tbody>
+        </table>
+      </div>
+ 
+      <!-- Status bar -->
+      <div style="margin-top:14px; padding:12px; background:var(--bg-3); border-radius:var(--radius-sm); display:flex; align-items:center; gap:12px; font-size:12px; color:var(--text-2);">
+        <span id="bulk-status-text">Ready to add enquiries.</span>
+        <div id="bulk-validation-errors" style="color:var(--red); display:none; margin-left:auto;"></div>
+      </div>
+ 
+    </div>
+ 
+    <!-- Footer -->
+    <div style="padding:16px 24px; border-top:1px solid var(--border); background:var(--bg-2); display:flex; gap:10px; justify-content:flex-end; flex-shrink:0;">
+      <button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button>
+      <button class="btn btn-primary" id="bulk-import-btn" onclick="submitBulkEnquiries()">✅ Import Enquiries</button>
+    </div>
+ 
   </div>
 </div>
 
 <!-- Toast container -->
 <div class="toast-container" id="toast-container"></div>
 
-<!-- ============================================================  JAVASCRIPT  -->
+<!-- ============================================================ JAVASCRIPT ============================================================ -->
 <script>
 const pageTitles = {
   home:'Dashboard', plans:'Subscription Plans', teams:'Teams',
@@ -1175,55 +1135,166 @@ function escHtml(s) {
   return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 }
 
-/* ================================================================
-   TOAST
-================================================================ */
+/* ===== TOAST ===== */
 function showToast(msg, type) {
-  const c   = document.getElementById('toast-container');
-  const el  = document.createElement('div');
-  el.className = `toast toast-${type || 'success'}`;
+  const c  = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className   = `toast toast-${type || 'success'}`;
   el.textContent = msg;
   c.appendChild(el);
   setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(40px)'; el.style.transition='.4s'; setTimeout(()=>el.remove(),400); }, 3000);
 }
 
-/* ================================================================
-   VIEW USER DETAIL MODAL
-================================================================ */
+/* ===== EMPLOYEE RESET CREDENTIALS  ← NEW ===== */
+async function resetEmployeeCredentials(employeeId, employeeName) {
+  if (!confirm(`Reset login credentials for ${employeeName}?\nNew password will be sent via WhatsApp.`)) return;
+
+  const btn = document.getElementById(`reset-btn-${employeeId}`);
+  if (btn) { btn.disabled = true; btn.textContent = '…'; }
+
+  try {
+    const res  = await fetch(`/admin/employees/reset-credentials/${employeeId}`, { method:'POST' });
+    const data = await res.json();
+    if (btn) { btn.disabled = false; btn.textContent = '🔑 Reset'; }
+    if (data.success) {
+      showToast('✅ ' + data.message, 'success');
+    } else {
+      showToast('❌ ' + (data.message || 'Reset failed'), 'danger');
+    }
+  } catch (e) {
+    if (btn) { btn.disabled = false; btn.textContent = '🔑 Reset'; }
+    showToast('❌ Network error. Try again.', 'danger');
+  }
+}
+
+/* ===== WHATSAPP INBOX  ← NEW ===== */
+let _waEnquiryId   = '';
+let _waEnquiryName = '';
+
+function openWaInbox(enquiryId, name, phone, whatsappId) {
+  _waEnquiryId   = enquiryId;
+  _waEnquiryName = name;
+
+  const initials = name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('') || '?';
+  document.getElementById('wa-head-avatar').textContent = initials;
+  document.getElementById('wa-head-name').textContent   = name;
+  document.getElementById('wa-head-sub').textContent    = whatsappId || phone || 'WhatsApp Chat';
+
+  // Reset chat area
+  document.getElementById('wa-chat-area').innerHTML = `<div class="wa-modal-loader"><div class="spinner"></div><span>Loading messages…</span></div>`;
+  document.getElementById('wa-send-input').value    = '';
+
+  document.getElementById('modal-wa-inbox').classList.add('open');
+  document.body.style.overflow = 'hidden';
+
+  loadWaThread(enquiryId);
+}
+
+function closeWaModal() {
+  document.getElementById('modal-wa-inbox').classList.remove('open');
+  document.body.style.overflow = '';
+  _waEnquiryId   = '';
+  _waEnquiryName = '';
+}
+
+document.getElementById('modal-wa-inbox').addEventListener('click', function(e) {
+  if (e.target === this) closeWaModal();
+});
+
+async function loadWaThread(enquiryId) {
+  try {
+    const data = await fetch(`/api/admin/wa_thread/${enquiryId}`).then(r => r.json());
+    renderWaMessages(data.messages || []);
+  } catch {
+    document.getElementById('wa-chat-area').innerHTML = `<div class="wa-chat-empty"><span class="emoji">⚠️</span><span>Failed to load messages.</span></div>`;
+  }
+}
+
+function renderWaMessages(messages) {
+  const area = document.getElementById('wa-chat-area');
+  if (!messages.length) {
+    area.innerHTML = `<div class="wa-chat-empty"><span class="emoji">💬</span><span>No messages yet. Start the conversation!</span></div>`;
+    return;
+  }
+  area.innerHTML = messages.map(m => {
+    const dir  = m.direction === 'out' ? 'out' : 'in';
+    const time = m.ts ? new Date(m.ts).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
+    return `<div class="wa-bubble ${dir}">
+      ${escHtml(m.body)}
+      <div class="wa-bubble-time">${time}${dir === 'out' ? ' ✓✓' : ''}</div>
+    </div>`;
+  }).join('');
+  area.scrollTop = area.scrollHeight;
+}
+
+async function waSend() {
+  const input = document.getElementById('wa-send-input');
+  const btn   = document.getElementById('wa-send-btn');
+  const msg   = input.value.trim();
+  if (!msg || !_waEnquiryId) return;
+
+  btn.disabled   = true;
+  btn.textContent = '…';
+
+  try {
+    const res  = await fetch('/api/admin/wa_send', {
+      method:  'POST',
+      headers: {'Content-Type':'application/json'},
+      body:    JSON.stringify({ enquiry_id: _waEnquiryId, message: msg })
+    });
+    const data = await res.json();
+    btn.disabled   = false;
+    btn.textContent = '➤';
+
+    if (data.success) {
+      input.value = '';
+      // Append bubble optimistically
+      const area = document.getElementById('wa-chat-area');
+      const time = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
+      // Remove empty state if present
+      area.querySelector('.wa-chat-empty')?.remove();
+      const div = document.createElement('div');
+      div.className = 'wa-bubble out';
+      div.innerHTML = `${escHtml(msg)}<div class="wa-bubble-time">${time} ✓✓</div>`;
+      area.appendChild(div);
+      area.scrollTop = area.scrollHeight;
+    } else {
+      showToast('❌ ' + (data.message || 'Send failed'), 'danger');
+    }
+  } catch {
+    btn.disabled   = false;
+    btn.textContent = '➤';
+    showToast('❌ Network error.', 'danger');
+  }
+}
+
+/* ===== VIEW USER DETAIL MODAL ===== */
 function openViewModal(userData, role) {
   const name     = userData.name || '—';
   const initials = name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
-
   document.getElementById('view-avatar').textContent      = initials || '?';
   document.getElementById('view-name').textContent        = name;
   document.getElementById('view-modal-title').textContent = role === 'employee' ? 'Delivery Partner Details' : 'Customer Details';
-
-  document.getElementById('view-role-badge').innerHTML = role === 'employee'
+  document.getElementById('view-role-badge').innerHTML    = role === 'employee'
     ? `<span class="badge badge-blue">🚴 Delivery Partner</span>`
     : `<span class="badge badge-orange">👤 Customer</span>`;
-  document.getElementById('view-status-badge').innerHTML = userData.status ? statusBadge(userData.status) : '';
+  document.getElementById('view-status-badge').innerHTML  = userData.status ? statusBadge(userData.status) : '';
   const planEl = document.getElementById('view-plan-badge');
   planEl.innerHTML = (userData.plan_name && userData.plan_name !== '—')
     ? `<span class="badge badge-green">📋 ${escHtml(userData.plan_name)}</span>` : '';
-
   const rawPhone = (userData.phone || '').replace(/\D/g,'');
   const waPhone  = rawPhone.length === 10 ? '91' + rawPhone : rawPhone;
   const waLink   = document.getElementById('view-whatsapp-link');
-  if (waPhone.length >= 10) { waLink.href = `https://wa.me/${waPhone}`; waLink.style.display = 'inline-flex'; }
-  else { waLink.style.display = 'none'; }
-
+  if (waPhone.length >= 10) { waLink.href = `https://wa.me/${waPhone}`; waLink.style.display='inline-flex'; }
+  else { waLink.style.display='none'; }
   const detailLink = document.getElementById('view-detail-link');
-  if (role === 'customer' && userData.id) {
-    detailLink.href = `/admin/customers/${userData.id}`;
-    detailLink.style.display = 'inline-flex';
-  } else { detailLink.style.display = 'none'; }
-
+  if (role === 'customer' && userData.id) { detailLink.href = `/admin/customers/${userData.id}`; detailLink.style.display='inline-flex'; }
+  else { detailLink.style.display='none'; }
   const phoneEl = document.getElementById('view-phone');
   phoneEl.textContent = userData.phone || '—';
   phoneEl.href = userData.phone ? `tel:${userData.phone}` : '#';
   document.getElementById('view-email').textContent   = userData.email   || '—';
   document.getElementById('view-address').textContent = userData.address || '—';
-
   const custSection = document.getElementById('view-customer-section');
   if (role === 'customer') {
     custSection.style.display = 'block';
@@ -1233,21 +1304,15 @@ function openViewModal(userData, role) {
     const offDays = userData.off_days || [];
     document.getElementById('view-off-days').textContent   = offDays.length ? offDays.join(', ') : 'None';
     const discParts = [];
-    if (parseFloat(userData.discount_percent||0) > 0) discParts.push(`${userData.discount_percent}%`);
-    if (parseFloat(userData.discount_amount||0)  > 0) discParts.push(`₹${userData.discount_amount}`);
+    if (parseFloat(userData.discount_percent||0)>0) discParts.push(`${userData.discount_percent}%`);
+    if (parseFloat(userData.discount_amount||0)>0)  discParts.push(`₹${userData.discount_amount}`);
     document.getElementById('view-discount').textContent   = discParts.length ? discParts.join(' + ') : 'None';
     document.getElementById('view-source').textContent     = userData.source     || '—';
     document.getElementById('view-created').textContent    = userData.created_at || '—';
     document.getElementById('view-acct-status').innerHTML  = statusBadge(userData.status || 'active');
-  } else {
-    custSection.style.display = 'none';
-  }
-
+  } else { custSection.style.display='none'; }
   const teamName = (userData.team_name && userData.team_name !== '—') ? userData.team_name : 'Unassigned';
-  const teamCity = userData.team_city ? ` — ${userData.team_city}` : '';
-  const teamArea = userData.team_area ? `, ${userData.team_area}` : '';
-  document.getElementById('view-current-team').textContent = teamName + teamArea + teamCity;
-
+  document.getElementById('view-current-team').textContent = teamName + (userData.team_area ? `, ${userData.team_area}` : '') + (userData.team_city ? ` — ${userData.team_city}` : '');
   const form = document.getElementById('view-assign-team-form');
   form.action = `/admin/users/edit/${userData.id}`;
   document.getElementById('view-assign-role').value = role;
@@ -1260,54 +1325,36 @@ function openViewModal(userData, role) {
   document.getElementById('va-address').value       = userData.address       || '';
   document.getElementById('va-ptime').value         = userData.preferred_time|| '';
   document.getElementById('view-team-select').value = userData.team_id       || '';
-
-  const editBtn = document.getElementById('view-edit-btn');
-  editBtn.onclick = () => {
+  document.getElementById('view-edit-btn').onclick  = () => {
     closeModal('modal-view-user');
     if (role === 'customer') openEditCustomer(userData);
     else openEditEmployee(userData.id, userData.name, userData.email, userData.phone, userData.team_id);
   };
-
   openModal('modal-view-user');
 }
 
-/* ================================================================
-   SAMPLE CUSTOMERS MODAL  ← NEW
-================================================================ */
+/* ===== SAMPLE CUSTOMERS MODAL ===== */
 let _smAllTeams = [];
 
 function openSampleModal(planLabel, count) {
-  // Update header
   document.getElementById('sm-plan-label').textContent  = planLabel;
   document.getElementById('sm-count-label').textContent = count + ' customer' + (count !== 1 ? 's' : '');
   document.getElementById('sm-summary-count').textContent = count;
-
-  // Reset view
   document.getElementById('sm-loader').style.display  = 'flex';
   document.getElementById('sm-empty').style.display   = 'none';
   document.getElementById('sm-content').style.display = 'none';
   document.getElementById('sm-cards').innerHTML       = '';
-
-  // Open modal
   document.getElementById('modal-sample-customers').classList.add('open');
   document.body.style.overflow = 'hidden';
-
-  // Fetch
   fetch('/api/admin/sample_customers?label=' + encodeURIComponent(planLabel))
     .then(r => r.json())
     .then(data => {
       _smAllTeams = data.teams || [];
       const customers = data.customers || [];
-
       document.getElementById('sm-loader').style.display = 'none';
       document.getElementById('sm-summary-count').textContent = customers.length;
       document.getElementById('sm-count-label').textContent   = customers.length + ' customer' + (customers.length !== 1 ? 's' : '');
-
-      if (!customers.length) {
-        document.getElementById('sm-empty').style.display = 'flex';
-        return;
-      }
-
+      if (!customers.length) { document.getElementById('sm-empty').style.display='flex'; return; }
       document.getElementById('sm-content').style.display = 'block';
       const container = document.getElementById('sm-cards');
       customers.forEach(c => container.insertAdjacentHTML('beforeend', buildSampleCard(c)));
@@ -1315,7 +1362,6 @@ function openSampleModal(planLabel, count) {
     .catch(() => {
       document.getElementById('sm-loader').style.display = 'none';
       document.getElementById('sm-empty').style.display  = 'flex';
-      document.getElementById('sm-empty').querySelector('span').textContent = 'Failed to load. Please close and retry.';
     });
 }
 
@@ -1323,77 +1369,43 @@ function closeSampleModal() {
   document.getElementById('modal-sample-customers').classList.remove('open');
   document.body.style.overflow = '';
 }
-
-// Close on backdrop click
-document.getElementById('modal-sample-customers').addEventListener('click', function(e) {
-  if (e.target === this) closeSampleModal();
-});
+document.getElementById('modal-sample-customers').addEventListener('click', function(e) { if (e.target===this) closeSampleModal(); });
 
 function buildSampleCard(c) {
   const initials = (c.name||'?').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
   const rawPhone = (c.phone||'').replace(/\D/g,'');
-  const waPhone  = rawPhone.length === 10 ? '91'+rawPhone : rawPhone;
-  const waHref   = waPhone.length >= 10 ? `https://wa.me/${waPhone}` : '#';
-
+  const waPhone  = rawPhone.length===10 ? '91'+rawPhone : rawPhone;
+  const waHref   = waPhone.length>=10 ? `https://wa.me/${waPhone}` : '#';
   const teamOpts = _smAllTeams.map(t =>
-    `<option value="${escHtml(t.id)}" ${t.id === c.team_id ? 'selected' : ''}>${escHtml(t.name)}${t.area ? ' – ' + escHtml(t.area) : ''}</option>`
+    `<option value="${escHtml(t.id)}" ${t.id===c.team_id?'selected':''}>${escHtml(t.name)}${t.area?' – '+escHtml(t.area):''}</option>`
   ).join('');
-
   const teamBadge = (c.team_name && c.team_name !== '—')
-    ? `<span class="badge badge-blue" id="sm-team-badge-${escHtml(c.id)}">${escHtml(c.team_name)}${c.team_area ? ' / '+escHtml(c.team_area) : ''}</span>`
+    ? `<span class="badge badge-blue" id="sm-team-badge-${escHtml(c.id)}">${escHtml(c.team_name)}${c.team_area?' / '+escHtml(c.team_area):''}</span>`
     : `<span class="badge badge-gray" id="sm-team-badge-${escHtml(c.id)}">Unassigned</span>`;
-
-  const offDaysStr = (c.off_days && c.off_days.length) ? c.off_days.join(', ') : 'None';
-
+  const offDaysStr = (c.off_days&&c.off_days.length) ? c.off_days.join(', ') : 'None';
   return `
   <div class="sample-cust-card" id="sm-card-${escHtml(c.id)}">
     <div class="sample-cust-card-header">
       <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
         <div class="sample-cust-avatar">${initials}</div>
-        <div style="min-width:0;">
-          <div class="sample-cust-name">${escHtml(c.name)}</div>
-          <div class="sample-cust-label">🧪 ${escHtml(c.sample_label)}</div>
-        </div>
+        <div style="min-width:0;"><div class="sample-cust-name">${escHtml(c.name)}</div><div class="sample-cust-label">🧪 ${escHtml(c.sample_label)}</div></div>
       </div>
       <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
         <a href="${waHref}" target="_blank" class="btn btn-success btn-sm" style="${waPhone.length<10?'display:none;':''}">💬</a>
         <a href="/admin/customers/${escHtml(c.id)}" target="_blank" class="btn btn-ghost btn-sm" title="Full profile">↗</a>
       </div>
     </div>
-
     <div class="sample-cust-fields">
-      <div class="sample-cust-field">
-        <span class="sf-icon">📞</span>
-        <span class="sf-val"><a href="tel:${escHtml(c.phone)}">${escHtml(c.phone)}</a></span>
-      </div>
-      <div class="sample-cust-field">
-        <span class="sf-icon">📍</span>
-        <span class="sf-val">${escHtml(c.address || '—')}</span>
-      </div>
-      <div class="sample-cust-field">
-        <span class="sf-icon">🕐</span>
-        <span class="sf-val">${escHtml(c.preferred_time || '—')}</span>
-      </div>
-      <div class="sample-cust-field">
-        <span class="sf-icon">📅</span>
-        <span class="sf-val">Starts: ${escHtml(c.start_date || '—')}</span>
-      </div>
-      ${offDaysStr !== 'None' ? `<div class="sample-cust-field"><span class="sf-icon">🚫</span><span class="sf-val">Off: ${escHtml(offDaysStr)}</span></div>` : ''}
+      <div class="sample-cust-field"><span class="sf-icon">📞</span><span class="sf-val"><a href="tel:${escHtml(c.phone)}">${escHtml(c.phone)}</a></span></div>
+      <div class="sample-cust-field"><span class="sf-icon">📍</span><span class="sf-val">${escHtml(c.address||'—')}</span></div>
+      <div class="sample-cust-field"><span class="sf-icon">🕐</span><span class="sf-val">${escHtml(c.preferred_time||'—')}</span></div>
+      <div class="sample-cust-field"><span class="sf-icon">📅</span><span class="sf-val">Starts: ${escHtml(c.start_date||'—')}</span></div>
+      ${offDaysStr!=='None'?`<div class="sample-cust-field"><span class="sf-icon">🚫</span><span class="sf-val">Off: ${escHtml(offDaysStr)}</span></div>`:''}
     </div>
-
-    <div class="sample-cust-team-current">
-      <span class="sct-label">Current Team&nbsp;&nbsp;</span>
-      ${teamBadge}
-    </div>
-
+    <div class="sample-cust-team-current"><span class="sct-label">Current Team&nbsp;&nbsp;</span>${teamBadge}</div>
     <div class="sample-assign-row">
-      <select id="sm-team-sel-${escHtml(c.id)}">
-        <option value="">— Assign a team —</option>
-        ${teamOpts}
-      </select>
-      <button class="sample-assign-btn" id="sm-assign-btn-${escHtml(c.id)}" onclick="assignSampleTeam('${escHtml(c.id)}')">
-        ✓ Assign
-      </button>
+      <select id="sm-team-sel-${escHtml(c.id)}"><option value="">— Assign a team —</option>${teamOpts}</select>
+      <button class="sample-assign-btn" id="sm-assign-btn-${escHtml(c.id)}" onclick="assignSampleTeam('${escHtml(c.id)}')">✓ Assign</button>
     </div>
   </div>`;
 }
@@ -1402,382 +1414,257 @@ async function assignSampleTeam(customerId) {
   const sel    = document.getElementById('sm-team-sel-' + customerId);
   const btn    = document.getElementById('sm-assign-btn-' + customerId);
   const teamId = sel ? sel.value : '';
-
   if (!teamId) { showToast('Please select a team first.', 'danger'); return; }
-
-  btn.disabled    = true;
-  btn.textContent = '…';
-
+  btn.disabled = true; btn.textContent = '…';
   try {
     const res  = await fetch('/api/admin/assign_team', {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ customer_id: customerId, team_id: teamId })
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({customer_id:customerId, team_id:teamId})
     });
     const data = await res.json();
-
-    btn.disabled    = false;
-    btn.textContent = '✓ Assign';
-
+    btn.disabled = false; btn.textContent = '✓ Assign';
     if (data.success) {
-      // Update badge in card
-      const badge = document.getElementById('sm-team-badge-' + customerId);
-      if (badge) {
-        badge.className   = 'badge badge-blue';
-        badge.textContent = data.team_name || 'Assigned';
-      }
-      showToast('✅ Team assigned to ' + (data.team_name || 'customer') + '!', 'success');
-    } else {
-      showToast('❌ ' + (data.message || 'Assignment failed'), 'danger');
-    }
-  } catch (err) {
-    btn.disabled    = false;
-    btn.textContent = '✓ Assign';
-    showToast('❌ Network error. Please retry.', 'danger');
-  }
+      const badge = document.getElementById('sm-team-badge-'+customerId);
+      if (badge) { badge.className='badge badge-blue'; badge.textContent=data.team_name||'Assigned'; }
+      showToast('✅ Team assigned to '+(data.team_name||'customer')+'!','success');
+    } else { showToast('❌ '+(data.message||'Assignment failed'),'danger'); }
+  } catch { btn.disabled=false; btn.textContent='✓ Assign'; showToast('❌ Network error.','danger'); }
 }
 
-/* ================================================================
-   BOXES NEEDED
-================================================================ */
+/* ===== BOXES NEEDED ===== */
 let _boxesData = [];
 let _boxView   = 'plan';
 
 function switchBoxView(view) {
   _boxView = view;
-  document.getElementById('tab-plan').classList.toggle('active', view === 'plan');
-  document.getElementById('tab-team').classList.toggle('active', view === 'team');
-  document.getElementById('boxes-plan-view').style.display = view === 'plan' ? '' : 'none';
-  document.getElementById('boxes-team-view').style.display = view === 'team' ? '' : 'none';
+  document.getElementById('tab-plan').classList.toggle('active', view==='plan');
+  document.getElementById('tab-team').classList.toggle('active', view==='team');
+  document.getElementById('boxes-plan-view').style.display = view==='plan' ? '' : 'none';
+  document.getElementById('boxes-team-view').style.display = view==='team' ? '' : 'none';
   renderBoxes();
 }
 
 async function loadBoxes(force) {
   if (_boxesData.length && !force) { renderBoxes(); return; }
-  const loadMsg = col => `<tr><td colspan="${col}" style="text-align:center;padding:20px;color:var(--text-3);">Loading…</td></tr>`;
-  document.getElementById('boxes-tbody').innerHTML      = loadMsg(7);
-  document.getElementById('boxes-team-tbody').innerHTML = loadMsg(5);
+  document.getElementById('boxes-tbody').innerHTML      = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-3);">Loading…</td></tr>`;
+  document.getElementById('boxes-team-tbody').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-3);">Loading…</td></tr>`;
   try {
-    _boxesData = await fetch('/api/admin/boxes_needed').then(r => r.json());
+    _boxesData = await fetch('/api/admin/boxes_needed').then(r=>r.json());
     renderBoxes();
-  } catch(err) {
+  } catch {
     document.getElementById('boxes-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">Retry</button></td></tr>`;
   }
 }
 
 function renderBoxes() {
-  const statusFilter = document.getElementById('boxes-status-filter').value;
+  const sf   = document.getElementById('boxes-status-filter').value;
   const data = _boxesData.filter(p => {
-    if (statusFilter === 'active') return p.active_customers > 0;
-    if (statusFilter === 'sample') return p.sample_boxes > 0;
-    return (p.active_customers + p.sample_boxes) > 0;
+    if (sf==='active') return p.active_customers>0;
+    if (sf==='sample') return p.sample_boxes>0;
+    return (p.active_customers+p.sample_boxes)>0;
   });
-  let grandActive = 0, grandSample = 0;
-  data.forEach(p => { grandActive += p.active_customers; grandSample += p.sample_boxes; });
-  const grandTotal = grandActive + grandSample;
+  let grandActive=0, grandSample=0;
+  data.forEach(p=>{grandActive+=p.active_customers; grandSample+=p.sample_boxes;});
+  const grandTotal = grandActive+grandSample;
 
   const tbody = document.getElementById('boxes-tbody');
   if (!data.length) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-3);">No boxes today.</td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-3);">No boxes today.</td></tr>`;
   } else {
-    const maxActive = Math.max(...data.map(d => d.active_customers), 1);
+    const maxActive = Math.max(...data.map(d=>d.active_customers),1);
     tbody.innerHTML = data.map(p => {
-      const isSamplePlan = p.is_sample_plan === true;
-      const hasSamples   = p.sample_boxes > 0;
-      const activeW      = Math.round((p.active_customers / maxActive) * 100);
-
-      const teamsHtml = (!isSamplePlan && (p.teams || []).length)
-        ? `<div class="team-breakdown">${p.teams.map(t => {
-            const tw = Math.round((t.count / Math.max(p.active_customers, 1)) * 100);
-            return `<div class="team-row">
-              <span class="t-name">${escHtml(t.team_name)}</span>
-              <span class="t-bar"><span class="t-bar-fill" style="width:${tw}%;"></span></span>
-              <span class="t-count">${t.count}</span>
-            </div>`;
-          }).join('')}</div>`
+      const isSample = p.is_sample_plan===true;
+      const hasSamples = p.sample_boxes>0;
+      const activeW = Math.round((p.active_customers/maxActive)*100);
+      const teamsHtml = (!isSample&&(p.teams||[]).length)
+        ? `<div class="team-breakdown">${p.teams.map(t=>{const tw=Math.round((t.count/Math.max(p.active_customers,1))*100);return `<div class="team-row"><span class="t-name">${escHtml(t.team_name)}</span><span class="t-bar"><span class="t-bar-fill" style="width:${tw}%;"></span></span><span class="t-count">${t.count}</span></div>`;}).join('')}</div>`
         : `<span style="color:var(--text-3);font-size:11px;">—</span>`;
-
-      const activeCell = isSamplePlan
+      const activeCell = isSample
         ? `<td><span style="color:var(--text-3);">—</span></td>`
-        : `<td><div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers}</div>
-           <div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div>
-           <div style="font-size:10px;color:var(--text-3);margin-top:2px;">active customers</div></td>`;
-
+        : `<td><div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers}</div><div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div><div style="font-size:10px;color:var(--text-3);margin-top:2px;">active customers</div></td>`;
       const sampleCell = hasSamples
-        ? `<td>
-             <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-               <span style="font-weight:700;color:#f97316;font-size:16px;">${p.sample_boxes}</span>
-               <button class="btn-view-sample" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}', ${p.sample_boxes})">
-                 👁 View
-               </button>
-             </div>
-             <div style="font-size:10px;color:var(--text-3);margin-top:4px;">sample box${p.sample_boxes > 1 ? 'es' : ''}</div>
-           </td>`
+        ? `<td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><span style="font-weight:700;color:#f97316;font-size:16px;">${p.sample_boxes}</span><button class="btn-view-sample" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes})">👁 View</button></div><div style="font-size:10px;color:var(--text-3);margin-top:4px;">sample box${p.sample_boxes>1?'es':''}</div></td>`
         : `<td><span style="color:var(--text-3);">0</span></td>`;
-
-      const totalBig = (p.active_customers + p.sample_boxes) > 0
-        ? `<span style="font-size:20px;font-weight:700;color:var(--text);">${p.active_customers + p.sample_boxes}</span>`
-        : `<span style="color:var(--text-3);">0</span>`;
-
-      const rowStyle = isSamplePlan ? 'background:rgba(249,115,22,.04);' : '';
-
-      const planNameCell = isSamplePlan
-        ? `<td><span class="badge badge-orange" style="font-size:12px;">🧪 ${escHtml(p.plan_name)}</span>
-           <div style="font-size:10px;color:var(--text-3);margin-top:3px;">unmatched sample plan</div></td>`
-        : `<td><div style="font-weight:600;">${escHtml(p.plan_name)}</div>
-           <div style="font-size:11px;color:var(--text-3);">₹${p.plan_price}</div></td>`;
-
-      const durationCell = isSamplePlan
-        ? `<td><span style="color:var(--text-3);">—</span></td>`
-        : `<td><span class="badge badge-blue">${p.duration_days || '—'} days</span></td>`;
-
-      // Actions cell — only show for rows with samples
-      const actionsCell = hasSamples
-        ? `<td><button class="btn btn-ghost btn-sm" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}', ${p.sample_boxes})" title="View all sample customers for this plan">
-             👁 View Customers
-           </button></td>`
+      const totalBig = (p.active_customers+p.sample_boxes)>0 ? `<span style="font-size:20px;font-weight:700;color:var(--text);">${p.active_customers+p.sample_boxes}</span>` : `<span style="color:var(--text-3);">0</span>`;
+      const rowStyle  = isSample ? 'background:rgba(249,115,22,.04);' : '';
+      const planCell  = isSample
+        ? `<td><span class="badge badge-orange" style="font-size:12px;">🧪 ${escHtml(p.plan_name)}</span><div style="font-size:10px;color:var(--text-3);margin-top:3px;">unmatched sample plan</div></td>`
+        : `<td><div style="font-weight:600;">${escHtml(p.plan_name)}</div><div style="font-size:11px;color:var(--text-3);">₹${p.plan_price}</div></td>`;
+      const durCell   = isSample ? `<td><span style="color:var(--text-3);">—</span></td>` : `<td><span class="badge badge-blue">${p.duration_days||'—'} days</span></td>`;
+      const actCell   = hasSamples
+        ? `<td><button class="btn btn-ghost btn-sm" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes})">👁 View Customers</button></td>`
         : `<td><span style="color:var(--text-3);font-size:11px;">—</span></td>`;
-
-      return `<tr style="${rowStyle}">${planNameCell}${durationCell}${activeCell}${sampleCell}<td>${totalBig}</td><td>${teamsHtml}</td>${actionsCell}</tr>`;
+      return `<tr style="${rowStyle}">${planCell}${durCell}${activeCell}${sampleCell}<td>${totalBig}</td><td>${teamsHtml}</td>${actCell}</tr>`;
     }).join('');
   }
 
-  // Team view (unchanged)
-  const teamMap = {};
-  _boxesData.forEach(p => {
-    (p.teams || []).forEach(t => {
-      if (!teamMap[t.team_id]) teamMap[t.team_id] = { name: t.team_name, active: 0, sample: 0, plans: {} };
-      teamMap[t.team_id].active += t.count;
-      if (!teamMap[t.team_id].plans[p.plan_name]) teamMap[t.team_id].plans[p.plan_name] = { active: 0 };
-      teamMap[t.team_id].plans[p.plan_name].active += t.count;
-    });
-  });
-  const teamRows = Object.values(teamMap).sort((a, b) => (b.active + b.sample) - (a.active + a.sample));
-  const teamTbody = document.getElementById('boxes-team-tbody');
-  const filteredTeamRows = teamRows.filter(t => {
-    if (statusFilter === 'active') return t.active > 0;
-    if (statusFilter === 'sample') return t.sample > 0;
-    return (t.active + t.sample) > 0;
-  });
-  if (!filteredTeamRows.length) {
-    teamTbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-3);">No team data today.</td></tr>`;
-  } else {
-    const maxTeamActive = Math.max(...filteredTeamRows.map(t => t.active), 1);
-    teamTbody.innerHTML = filteredTeamRows.map(t => {
-      const planBreakdown = Object.entries(t.plans).sort((a,b) => b[1].active - a[1].active)
-        .map(([planName, pd]) => `<span class="badge badge-blue" style="margin:1px;">${escHtml(planName.substring(0,18))}… ×${pd.active}</span>`).join('');
-      const tw = Math.round((t.active / maxTeamActive) * 100);
-      return `<tr>
-        <td><div style="font-weight:600;">${escHtml(t.name)}</div></td>
-        <td><div style="font-weight:700;color:var(--green);font-size:16px;">${t.active}</div>
-          <div class="bar-wrap"><div class="bar-fill" style="width:${tw}%;background:var(--green);"></div></div></td>
-        <td><span style="color:var(--text-3);">—</span></td>
-        <td><span style="font-size:20px;font-weight:700;">${t.active + t.sample}</span></td>
-        <td><div style="display:flex;flex-wrap:wrap;gap:2px;">${planBreakdown || '—'}</div></td>
-      </tr>`;
-    }).join('');
-  }
+  // Team view
+  const teamMap={};
+  _boxesData.forEach(p=>{(p.teams||[]).forEach(t=>{if(!teamMap[t.team_id])teamMap[t.team_id]={name:t.team_name,active:0,sample:0,plans:{}};teamMap[t.team_id].active+=t.count;if(!teamMap[t.team_id].plans[p.plan_name])teamMap[t.team_id].plans[p.plan_name]={active:0};teamMap[t.team_id].plans[p.plan_name].active+=t.count;});});
+  const teamRows=Object.values(teamMap).sort((a,b)=>(b.active+b.sample)-(a.active+a.sample));
+  const teamTbody=document.getElementById('boxes-team-tbody');
+  const fRows=teamRows.filter(t=>{if(sf==='active')return t.active>0;if(sf==='sample')return t.sample>0;return(t.active+t.sample)>0;});
+  if(!fRows.length){teamTbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-3);">No team data today.</td></tr>`;}
+  else{const mx=Math.max(...fRows.map(t=>t.active),1);teamTbody.innerHTML=fRows.map(t=>{const pb=Object.entries(t.plans).sort((a,b)=>b[1].active-a[1].active).map(([pn,pd])=>`<span class="badge badge-blue" style="margin:1px;">${escHtml(pn.substring(0,18))}… ×${pd.active}</span>`).join('');const tw=Math.round((t.active/mx)*100);return `<tr><td><div style="font-weight:600;">${escHtml(t.name)}</div></td><td><div style="font-weight:700;color:var(--green);font-size:16px;">${t.active}</div><div class="bar-wrap"><div class="bar-fill" style="width:${tw}%;background:var(--green);"></div></div></td><td><span style="color:var(--text-3);">—</span></td><td><span style="font-size:20px;font-weight:700;">${t.active+t.sample}</span></td><td><div style="display:flex;flex-wrap:wrap;gap:2px;">${pb||'—'}</div></td></tr>`;}).join('');}
 
-  const row = document.getElementById('boxes-total-row');
-  document.getElementById('boxes-grand-total').textContent = grandTotal;
-  row.style.display = grandTotal > 0 ? 'flex' : 'none';
+  const row=document.getElementById('boxes-total-row');
+  document.getElementById('boxes-grand-total').textContent=grandTotal;
+  row.style.display=grandTotal>0?'flex':'none';
 }
 
-/* ---- Load Employees ---- */
+/* ===== LOAD EMPLOYEES (with Reset Credentials button) ===== */
 async function loadEmployees() {
   const tbody = document.querySelector('#employees-table tbody');
-  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
+  tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try {
     const data = await fetch('/api/admin/employees').then(r=>r.json());
     _loaded.employees = true;
-    if (!data.length) { tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No employees found.</td></tr>`; return; }
-    tbody.innerHTML = data.map(e => `
+    if(!data.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No employees found.</td></tr>`;return;}
+    tbody.innerHTML = data.map(e=>`
       <tr data-name="${e.name.toLowerCase()}" data-city="${(e.team_city||'').toLowerCase()}" data-team="${e.team_id}">
-        <td>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="avatar avatar-sm">${e.name.charAt(0).toUpperCase()}</div>
-            <div>
-              <div style="font-weight:600;">${escHtml(e.name)}</div>
-              <div style="font-size:11px;color:var(--text-3);">${escHtml(e.phone)}</div>
-            </div>
-          </div>
-        </td>
+        <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm">${e.name.charAt(0).toUpperCase()}</div><div><div style="font-weight:600;">${escHtml(e.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(e.phone)}</div></div></div></td>
         <td><div style="font-size:12px;color:var(--text-2);">${escHtml(e.email)}</div><div style="font-size:10px;color:var(--text-3);">User ID</div></td>
         <td>${escHtml(e.phone)}</td>
         <td><span class="badge badge-blue">${escHtml(e.team_name)}</span></td>
         <td>
-          <div style="display:flex;gap:6px;flex-wrap:wrap;">
-            <button class="btn btn-ghost btn-sm"
-              onclick='openViewModal(${JSON.stringify(e)},"employee")'>👁 View</button>
-            <button class="btn btn-ghost btn-sm"
-              onclick="openEditEmployee('${e.id}','${escHtml(e.name)}','${escHtml(e.email)}','${escHtml(e.phone)}','${e.team_id}')">
-              ✏️ Edit
-            </button>
-            <form method="POST" action="/admin/users/delete/${e.id}"
-                  onsubmit="return confirm('Remove ${escHtml(e.name)}?');" style="display:inline;">
+          <div style="display:flex;gap:5px;flex-wrap:wrap;">
+            <button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(e)},"employee")'>👁 View</button>
+            <button class="btn btn-ghost btn-sm" onclick="openEditEmployee('${e.id}','${escHtml(e.name)}','${escHtml(e.email)}','${escHtml(e.phone)}','${e.team_id}')">✏️ Edit</button>
+            <button class="btn btn-warning btn-sm" id="reset-btn-${e.id}" onclick="resetEmployeeCredentials('${e.id}','${escHtml(e.name)}')">🔑 Reset</button>
+            <form method="POST" action="/admin/users/delete/${e.id}" onsubmit="return confirm('Remove ${escHtml(e.name)}?');" style="display:inline;">
               <input type="hidden" name="next" value="dashboard_admin">
               <button class="btn btn-danger btn-sm">🗑️</button>
             </form>
           </div>
         </td>
       </tr>`).join('');
-  } catch(err) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load. Please refresh.</td></tr>`;
+  } catch {
+    tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`;
   }
 }
 
 function statusBadge(status) {
-  const map = {
-    'active':   '<span class="badge badge-green">✅ Active</span>',
-    'paused':   '<span class="badge badge-yellow">⏸️ Paused</span>',
-    'inactive': '<span class="badge badge-red">❌ Inactive</span>',
-  };
+  const map={'active':'<span class="badge badge-green">✅ Active</span>','paused':'<span class="badge badge-yellow">⏸️ Paused</span>','inactive':'<span class="badge badge-red">❌ Inactive</span>'};
   return map[status] || `<span class="badge badge-gray">${escHtml(status||'—')}</span>`;
 }
 
-/* ---- Load Customers ---- */
+/* ===== LOAD CUSTOMERS ===== */
 async function loadCustomers() {
-  const tbody = document.querySelector('#customers-table tbody');
-  tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
+  const tbody=document.querySelector('#customers-table tbody');
+  tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try {
-    const data = await fetch('/api/admin/customers').then(r=>r.json());
-    _loaded.customers = true;
-    const badge = document.getElementById('cust-badge');
-    if (badge) badge.textContent = data.length;
-    if (!data.length) { tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">No customers found.</td></tr>`; return; }
-    tbody.innerHTML = data.map(c => {
-      const discDisplay = [];
-      if (c.discount_percent > 0) discDisplay.push(`${c.discount_percent}%`);
-      if (c.discount_amount > 0)  discDisplay.push(`₹${c.discount_amount}`);
-      const discStr  = discDisplay.length ? `<span class="badge badge-green">${discDisplay.join(' + ')}</span>` : `<span style="color:var(--text-3);">—</span>`;
-      const startStr = c.start_date ? `<span style="font-size:12px;color:var(--text-2);">${c.start_date}</span>` : `<span style="color:var(--text-3);">—</span>`;
-      return `
-      <tr data-name="${c.name.toLowerCase()}"
-          data-city="${(c.team_city||'').toLowerCase()}"
-          data-team="${c.team_id}"
-          data-plan="${c.plan_id||''}"
-          data-status="${c.status||'active'}">
-        <td>
-          <div style="display:flex;align-items:center;gap:10px;">
-            <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${c.name.charAt(0).toUpperCase()}</div>
-            <div>
-              <div style="font-weight:600;">${escHtml(c.name)}</div>
-              <div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div>
-            </div>
-          </div>
-        </td>
+    const data=await fetch('/api/admin/customers').then(r=>r.json());
+    _loaded.customers=true;
+    const badge=document.getElementById('cust-badge'); if(badge) badge.textContent=data.length;
+    if(!data.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">No customers found.</td></tr>`;return;}
+    tbody.innerHTML=data.map(c=>{
+      const discParts=[];
+      if(c.discount_percent>0) discParts.push(`${c.discount_percent}%`);
+      if(c.discount_amount>0)  discParts.push(`₹${c.discount_amount}`);
+      const discStr  = discParts.length?`<span class="badge badge-green">${discParts.join(' + ')}</span>`:`<span style="color:var(--text-3);">—</span>`;
+      const startStr = c.start_date?`<span style="font-size:12px;color:var(--text-2);">${c.start_date}</span>`:`<span style="color:var(--text-3);">—</span>`;
+      return `<tr data-name="${c.name.toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id}" data-plan="${c.plan_id||''}" data-status="${c.status||'active'}">
+        <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${c.name.charAt(0).toUpperCase()}</div><div><div style="font-weight:600;">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div></div></div></td>
         <td>${c.plan_name!=='—'?`<span class="badge badge-orange">${escHtml(c.plan_name)}</span>`:`<span class="badge badge-gray">No plan</span>`}</td>
         <td>${startStr}</td>
         <td>${discStr}</td>
         <td>${statusBadge(c.status)}</td>
         <td><span class="badge badge-blue">${escHtml(c.team_name)}</span></td>
-        <td>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;">
-            <button class="btn btn-ghost btn-sm"
-              onclick='openViewModal(${JSON.stringify(c)},"customer")'>👁 View</button>
-            <button class="btn btn-ghost btn-sm"
-              onclick='openEditCustomer(${JSON.stringify(c)})'>✏️ Edit</button>
-            <form method="POST" action="/admin/users/delete/${c.id}"
-                  onsubmit="return confirm('Remove ${escHtml(c.name)}?');" style="display:inline;">
-              <input type="hidden" name="next" value="dashboard_admin">
-              <button class="btn btn-danger btn-sm">🗑️</button>
-            </form>
-          </div>
-        </td>
+        <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(c)},"customer")'>👁 View</button>
+          <button class="btn btn-ghost btn-sm" onclick='openEditCustomer(${JSON.stringify(c)})'>✏️ Edit</button>
+          <form method="POST" action="/admin/users/delete/${c.id}" onsubmit="return confirm('Remove ${escHtml(c.name)}?');" style="display:inline;"><input type="hidden" name="next" value="dashboard_admin"><button class="btn btn-danger btn-sm">🗑️</button></form>
+        </div></td>
       </tr>`;
     }).join('');
     filterCustomers();
-  } catch(err) {
-    tbody.innerHTML = `<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">Failed to load. Please refresh.</td></tr>`;
+  } catch {
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`;
   }
 }
 
-/* ---- Customer Filters ---- */
+/* ===== CUSTOMER FILTERS ===== */
 function filterCustomers() {
-  const q      = (document.getElementById('cust-search').value       || '').toLowerCase().trim();
-  const city   = (document.getElementById('cust-city-filter').value  || '').toLowerCase();
-  const team   =  document.getElementById('cust-team-filter').value  || '';
-  const plan   =  document.getElementById('cust-plan-filter').value  || '';
-  const status = (document.getElementById('cust-status-filter').value|| '').toLowerCase();
-  let visible  = 0;
-  const rows   = document.querySelectorAll('#customers-table tbody tr[data-name]');
-  const total  = rows.length;
-  rows.forEach(r => {
-    const show = (!q      || (r.getAttribute('data-name')||'').toLowerCase().includes(q))
-              && (!city   || (r.getAttribute('data-city')||'').toLowerCase() === city)
-              && (!team   || r.getAttribute('data-team')  === team)
-              && (!plan   || r.getAttribute('data-plan')  === plan)
-              && (!status || (r.getAttribute('data-status')||'').toLowerCase() === status);
-    r.style.display = show ? '' : 'none';
-    if (show) visible++;
+  const q      =(document.getElementById('cust-search').value||'').toLowerCase().trim();
+  const city   =(document.getElementById('cust-city-filter').value||'').toLowerCase();
+  const team   = document.getElementById('cust-team-filter').value||'';
+  const plan   = document.getElementById('cust-plan-filter').value||'';
+  const status =(document.getElementById('cust-status-filter').value||'').toLowerCase();
+  let visible=0;
+  const rows=document.querySelectorAll('#customers-table tbody tr[data-name]');
+  const total=rows.length;
+  rows.forEach(r=>{
+    const show=(!q||(r.getAttribute('data-name')||'').toLowerCase().includes(q))
+            &&(!city||(r.getAttribute('data-city')||'').toLowerCase()===city)
+            &&(!team||r.getAttribute('data-team')===team)
+            &&(!plan||r.getAttribute('data-plan')===plan)
+            &&(!status||(r.getAttribute('data-status')||'').toLowerCase()===status);
+    r.style.display=show?'':'none'; if(show)visible++;
   });
-  const hasFilter = q || city || team || plan || status;
-  const clearBtn  = document.getElementById('cust-clear-filters');
-  if (clearBtn) clearBtn.style.display = hasFilter ? 'inline-flex' : 'none';
-  updateCustFilterChips({ q, city, team, plan, status });
-  const countEl = document.getElementById('cust-result-count');
-  if (countEl) countEl.textContent = hasFilter ? `Showing ${visible} of ${total} customers` : '';
+  const hasFilter=q||city||team||plan||status;
+  const cb=document.getElementById('cust-clear-filters'); if(cb) cb.style.display=hasFilter?'inline-flex':'none';
+  updateCustFilterChips({q,city,team,plan,status});
+  const ce=document.getElementById('cust-result-count'); if(ce) ce.textContent=hasFilter?`Showing ${visible} of ${total} customers`:'';
 }
 
-function updateCustFilterChips({ q, city, team, plan, status }) {
-  const wrap = document.getElementById('cust-filter-chips');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  const teamLabel   = team   ? ((document.querySelector(`#cust-team-filter option[value="${team}"]`) || {}).textContent || team) : '';
-  const planLabel   = plan   ? ((document.querySelector(`#cust-plan-filter option[value="${plan}"]`) || {}).textContent || plan) : '';
-  const statusLabel = status ? ({ active:'✅ Active', paused:'⏸️ Paused', inactive:'❌ Inactive' }[status] || status) : '';
-  const cityLabel   = city   ? city.charAt(0).toUpperCase() + city.slice(1) : '';
-  const chips = [
-    q          && { label:`"${q}"`,             clear: () => { document.getElementById('cust-search').value = ''; filterCustomers(); } },
-    cityLabel  && { label:`🏙️ ${cityLabel}`,    clear: () => { document.getElementById('cust-city-filter').value = ''; filterCustomers(); } },
-    teamLabel  && { label:`🏘️ ${teamLabel.split('–')[0].trim()}`, clear: () => { document.getElementById('cust-team-filter').value = ''; filterCustomers(); } },
-    planLabel  && { label:`📋 ${planLabel.substring(0,20)}`, clear: () => { document.getElementById('cust-plan-filter').value = ''; filterCustomers(); } },
-    statusLabel&& { label: statusLabel,          clear: () => { document.getElementById('cust-status-filter').value = ''; filterCustomers(); } },
-  ].filter(Boolean);
-  chips.forEach(chip => {
-    const el = document.createElement('span');
-    el.className = 'filter-active-indicator';
-    el.innerHTML = escHtml(chip.label) + `<button title="Remove filter">✕</button>`;
-    el.querySelector('button').addEventListener('click', chip.clear);
-    wrap.appendChild(el);
+function updateCustFilterChips({q,city,team,plan,status}) {
+  const wrap=document.getElementById('cust-filter-chips'); if(!wrap) return;
+  wrap.innerHTML='';
+  const tl=(document.querySelector(`#cust-team-filter option[value="${team}"]`)||{}).textContent||team;
+  const pl=(document.querySelector(`#cust-plan-filter option[value="${plan}"]`)||{}).textContent||plan;
+  const sl={active:'✅ Active',paused:'⏸️ Paused',inactive:'❌ Inactive'}[status]||status;
+  const cl=city?city.charAt(0).toUpperCase()+city.slice(1):'';
+  [{label:q&&`"${q}"`,clear:()=>{document.getElementById('cust-search').value='';filterCustomers();}},
+   {label:cl&&`🏙️ ${cl}`,clear:()=>{document.getElementById('cust-city-filter').value='';filterCustomers();}},
+   {label:tl&&`🏘️ ${tl.split('–')[0].trim()}`,clear:()=>{document.getElementById('cust-team-filter').value='';filterCustomers();}},
+   {label:pl&&`📋 ${pl.substring(0,20)}`,clear:()=>{document.getElementById('cust-plan-filter').value='';filterCustomers();}},
+   {label:sl&&sl,clear:()=>{document.getElementById('cust-status-filter').value='';filterCustomers();}},
+  ].filter(c=>c.label).forEach(chip=>{
+    const el=document.createElement('span'); el.className='filter-active-indicator';
+    el.innerHTML=escHtml(chip.label)+`<button title="Remove filter">✕</button>`;
+    el.querySelector('button').addEventListener('click',chip.clear); wrap.appendChild(el);
   });
 }
 
 function clearCustomerFilters() {
-  document.getElementById('cust-search').value        = '';
-  document.getElementById('cust-city-filter').value   = '';
-  document.getElementById('cust-team-filter').value   = '';
-  document.getElementById('cust-plan-filter').value   = '';
-  document.getElementById('cust-status-filter').value = '';
+  ['cust-search','cust-city-filter','cust-team-filter','cust-plan-filter','cust-status-filter'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
+  });
   filterCustomers();
 }
 
-/* ---- Load Enquiries ---- */
+/* ===== LOAD ENQUIRIES (with WA Inbox button) ===== */
 let _enqLoaded = false;
 async function loadEnquiries(force) {
   if (_enqLoaded && !force) return;
-  const tbody = document.getElementById('enq-tbody');
-  tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
+  const tbody=document.getElementById('enq-tbody');
+  tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try {
-    const data = await fetch('/api/admin/enquiries_data').then(r => { if (!r.ok) throw new Error('HTTP '+r.status); return r.json(); });
-    _enqLoaded = true;
-    const total = data.length, pending = data.filter(e=>e.status==='pending').length, approved = data.filter(e=>e.status==='approved').length;
-    document.getElementById('enq-stat-total').textContent    = total;
-    document.getElementById('enq-stat-pending').textContent  = pending;
-    document.getElementById('enq-stat-approved').textContent = approved;
-    const badge = document.getElementById('enq-badge');
-    if (pending > 0) { badge.textContent = pending; badge.style.display = 'inline-flex'; } else { badge.style.display = 'none'; }
-    if (!data.length) { tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">No enquiries yet.</td></tr>`; return; }
-    tbody.innerHTML = data.map(e => {
-      const date = e.created_at ? new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}) : '—';
-      const sb = e.status==='pending' ? `<span class="badge badge-yellow">⏳ Pending</span>` : `<span class="badge badge-green">✅ Converted</span>`;
-      const approveBtn = e.status==='pending'
-        ? `<form method="POST" action="/admin/enquiries/approve/${e.id}" onsubmit="return confirm('Convert ${escHtml(e.name)} to a customer?');" style="display:inline;">
-             <button class="btn btn-success btn-sm">✅ Approve</button>
-           </form>` : '';
+    const data=await fetch('/api/admin/enquiries_data').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
+    _enqLoaded=true;
+    const total=data.length,pending=data.filter(e=>e.status==='pending').length,approved=data.filter(e=>e.status==='approved').length;
+    document.getElementById('enq-stat-total').textContent=total;
+    document.getElementById('enq-stat-pending').textContent=pending;
+    document.getElementById('enq-stat-approved').textContent=approved;
+    const badge=document.getElementById('enq-badge');
+    if(pending>0){badge.textContent=pending;badge.style.display='inline-flex';}else{badge.style.display='none';}
+    if(!data.length){tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">No enquiries yet.</td></tr>`;return;}
+
+    tbody.innerHTML=data.map(e=>{
+      const date=e.created_at?new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}):'—';
+      const sb=e.status==='pending'?`<span class="badge badge-yellow">⏳ Pending</span>`:`<span class="badge badge-green">✅ Converted</span>`;
+      const approveBtn=e.status==='pending'
+        ?`<form method="POST" action="/admin/enquiries/approve/${e.id}" onsubmit="return confirm('Convert ${escHtml(e.name)} to a customer?');" style="display:inline;"><button class="btn btn-success btn-sm">✅ Approve</button></form>`:'';
+
+      // WhatsApp Inbox button
+      const hasInbox = e.has_inbox;
+      const inboxDot = hasInbox ? '<span class="inbox-dot" title="Has messages"></span>' : '';
+      const waBtn    = `<button class="btn btn-wa btn-sm" onclick="openWaInbox('${e.id}','${escHtml(e.name)}','${escHtml(e.phone||'')}','${escHtml(e.whatsapp_id||'')}')" title="Open WhatsApp conversation">
+        ${inboxDot}💬 Inbox
+      </button>`;
+
       return `<tr data-name="${e.name.toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}">
-        <td><div style="display:flex;align-items:center;gap:8px;">
-          <div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${e.name.charAt(0).toUpperCase()}</div>
+        <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${e.name.charAt(0).toUpperCase()}</div>
           <div><div style="font-weight:600;">${escHtml(e.name)}</div>${e.address?`<div style="font-size:11px;color:var(--text-3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.address)}</div>`:''}</div>
         </div></td>
         <td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td>
@@ -1787,223 +1674,399 @@ async function loadEnquiries(force) {
         <td>${e.payment_method==='cod'?`<span class="badge badge-yellow">💵 COD</span>`:`<span class="badge badge-blue">📱 UPI</span>`}</td>
         <td style="font-size:12px;color:var(--text-3);">${date}</td>
         <td>${sb}</td>
-        <td><div style="display:flex;gap:5px;align-items:center;">${approveBtn}
-          <form method="POST" action="/admin/enquiries/delete/${e.id}" onsubmit="return confirm('Delete this enquiry?');" style="display:inline;">
-            <button class="btn btn-danger btn-sm">🗑️</button>
-          </form>
+        <td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
+          ${approveBtn}
+          ${waBtn}
+          <form method="POST" action="/admin/enquiries/delete/${e.id}" onsubmit="return confirm('Delete this enquiry?');" style="display:inline;"><button class="btn btn-danger btn-sm">🗑️</button></form>
         </div></td>
       </tr>`;
     }).join('');
   } catch(err) {
-    tbody.innerHTML = `<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;
+    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;
   }
 }
 
 function filterEnqTable() {
-  const q  = document.getElementById('enq-search').value.toLowerCase();
-  const st = document.getElementById('enq-status-filter').value;
-  document.querySelectorAll('#enq-table tbody tr').forEach(r => {
-    const name  = (r.getAttribute('data-name') ||'').toLowerCase();
-    const phone = (r.getAttribute('data-phone')||'').toLowerCase();
-    const rs    =  r.getAttribute('data-status')||'';
-    r.style.display = ((!q||(name+phone).includes(q)) && (!st||rs===st)) ? '' : 'none';
+  const q=document.getElementById('enq-search').value.toLowerCase();
+  const st=document.getElementById('enq-status-filter').value;
+  document.querySelectorAll('#enq-table tbody tr').forEach(r=>{
+    const name=(r.getAttribute('data-name')||'').toLowerCase();
+    const phone=(r.getAttribute('data-phone')||'').toLowerCase();
+    const rs=r.getAttribute('data-status')||'';
+    r.style.display=((!q||(name+phone).includes(q))&&(!st||rs===st))?'':'none';
   });
 }
 
-/* ---- Edit Modals ---- */
+/* ===== EDIT MODALS ===== */
 function openEditEmployee(id, name, email, phone, teamId) {
-  document.getElementById('ee-name').value  = name;
-  document.getElementById('ee-email').value = email;
-  document.getElementById('ee-phone').value = phone;
-  document.getElementById('ee-team').value  = teamId;
-  document.getElementById('edit-emp-form').action = '/admin/users/edit/' + id;
+  document.getElementById('ee-name').value=name; document.getElementById('ee-email').value=email;
+  document.getElementById('ee-phone').value=phone; document.getElementById('ee-team').value=teamId;
+  document.getElementById('edit-emp-form').action='/admin/users/edit/'+id;
   openModal('modal-edit-employee');
 }
 
 function openEditCustomer(c) {
-  document.getElementById('ec-name').value      = c.name || '';
-  const realEmail = (c.email||'').endsWith('@fruitedelights.local') ? '' : (c.email||'');
-  document.getElementById('ec-email').value     = realEmail;
-  document.getElementById('ec-phone').value     = c.phone || '';
-  document.getElementById('ec-team').value      = c.team_id || '';
-  document.getElementById('ec-plan').value      = c.plan_name !== '—' ? c.plan_name : '';
-  document.getElementById('ec-address').value   = c.address || '';
-  document.getElementById('ec-ptime').value     = c.preferred_time || '';
-  document.getElementById('ec-startdate').value = c.start_date || '';
-  document.getElementById('ec-status').value    = c.status || 'active';
-  document.getElementById('ec-discpct').value   = c.discount_percent || 0;
-  document.getElementById('ec-discamt').value   = c.discount_amount || 0;
-  const sel = document.getElementById('ec-offdays');
-  for (let opt of sel.options) { opt.selected = (c.off_days || []).includes(opt.value); }
-  document.getElementById('edit-cust-form').action = '/admin/users/edit/' + c.id;
+  document.getElementById('ec-name').value=c.name||'';
+  const realEmail=(c.email||'').endsWith('@fruitedelights.local')?'':(c.email||'');
+  document.getElementById('ec-email').value=realEmail;
+  document.getElementById('ec-phone').value=c.phone||'';
+  document.getElementById('ec-team').value=c.team_id||'';
+  document.getElementById('ec-plan').value=c.plan_name!=='—'?c.plan_name:'';
+  document.getElementById('ec-address').value=c.address||'';
+  document.getElementById('ec-ptime').value=c.preferred_time||'';
+  document.getElementById('ec-startdate').value=c.start_date||'';
+  document.getElementById('ec-status').value=c.status||'active';
+  document.getElementById('ec-discpct').value=c.discount_percent||0;
+  document.getElementById('ec-discamt').value=c.discount_amount||0;
+  const sel=document.getElementById('ec-offdays');
+  for(let opt of sel.options){opt.selected=(c.off_days||[]).includes(opt.value);}
+  document.getElementById('edit-cust-form').action='/admin/users/edit/'+c.id;
   openModal('modal-edit-customer');
 }
 
 function openAddUserModal(role) {
-  const form = document.getElementById('user-form');
-  form.action = '/admin/users/add';
-  form.reset();
-  document.getElementById('user-modal-title').textContent = 'Onboard User';
-  document.getElementById('user-submit-btn').textContent  = 'Add & Send Credentials';
-  document.getElementById('rf-role-group').style.display  = 'block';
-  document.getElementById('roleSelect').value             = role || '';
-  document.getElementById('hiddenRole').value             = role || '';
-  applyRoleFields(role || '');
+  const form=document.getElementById('user-form');
+  form.action='/admin/users/add'; form.reset();
+  document.getElementById('user-modal-title').textContent='Onboard User';
+  document.getElementById('user-submit-btn').textContent='Add & Send Credentials';
+  document.getElementById('rf-role-group').style.display='block';
+  document.getElementById('roleSelect').value=role||'';
+  document.getElementById('hiddenRole').value=role||'';
+  applyRoleFields(role||'');
   openModal('modal-add-user');
 }
 
 function onRoleChange() {
-  const r = document.getElementById('roleSelect').value;
-  document.getElementById('hiddenRole').value = r;
+  const r=document.getElementById('roleSelect').value;
+  document.getElementById('hiddenRole').value=r;
   applyRoleFields(r);
 }
 
 function applyRoleFields(role) {
-  document.getElementById('rf-team').style.display     = (role==='employee'||role==='customer') ? 'block' : 'none';
-  document.getElementById('rf-customer').style.display = role==='customer' ? 'block' : 'none';
-  const emailInput = document.getElementById('uf-email');
-  const emailLabel = document.getElementById('email-label');
-  const emailHint  = document.getElementById('email-hint');
-  if (role === 'customer') {
-    emailInput.required = false;
-    emailInput.placeholder = 'Optional — auto-generated from phone if blank';
-    emailLabel.innerHTML = 'User ID (Email) <span class="opt">(optional for customers)</span>';
-    emailHint.style.display = 'block';
-  } else {
-    emailInput.required = true;
-    emailInput.placeholder = 'user@example.com';
-    emailLabel.innerHTML = 'User ID (Email) *';
-    emailHint.style.display = 'none';
-  }
+  document.getElementById('rf-team').style.display=(role==='employee'||role==='customer')?'block':'none';
+  document.getElementById('rf-customer').style.display=role==='customer'?'block':'none';
+  const ei=document.getElementById('uf-email'), el=document.getElementById('email-label'), eh=document.getElementById('email-hint');
+  if(role==='customer'){ei.required=false;ei.placeholder='Optional — auto-generated from phone if blank';el.innerHTML='User ID (Email) <span class="opt">(optional for customers)</span>';eh.style.display='block';}
+  else{ei.required=true;ei.placeholder='user@example.com';el.innerHTML='User ID (Email) *';eh.style.display='none';}
 }
 
 function openEditPlan(plan) {
-  document.getElementById('ep-name').value     = plan.name || '';
-  document.getElementById('ep-desc').value     = plan.description || '';
-  document.getElementById('ep-price').value    = plan.price_per_month || plan.price_per_day || '';
-  document.getElementById('ep-duration').value = plan.duration_days || '';
-  document.getElementById('ep-tax').value      = plan.tax_percent || 0;
-  const id = typeof plan._id === 'object' ? plan._id.$oid : plan._id;
-  document.getElementById('edit-plan-form').action = '/admin/plans/edit/' + id;
+  document.getElementById('ep-name').value=plan.name||'';
+  document.getElementById('ep-desc').value=plan.description||'';
+  document.getElementById('ep-price').value=plan.price_per_month||plan.price_per_day||'';
+  document.getElementById('ep-duration').value=plan.duration_days||'';
+  document.getElementById('ep-tax').value=plan.tax_percent||0;
+  const id=typeof plan._id==='object'?plan._id.$oid:plan._id;
+  document.getElementById('edit-plan-form').action='/admin/plans/edit/'+id;
   openModal('modal-edit-plan');
 }
 
 function openEditTeam(team) {
-  document.getElementById('et-name').value = team.name || '';
-  document.getElementById('et-area').value = team.area || '';
-  document.getElementById('et-city').value = team.city || '';
-  const id = typeof team._id === 'object' ? team._id.$oid : team._id;
-  document.getElementById('edit-team-form').action = '/admin/teams/edit/' + id;
+  document.getElementById('et-name').value=team.name||'';
+  document.getElementById('et-area').value=team.area||'';
+  document.getElementById('et-city').value=team.city||'';
+  const id=typeof team._id==='object'?team._id.$oid:team._id;
+  document.getElementById('edit-team-form').action='/admin/teams/edit/'+id;
   openModal('modal-edit-team');
 }
 
-/* ---- Sidebar ---- */
-function toggleSidebar() { document.getElementById('sidebar').classList.toggle('open'); document.getElementById('overlay').classList.toggle('open'); }
-function closeSidebar()  { document.getElementById('sidebar').classList.remove('open'); document.getElementById('overlay').classList.remove('open'); }
+/* ===== SIDEBAR ===== */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
 
-/* ---- Standard Modals ---- */
-function openModal(id)  { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('.modal-backdrop').forEach(m => {
-  m.addEventListener('click', function(e) { if (e.target===this) this.classList.remove('open'); });
-});
+/* ===== MODALS ===== */
+function openModal(id){document.getElementById(id).classList.add('open');}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+document.querySelectorAll('.modal-backdrop').forEach(m=>{m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});});
 
-/* ---- Generic table filters ---- */
-function filterTable(inputId, tableId, attr) {
-  const q = document.getElementById(inputId).value.toLowerCase();
-  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => { r.style.display = (r.getAttribute(attr)||'').toLowerCase().includes(q) ? '' : 'none'; });
-}
-function filterTeams() {
-  const q    = document.getElementById('team-search').value.toLowerCase();
-  const city = document.getElementById('team-city-filter').value.toLowerCase();
-  document.querySelectorAll('#teams-table tbody tr').forEach(r => {
-    const name = (r.getAttribute('data-name')||'').toLowerCase();
-    const rc   = (r.getAttribute('data-city')||'').toLowerCase();
-    r.style.display = name.includes(q) && (!city||rc===city) ? '' : 'none';
-  });
-}
-function filterByCity(selectId, tableId) {
-  const city = document.getElementById(selectId).value.toLowerCase();
-  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => { r.style.display = (!city||(r.getAttribute('data-city')||'').toLowerCase()===city) ? '' : 'none'; });
-}
-function filterByTeam(selectId, tableId) {
-  const team = document.getElementById(selectId).value;
-  document.querySelectorAll('#'+tableId+' tbody tr').forEach(r => { r.style.display = (!team||r.getAttribute('data-team')===team) ? '' : 'none'; });
-}
+/* ===== GENERIC TABLE FILTERS ===== */
+function filterTable(inputId,tableId,attr){const q=document.getElementById(inputId).value.toLowerCase();document.querySelectorAll('#'+tableId+' tbody tr').forEach(r=>{r.style.display=(r.getAttribute(attr)||'').toLowerCase().includes(q)?'':'none';});}
+function filterTeams(){const q=document.getElementById('team-search').value.toLowerCase();const city=document.getElementById('team-city-filter').value.toLowerCase();document.querySelectorAll('#teams-table tbody tr').forEach(r=>{const name=(r.getAttribute('data-name')||'').toLowerCase();const rc=(r.getAttribute('data-city')||'').toLowerCase();r.style.display=name.includes(q)&&(!city||rc===city)?'':'none';});}
+function filterByCity(selectId,tableId){const city=document.getElementById(selectId).value.toLowerCase();document.querySelectorAll('#'+tableId+' tbody tr').forEach(r=>{r.style.display=(!city||(r.getAttribute('data-city')||'').toLowerCase()===city)?'':'none';});}
+function filterByTeam(selectId,tableId){const team=document.getElementById(selectId).value;document.querySelectorAll('#'+tableId+' tbody tr').forEach(r=>{r.style.display=(!team||r.getAttribute('data-team')===team)?'':'none';});}
 
-/* ---- Charts ---- */
+/* ===== CHARTS ===== */
 let deliveryChart, areaChart;
-Chart.defaults.color = '#6b7280';
-Chart.defaults.font  = { family:'DM Sans, sans-serif', size:12 };
+Chart.defaults.color='#6b7280';
+Chart.defaults.font={family:'DM Sans, sans-serif',size:12};
 
-function initAreaChart(data) {
-  const ctx = document.getElementById('areaChart').getContext('2d');
-  if (areaChart) areaChart.destroy();
-  const palette = ['rgba(79,70,229,.85)','rgba(124,58,237,.85)','rgba(37,99,235,.85)','rgba(8,145,178,.85)','rgba(5,150,105,.85)','rgba(217,119,6,.85)'];
-  areaChart = new Chart(ctx, {
-    type:'bar',
-    data:{ labels:data.map(d=>d.area), datasets:[{label:'Pending',data:data.map(d=>d.pending),backgroundColor:data.map((_,i)=>palette[i%palette.length]),borderRadius:{topLeft:8,topRight:8},borderSkipped:false}] },
-    options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}
-  });
+function initAreaChart(data){
+  const ctx=document.getElementById('areaChart').getContext('2d');
+  if(areaChart) areaChart.destroy();
+  const palette=['rgba(79,70,229,.85)','rgba(124,58,237,.85)','rgba(37,99,235,.85)','rgba(8,145,178,.85)','rgba(5,150,105,.85)','rgba(217,119,6,.85)'];
+  areaChart=new Chart(ctx,{type:'bar',data:{labels:data.map(d=>d.area),datasets:[{label:'Pending',data:data.map(d=>d.pending),backgroundColor:data.map((_,i)=>palette[i%palette.length]),borderRadius:{topLeft:8,topRight:8},borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}});
 }
 
-function initDeliveryChart(ts) {
-  const ctx = document.getElementById('deliveryChart').getContext('2d');
-  if (deliveryChart) deliveryChart.destroy();
-  const grad = c => { const g=ctx.createLinearGradient(0,0,0,250); g.addColorStop(0,c); g.addColorStop(1,'rgba(255,255,255,0)'); return g; };
-  deliveryChart = new Chart(ctx, {
-    type:'line',
-    data:{
-      labels:ts.map(d=>new Date(d.date).toLocaleDateString('en-IN',{month:'short',day:'numeric'})),
-      datasets:[
-        {label:'Delivered',data:ts.map(d=>d.delivered),borderColor:'#10b981',backgroundColor:grad('rgba(16,185,129,.15)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#10b981',pointBorderColor:'#fff',pointBorderWidth:2},
-        {label:'Pending',  data:ts.map(d=>d.pending),  borderColor:'#f59e0b',backgroundColor:grad('rgba(245,158,11,.12)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#f59e0b',pointBorderColor:'#fff',pointBorderWidth:2},
-        {label:'Holiday',  data:ts.map(d=>d.holiday),  borderColor:'#ef4444',backgroundColor:grad('rgba(239,68,68,.10)'), fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#ef4444',pointBorderColor:'#fff',pointBorderWidth:2},
-      ]
-    },
-    options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{boxWidth:10,padding:18,usePointStyle:true}}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}
-  });
+function initDeliveryChart(ts){
+  const ctx=document.getElementById('deliveryChart').getContext('2d');
+  if(deliveryChart) deliveryChart.destroy();
+  const grad=c=>{const g=ctx.createLinearGradient(0,0,0,250);g.addColorStop(0,c);g.addColorStop(1,'rgba(255,255,255,0)');return g;};
+  deliveryChart=new Chart(ctx,{type:'line',data:{labels:ts.map(d=>new Date(d.date).toLocaleDateString('en-IN',{month:'short',day:'numeric'})),datasets:[{label:'Delivered',data:ts.map(d=>d.delivered),borderColor:'#10b981',backgroundColor:grad('rgba(16,185,129,.15)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#10b981',pointBorderColor:'#fff',pointBorderWidth:2},{label:'Pending',data:ts.map(d=>d.pending),borderColor:'#f59e0b',backgroundColor:grad('rgba(245,158,11,.12)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#f59e0b',pointBorderColor:'#fff',pointBorderWidth:2},{label:'Holiday',data:ts.map(d=>d.holiday),borderColor:'#ef4444',backgroundColor:grad('rgba(239,68,68,.10)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#ef4444',pointBorderColor:'#fff',pointBorderWidth:2}]},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{boxWidth:10,padding:18,usePointStyle:true}}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}});
 }
 
-async function loadChart(days, pill) {
+async function loadChart(days,pill){
   document.querySelectorAll('.range-pill').forEach(p=>p.classList.remove('active'));
-  if (pill) pill.classList.add('active');
-  try {
-    const data = await fetch(`/api/admin/analytics?range=${days}`).then(r=>r.json());
-    initDeliveryChart(data.timeseries);
-    initAreaChart(data.area_pending);
-  } catch { initDeliveryChart([]); initAreaChart([]); }
+  if(pill) pill.classList.add('active');
+  try{const data=await fetch(`/api/admin/analytics?range=${days}`).then(r=>r.json());initDeliveryChart(data.timeseries);initAreaChart(data.area_pending);}
+  catch{initDeliveryChart([]);initAreaChart([]);}
 }
 
-/* ---- Avatar initials ---- */
-(function(){
-  const name = document.getElementById('session-name');
-  const av   = document.getElementById('user-avatar-init');
-  if (name && av) {
-    const w = (name.textContent||'').trim().split(' ');
-    av.textContent = w.length>=2 ? w[0][0].toUpperCase()+w[1][0].toUpperCase() : (w[0]||'A')[0].toUpperCase();
+/* ===== AVATAR INITIALS ===== */
+(function(){const name=document.getElementById('session-name');const av=document.getElementById('user-avatar-init');if(name&&av){const w=(name.textContent||'').trim().split(' ');av.textContent=w.length>=2?w[0][0].toUpperCase()+w[1][0].toUpperCase():(w[0]||'A')[0].toUpperCase();}})();
+
+/* ===== FLASH AUTO-DISMISS ===== */
+setTimeout(()=>{document.querySelectorAll('.flash').forEach(f=>{f.style.transition='.4s';f.style.opacity='0';f.style.transform='translateX(40px)';setTimeout(()=>f.remove(),400);});},4000);
+
+/* ===== ENQUIRY BADGE ON BOOT ===== */
+(async function(){try{const d=await fetch('/api/admin/enquiry_count').then(r=>r.json());if(d.pending>0){const b=document.getElementById('enq-badge');if(b){b.textContent=d.pending;b.style.display='inline-flex';}}}catch{}})();
+
+// Global bulk enquiry data
+let _bulkEnquiries = [];
+const _bulkPlans = [
+  "Full Week Sample – ₹89",
+  "Half Week Sample – ₹59",
+  "Custom Plan",
+  "Premium – ₹299/mo",
+  "Regular – ₹199/mo",
+  "Budget – ₹99/mo"
+];
+const _bulkTimeSlots = [
+  "7:00 AM – 9:00 AM",
+  "9:00 AM – 11:00 AM",
+  "11:00 AM – 1:00 PM",
+  "1:00 PM – 3:00 PM",
+  "5:00 PM – 7:00 PM",
+  "Anytime"
+];
+const _bulkPaymentMethods = ["upi", "cod"];
+const _bulkStatuses = ["pending", "approved"];
+ 
+function openBulkEnquiriesModal() {
+  _bulkEnquiries = [{}]; // Start with one empty row
+  renderBulkTable();
+  document.getElementById('modal-bulk-enquiries').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+ 
+function closeBulkModal() {
+  document.getElementById('modal-bulk-enquiries').classList.remove('open');
+  document.body.style.overflow = '';
+  _bulkEnquiries = [];
+}
+ 
+document.getElementById('modal-bulk-enquiries')?.addEventListener('click', function(e) {
+  if (e.target === this) closeBulkModal();
+});
+ 
+function updateRowCount() {
+  const count = _bulkEnquiries.length;
+  document.getElementById('bulk-row-count').textContent = `Rows: ${count}`;
+}
+ 
+function addBulkRow() {
+  _bulkEnquiries.push({});
+  renderBulkTable();
+}
+ 
+function addBulkRows(n) {
+  for (let i = 0; i < n; i++) _bulkEnquiries.push({});
+  renderBulkTable();
+}
+ 
+function removeBulkRow() {
+  if (_bulkEnquiries.length > 0) {
+    _bulkEnquiries.pop();
+    renderBulkTable();
   }
-})();
-
-/* ---- Flash auto-dismiss ---- */
-setTimeout(() => {
-  document.querySelectorAll('.flash').forEach(f => {
-    f.style.transition = '0.4s'; f.style.opacity = '0'; f.style.transform = 'translateX(40px)';
-    setTimeout(() => f.remove(), 400);
+}
+ 
+function clearBulkData() {
+  if (!confirm('Clear all rows? This cannot be undone.')) return;
+  _bulkEnquiries = [{}];
+  renderBulkTable();
+}
+ 
+function toggleBulkSelectAll() {
+  const checked = document.getElementById('bulk-select-all').checked;
+  document.querySelectorAll('#bulk-tbody .bulk-row-checkbox').forEach(cb => {
+    cb.checked = checked;
   });
-}, 4000);
-
-/* ---- Enquiry badge on boot ---- */
-(async function(){
+}
+ 
+function renderBulkTable() {
+  const tbody = document.getElementById('bulk-tbody');
+  tbody.innerHTML = _bulkEnquiries.map((row, idx) => {
+    return `
+      <tr style="height:44px; border-bottom:1px solid var(--border); hover-background:var(--bg-3);">
+        <td style="width:30px; padding:6px 4px; text-align:center; border-right:1px solid var(--border); vertical-align:middle;">
+          <input type="checkbox" class="bulk-row-checkbox" style="cursor:pointer;">
+        </td>
+        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
+          <input type="text" class="bulk-cell-input" data-row="${idx}" data-field="name" 
+            value="${escHtml(row.name || '')}" placeholder="Name"
+            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none;"
+            onchange="updateBulkRow(${idx},'name',this.value)"
+            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
+            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+        </td>
+        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
+          <input type="tel" class="bulk-cell-input" data-row="${idx}" data-field="phone" 
+            value="${escHtml(row.phone || '')}" placeholder="Phone"
+            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none;"
+            onchange="updateBulkRow(${idx},'phone',this.value)"
+            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
+            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+        </td>
+        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
+          <input type="text" list="bulk-plans-list" class="bulk-cell-input" data-row="${idx}" data-field="plan" 
+            value="${escHtml(row.plan || '')}" placeholder="Plan"
+            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none;"
+            onchange="updateBulkRow(${idx},'plan',this.value)"
+            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
+            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+        </td>
+        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
+          <select class="bulk-cell-input" data-row="${idx}" data-field="delivery_time" 
+            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none; background:white;"
+            onchange="updateBulkRow(${idx},'delivery_time',this.value)"
+            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
+            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+            <option value="">${escHtml(row.delivery_time || '— Select —')}</option>
+            ${_bulkTimeSlots.map(t => `<option value="${escHtml(t)}" ${row.delivery_time === t ? 'selected' : ''}>${escHtml(t)}</option>`).join('')}
+          </select>
+        </td>
+        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
+          <input type="date" class="bulk-cell-input" data-row="${idx}" data-field="start_date" 
+            value="${escHtml(row.start_date || '')}" 
+            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none;"
+            onchange="updateBulkRow(${idx},'start_date',this.value)"
+            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
+            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+        </td>
+        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
+          <select class="bulk-cell-input" data-row="${idx}" data-field="payment_method" 
+            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none; background:white;"
+            onchange="updateBulkRow(${idx},'payment_method',this.value)"
+            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
+            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+            <option value="upi" ${row.payment_method === 'upi' ? 'selected' : ''}>📱 UPI</option>
+            <option value="cod" ${row.payment_method === 'cod' ? 'selected' : ''}>💵 COD</option>
+          </select>
+        </td>
+        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
+          <select class="bulk-cell-input" data-row="${idx}" data-field="status" 
+            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none; background:white;"
+            onchange="updateBulkRow(${idx},'status',this.value)"
+            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
+            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+            <option value="pending" ${row.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
+            <option value="approved" ${row.status === 'approved' ? 'selected' : ''}>✅ Approved</option>
+          </select>
+        </td>
+        <td style="padding:4px 8px; vertical-align:middle;">
+          <input type="text" class="bulk-cell-input" data-row="${idx}" data-field="address" 
+            value="${escHtml(row.address || '')}" placeholder="Address (optional)"
+            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none;"
+            onchange="updateBulkRow(${idx},'address',this.value)"
+            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
+            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
+        </td>
+      </tr>
+    `;
+  }).join('');
+  
+  updateRowCount();
+}
+ 
+function updateBulkRow(rowIdx, field, value) {
+  if (_bulkEnquiries[rowIdx]) {
+    _bulkEnquiries[rowIdx][field] = value;
+  }
+}
+ 
+function downloadBulkTemplate() {
+  const data = _bulkEnquiries.map(r => ({
+    name: r.name || '',
+    phone: r.phone || '',
+    plan: r.plan || '',
+    delivery_time: r.delivery_time || '',
+    start_date: r.start_date || '',
+    payment_method: r.payment_method || 'upi',
+    status: r.status || 'pending',
+    address: r.address || ''
+  }));
+  
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `enquiries_${new Date().toISOString().split('T')[0]}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+ 
+async function submitBulkEnquiries() {
+  // Filter out empty rows
+  const validRows = _bulkEnquiries.filter(r => (r.name || '').trim() || (r.phone || '').trim());
+  
+  if (!validRows.length) {
+    showToast('❌ Please add at least one enquiry.', 'danger');
+    return;
+  }
+  
+  const btn = document.getElementById('bulk-import-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ Importing…';
+  document.getElementById('bulk-status-text').textContent = 'Processing...';
+  
   try {
-    const d = await fetch('/api/admin/enquiry_count').then(r=>r.json());
-    if (d.pending>0) { const b = document.getElementById('enq-badge'); if (b) { b.textContent=d.pending; b.style.display='inline-flex'; } }
-  } catch {}
-})();
+    const res = await fetch('/api/admin/bulk_enquiries_import', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ enquiries: validRows })
+    });
+    
+    const result = await res.json();
+    btn.disabled = false;
+    btn.textContent = '✅ Import Enquiries';
+    
+    if (result.success) {
+      document.getElementById('bulk-status-text').innerHTML = 
+        `<strong style="color:var(--green);">✅ ${result.message}</strong><br>` +
+        `Inserted: <strong>${result.inserted}</strong> | Skipped: <strong>${result.skipped}</strong>`;
+      
+      if (result.errors && result.errors.length > 0) {
+        const errorDiv = document.getElementById('bulk-validation-errors');
+        errorDiv.innerHTML = `<strong>⚠️ ${result.errors.length} error(s):</strong><br>` + 
+          result.errors.map(e => `• ${escHtml(e)}`).join('<br>');
+        errorDiv.style.display = 'block';
+      }
+      
+      showToast(`✅ ${result.message}`, 'success');
+      
+      // Reload enquiries after 2 seconds
+      setTimeout(() => {
+        closeBulkModal();
+        if (_enqLoaded) loadEnquiries(true);
+      }, 2000);
+    } else {
+      showToast('❌ ' + (result.message || 'Import failed'), 'danger');
+      document.getElementById('bulk-status-text').textContent = 'Error: ' + (result.message || 'Unknown error');
+    }
+  } catch (err) {
+    btn.disabled = false;
+    btn.textContent = '✅ Import Enquiries';
+    showToast('❌ Network error. Try again.', 'danger');
+    document.getElementById('bulk-status-text').textContent = 'Network error.';
+  }
+}
 
-/* ---- Boot ---- */
-window.addEventListener('DOMContentLoaded', () => {
-  loadChart(1, document.querySelector('.range-pill.active'));
+
+
+/* ===== BOOT ===== */
+window.addEventListener('DOMContentLoaded',()=>{
+  loadChart(1,document.querySelector('.range-pill.active'));
   loadEmployees();
   loadCustomers();
   loadBoxes(false);

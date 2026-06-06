@@ -10,10 +10,96 @@ bhuvi124@gmail.com
 ll2_vFoL2xM
 manager : 
 
-Return EXACTLY in this format:
+# ---------------------------------------------------------------------------
+# WHATSAPP INBOX – Incoming webhook (PUBLIC – called by n8n)  ← NEW
+# ---------------------------------------------------------------------------
+@app.route("/api/webhook/wa_incoming", methods=["POST"])
+def wa_incoming_webhook():
+    """
+    n8n calls this endpoint when a WhatsApp message arrives.
+    Expected JSON body (from your webhook output):
+    {
+        "instanceName": "Fruit_Delights",
+        "whatsappId":   "63582796566668@lid",
+        "phoneNumber":  "63582796566668",       ← may be empty string
+        "body":         "message text",
+        "pushName":     "John",
+        "timestamp":    1780718285,
+        "messageId":    "false_63582796566668@lid_3EB0139F5A8B2FA8FA53",
+        "enquiry_id":   "6649abc..."             ← optional; if n8n can resolve it
+    }
+    If enquiry_id is not supplied, we match by whatsappId or phone against the
+    enquiries collection (field: whatsapp_id or phone).
+    """
+    data = request.get_json(silent=True) or {}
 
-===SUBJECT===
-<subject line>
+    whatsapp_id = (data.get("whatsappId") or "").strip()
+    phone_raw   = (data.get("phoneNumber") or "").strip()
+    body        = (data.get("body") or "").strip()
+    push_name   = (data.get("pushName") or "").strip()
+    message_id  = (data.get("messageId") or "").strip()
+    timestamp   = data.get("timestamp")
 
-===BODY===
-<email body>
+    if not body:
+        return jsonify({"status": "ignored", "reason": "empty body"}), 200
+
+    # Normalise phone
+    phone = "".join(filter(str.isdigit, phone_raw))
+    if len(phone) == 12 and phone.startswith("91"):
+        phone_10 = phone[2:]
+    elif len(phone) == 10:
+        phone_10 = phone
+        phone    = "91" + phone
+    else:
+        phone_10 = phone
+
+    # ── Try to find the enquiry ──
+    enquiry_id_str = (data.get("enquiry_id") or "").strip()
+    enq = None
+
+    if enquiry_id_str:
+        try:
+            enq = enquiries_col.find_one({"_id": ObjectId(enquiry_id_str)})
+        except Exception:
+            pass
+
+    if not enq and whatsapp_id:
+        enq = enquiries_col.find_one({"whatsapp_id": whatsapp_id})
+
+    if not enq and phone:
+        enq = enquiries_col.find_one({"phone": {"$in": [phone, phone_10, phone_raw]}})
+
+    if not enq:
+        # Save under a "unknown" bucket so we can still see the message
+        bucket_id = f"unknown_{whatsapp_id or phone}"
+        _wa_append_message(
+            enquiry_id=bucket_id,
+            direction="in",
+            body=body,
+            whatsapp_id=whatsapp_id,
+            phone=phone,
+            push_name=push_name,
+            message_id=message_id,
+        )
+        return jsonify({"status": "saved", "matched": False, "bucket": bucket_id}), 200
+
+    enq_id = str(enq["_id"])
+
+    # Store whatsapp_id on enquiry if not already there
+    if whatsapp_id and not enq.get("whatsapp_id"):
+        enquiries_col.update_one(
+            {"_id": enq["_id"]},
+            {"$set": {"whatsapp_id": whatsapp_id}}
+        )
+
+    _wa_append_message(
+        enquiry_id=enq_id,
+        direction="in",
+        body=body,
+        whatsapp_id=whatsapp_id,
+        phone=phone,
+        push_name=push_name,
+        message_id=message_id,
+    )
+
+    return jsonify({"status": "saved", "matched": True, "enquiry_id": enq_id}), 200
