@@ -1894,6 +1894,72 @@ def assign_team_to_customer():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+# ---------------------------------------------------------------------------
+# N8N – Add enquiry from WhatsApp incoming message
+# ---------------------------------------------------------------------------
+@app.route("/api/enq/add_enquiry", methods=["POST"])
+def n8n_add_enquiry():
+    token = request.headers.get("X-Api-Key") or request.args.get("token")
+    if token != os.getenv("Token_SECRET"):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json(silent=True) or {}
+
+    push_name    = (data.get("pushName") or "").strip()
+    whatsapp_id  = (data.get("from") or "").strip()
+    body         = (data.get("body") or "").strip()
+    
+
+    if not whatsapp_id:
+        return jsonify({"success": False, "message": "Missing 'from' (whatsappId)."}), 400
+
+    # Deduplicate – don't create if this whatsapp_id already has a pending enquiry
+    existing = enquiries_col.find_one({
+        "whatsapp_id": whatsapp_id,
+        "tag":         "form_enquiry",
+        "status":      "pending"
+    })
+    if existing:
+        return jsonify({
+            "success":    False,
+            "message":    "Pending enquiry already exists for this WhatsApp ID.",
+            "enquiry_id": str(existing["_id"])
+        }), 409
+
+    # Derive phone from whatsapp_id (strip @lid / @s.whatsapp.net etc.)
+    raw_phone = whatsapp_id.split("@")[0]
+    phone = "".join(filter(str.isdigit, raw_phone))
+
+    enquiry_doc = {
+        "name":           push_name,
+        
+        "whatsapp_id":    whatsapp_id,
+        "source":         "whatsapp",
+        "tag":            "form_enquiry",
+        "created_at":     datetime.now(),
+    }
+
+    result = enquiries_col.insert_one(enquiry_doc)
+    enq_id = str(result.inserted_id)
+
+    # Seed the WA inbox thread with the opening message if body is present
+    if body:
+        _wa_append_message(
+            enquiry_id=enq_id,
+            direction="in",
+            body=body,
+            whatsapp_id=whatsapp_id,
+            phone=phone,
+            push_name=push_name,
+        )
+
+    return jsonify({
+        "success":    True,
+        "enquiry_id": enq_id,
+        "name":       push_name or phone,
+        "phone":      phone,
+        "message":    "Enquiry created."
+    }), 201
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5757)
