@@ -52,3 +52,5 @@ def send_whatsapp_msg(identifier: str, message: str) -> bool:
     except Exception as e:
         print(f"[outwpmsg] Error sending to {number}: {e}")
         return False
+    
+  

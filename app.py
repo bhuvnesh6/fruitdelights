@@ -536,8 +536,21 @@ def admin_analytics():
     for t in teams:
         cnt = deliveries_col.count_documents({"team_id": t["_id"], "status": "pending", "date": today})
         area_data.append({"area": t.get("area", t["name"]), "pending": cnt})
+
     return jsonify({"timeseries": results, "area_pending": area_data})
 
+
+@app.route("/api/admin/enquiries/edit/<enquiry_id>", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def edit_enquiry(enquiry_id):
+    data = request.get_json(silent=True) or {}
+    allowed = ["name", "phone", "address", "plan", "delivery_time", "start_date", "payment_method", "status"]
+    update = {k: data[k] for k in allowed if k in data}
+    if not update:
+        return jsonify({"success": False, "message": "Nothing to update."}), 400
+    enquiries_col.update_one({"_id": ObjectId(enquiry_id)}, {"$set": update})
+    return jsonify({"success": True, "message": "Enquiry updated."})
 
 # ---------------------------------------------------------------------------
 # ADMIN – plans
@@ -1148,10 +1161,27 @@ def wa_send():
 @login_required
 @role_required("admin", "manager")
 def wa_thread(enquiry_id):
-    """Return all messages in this enquiry's WhatsApp thread."""
     doc = wa_inbox_col.find_one({"enquiry_id": enquiry_id})
+
+    # If not found, try matching by unknown bucket using the enquiry's whatsapp_id
+    if not doc:
+        enq = enquiries_col.find_one({"_id": ObjectId(enquiry_id)})
+        if enq:
+            wa_id = enq.get("whatsapp_id", "")
+            phone = "".join(filter(str.isdigit, str(enq.get("phone", ""))))
+            raw_digits = wa_id.split("@")[0] if wa_id else phone
+            if raw_digits:
+                doc = wa_inbox_col.find_one({"enquiry_id": f"unknown_{raw_digits}"})
+            # If found, re-link it to the real enquiry_id for future
+            if doc:
+                wa_inbox_col.update_one(
+                    {"_id": doc["_id"]},
+                    {"$set": {"enquiry_id": enquiry_id}}
+                )
+
     if not doc:
         return jsonify({"messages": [], "push_name": "", "phone": "", "whatsapp_id": ""})
+
     messages = []
     for m in doc.get("messages", []):
         messages.append({
@@ -1166,7 +1196,6 @@ def wa_thread(enquiry_id):
         "phone":       doc.get("phone", ""),
         "whatsapp_id": doc.get("whatsapp_id", ""),
     })
-
 
 # ---------------------------------------------------------------------------
 # WHATSAPP INBOX – Incoming webhook (PUBLIC – called by n8n)  ← NEW
@@ -1229,7 +1258,9 @@ def wa_incoming_webhook():
 
     if not enq:
         # Save under a "unknown" bucket so we can still see the message
-        bucket_id = f"unknown_{whatsapp_id or phone}"
+        raw_digits = whatsapp_id.split("@")[0] if whatsapp_id else phone
+        bucket_id = f"unknown_{raw_digits}"
+        
         _wa_append_message(
             enquiry_id=bucket_id,
             direction="in",
