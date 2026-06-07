@@ -1169,7 +1169,7 @@ def enquiry_count():
 @role_required("admin", "manager")
 def wa_send():
     """
-    Admin sends a WhatsApp message to an enquiry contact.
+    Admin sends  WhatsApp message to an enquiry contact.
     Body JSON: { "enquiry_id": "...", "message": "..." }
     Uses whatsapp_id if stored, else falls back to phone number.
     """

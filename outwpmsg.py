@@ -14,7 +14,7 @@ def send_whatsapp_msg(identifier: str, message: str) -> bool:
                 Otherwise it is treated as a plain phone number.
     message:    Plain text message to send.
     
-    Uses the same API endpoint as wp.py but is a separate function
+    Uses the same Api endpoint as wp.py but is a separate function
     so admin-CRM sends don't interfere with credential-sending logic.
     """
     load_dotenv()
