@@ -86,12 +86,14 @@ img{display:block;max-width:100%}
 .stat-card.c-yellow::before{background:var(--yellow)}
 .stat-card.c-red::before{background:var(--red)}
 .stat-card.c-blue::before{background:var(--blue)}
+.stat-card.c-purple::before{background:#7c3aed}
 .stat-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;margin-bottom:14px}
 .stat-card.c-orange .stat-icon{background:#fff7ed}
 .stat-card.c-green  .stat-icon{background:var(--green-soft)}
 .stat-card.c-yellow .stat-icon{background:var(--yellow-soft)}
 .stat-card.c-red    .stat-icon{background:var(--red-soft)}
 .stat-card.c-blue   .stat-icon{background:var(--blue-soft)}
+.stat-card.c-purple .stat-icon{background:#f5f3ff}
 .stat-value{font-size:28px;font-weight:700;line-height:1;margin-bottom:4px;color:var(--text)}
 .stat-label{font-size:12px;color:var(--text-2);font-weight:500}
 .charts-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:22px}
@@ -123,6 +125,7 @@ tbody tr:hover td{background:var(--bg-3)}
 .badge-gray{background:var(--bg-3);color:var(--text-2)}
 .badge-orange{background:#fff7ed;color:#f97316}
 .badge-wa{background:var(--wa-soft);color:#15803d}
+.badge-purple{background:#f5f3ff;color:#7c3aed}
 .avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#ff9a35);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:white;flex-shrink:0}
 .avatar-sm{width:26px;height:26px;font-size:10px}
 .flash-wrap{position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:12px}
@@ -159,6 +162,9 @@ tbody tr:hover td{background:var(--bg-3)}
 /* ── Boxes table ── */
 .boxes-table td .bar-wrap{height:6px;background:var(--bg-3);border-radius:99px;overflow:hidden;margin-top:4px;min-width:80px}
 .boxes-table td .bar-fill{height:100%;border-radius:99px;transition:width .4s}
+.next-day-banner{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border:1.5px solid #c4b5fd;border-radius:var(--radius-sm);margin-bottom:14px;font-size:13px;font-weight:600;color:#5b21b6}
+.next-day-banner .nd-icon{font-size:18px}
+.alt-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;background:linear-gradient(135deg,#fef3c7,#fed7aa);color:#92400e;border:1px solid #fcd34d;white-space:nowrap}
 
 /* ── Box view tabs ── */
 .box-tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;width:fit-content}
@@ -237,24 +243,10 @@ tbody tr:hover td{background:var(--bg-3)}
 .btn-view-sample{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;font-size:11px;font-weight:700;background:linear-gradient(135deg,#fff7ed,#fef3c7);color:#c2410c;border:1.5px solid #fed7aa;border-radius:99px;cursor:pointer;transition:all .15s;white-space:nowrap}
 .btn-view-sample:hover{background:linear-gradient(135deg,#fed7aa,#fdba74);border-color:#fb923c;color:#7c2d12}
 
-/* ── WhatsApp Inbox Modal  ── */
+/* ── WhatsApp Inbox Modal ── */
 .wa-modal-backdrop{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
 .wa-modal-backdrop.open{display:flex}
-
-.wa-modal {
-  background: var(--bg-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  width: 100%;
-  max-width: 540px;
-  max-height: 90vh;
-  height: 600px;             /* ← ADD THIS — gives the flex column a real height */
-  display: flex;
-  flex-direction: column;
-  box-shadow: var(--shadow-lg);
-  animation: modalIn .2s ease;
-}
-
+.wa-modal{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:540px;max-height:90vh;height:600px;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
 .wa-modal-head{padding:14px 20px;background:linear-gradient(135deg,#075e54,#128c7e);border-radius:var(--radius) var(--radius) 0 0;display:flex;align-items:center;justify-content:space-between;flex-shrink:0}
 .wa-modal-head-info{display:flex;align-items:center;gap:12px}
 .wa-modal-head-avatar{width:40px;height:40px;border-radius:50%;background:#25d366;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;color:white;flex-shrink:0}
@@ -262,7 +254,7 @@ tbody tr:hover td{background:var(--bg-3)}
 .wa-modal-head-sub{font-size:11px;color:rgba(255,255,255,.7)}
 .wa-modal-close-btn{background:none;border:none;color:rgba(255,255,255,.8);font-size:20px;cursor:pointer;line-height:1;padding:4px}
 .wa-modal-close-btn:hover{color:white}
-.wa-chat-area{flex:1;overflow-y:scroll; padding:16px;background:#e5ddd5;display:flex;flex-direction:column;gap:8px;min-height:260px}
+.wa-chat-area{flex:1;overflow-y:scroll;padding:16px;background:#e5ddd5;display:flex;flex-direction:column;gap:8px;min-height:260px}
 .wa-bubble{max-width:78%;padding:8px 12px;border-radius:12px;font-size:13px;line-height:1.5;position:relative;word-break:break-word}
 .wa-bubble.in{background:white;border-radius:0 12px 12px 12px;align-self:flex-start;box-shadow:0 1px 2px rgba(0,0,0,.1)}
 .wa-bubble.out{background:#d9fdd3;border-radius:12px 0 12px 12px;align-self:flex-end;box-shadow:0 1px 2px rgba(0,0,0,.1)}
@@ -276,11 +268,11 @@ tbody tr:hover td{background:var(--bg-3)}
 .wa-send-btn{width:40px;height:40px;border-radius:50%;background:var(--wa);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:background .15s}
 .wa-send-btn:hover{background:#1ebe5d}
 .wa-send-btn:disabled{background:#ccc;cursor:not-allowed}
-.wa-modal-loader{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;color:var(--text-3);gap:10px}
-
-/* Inbox dot indicator in enquiry table */
 .inbox-dot{width:8px;height:8px;border-radius:50%;background:var(--wa);display:inline-block;margin-right:4px;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* ── Manager table (same style as employees) ── */
+.manager-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:white;flex-shrink:0}
 
 @media(max-width:1024px){.charts-grid{grid-template-columns:1fr}}
 @media(max-width:768px){
@@ -332,6 +324,13 @@ tbody tr:hover td{background:var(--bg-3)}
       <div class="nav-item" data-page="teams" onclick="navigate('teams',this)">
         <span class="nav-icon">🏘️</span> Teams
       </div>
+      <!-- Managers tab — admin only -->
+      {% if session.role == 'admin' %}
+      <div class="nav-item" data-page="managers" onclick="navigate('managers',this)">
+        <span class="nav-icon">🧑‍💼</span> Managers
+        <span class="nav-badge badge-purple" id="mgr-badge" style="background:#7c3aed;display:none;"></span>
+      </div>
+      {% endif %}
       <div class="nav-item" data-page="employees" onclick="navigate('employees',this)">
         <span class="nav-icon">🚴</span> Employees
       </div>
@@ -339,10 +338,12 @@ tbody tr:hover td{background:var(--bg-3)}
         <span class="nav-icon">👥</span> Customers
         <span class="nav-badge" id="cust-badge">{{ stats.total_customers }}</span>
       </div>
+      {% if session.role == 'admin' %}
       <div class="nav-item" data-page="enquiries" onclick="navigate('enquiries',this)">
         <span class="nav-icon">📩</span> Enquiries
         <span class="nav-badge" id="enq-badge" style="background:#f97316;display:none;">0</span>
       </div>
+      {% endif %}
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Quick Add</div>
@@ -401,8 +402,14 @@ tbody tr:hover td{background:var(--bg-3)}
 
       <!-- ===== HOME ===== -->
       <div class="page-section active" id="page-home">
+        {% if session.role == 'manager' %}
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:12px 16px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:var(--radius-sm);border:1px solid #c4b5fd;">
+          <span style="font-size:20px;">🧑‍💼</span>
+          <div><div style="font-weight:700;color:#5b21b6;">Manager View</div><div style="font-size:12px;color:#7c3aed;">You are viewing data scoped to your assigned team only.</div></div>
+        </div>
+        {% endif %}
         <div class="stat-cards">
-          <div class="stat-card c-orange"><div class="stat-icon">👥</div><div class="stat-value">{{ stats.total_customers }}</div><div class="stat-label">Total Customers</div></div>
+          <div class="stat-card c-orange"><div class="stat-icon">👥</div><div class="stat-value">{{ stats.total_customers }}</div><div class="stat-label">{% if session.role == 'manager' %}Team {% endif %}Customers</div></div>
           <div class="stat-card c-blue"><div class="stat-icon">🚴</div><div class="stat-value">{{ stats.total_employees }}</div><div class="stat-label">Delivery Partners</div></div>
           <div class="stat-card c-green"><div class="stat-icon">✅</div><div class="stat-value">{{ stats.delivered_today }}</div><div class="stat-label">Delivered Today</div></div>
           <div class="stat-card c-yellow"><div class="stat-icon">⏳</div><div class="stat-value">{{ stats.pending_deliveries }}</div><div class="stat-label">Pending Today</div></div>
@@ -410,10 +417,10 @@ tbody tr:hover td{background:var(--bg-3)}
           <div class="stat-card c-blue"><div class="stat-icon">🏘️</div><div class="stat-value">{{ stats.active_teams }}</div><div class="stat-label">Active Teams</div></div>
         </div>
 
-        <!-- BOXES NEEDED TODAY -->
+        <!-- BOXES NEEDED TODAY / NEXT DAY -->
         <div class="card" style="margin-top:22px;">
           <div class="card-header" style="flex-wrap:wrap;gap:10px;">
-            <div class="card-title">📦 Boxes to Prepare Today</div>
+            <div class="card-title" id="boxes-card-title">📦 Boxes to Prepare Today</div>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
               <div class="box-tabs">
                 <button class="box-tab active" id="tab-plan" onclick="switchBoxView('plan')">By Plan</button>
@@ -427,15 +434,30 @@ tbody tr:hover td{background:var(--bg-3)}
               <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">🔄 Refresh</button>
             </div>
           </div>
-          <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;margin-top:-8px;">
+          <!-- Next-day banner (shown dynamically) -->
+          <div id="next-day-banner" class="next-day-banner" style="display:none;">
+            <span class="nd-icon">🌙</span>
+            <div>
+              <strong>Showing tomorrow's boxes</strong>
+              <span style="font-weight:400;color:#7c3aed;margin-left:6px;font-size:12px;">It's past 1 pm — prepare ahead for the next delivery day.</span>
+            </div>
+            <span id="next-day-date-label" style="margin-left:auto;font-size:12px;color:#5b21b6;font-weight:600;"></span>
+          </div>
+          <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;margin-top:-4px;">
             <strong style="color:var(--green);">Active</strong> = scheduled active-status customers •
-            <strong style="color:#f97316;">Sample</strong> = approved-today enquiries
+            <strong style="color:#f97316;">Sample</strong> = approved-today enquiries •
+            <strong style="color:#92400e;">🔄 Alt</strong> = alternating plan item for that day
           </p>
           <div id="boxes-plan-view">
             <div class="table-wrap">
               <table class="boxes-table">
                 <thead>
-                  <tr><th>Plan</th><th>Duration</th><th style="color:var(--green);">🟢 Active Boxes</th><th style="color:#f97316;">🟠 Sample Boxes</th><th>📦 Total</th><th>Teams</th><th>Actions</th></tr>
+                  <tr>
+                    <th>Plan</th><th>Duration</th>
+                    <th style="color:var(--green);">🟢 Active Boxes</th>
+                    <th style="color:#f97316;">🟠 Sample Boxes</th>
+                    <th>📦 Total</th><th>Teams</th><th>Actions</th>
+                  </tr>
                 </thead>
                 <tbody id="boxes-tbody">
                   <tr><td colspan="7" style="text-align:center;padding:28px;color:var(--text-3);">Loading…</td></tr>
@@ -456,7 +478,7 @@ tbody tr:hover td{background:var(--bg-3)}
             </div>
           </div>
           <div id="boxes-total-row" style="display:none;margin-top:14px;padding:12px 16px;background:var(--accent-soft);border-radius:var(--radius-sm);align-items:center;justify-content:space-between;">
-            <span style="font-weight:600;color:var(--accent);">🎯 Grand Total Boxes Today</span>
+            <span style="font-weight:600;color:var(--accent);">🎯 Grand Total Boxes</span>
             <span id="boxes-grand-total" style="font-size:22px;font-weight:700;color:var(--accent);">—</span>
           </div>
         </div>
@@ -489,13 +511,20 @@ tbody tr:hover td{background:var(--bg-3)}
         {% if plans %}
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Plan Name</th><th>Description</th><th>Duration (Days)</th><th>Monthly Price</th><th>Tax %</th><th>Total (incl. tax)</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Plan Name</th><th>Type</th><th>Description</th><th>Duration</th><th>Monthly Price</th><th>Tax %</th><th>Total</th><th>Actions</th></tr></thead>
             <tbody>
               {% for plan in plans %}
               <tr>
                 <td><strong>{{ plan.name }}</strong></td>
+                <td>
+                  {% if plan.alternate_items and plan.alternate_items|length >= 2 %}
+                    <span class="badge badge-yellow" title="{{ plan.alternate_items | join(' → ') }}">🔄 Alternate</span>
+                  {% else %}
+                    <span class="badge badge-blue">Standard</span>
+                  {% endif %}
+                </td>
                 <td style="color:var(--text-2);max-width:180px;">{{ plan.description or '—' }}</td>
-                <td>{% if plan.duration_days %}<span class="badge badge-blue">{{ plan.duration_days }} days</span>{% else %}<span style="color:var(--text-3);">—</span>{% endif %}</td>
+                <td>{% if plan.duration_days %}<span class="badge badge-blue">{{ plan.duration_days }} days</span>{% else %}—{% endif %}</td>
                 <td><span style="color:var(--accent);font-weight:700;">₹{{ plan.price_per_month or plan.price_per_day or 0 }}</span></td>
                 <td>{{ plan.tax_percent or 0 }}%</td>
                 <td style="color:var(--green);">₹{{ (((plan.price_per_month or plan.price_per_day or 0) | float) * (1 + (plan.tax_percent | float)/100)) | round(2) }}</td>
@@ -555,6 +584,33 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="empty-state"><div class="empty-icon">🏘️</div><p>No teams yet.</p></div>
         {% endif %}
       </div>
+
+      <!-- ===== MANAGERS (admin only) ===== -->
+      {% if session.role == 'admin' %}
+      <div class="page-section" id="page-managers">
+        <div class="section-title-bar">
+          <h2>Managers</h2>
+          <button class="btn btn-primary" onclick="openAddUserModal('manager')">＋ Add Manager</button>
+        </div>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:20px;margin-top:-8px;">Managers can log in and see the same dashboard, but scoped only to their assigned team's customers and data.</p>
+        <div class="table-wrap">
+          <table id="managers-table">
+            <thead>
+              <tr>
+                <th>Manager</th>
+                <th>User ID / Login</th>
+                <th>Phone</th>
+                <th>Team</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="managers-grid">
+              <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">Loading managers…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
 
       <!-- ===== EMPLOYEES ===== -->
       <div class="page-section" id="page-employees">
@@ -621,8 +677,9 @@ tbody tr:hover td{background:var(--bg-3)}
         <div id="cust-result-count" style="margin-top:10px;font-size:12px;color:var(--text-3);text-align:right;"></div>
       </div>
 
-      <!-- ===== ENQUIRIES ===== -->
-       <div class="page-section" id="page-enquiries">
+      <!-- ===== ENQUIRIES (admin only) ===== -->
+      {% if session.role == 'admin' %}
+      <div class="page-section" id="page-enquiries">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
           <h2 style="font-family:var(--font-disp);font-size:22px;">Web Form Enquiries</h2>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
@@ -654,6 +711,7 @@ tbody tr:hover td{background:var(--bg-3)}
           </table>
         </div>
       </div>
+      {% endif %}
 
     </div><!-- /page-content -->
   </div><!-- /main -->
@@ -670,7 +728,7 @@ tbody tr:hover td{background:var(--bg-3)}
 
 <!-- ============================================================ MODALS ============================================================ -->
 
-<!-- Add Plan -->
+<!-- Add Plan (with alternate_items field) -->
 <div class="modal-backdrop" id="modal-add-plan">
   <div class="modal">
     <div class="modal-header"><div class="modal-title">New Subscription Plan</div><button class="modal-close" onclick="closeModal('modal-add-plan')">✕</button></div>
@@ -682,6 +740,11 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" class="form-control" required min="1" max="31"></div>
       </div>
       <div class="form-group"><label class="form-label">Tax (%)</label><input type="number" name="tax_percent" class="form-control" min="0" step="0.01" value="0"></div>
+      <div class="form-group">
+        <label class="form-label">Alternate Items <span class="opt">(optional — comma-separated, e.g. Fruits, Sprouts)</span></label>
+        <input type="text" name="alternate_items" class="form-control" placeholder="e.g. Fruits, Sprouts — leave blank for standard plan">
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">If filled, boxes will alternate each day between these items (Day 1 = Fruits, Day 2 = Sprouts, etc.)</div>
+      </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-add-plan')">Cancel</button>
         <button type="submit" class="btn btn-primary">Create Plan</button>
@@ -690,7 +753,7 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- Edit Plan -->
+<!-- Edit Plan (with alternate_items field) -->
 <div class="modal-backdrop" id="modal-edit-plan">
   <div class="modal">
     <div class="modal-header"><div class="modal-title">Edit Plan</div><button class="modal-close" onclick="closeModal('modal-edit-plan')">✕</button></div>
@@ -702,6 +765,11 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" id="ep-duration" class="form-control" required min="1" max="31"></div>
       </div>
       <div class="form-group"><label class="form-label">Tax (%)</label><input type="number" name="tax_percent" id="ep-tax" class="form-control" step="0.01"></div>
+      <div class="form-group">
+        <label class="form-label">Alternate Items <span class="opt">(comma-separated)</span></label>
+        <input type="text" name="alternate_items" id="ep-alt" class="form-control" placeholder="e.g. Fruits, Sprouts">
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Leave blank for a standard (non-alternating) plan.</div>
+      </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-plan')">Cancel</button>
         <button type="submit" class="btn btn-primary">Save Changes</button>
@@ -743,6 +811,40 @@ tbody tr:hover td{background:var(--bg-3)}
         <button type="submit" class="btn btn-primary">Save Changes</button>
       </div>
     </form>
+  </div>
+</div>
+
+<!-- Edit Manager (assign team) -->
+<div class="modal-backdrop" id="modal-edit-manager">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">Edit Manager</div><button class="modal-close" onclick="closeModal('modal-edit-manager')">✕</button></div>
+    <div id="mgr-edit-content">
+      <div class="detail-hero" style="margin-bottom:18px;">
+        <div class="detail-hero-avatar" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);" id="mgr-edit-avatar">M</div>
+        <div class="detail-hero-info">
+          <div class="detail-hero-name" id="mgr-edit-name">—</div>
+          <div class="detail-hero-sub"><span class="badge badge-purple">🧑‍💼 Manager</span></div>
+        </div>
+      </div>
+      <div class="detail-grid" style="margin-bottom:16px;">
+        <div class="detail-field"><div class="detail-field-label">Email / Login ID</div><div class="detail-field-value" id="mgr-edit-email" style="font-size:12px;">—</div></div>
+        <div class="detail-field"><div class="detail-field-label">Phone</div><div class="detail-field-value" id="mgr-edit-phone">—</div></div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Assign Team</label>
+        <select id="mgr-team-select" class="form-control">
+          <option value="">— No team assigned —</option>
+          {% for team in teams %}
+          <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
+          {% endfor %}
+        </select>
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">The manager will only see data for this team when logged in.</div>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-manager')">Cancel</button>
+        <button type="button" class="btn btn-primary" id="mgr-save-btn" onclick="saveManagerTeam()">💾 Save Assignment</button>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -937,7 +1039,7 @@ tbody tr:hover td{background:var(--bg-3)}
 <!-- View User Detail Modal -->
 <div class="modal-backdrop" id="modal-view-user">
   <div class="modal" style="max-width:680px;">
-    <div class="modal-header"><div class="modal-title" id="view-modal-title">Customer Details</div><button class="modal-close" onclick="closeModal('modal-view-user')">✕</button></div>
+    <div class="modal-header"><div class="modal-title" id="view-modal-title">Details</div><button class="modal-close" onclick="closeModal('modal-view-user')">✕</button></div>
     <div class="detail-hero">
       <div class="detail-hero-avatar" id="view-avatar">?</div>
       <div class="detail-hero-info">
@@ -1020,13 +1122,9 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- ============================================================
-     WHATSAPP INBOX MODAL  ← NEW
-============================================================ -->
+<!-- WhatsApp Inbox Modal -->
 <div class="wa-modal-backdrop" id="modal-wa-inbox">
   <div class="wa-modal">
-
-    <!-- Header (WhatsApp green) -->
     <div class="wa-modal-head">
       <div class="wa-modal-head-info">
         <div class="wa-modal-head-avatar" id="wa-head-avatar">?</div>
@@ -1037,121 +1135,81 @@ tbody tr:hover td{background:var(--bg-3)}
       </div>
       <button class="wa-modal-close-btn" onclick="closeWaModal()">✕</button>
     </div>
-
-    <!-- Chat area -->
     <div class="wa-chat-area" id="wa-chat-area">
       <div class="wa-modal-loader"><div class="spinner"></div><span>Loading messages…</span></div>
     </div>
-
-    <!-- Send area -->
     <div class="wa-send-area">
       <textarea class="wa-send-input" id="wa-send-input" placeholder="Type a message…" rows="1"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();waSend();}"></textarea>
       <button class="wa-send-btn" id="wa-send-btn" onclick="waSend()" title="Send">➤</button>
     </div>
-
   </div>
 </div>
 
 <!-- Bulk Import Enquiries Modal -->
-
 <div class="modal-backdrop" id="modal-bulk-enquiries">
   <div class="modal" style="max-width:1100px; max-height:95vh; display:flex; flex-direction:column;">
-    
     <div class="modal-header">
-      <div>
-        <div class="modal-title">📥 Bulk Import Enquiries</div>
-        <div style="font-size:12px; color:var(--text-2); margin-top:3px;">Add hundreds of enquiries at once using the spreadsheet editor below</div>
-      </div>
+      <div><div class="modal-title">📥 Bulk Import Enquiries</div><div style="font-size:12px;color:var(--text-2);margin-top:3px;">Add hundreds of enquiries at once</div></div>
       <button class="modal-close" onclick="closeBulkModal()">✕</button>
     </div>
- 
-    <div style="flex:1; display:flex; flex-direction:column; overflow:hidden; padding:20px 24px; background:var(--bg);">
-      
-      <!-- Controls -->
-      <div style="display:flex; gap:10px; margin-bottom:16px; flex-wrap:wrap; align-items:center;">
-        <button class="btn btn-ghost btn-sm" onclick="addBulkRow()" title="Add empty row">➕ Add Row</button>
-        <button class="btn btn-ghost btn-sm" onclick="addBulkRows(5)" title="Add 5 empty rows">➕ Add 5 Rows</button>
-        <button class="btn btn-ghost btn-sm" onclick="removeBulkRow()" title="Remove last row">➖ Remove Row</button>
-        <button class="btn btn-ghost btn-sm" onclick="downloadBulkTemplate()" title="Download as JSON">📥 Download Template</button>
-        <button class="btn btn-ghost btn-sm" onclick="clearBulkData()" title="Clear all rows">🗑️ Clear All</button>
+    <div style="flex:1;display:flex;flex-direction:column;overflow:hidden;padding:20px 24px;background:var(--bg);">
+      <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-ghost btn-sm" onclick="addBulkRow()">➕ Add Row</button>
+        <button class="btn btn-ghost btn-sm" onclick="addBulkRows(5)">➕ Add 5 Rows</button>
+        <button class="btn btn-ghost btn-sm" onclick="removeBulkRow()">➖ Remove Row</button>
+        <button class="btn btn-ghost btn-sm" onclick="clearBulkData()">🗑️ Clear All</button>
         <div style="flex:1;"></div>
-        <span id="bulk-row-count" style="font-size:12px; color:var(--text-3); font-weight:600;">Rows: 0</span>
+        <span id="bulk-row-count" style="font-size:12px;color:var(--text-3);font-weight:600;">Rows: 0</span>
       </div>
- 
-      <!-- Spreadsheet container -->
-      <div id="bulk-spreadsheet-wrap" style="flex:1; overflow:auto; border:1px solid var(--border); border-radius:var(--radius-sm); background:white; position:relative;">
-        <table id="bulk-enquiries-table" style="width:100%; border-collapse:collapse; background:white;">
-          <thead style="position:sticky; top:0; z-index:10; background:var(--bg-3); box-shadow:0 2px 4px rgba(0,0,0,.05);">
+      <div id="bulk-spreadsheet-wrap" style="flex:1;overflow:auto;border:1px solid var(--border);border-radius:var(--radius-sm);background:white;">
+        <table id="bulk-enquiries-table" style="width:100%;border-collapse:collapse;background:white;">
+          <thead style="position:sticky;top:0;z-index:10;background:var(--bg-3);">
             <tr style="height:44px;">
-              <th style="width:30px; padding:8px 4px; text-align:center; border-right:1px solid var(--border); border-bottom:1px solid var(--border); background:var(--bg-3);">
-                <input type="checkbox" id="bulk-select-all" onchange="toggleBulkSelectAll()" style="cursor:pointer;">
-              </th>
-              <th style="min-width:140px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Name *</th>
-              <th style="min-width:120px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Phone *</th>
-              <th style="min-width:140px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Plan</th>
-              <th style="min-width:140px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Time Pref.</th>
-              <th style="min-width:110px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Start Date</th>
-              <th style="min-width:100px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Payment</th>
-              <th style="min-width:110px; padding:10px 12px; text-align:left; border-right:1px solid var(--border); border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Status</th>
-              <th style="min-width:180px; padding:10px 12px; text-align:left; border-bottom:1px solid var(--border); font-size:11px; font-weight:600; color:var(--text-2); text-transform:uppercase; letter-spacing:.5px; background:var(--bg-3);">Address</th>
+              <th style="width:30px;padding:8px 4px;text-align:center;border-right:1px solid var(--border);border-bottom:1px solid var(--border);"><input type="checkbox" id="bulk-select-all" onchange="toggleBulkSelectAll()"></th>
+              <th style="min-width:140px;padding:10px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;">Name *</th>
+              <th style="min-width:120px;padding:10px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;">Phone *</th>
+              <th style="min-width:140px;padding:10px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;">Plan</th>
+              <th style="min-width:140px;padding:10px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;">Time Pref.</th>
+              <th style="min-width:110px;padding:10px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;">Start Date</th>
+              <th style="min-width:100px;padding:10px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;">Payment</th>
+              <th style="min-width:110px;padding:10px 12px;border-right:1px solid var(--border);border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;">Status</th>
+              <th style="min-width:180px;padding:10px 12px;border-bottom:1px solid var(--border);font-size:11px;font-weight:600;color:var(--text-2);text-transform:uppercase;">Address</th>
             </tr>
           </thead>
-          <tbody id="bulk-tbody">
-            <!-- Rows will be added here -->
-          </tbody>
+          <tbody id="bulk-tbody"></tbody>
         </table>
       </div>
- 
-      <!-- Status bar -->
-      <div style="margin-top:14px; padding:12px; background:var(--bg-3); border-radius:var(--radius-sm); display:flex; align-items:center; gap:12px; font-size:12px; color:var(--text-2);">
+      <div style="margin-top:14px;padding:12px;background:var(--bg-3);border-radius:var(--radius-sm);display:flex;align-items:center;gap:12px;font-size:12px;color:var(--text-2);">
         <span id="bulk-status-text">Ready to add enquiries.</span>
-        <div id="bulk-validation-errors" style="color:var(--red); display:none; margin-left:auto;"></div>
+        <div id="bulk-validation-errors" style="color:var(--red);display:none;margin-left:auto;"></div>
       </div>
- 
     </div>
- 
-    <!-- Footer -->
-    <div style="padding:16px 24px; border-top:1px solid var(--border); background:var(--bg-2); display:flex; gap:10px; justify-content:flex-end; flex-shrink:0;">
+    <div style="padding:16px 24px;border-top:1px solid var(--border);background:var(--bg-2);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;">
       <button class="btn btn-ghost" onclick="closeBulkModal()">Cancel</button>
       <button class="btn btn-primary" id="bulk-import-btn" onclick="submitBulkEnquiries()">✅ Import Enquiries</button>
     </div>
- 
   </div>
 </div>
-
-<!-- Toast container -->
-<div class="toast-container" id="toast-container"></div>
-
 
 <!-- Edit Enquiry Modal -->
 <div class="modal-backdrop" id="modal-edit-enquiry">
   <div class="modal" style="max-width:580px;">
-    <div class="modal-header">
-      <div class="modal-title">✏️ Edit Enquiry</div>
-      <button class="modal-close" onclick="closeModal('modal-edit-enquiry')">✕</button>
-    </div>
-    <div id="enq-edit-form-body">
+    <div class="modal-header"><div class="modal-title">✏️ Edit Enquiry</div><button class="modal-close" onclick="closeModal('modal-edit-enquiry')">✕</button></div>
+    <div>
       <input type="hidden" id="enq-edit-id">
       <div class="form-row">
         <div class="form-group"><label class="form-label">Name *</label><input type="text" id="enq-edit-name" class="form-control"></div>
         <div class="form-group"><label class="form-label">Phone *</label><input type="tel" id="enq-edit-phone" class="form-control"></div>
       </div>
       <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Plan</label>
-          <input type="text" id="enq-edit-plan" class="form-control" placeholder="e.g. Premium Sample ₹89">
-        </div>
+        <div class="form-group"><label class="form-label">Plan</label><input type="text" id="enq-edit-plan" class="form-control" placeholder="e.g. Premium Sample ₹89"></div>
         <div class="form-group">
           <label class="form-label">Delivery Time</label>
           <select id="enq-edit-time" class="form-control">
             <option value="">— Select —</option>
-            <option>7:00 AM – 9:00 AM</option>
-            <option>9:00 AM – 11:00 AM</option>
-            <option>11:00 AM – 1:00 PM</option>
-            <option>1:00 PM – 3:00 PM</option>
-            <option>5:00 PM – 7:00 PM</option>
-            <option>Anytime</option>
+            <option>7:00 AM – 9:00 AM</option><option>9:00 AM – 11:00 AM</option>
+            <option>11:00 AM – 1:00 PM</option><option>Anytime</option>
           </select>
         </div>
       </div>
@@ -1180,17 +1238,23 @@ tbody tr:hover td{background:var(--bg-3)}
     </div>
   </div>
 </div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toast-container"></div>
+
 <!-- ============================================================ JAVASCRIPT ============================================================ -->
 <script>
+const IS_ADMIN = {{ 'true' if session.role == 'admin' else 'false' }};
 const pageTitles = {
   home:'Dashboard', plans:'Subscription Plans', teams:'Teams',
-  employees:'Delivery Partners', customers:'Customers', enquiries:'Web Enquiries'
+  managers:'Managers', employees:'Delivery Partners', customers:'Customers', enquiries:'Web Enquiries'
 };
-const _loaded = { employees:false, customers:false };
+const _loaded = { employees:false, customers:false, managers:false };
 
 function navigate(page, el) {
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
-  document.getElementById('page-'+page).classList.add('active');
+  const sec = document.getElementById('page-'+page);
+  if (sec) sec.classList.add('active');
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.querySelectorAll('[data-page="'+page+'"]').forEach(n => n.classList.add('active'));
   document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
@@ -1198,7 +1262,8 @@ function navigate(page, el) {
   document.getElementById('page-title').textContent = pageTitles[page] || 'Dashboard';
   closeSidebar();
   if (page === 'employees' && !_loaded.employees) loadEmployees();
-  if (page === 'customers' && !_loaded.customers)  loadCustomers();
+  if (page === 'customers' && !_loaded.customers) loadCustomers();
+  if (page === 'managers'  && !_loaded.managers)  loadManagers();
   if (page === 'enquiries') loadEnquiries(false);
 }
 
@@ -1208,7 +1273,7 @@ function escHtml(s) {
 
 /* ===== TOAST ===== */
 function showToast(msg, type) {
-  const c  = document.getElementById('toast-container');
+  const c = document.getElementById('toast-container');
   const el = document.createElement('div');
   el.className   = `toast toast-${type || 'success'}`;
   el.textContent = msg;
@@ -1216,65 +1281,130 @@ function showToast(msg, type) {
   setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(40px)'; el.style.transition='.4s'; setTimeout(()=>el.remove(),400); }, 3000);
 }
 
-/* ===== EMPLOYEE RESET CREDENTIALS  ← NEW ===== */
-async function resetEmployeeCredentials(employeeId, employeeName) {
-  if (!confirm(`Reset login credentials for ${employeeName}?\nNew password will be sent via WhatsApp.`)) return;
+/* ===== MANAGERS ===== */
+let _mgrCurrentId = '';
 
-  const btn = document.getElementById(`reset-btn-${employeeId}`);
-  if (btn) { btn.disabled = true; btn.textContent = '…'; }
-
+async function loadManagers() {
+  const tbody = document.getElementById('managers-grid');
+  if (!tbody) return;
+  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);"><div class="spinner" style="margin:0 auto 12px;"></div>Loading managers…</td></tr>`;
   try {
-    const res  = await fetch(`/admin/employees/reset-credentials/${employeeId}`, { method:'POST' });
-    const data = await res.json();
-    if (btn) { btn.disabled = false; btn.textContent = '🔑 Reset'; }
-    if (data.success) {
-      showToast('✅ ' + data.message, 'success');
-    } else {
-      showToast('❌ ' + (data.message || 'Reset failed'), 'danger');
+    const data = await fetch('/api/admin/managers').then(r=>r.json());
+    _loaded.managers = true;
+    const badge = document.getElementById('mgr-badge');
+    if (badge) { badge.textContent = data.length; badge.style.display = data.length ? 'inline-flex' : 'none'; }
+    if (!data.length) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No managers yet. Add one with the button above.</td></tr>`;
+      return;
     }
-  } catch (e) {
-    if (btn) { btn.disabled = false; btn.textContent = '🔑 Reset'; }
-    showToast('❌ Network error. Try again.', 'danger');
+    tbody.innerHTML = data.map(m => {
+      const initials = (m.name||'M').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+      const rawPhone = (m.phone||'').replace(/\D/g,'');
+      const waPhone  = rawPhone.length===10 ? '91'+rawPhone : rawPhone;
+      const teamLabel = (m.team_name && m.team_name !== '—')
+        ? `<span class="badge badge-blue">🏘️ ${escHtml(m.team_name)}${m.team_area ? ' – '+escHtml(m.team_area) : ''}</span>`
+        : `<span class="badge badge-gray">No team assigned</span>`;
+      return `<tr>
+        <td><div style="display:flex;align-items:center;gap:10px;">
+          <div class="manager-avatar">${initials}</div>
+          <div><div style="font-weight:600;">${escHtml(m.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(m.phone||'—')}</div></div>
+        </div></td>
+        <td><div style="font-size:12px;color:var(--text-2);">${escHtml(m.email||'—')}</div></td>
+        <td>${escHtml(m.phone||'—')}</td>
+        <td>${teamLabel}</td>
+        <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
+          ${waPhone.length >= 10 ? `<a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-success btn-sm">💬</a>` : ''}
+          <button class="btn btn-primary btn-sm" onclick='openEditManager(${JSON.stringify(m)})'>🏘️ Assign Team</button>
+          <button class="btn btn-warning btn-sm" onclick="resetManagerCredentials('${m.id}','${escHtml(m.name)}')">🔑 Reset</button>
+          <form method="POST" action="/admin/users/delete/${m.id}" onsubmit="return confirm('Remove ${escHtml(m.name)} as manager?');" style="display:inline;">
+            <input type="hidden" name="next" value="dashboard_admin">
+            <button class="btn btn-danger btn-sm">🗑️</button>
+          </form>
+        </div></td>
+      </tr>`;
+    }).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load managers.</td></tr>`;
   }
 }
 
-/* ===== WHATSAPP INBOX  ← NEW ===== */
-let _waEnquiryId   = '';
-let _waEnquiryName = '';
+function openEditManager(m) {
+  _mgrCurrentId = m.id;
+  document.getElementById('mgr-edit-avatar').textContent = (m.name||'M').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+  document.getElementById('mgr-edit-name').textContent  = m.name  || '—';
+  document.getElementById('mgr-edit-email').textContent = m.email || '—';
+  document.getElementById('mgr-edit-phone').textContent = m.phone || '—';
+  document.getElementById('mgr-team-select').value      = m.team_id || '';
+  openModal('modal-edit-manager');
+}
+
+async function saveManagerTeam() {
+  const teamId = document.getElementById('mgr-team-select').value;
+  const btn    = document.getElementById('mgr-save-btn');
+  btn.disabled = true; btn.textContent = '…';
+  try {
+    const res  = await fetch('/admin/managers/assign-team', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ manager_id: _mgrCurrentId, team_id: teamId })
+    });
+    const data = await res.json();
+    btn.disabled = false; btn.textContent = '💾 Save Assignment';
+    if (data.success) {
+      showToast('✅ Team assigned!', 'success');
+      closeModal('modal-edit-manager');
+      _loaded.managers = false;
+      loadManagers();
+    } else { showToast('❌ '+(data.message||'Failed'), 'danger'); }
+  } catch { btn.disabled=false; btn.textContent='💾 Save Assignment'; showToast('❌ Network error.', 'danger'); }
+}
+
+async function resetManagerCredentials(managerId, managerName) {
+  if (!confirm(`Reset credentials for ${managerName}? New password will be sent via WhatsApp.`)) return;
+  try {
+    const res  = await fetch(`/admin/employees/reset-credentials/${managerId}`, { method:'POST' });
+    const data = await res.json();
+    showToast(data.success ? '✅ '+data.message : '❌ '+(data.message||'Failed'), data.success ? 'success' : 'danger');
+  } catch { showToast('❌ Network error.', 'danger'); }
+}
+
+/* ===== EMPLOYEE RESET ===== */
+async function resetEmployeeCredentials(employeeId, employeeName) {
+  if (!confirm(`Reset login credentials for ${employeeName}?\nNew password will be sent via WhatsApp.`)) return;
+  const btn = document.getElementById(`reset-btn-${employeeId}`);
+  if (btn) { btn.disabled=true; btn.textContent='…'; }
+  try {
+    const res  = await fetch(`/admin/employees/reset-credentials/${employeeId}`, { method:'POST' });
+    const data = await res.json();
+    if (btn) { btn.disabled=false; btn.textContent='🔑 Reset'; }
+    showToast(data.success ? '✅ '+data.message : '❌ '+(data.message||'Reset failed'), data.success ? 'success' : 'danger');
+  } catch { if(btn){btn.disabled=false;btn.textContent='🔑 Reset';} showToast('❌ Network error.','danger'); }
+}
+
+/* ===== WHATSAPP INBOX ===== */
+let _waEnquiryId = '', _waEnquiryName = '';
 
 function openWaInbox(enquiryId, name, phone, whatsappId) {
-  _waEnquiryId   = enquiryId;
-  _waEnquiryName = name;
-
+  _waEnquiryId = enquiryId; _waEnquiryName = name;
   const initials = name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('') || '?';
   document.getElementById('wa-head-avatar').textContent = initials;
   document.getElementById('wa-head-name').textContent   = name;
   document.getElementById('wa-head-sub').textContent    = whatsappId || phone || 'WhatsApp Chat';
-
-  // Reset chat area
-  document.getElementById('wa-chat-area').innerHTML = `<div class="wa-modal-loader"><div class="spinner"></div><span>Loading messages…</span></div>`;
-  document.getElementById('wa-send-input').value    = '';
-
+  document.getElementById('wa-chat-area').innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-3);gap:10px;"><div class="spinner"></div><span>Loading…</span></div>`;
+  document.getElementById('wa-send-input').value = '';
   document.getElementById('modal-wa-inbox').classList.add('open');
   document.body.style.overflow = 'hidden';
-
   loadWaThread(enquiryId);
 }
 
 function closeWaModal() {
   document.getElementById('modal-wa-inbox').classList.remove('open');
   document.body.style.overflow = '';
-  _waEnquiryId   = '';
-  _waEnquiryName = '';
 }
-
-document.getElementById('modal-wa-inbox').addEventListener('click', function(e) {
-  if (e.target === this) closeWaModal();
-});
+document.getElementById('modal-wa-inbox').addEventListener('click', function(e) { if(e.target===this) closeWaModal(); });
 
 async function loadWaThread(enquiryId) {
   try {
-    const data = await fetch(`/api/admin/wa_thread/${enquiryId}`).then(r => r.json());
+    const data = await fetch(`/api/admin/wa_thread/${enquiryId}`).then(r=>r.json());
     renderWaMessages(data.messages || []);
   } catch {
     document.getElementById('wa-chat-area').innerHTML = `<div class="wa-chat-empty"><span class="emoji">⚠️</span><span>Failed to load messages.</span></div>`;
@@ -1289,11 +1419,8 @@ function renderWaMessages(messages) {
   }
   area.innerHTML = messages.map(m => {
     const dir  = m.direction === 'out' ? 'out' : 'in';
-    const time = m.ts ? new Date(m.ts).toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'}) : '';
-    return `<div class="wa-bubble ${dir}">
-      ${escHtml(m.body)}
-      <div class="wa-bubble-time">${time}${dir === 'out' ? ' ✓✓' : ''}</div>
-    </div>`;
+    const time = m.ts ? new Date(m.ts).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'}) : '';
+    return `<div class="wa-bubble ${dir}">${escHtml(m.body)}<div class="wa-bubble-time">${time}${dir==='out'?' ✓✓':''}</div></div>`;
   }).join('');
   area.scrollTop = area.scrollHeight;
 }
@@ -1303,45 +1430,30 @@ async function waSend() {
   const btn   = document.getElementById('wa-send-btn');
   const msg   = input.value.trim();
   if (!msg || !_waEnquiryId) return;
-
-  btn.disabled   = true;
-  btn.textContent = '…';
-
+  btn.disabled=true; btn.textContent='…';
   try {
     const res  = await fetch('/api/admin/wa_send', {
-      method:  'POST',
-      headers: {'Content-Type':'application/json'},
-      body:    JSON.stringify({ enquiry_id: _waEnquiryId, message: msg })
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({enquiry_id:_waEnquiryId, message:msg})
     });
     const data = await res.json();
-    btn.disabled   = false;
-    btn.textContent = '➤';
-
+    btn.disabled=false; btn.textContent='➤';
     if (data.success) {
       input.value = '';
-      // Append bubble optimistically
       const area = document.getElementById('wa-chat-area');
-      const time = new Date().toLocaleTimeString('en-IN', {hour:'2-digit', minute:'2-digit'});
-      // Remove empty state if present
       area.querySelector('.wa-chat-empty')?.remove();
-      const div = document.createElement('div');
+      const time = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
+      const div  = document.createElement('div');
       div.className = 'wa-bubble out';
       div.innerHTML = `${escHtml(msg)}<div class="wa-bubble-time">${time} ✓✓</div>`;
-      area.appendChild(div);
-      area.scrollTop = area.scrollHeight;
-    } else {
-      showToast('❌ ' + (data.message || 'Send failed'), 'danger');
-    }
-  } catch {
-    btn.disabled   = false;
-    btn.textContent = '➤';
-    showToast('❌ Network error.', 'danger');
-  }
+      area.appendChild(div); area.scrollTop = area.scrollHeight;
+    } else { showToast('❌ '+(data.message||'Send failed'),'danger'); }
+  } catch { btn.disabled=false; btn.textContent='➤'; showToast('❌ Network error.','danger'); }
 }
 
 /* ===== VIEW USER DETAIL MODAL ===== */
 function openViewModal(userData, role) {
-  const name     = userData.name || '—';
+  const name = userData.name || '—';
   const initials = name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
   document.getElementById('view-avatar').textContent      = initials || '?';
   document.getElementById('view-name').textContent        = name;
@@ -1353,24 +1465,23 @@ function openViewModal(userData, role) {
   const planEl = document.getElementById('view-plan-badge');
   planEl.innerHTML = (userData.plan_name && userData.plan_name !== '—')
     ? `<span class="badge badge-green">📋 ${escHtml(userData.plan_name)}</span>` : '';
-  const rawPhone = (userData.phone || '').replace(/\D/g,'');
-  const waPhone  = rawPhone.length === 10 ? '91' + rawPhone : rawPhone;
+  const rawPhone = (userData.phone||'').replace(/\D/g,'');
+  const waPhone  = rawPhone.length===10 ? '91'+rawPhone : rawPhone;
   const waLink   = document.getElementById('view-whatsapp-link');
-  if (waPhone.length >= 10) { waLink.href = `https://wa.me/${waPhone}`; waLink.style.display='inline-flex'; }
+  if (waPhone.length >= 10) { waLink.href=`https://wa.me/${waPhone}`; waLink.style.display='inline-flex'; }
   else { waLink.style.display='none'; }
   const detailLink = document.getElementById('view-detail-link');
-  if (role === 'customer' && userData.id) { detailLink.href = `/admin/customers/${userData.id}`; detailLink.style.display='inline-flex'; }
+  if (role === 'customer' && userData.id) { detailLink.href=`/admin/customers/${userData.id}`; detailLink.style.display='inline-flex'; }
   else { detailLink.style.display='none'; }
-  const phoneEl = document.getElementById('view-phone');
-  phoneEl.textContent = userData.phone || '—';
-  phoneEl.href = userData.phone ? `tel:${userData.phone}` : '#';
+  document.getElementById('view-phone').textContent   = userData.phone || '—';
+  document.getElementById('view-phone').href          = userData.phone ? `tel:${userData.phone}` : '#';
   document.getElementById('view-email').textContent   = userData.email   || '—';
   document.getElementById('view-address').textContent = userData.address || '—';
   const custSection = document.getElementById('view-customer-section');
   if (role === 'customer') {
     custSection.style.display = 'block';
-    document.getElementById('view-plan-name').textContent  = userData.plan_name  || '—';
-    document.getElementById('view-start-date').textContent = userData.start_date || '—';
+    document.getElementById('view-plan-name').textContent  = userData.plan_name      || '—';
+    document.getElementById('view-start-date').textContent = userData.start_date     || '—';
     document.getElementById('view-pref-time').textContent  = userData.preferred_time || '—';
     const offDays = userData.off_days || [];
     document.getElementById('view-off-days').textContent   = offDays.length ? offDays.join(', ') : 'None';
@@ -1383,7 +1494,7 @@ function openViewModal(userData, role) {
     document.getElementById('view-acct-status').innerHTML  = statusBadge(userData.status || 'active');
   } else { custSection.style.display='none'; }
   const teamName = (userData.team_name && userData.team_name !== '—') ? userData.team_name : 'Unassigned';
-  document.getElementById('view-current-team').textContent = teamName + (userData.team_area ? `, ${userData.team_area}` : '') + (userData.team_city ? ` — ${userData.team_city}` : '');
+  document.getElementById('view-current-team').textContent = teamName + (userData.team_area?`, ${userData.team_area}`:'') + (userData.team_city?` — ${userData.team_city}`:'');
   const form = document.getElementById('view-assign-team-form');
   form.action = `/admin/users/edit/${userData.id}`;
   document.getElementById('view-assign-role').value = role;
@@ -1406,10 +1517,9 @@ function openViewModal(userData, role) {
 
 /* ===== SAMPLE CUSTOMERS MODAL ===== */
 let _smAllTeams = [];
-
 function openSampleModal(planLabel, count) {
-  document.getElementById('sm-plan-label').textContent  = planLabel;
-  document.getElementById('sm-count-label').textContent = count + ' customer' + (count !== 1 ? 's' : '');
+  document.getElementById('sm-plan-label').textContent    = planLabel;
+  document.getElementById('sm-count-label').textContent   = count + ' customer'+(count!==1?'s':'');
   document.getElementById('sm-summary-count').textContent = count;
   document.getElementById('sm-loader').style.display  = 'flex';
   document.getElementById('sm-empty').style.display   = 'none';
@@ -1417,89 +1527,66 @@ function openSampleModal(planLabel, count) {
   document.getElementById('sm-cards').innerHTML       = '';
   document.getElementById('modal-sample-customers').classList.add('open');
   document.body.style.overflow = 'hidden';
-  fetch('/api/admin/sample_customers?label=' + encodeURIComponent(planLabel))
-    .then(r => r.json())
+  fetch('/api/admin/sample_customers?label='+encodeURIComponent(planLabel))
+    .then(r=>r.json())
     .then(data => {
       _smAllTeams = data.teams || [];
       const customers = data.customers || [];
-      document.getElementById('sm-loader').style.display = 'none';
+      document.getElementById('sm-loader').style.display  = 'none';
       document.getElementById('sm-summary-count').textContent = customers.length;
-      document.getElementById('sm-count-label').textContent   = customers.length + ' customer' + (customers.length !== 1 ? 's' : '');
+      document.getElementById('sm-count-label').textContent   = customers.length+' customer'+(customers.length!==1?'s':'');
       if (!customers.length) { document.getElementById('sm-empty').style.display='flex'; return; }
       document.getElementById('sm-content').style.display = 'block';
       const container = document.getElementById('sm-cards');
       customers.forEach(c => container.insertAdjacentHTML('beforeend', buildSampleCard(c)));
-    })
-    .catch(() => {
+    }).catch(() => {
       document.getElementById('sm-loader').style.display = 'none';
       document.getElementById('sm-empty').style.display  = 'flex';
     });
 }
-
-function closeSampleModal() {
-  document.getElementById('modal-sample-customers').classList.remove('open');
-  document.body.style.overflow = '';
-}
-document.getElementById('modal-sample-customers').addEventListener('click', function(e) { if (e.target===this) closeSampleModal(); });
+function closeSampleModal() { document.getElementById('modal-sample-customers').classList.remove('open'); document.body.style.overflow=''; }
+document.getElementById('modal-sample-customers').addEventListener('click', function(e){ if(e.target===this) closeSampleModal(); });
 
 function buildSampleCard(c) {
   const initials = (c.name||'?').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
   const rawPhone = (c.phone||'').replace(/\D/g,'');
-  const waPhone  = rawPhone.length===10 ? '91'+rawPhone : rawPhone;
-  const waHref   = waPhone.length>=10 ? `https://wa.me/${waPhone}` : '#';
-  const teamOpts = _smAllTeams.map(t =>
-    `<option value="${escHtml(t.id)}" ${t.id===c.team_id?'selected':''}>${escHtml(t.name)}${t.area?' – '+escHtml(t.area):''}</option>`
-  ).join('');
-  const teamBadge = (c.team_name && c.team_name !== '—')
-    ? `<span class="badge badge-blue" id="sm-team-badge-${escHtml(c.id)}">${escHtml(c.team_name)}${c.team_area?' / '+escHtml(c.team_area):''}</span>`
-    : `<span class="badge badge-gray" id="sm-team-badge-${escHtml(c.id)}">Unassigned</span>`;
-  const offDaysStr = (c.off_days&&c.off_days.length) ? c.off_days.join(', ') : 'None';
-  return `
-  <div class="sample-cust-card" id="sm-card-${escHtml(c.id)}">
-    <div class="sample-cust-card-header">
-      <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
-        <div class="sample-cust-avatar">${initials}</div>
-        <div style="min-width:0;"><div class="sample-cust-name">${escHtml(c.name)}</div><div class="sample-cust-label">🧪 ${escHtml(c.sample_label)}</div></div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
-        <a href="${waHref}" target="_blank" class="btn btn-success btn-sm" style="${waPhone.length<10?'display:none;':''}">💬</a>
-        <a href="/admin/customers/${escHtml(c.id)}" target="_blank" class="btn btn-ghost btn-sm" title="Full profile">↗</a>
-      </div>
+  const waPhone  = rawPhone.length===10?'91'+rawPhone:rawPhone;
+  const teamOpts = _smAllTeams.map(t=>`<option value="${escHtml(t.id)}" ${t.id===c.team_id?'selected':''}>${escHtml(t.name)}${t.area?' – '+escHtml(t.area):''}</option>`).join('');
+  const teamBadge = (c.team_name&&c.team_name!=='—')?`<span class="badge badge-blue" id="sm-team-badge-${escHtml(c.id)}">${escHtml(c.team_name)}</span>`:`<span class="badge badge-gray" id="sm-team-badge-${escHtml(c.id)}">Unassigned</span>`;
+  return `<div class="sample-cust-card"><div class="sample-cust-card-header">
+    <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
+      <div class="sample-cust-avatar">${initials}</div>
+      <div><div class="sample-cust-name">${escHtml(c.name)}</div><div class="sample-cust-label">🧪 ${escHtml(c.sample_label)}</div></div>
     </div>
+    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
+      ${waPhone.length>=10?`<a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-success btn-sm">💬</a>`:''}
+      <a href="/admin/customers/${escHtml(c.id)}" target="_blank" class="btn btn-ghost btn-sm">↗</a>
+    </div></div>
     <div class="sample-cust-fields">
       <div class="sample-cust-field"><span class="sf-icon">📞</span><span class="sf-val"><a href="tel:${escHtml(c.phone)}">${escHtml(c.phone)}</a></span></div>
       <div class="sample-cust-field"><span class="sf-icon">📍</span><span class="sf-val">${escHtml(c.address||'—')}</span></div>
       <div class="sample-cust-field"><span class="sf-icon">🕐</span><span class="sf-val">${escHtml(c.preferred_time||'—')}</span></div>
-      <div class="sample-cust-field"><span class="sf-icon">📅</span><span class="sf-val">Starts: ${escHtml(c.start_date||'—')}</span></div>
-      ${offDaysStr!=='None'?`<div class="sample-cust-field"><span class="sf-icon">🚫</span><span class="sf-val">Off: ${escHtml(offDaysStr)}</span></div>`:''}
     </div>
-    <div class="sample-cust-team-current"><span class="sct-label">Current Team&nbsp;&nbsp;</span>${teamBadge}</div>
+    <div class="sample-cust-team-current"><span class="sct-label">Team&nbsp;&nbsp;</span>${teamBadge}</div>
     <div class="sample-assign-row">
       <select id="sm-team-sel-${escHtml(c.id)}"><option value="">— Assign a team —</option>${teamOpts}</select>
       <button class="sample-assign-btn" id="sm-assign-btn-${escHtml(c.id)}" onclick="assignSampleTeam('${escHtml(c.id)}')">✓ Assign</button>
-    </div>
-  </div>`;
+    </div></div>`;
 }
 
 async function assignSampleTeam(customerId) {
-  const sel    = document.getElementById('sm-team-sel-' + customerId);
-  const btn    = document.getElementById('sm-assign-btn-' + customerId);
-  const teamId = sel ? sel.value : '';
-  if (!teamId) { showToast('Please select a team first.', 'danger'); return; }
-  btn.disabled = true; btn.textContent = '…';
+  const sel=document.getElementById('sm-team-sel-'+customerId);
+  const btn=document.getElementById('sm-assign-btn-'+customerId);
+  const teamId=sel?sel.value:'';
+  if(!teamId){showToast('Please select a team.','danger');return;}
+  btn.disabled=true; btn.textContent='…';
   try {
-    const res  = await fetch('/api/admin/assign_team', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({customer_id:customerId, team_id:teamId})
-    });
-    const data = await res.json();
-    btn.disabled = false; btn.textContent = '✓ Assign';
-    if (data.success) {
-      const badge = document.getElementById('sm-team-badge-'+customerId);
-      if (badge) { badge.className='badge badge-blue'; badge.textContent=data.team_name||'Assigned'; }
-      showToast('✅ Team assigned to '+(data.team_name||'customer')+'!','success');
-    } else { showToast('❌ '+(data.message||'Assignment failed'),'danger'); }
-  } catch { btn.disabled=false; btn.textContent='✓ Assign'; showToast('❌ Network error.','danger'); }
+    const res=await fetch('/api/admin/assign_team',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({customer_id:customerId,team_id:teamId})});
+    const data=await res.json();
+    btn.disabled=false; btn.textContent='✓ Assign';
+    if(data.success){const badge=document.getElementById('sm-team-badge-'+customerId);if(badge){badge.className='badge badge-blue';badge.textContent=data.team_name||'Assigned';}showToast('✅ Team assigned!','success');}
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  } catch{btn.disabled=false;btn.textContent='✓ Assign';showToast('❌ Network error.','danger');}
 }
 
 /* ===== BOXES NEEDED ===== */
@@ -1534,84 +1621,131 @@ function renderBoxes() {
     if (sf==='sample') return p.sample_boxes>0;
     return (p.active_customers+p.sample_boxes)>0;
   });
-  let grandActive=0, grandSample=0;
-  data.forEach(p=>{grandActive+=p.active_customers; grandSample+=p.sample_boxes;});
-  const grandTotal = grandActive+grandSample;
 
-  const tbody = document.getElementById('boxes-tbody');
-  if (!data.length) {
-    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-3);">No boxes today.</td></tr>`;
+  const isNextDay = _boxesData.length && _boxesData[0].is_next_day;
+  const banner    = document.getElementById('next-day-banner');
+  const cardTitle = document.getElementById('boxes-card-title');
+  if (isNextDay) {
+    banner.style.display = 'flex';
+    const targetDate     = _boxesData[0].target_date || '';
+    document.getElementById('next-day-date-label').textContent = targetDate
+      ? new Date(targetDate+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'})
+      : '';
+    cardTitle.textContent = '📦 Boxes for Tomorrow';
   } else {
-    const maxActive = Math.max(...data.map(d=>d.active_customers),1);
+    banner.style.display = 'none';
+    cardTitle.textContent = '📦 Boxes to Prepare Today';
+  }
+
+  let grandActive=0, grandSample=0;
+  data.forEach(p=>{ grandActive+=p.active_customers; grandSample+=p.sample_boxes; });
+  const grandTotal = grandActive + grandSample;
+
+  const tbody  = document.getElementById('boxes-tbody');
+  if (!data.length) {
+    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-3);">No boxes ${isNextDay?'for tomorrow':'today'}.</td></tr>`;
+  } else {
+    const maxActive = Math.max(...data.map(d=>d.active_customers), 1);
     tbody.innerHTML = data.map(p => {
-      const isSample = p.is_sample_plan===true;
-      const hasSamples = p.sample_boxes>0;
-      const activeW = Math.round((p.active_customers/maxActive)*100);
-      const teamsHtml = (!isSample&&(p.teams||[]).length)
+      const isSample   = p.is_sample_plan === true;
+      const hasSamples = p.sample_boxes > 0;
+      const isAlt      = p.is_alternate_plan;
+      const altLabel   = p.today_item;
+      const nextDayTag = p.is_next_day
+        ? `<span class="badge badge-purple" style="font-size:10px;margin-left:6px;">Next Day</span>` : '';
+
+      let planCell;
+      if (isSample) {
+        planCell = `<td><span class="badge badge-orange" style="font-size:12px;">🧪 ${escHtml(p.plan_name)}</span><div style="font-size:10px;color:var(--text-3);margin-top:3px;">unmatched sample</div></td>`;
+      } else {
+        planCell = `<td>
+          <div style="font-weight:600;">${escHtml(p.plan_name)}${nextDayTag}</div>
+          <div style="font-size:11px;color:var(--text-3);">₹${p.plan_price}</div>
+          ${isAlt && altLabel ? `<div style="margin-top:5px;"><span class="alt-pill">🔄 Today: ${escHtml(altLabel)}</span></div>` : ''}
+        </td>`;
+      }
+
+      const durCell    = isSample ? `<td><span style="color:var(--text-3);">—</span></td>` : `<td><span class="badge badge-blue">${p.duration_days||'—'} days</span></td>`;
+      const activeW    = Math.round((p.active_customers/maxActive)*100);
+      const activeCell = isSample ? `<td><span style="color:var(--text-3);">—</span></td>`
+        : `<td><div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers}</div>
+             <div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div></td>`;
+
+      const sampleCell = hasSamples
+        ? `<td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+             <span style="font-weight:700;color:#f97316;font-size:16px;">${p.sample_boxes}</span>
+             <button class="btn-view-sample" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes})">👁 View</button>
+           </div></td>`
+        : `<td><span style="color:var(--text-3);">0</span></td>`;
+
+      const totalBig   = (p.active_customers+p.sample_boxes)>0
+        ? `<span style="font-size:20px;font-weight:700;color:var(--text);">${p.active_customers+p.sample_boxes}</span>`
+        : `<span style="color:var(--text-3);">0</span>`;
+
+      const teamsHtml  = (!isSample && (p.teams||[]).length)
         ? `<div class="team-breakdown">${p.teams.map(t=>{const tw=Math.round((t.count/Math.max(p.active_customers,1))*100);return `<div class="team-row"><span class="t-name">${escHtml(t.team_name)}</span><span class="t-bar"><span class="t-bar-fill" style="width:${tw}%;"></span></span><span class="t-count">${t.count}</span></div>`;}).join('')}</div>`
         : `<span style="color:var(--text-3);font-size:11px;">—</span>`;
-      const activeCell = isSample
-        ? `<td><span style="color:var(--text-3);">—</span></td>`
-        : `<td><div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers}</div><div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div><div style="font-size:10px;color:var(--text-3);margin-top:2px;">active customers</div></td>`;
-      const sampleCell = hasSamples
-        ? `<td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;"><span style="font-weight:700;color:#f97316;font-size:16px;">${p.sample_boxes}</span><button class="btn-view-sample" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes})">👁 View</button></div><div style="font-size:10px;color:var(--text-3);margin-top:4px;">sample box${p.sample_boxes>1?'es':''}</div></td>`
-        : `<td><span style="color:var(--text-3);">0</span></td>`;
-      const totalBig = (p.active_customers+p.sample_boxes)>0 ? `<span style="font-size:20px;font-weight:700;color:var(--text);">${p.active_customers+p.sample_boxes}</span>` : `<span style="color:var(--text-3);">0</span>`;
-      const rowStyle  = isSample ? 'background:rgba(249,115,22,.04);' : '';
-      const planCell  = isSample
-        ? `<td><span class="badge badge-orange" style="font-size:12px;">🧪 ${escHtml(p.plan_name)}</span><div style="font-size:10px;color:var(--text-3);margin-top:3px;">unmatched sample plan</div></td>`
-        : `<td><div style="font-weight:600;">${escHtml(p.plan_name)}</div><div style="font-size:11px;color:var(--text-3);">₹${p.plan_price}</div></td>`;
-      const durCell   = isSample ? `<td><span style="color:var(--text-3);">—</span></td>` : `<td><span class="badge badge-blue">${p.duration_days||'—'} days</span></td>`;
-      const actCell   = hasSamples
+
+      const actCell    = hasSamples
         ? `<td><button class="btn btn-ghost btn-sm" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes})">👁 View Customers</button></td>`
         : `<td><span style="color:var(--text-3);font-size:11px;">—</span></td>`;
+
+      const rowStyle   = isSample ? 'background:rgba(249,115,22,.04);' : '';
       return `<tr style="${rowStyle}">${planCell}${durCell}${activeCell}${sampleCell}<td>${totalBig}</td><td>${teamsHtml}</td>${actCell}</tr>`;
     }).join('');
   }
 
-  // Team view
   const teamMap={};
-  _boxesData.forEach(p=>{(p.teams||[]).forEach(t=>{if(!teamMap[t.team_id])teamMap[t.team_id]={name:t.team_name,active:0,sample:0,plans:{}};teamMap[t.team_id].active+=t.count;if(!teamMap[t.team_id].plans[p.plan_name])teamMap[t.team_id].plans[p.plan_name]={active:0};teamMap[t.team_id].plans[p.plan_name].active+=t.count;});});
+  _boxesData.forEach(p=>{ (p.teams||[]).forEach(t=>{
+    if(!teamMap[t.team_id]) teamMap[t.team_id]={name:t.team_name,active:0,sample:0,plans:{}};
+    teamMap[t.team_id].active+=t.count;
+    if(!teamMap[t.team_id].plans[p.plan_name]) teamMap[t.team_id].plans[p.plan_name]={active:0};
+    teamMap[t.team_id].plans[p.plan_name].active+=t.count;
+  });});
   const teamRows=Object.values(teamMap).sort((a,b)=>(b.active+b.sample)-(a.active+a.sample));
   const teamTbody=document.getElementById('boxes-team-tbody');
-  const fRows=teamRows.filter(t=>{if(sf==='active')return t.active>0;if(sf==='sample')return t.sample>0;return(t.active+t.sample)>0;});
-  if(!fRows.length){teamTbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-3);">No team data today.</td></tr>`;}
-  else{const mx=Math.max(...fRows.map(t=>t.active),1);teamTbody.innerHTML=fRows.map(t=>{const pb=Object.entries(t.plans).sort((a,b)=>b[1].active-a[1].active).map(([pn,pd])=>`<span class="badge badge-blue" style="margin:1px;">${escHtml(pn.substring(0,18))}… ×${pd.active}</span>`).join('');const tw=Math.round((t.active/mx)*100);return `<tr><td><div style="font-weight:600;">${escHtml(t.name)}</div></td><td><div style="font-weight:700;color:var(--green);font-size:16px;">${t.active}</div><div class="bar-wrap"><div class="bar-fill" style="width:${tw}%;background:var(--green);"></div></div></td><td><span style="color:var(--text-3);">—</span></td><td><span style="font-size:20px;font-weight:700;">${t.active+t.sample}</span></td><td><div style="display:flex;flex-wrap:wrap;gap:2px;">${pb||'—'}</div></td></tr>`;}).join('');}
+  const fRows=teamRows.filter(t=>{ if(sf==='active')return t.active>0; if(sf==='sample')return t.sample>0; return(t.active+t.sample)>0; });
+  if(!fRows.length){ teamTbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-3);">No team data.</td></tr>`; }
+  else {
+    const mx=Math.max(...fRows.map(t=>t.active),1);
+    teamTbody.innerHTML=fRows.map(t=>{
+      const pb=Object.entries(t.plans).sort((a,b)=>b[1].active-a[1].active).map(([pn,pd])=>`<span class="badge badge-blue" style="margin:1px;">${escHtml(pn.substring(0,18))}… ×${pd.active}</span>`).join('');
+      const tw=Math.round((t.active/mx)*100);
+      return `<tr><td><div style="font-weight:600;">${escHtml(t.name)}</div></td><td><div style="font-weight:700;color:var(--green);font-size:16px;">${t.active}</div><div class="bar-wrap"><div class="bar-fill" style="width:${tw}%;background:var(--green);"></div></div></td><td><span style="color:var(--text-3);">—</span></td><td><span style="font-size:20px;font-weight:700;">${t.active+t.sample}</span></td><td><div style="display:flex;flex-wrap:wrap;gap:2px;">${pb||'—'}</div></td></tr>`;
+    }).join('');
+  }
 
   const row=document.getElementById('boxes-total-row');
   document.getElementById('boxes-grand-total').textContent=grandTotal;
   row.style.display=grandTotal>0?'flex':'none';
 }
 
-/* ===== LOAD EMPLOYEES (with Reset Credentials button) ===== */
+/* ===== LOAD EMPLOYEES ===== */
 async function loadEmployees() {
-  const tbody = document.querySelector('#employees-table tbody');
+  const tbody=document.querySelector('#employees-table tbody');
   tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try {
-    const data = await fetch('/api/admin/employees').then(r=>r.json());
-    _loaded.employees = true;
+    const data=await fetch('/api/admin/employees').then(r=>r.json());
+    _loaded.employees=true;
     if(!data.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No employees found.</td></tr>`;return;}
-    tbody.innerHTML = data.map(e=>`
+    tbody.innerHTML=data.map(e=>`
       <tr data-name="${e.name.toLowerCase()}" data-city="${(e.team_city||'').toLowerCase()}" data-team="${e.team_id}">
-        <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm">${e.name.charAt(0).toUpperCase()}</div><div><div style="font-weight:600;">${escHtml(e.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(e.phone)}</div></div></div></td>
-        <td><div style="font-size:12px;color:var(--text-2);">${escHtml(e.email)}</div><div style="font-size:10px;color:var(--text-3);">User ID</div></td>
+        <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm">${e.name.charAt(0).toUpperCase()}</div>
+          <div><div style="font-weight:600;">${escHtml(e.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(e.phone)}</div></div></div></td>
+        <td><div style="font-size:12px;color:var(--text-2);">${escHtml(e.email)}</div></td>
         <td>${escHtml(e.phone)}</td>
         <td><span class="badge badge-blue">${escHtml(e.team_name)}</span></td>
-        <td>
-          <div style="display:flex;gap:5px;flex-wrap:wrap;">
-            <button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(e)},"employee")'>👁 View</button>
-            <button class="btn btn-ghost btn-sm" onclick="openEditEmployee('${e.id}','${escHtml(e.name)}','${escHtml(e.email)}','${escHtml(e.phone)}','${e.team_id}')">✏️ Edit</button>
-            <button class="btn btn-warning btn-sm" id="reset-btn-${e.id}" onclick="resetEmployeeCredentials('${e.id}','${escHtml(e.name)}')">🔑 Reset</button>
-            <form method="POST" action="/admin/users/delete/${e.id}" onsubmit="return confirm('Remove ${escHtml(e.name)}?');" style="display:inline;">
-              <input type="hidden" name="next" value="dashboard_admin">
-              <button class="btn btn-danger btn-sm">🗑️</button>
-            </form>
-          </div>
-        </td>
+        <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
+          <button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(e)},"employee")'>👁 View</button>
+          <button class="btn btn-ghost btn-sm" onclick="openEditEmployee('${e.id}','${escHtml(e.name)}','${escHtml(e.email)}','${escHtml(e.phone)}','${e.team_id}')">✏️ Edit</button>
+          <button class="btn btn-warning btn-sm" id="reset-btn-${e.id}" onclick="resetEmployeeCredentials('${e.id}','${escHtml(e.name)}')">🔑 Reset</button>
+          <form method="POST" action="/admin/users/delete/${e.id}" onsubmit="return confirm('Remove ${escHtml(e.name)}?');" style="display:inline;">
+            <input type="hidden" name="next" value="dashboard_admin">
+            <button class="btn btn-danger btn-sm">🗑️</button>
+          </form>
+        </div></td>
       </tr>`).join('');
-  } catch {
-    tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`;
-  }
+  } catch { tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`; }
 }
 
 function statusBadge(status) {
@@ -1632,10 +1766,11 @@ async function loadCustomers() {
       const discParts=[];
       if(c.discount_percent>0) discParts.push(`${c.discount_percent}%`);
       if(c.discount_amount>0)  discParts.push(`₹${c.discount_amount}`);
-      const discStr  = discParts.length?`<span class="badge badge-green">${discParts.join(' + ')}</span>`:`<span style="color:var(--text-3);">—</span>`;
-      const startStr = c.start_date?`<span style="font-size:12px;color:var(--text-2);">${c.start_date}</span>`:`<span style="color:var(--text-3);">—</span>`;
+      const discStr=discParts.length?`<span class="badge badge-green">${discParts.join(' + ')}</span>`:`<span style="color:var(--text-3);">—</span>`;
+      const startStr=c.start_date?`<span style="font-size:12px;color:var(--text-2);">${c.start_date}</span>`:`<span style="color:var(--text-3);">—</span>`;
       return `<tr data-name="${c.name.toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id}" data-plan="${c.plan_id||''}" data-status="${c.status||'active'}">
-        <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${c.name.charAt(0).toUpperCase()}</div><div><div style="font-weight:600;">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div></div></div></td>
+        <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${c.name.charAt(0).toUpperCase()}</div>
+          <div><div style="font-weight:600;">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div></div></div></td>
         <td>${c.plan_name!=='—'?`<span class="badge badge-orange">${escHtml(c.plan_name)}</span>`:`<span class="badge badge-gray">No plan</span>`}</td>
         <td>${startStr}</td>
         <td>${discStr}</td>
@@ -1649,18 +1784,16 @@ async function loadCustomers() {
       </tr>`;
     }).join('');
     filterCustomers();
-  } catch {
-    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`;
-  }
+  } catch { tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`; }
 }
 
 /* ===== CUSTOMER FILTERS ===== */
 function filterCustomers() {
-  const q      =(document.getElementById('cust-search').value||'').toLowerCase().trim();
-  const city   =(document.getElementById('cust-city-filter').value||'').toLowerCase();
-  const team   = document.getElementById('cust-team-filter').value||'';
-  const plan   = document.getElementById('cust-plan-filter').value||'';
-  const status =(document.getElementById('cust-status-filter').value||'').toLowerCase();
+  const q=(document.getElementById('cust-search').value||'').toLowerCase().trim();
+  const city=(document.getElementById('cust-city-filter').value||'').toLowerCase();
+  const team=document.getElementById('cust-team-filter').value||'';
+  const plan=document.getElementById('cust-plan-filter').value||'';
+  const status=(document.getElementById('cust-status-filter').value||'').toLowerCase();
   let visible=0;
   const rows=document.querySelectorAll('#customers-table tbody tr[data-name]');
   const total=rows.length;
@@ -1677,7 +1810,6 @@ function filterCustomers() {
   updateCustFilterChips({q,city,team,plan,status});
   const ce=document.getElementById('cust-result-count'); if(ce) ce.textContent=hasFilter?`Showing ${visible} of ${total} customers`:'';
 }
-
 function updateCustFilterChips({q,city,team,plan,status}) {
   const wrap=document.getElementById('cust-filter-chips'); if(!wrap) return;
   wrap.innerHTML='';
@@ -1696,67 +1828,52 @@ function updateCustFilterChips({q,city,team,plan,status}) {
     el.querySelector('button').addEventListener('click',chip.clear); wrap.appendChild(el);
   });
 }
-
 function clearCustomerFilters() {
-  ['cust-search','cust-city-filter','cust-team-filter','cust-plan-filter','cust-status-filter'].forEach(id=>{
-    const el=document.getElementById(id); if(el) el.value='';
-  });
+  ['cust-search','cust-city-filter','cust-team-filter','cust-plan-filter','cust-status-filter'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
   filterCustomers();
 }
 
-/* ===== LOAD ENQUIRIES (with WA Inbox button) ===== */
+/* ===== LOAD ENQUIRIES ===== */
 let _enqLoaded = false;
 async function loadEnquiries(force) {
   if (_enqLoaded && !force) return;
   const tbody=document.getElementById('enq-tbody');
+  if(!tbody) return;
   tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try {
-    const data=await fetch('/api/admin/enquiries_data').then(r=>{if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
+    const data=await fetch('/api/admin/enquiries_data').then(r=>r.json());
     _enqLoaded=true;
     const total=data.length,pending=data.filter(e=>e.status==='pending').length,approved=data.filter(e=>e.status==='approved').length;
     document.getElementById('enq-stat-total').textContent=total;
     document.getElementById('enq-stat-pending').textContent=pending;
     document.getElementById('enq-stat-approved').textContent=approved;
     const badge=document.getElementById('enq-badge');
-    if(pending>0){badge.textContent=pending;badge.style.display='inline-flex';}else{badge.style.display='none';}
+    if(badge){if(pending>0){badge.textContent=pending;badge.style.display='inline-flex';}else{badge.style.display='none';}}
     if(!data.length){tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">No enquiries yet.</td></tr>`;return;}
-
     tbody.innerHTML=data.map(e=>{
       const date=e.created_at?new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}):'—';
       const sb=e.status==='pending'?`<span class="badge badge-yellow">⏳ Pending</span>`:`<span class="badge badge-green">✅ Converted</span>`;
-      const approveBtn=e.status==='pending'
-        ?`<form method="POST" action="/admin/enquiries/approve/${e.id}" onsubmit="return confirm('Convert ${escHtml(e.name)} to a customer?');" style="display:inline;"><button class="btn btn-success btn-sm">✅ Approve</button></form>`:'';
-
-      const editBtn = `<button class="btn btn-ghost btn-sm" onclick='openEditEnquiry(${JSON.stringify(e)})'>✏️ Edit</button>`;
-      // WhatsApp Inbox button
-      const hasInbox = e.has_inbox;
-      const inboxDot = hasInbox ? '<span class="inbox-dot" title="Has messages"></span>' : '';
-      const waBtn    = `<button class="btn btn-wa btn-sm" onclick="openWaInbox('${e.id}','${escHtml(e.name)}','${escHtml(e.phone||'')}','${escHtml(e.whatsapp_id||'')}')" title="Open WhatsApp conversation">
-        ${inboxDot}💬 Inbox
-      </button>`;
-
+      const approveBtn=e.status==='pending'?`<form method="POST" action="/admin/enquiries/approve/${e.id}" onsubmit="return confirm('Convert to customer?');" style="display:inline;"><button class="btn btn-success btn-sm">✅ Approve</button></form>`:'';
+      const editBtn=`<button class="btn btn-ghost btn-sm" onclick='openEditEnquiry(${JSON.stringify(e)})'>✏️ Edit</button>`;
+      const inboxDot=e.has_inbox?`<span class="inbox-dot"></span>`:'';
+      const waBtn=`<button class="btn btn-wa btn-sm" onclick="openWaInbox('${e.id}','${escHtml(e.name)}','${escHtml(e.phone||'')}','${escHtml(e.whatsapp_id||'')}')">${inboxDot}💬 Inbox</button>`;
       return `<tr data-name="${e.name.toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}">
         <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${e.name.charAt(0).toUpperCase()}</div>
-          <div><div style="font-weight:600;">${escHtml(e.name)}</div>${e.address?`<div style="font-size:11px;color:var(--text-3);max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.address)}</div>`:''}</div>
-        </div></td>
+          <div><div style="font-weight:600;">${escHtml(e.name)}</div></div></div></td>
         <td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td>
-        <td>${e.plan?`<span class="badge badge-orange" title="${escHtml(e.plan)}">${escHtml(e.plan.substring(0,22))}${e.plan.length>22?'…':''}</span>`:`<span class="badge badge-gray">—</span>`}</td>
+        <td>${e.plan?`<span class="badge badge-orange">${escHtml(e.plan.substring(0,22))}</span>`:`<span class="badge badge-gray">—</span>`}</td>
         <td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td>
         <td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td>
         <td>${e.payment_method==='cod'?`<span class="badge badge-yellow">💵 COD</span>`:`<span class="badge badge-blue">📱 UPI</span>`}</td>
         <td style="font-size:12px;color:var(--text-3);">${date}</td>
         <td>${sb}</td>
         <td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
-          ${approveBtn}
-          ${editBtn}
-          ${waBtn}
-          <form method="POST" action="/admin/enquiries/delete/${e.id}" onsubmit="return confirm('Delete this enquiry?');" style="display:inline;"><button class="btn btn-danger btn-sm">🗑️</button></form>
+          ${approveBtn}${editBtn}${waBtn}
+          <form method="POST" action="/admin/enquiries/delete/${e.id}" onsubmit="return confirm('Delete?');" style="display:inline;"><button class="btn btn-danger btn-sm">🗑️</button></form>
         </div></td>
       </tr>`;
     }).join('');
-  } catch(err) {
-    tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;
-  }
+  } catch { tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`; }
 }
 
 function filterEnqTable() {
@@ -1765,23 +1882,20 @@ function filterEnqTable() {
   document.querySelectorAll('#enq-table tbody tr').forEach(r=>{
     const name=(r.getAttribute('data-name')||'').toLowerCase();
     const phone=(r.getAttribute('data-phone')||'').toLowerCase();
-    const rs=r.getAttribute('data-status')||'';
-    r.style.display=((!q||(name+phone).includes(q))&&(!st||rs===st))?'':'none';
+    r.style.display=((!q||(name+phone).includes(q))&&(!st||r.getAttribute('data-status')===st))?'':'none';
   });
 }
 
 /* ===== EDIT MODALS ===== */
-function openEditEmployee(id, name, email, phone, teamId) {
-  document.getElementById('ee-name').value=name; document.getElementById('ee-email').value=email;
-  document.getElementById('ee-phone').value=phone; document.getElementById('ee-team').value=teamId;
+function openEditEmployee(id,name,email,phone,teamId){
+  document.getElementById('ee-name').value=name;document.getElementById('ee-email').value=email;
+  document.getElementById('ee-phone').value=phone;document.getElementById('ee-team').value=teamId;
   document.getElementById('edit-emp-form').action='/admin/users/edit/'+id;
   openModal('modal-edit-employee');
 }
-
-function openEditCustomer(c) {
+function openEditCustomer(c){
   document.getElementById('ec-name').value=c.name||'';
-  const realEmail=(c.email||'').endsWith('@fruitedelights.local')?'':(c.email||'');
-  document.getElementById('ec-email').value=realEmail;
+  document.getElementById('ec-email').value=(c.email||'').endsWith('@fruitedelights.local')?'':(c.email||'');
   document.getElementById('ec-phone').value=c.phone||'';
   document.getElementById('ec-team').value=c.team_id||'';
   document.getElementById('ec-plan').value=c.plan_name!=='—'?c.plan_name:'';
@@ -1796,10 +1910,8 @@ function openEditCustomer(c) {
   document.getElementById('edit-cust-form').action='/admin/users/edit/'+c.id;
   openModal('modal-edit-customer');
 }
-
-function openAddUserModal(role) {
-  const form=document.getElementById('user-form');
-  form.action='/admin/users/add'; form.reset();
+function openAddUserModal(role){
+  const form=document.getElementById('user-form');form.action='/admin/users/add';form.reset();
   document.getElementById('user-modal-title').textContent='Onboard User';
   document.getElementById('user-submit-btn').textContent='Add & Send Credentials';
   document.getElementById('rf-role-group').style.display='block';
@@ -1808,33 +1920,31 @@ function openAddUserModal(role) {
   applyRoleFields(role||'');
   openModal('modal-add-user');
 }
-
-function onRoleChange() {
+function onRoleChange(){
   const r=document.getElementById('roleSelect').value;
   document.getElementById('hiddenRole').value=r;
   applyRoleFields(r);
 }
-
-function applyRoleFields(role) {
-  document.getElementById('rf-team').style.display=(role==='employee'||role==='customer')?'block':'none';
+function applyRoleFields(role){
+  document.getElementById('rf-team').style.display=(role==='employee'||role==='customer'||role==='manager')?'block':'none';
   document.getElementById('rf-customer').style.display=role==='customer'?'block':'none';
-  const ei=document.getElementById('uf-email'), el=document.getElementById('email-label'), eh=document.getElementById('email-hint');
-  if(role==='customer'){ei.required=false;ei.placeholder='Optional — auto-generated from phone if blank';el.innerHTML='User ID (Email) <span class="opt">(optional for customers)</span>';eh.style.display='block';}
-  else{ei.required=true;ei.placeholder='user@example.com';el.innerHTML='User ID (Email) *';eh.style.display='none';}
+  const ei=document.getElementById('uf-email'),el=document.getElementById('email-label'),eh=document.getElementById('email-hint');
+  if(role==='customer'){ei.required=false;ei.placeholder='Optional — auto-generated';el.innerHTML='User ID <span class="opt">(optional for customers)</span>';eh.style.display='block';}
+  else{ei.required=true;ei.placeholder='user@example.com';el.innerHTML='User ID *';eh.style.display='none';}
 }
-
-function openEditPlan(plan) {
+function openEditPlan(plan){
   document.getElementById('ep-name').value=plan.name||'';
   document.getElementById('ep-desc').value=plan.description||'';
   document.getElementById('ep-price').value=plan.price_per_month||plan.price_per_day||'';
   document.getElementById('ep-duration').value=plan.duration_days||'';
   document.getElementById('ep-tax').value=plan.tax_percent||0;
+  const altItems=plan.alternate_items||[];
+  document.getElementById('ep-alt').value=altItems.join(', ');
   const id=typeof plan._id==='object'?plan._id.$oid:plan._id;
   document.getElementById('edit-plan-form').action='/admin/plans/edit/'+id;
   openModal('modal-edit-plan');
 }
-
-function openEditTeam(team) {
+function openEditTeam(team){
   document.getElementById('et-name').value=team.name||'';
   document.getElementById('et-area').value=team.area||'';
   document.getElementById('et-city').value=team.city||'';
@@ -1843,11 +1953,9 @@ function openEditTeam(team) {
   openModal('modal-edit-team');
 }
 
-/* ===== SIDEBAR ===== */
+/* ===== SIDEBAR / MODALS ===== */
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
-
-/* ===== MODALS ===== */
 function openModal(id){document.getElementById(id).classList.add('open');}
 function closeModal(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.modal-backdrop').forEach(m=>{m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});});
@@ -1869,14 +1977,12 @@ function initAreaChart(data){
   const palette=['rgba(79,70,229,.85)','rgba(124,58,237,.85)','rgba(37,99,235,.85)','rgba(8,145,178,.85)','rgba(5,150,105,.85)','rgba(217,119,6,.85)'];
   areaChart=new Chart(ctx,{type:'bar',data:{labels:data.map(d=>d.area),datasets:[{label:'Pending',data:data.map(d=>d.pending),backgroundColor:data.map((_,i)=>palette[i%palette.length]),borderRadius:{topLeft:8,topRight:8},borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}});
 }
-
 function initDeliveryChart(ts){
   const ctx=document.getElementById('deliveryChart').getContext('2d');
   if(deliveryChart) deliveryChart.destroy();
   const grad=c=>{const g=ctx.createLinearGradient(0,0,0,250);g.addColorStop(0,c);g.addColorStop(1,'rgba(255,255,255,0)');return g;};
   deliveryChart=new Chart(ctx,{type:'line',data:{labels:ts.map(d=>new Date(d.date).toLocaleDateString('en-IN',{month:'short',day:'numeric'})),datasets:[{label:'Delivered',data:ts.map(d=>d.delivered),borderColor:'#10b981',backgroundColor:grad('rgba(16,185,129,.15)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#10b981',pointBorderColor:'#fff',pointBorderWidth:2},{label:'Pending',data:ts.map(d=>d.pending),borderColor:'#f59e0b',backgroundColor:grad('rgba(245,158,11,.12)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#f59e0b',pointBorderColor:'#fff',pointBorderWidth:2},{label:'Holiday',data:ts.map(d=>d.holiday),borderColor:'#ef4444',backgroundColor:grad('rgba(239,68,68,.10)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#ef4444',pointBorderColor:'#fff',pointBorderWidth:2}]},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{boxWidth:10,padding:18,usePointStyle:true}}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}});
 }
-
 async function loadChart(days,pill){
   document.querySelectorAll('.range-pill').forEach(p=>p.classList.remove('active'));
   if(pill) pill.classList.add('active');
@@ -1891,292 +1997,79 @@ async function loadChart(days,pill){
 setTimeout(()=>{document.querySelectorAll('.flash').forEach(f=>{f.style.transition='.4s';f.style.opacity='0';f.style.transform='translateX(40px)';setTimeout(()=>f.remove(),400);});},4000);
 
 /* ===== ENQUIRY BADGE ON BOOT ===== */
-(async function(){try{const d=await fetch('/api/admin/enquiry_count').then(r=>r.json());if(d.pending>0){const b=document.getElementById('enq-badge');if(b){b.textContent=d.pending;b.style.display='inline-flex';}}}catch{}})();
+(async function(){
+  if(!IS_ADMIN) return;
+  try{const d=await fetch('/api/admin/enquiry_count').then(r=>r.json());if(d.pending>0){const b=document.getElementById('enq-badge');if(b){b.textContent=d.pending;b.style.display='inline-flex';}}}catch{}
+})();
 
-// Global bulk enquiry data
+/* ===== BULK IMPORT ===== */
 let _bulkEnquiries = [];
-const _bulkPlans = [
-  "Full Week Sample – ₹89",
-  "Half Week Sample – ₹59",
-  "Custom Plan",
-  "Premium – ₹299/mo",
-  "Regular – ₹199/mo",
-  "Budget – ₹99/mo"
-];
-const _bulkTimeSlots = [
-  "7:00 AM – 9:00 AM",
-  "9:00 AM – 11:00 AM",
-  "11:00 AM – 1:00 PM",
-  "1:00 PM – 3:00 PM",
-  "5:00 PM – 7:00 PM",
-  "Anytime"
-];
-const _bulkPaymentMethods = ["upi", "cod"];
-const _bulkStatuses = ["pending", "approved"];
- 
-function openBulkEnquiriesModal() {
-  _bulkEnquiries = [{}]; // Start with one empty row
-  renderBulkTable();
-  document.getElementById('modal-bulk-enquiries').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
- 
-function closeBulkModal() {
-  document.getElementById('modal-bulk-enquiries').classList.remove('open');
-  document.body.style.overflow = '';
-  _bulkEnquiries = [];
-}
- 
-document.getElementById('modal-bulk-enquiries')?.addEventListener('click', function(e) {
-  if (e.target === this) closeBulkModal();
-});
- 
-function updateRowCount() {
-  const count = _bulkEnquiries.length;
-  document.getElementById('bulk-row-count').textContent = `Rows: ${count}`;
-}
- 
-function addBulkRow() {
-  _bulkEnquiries.push({});
-  renderBulkTable();
-}
- 
-function addBulkRows(n) {
-  for (let i = 0; i < n; i++) _bulkEnquiries.push({});
-  renderBulkTable();
-}
- 
-function removeBulkRow() {
-  if (_bulkEnquiries.length > 0) {
-    _bulkEnquiries.pop();
-    renderBulkTable();
-  }
-}
- 
-function clearBulkData() {
-  if (!confirm('Clear all rows? This cannot be undone.')) return;
-  _bulkEnquiries = [{}];
-  renderBulkTable();
-}
- 
-function toggleBulkSelectAll() {
-  const checked = document.getElementById('bulk-select-all').checked;
-  document.querySelectorAll('#bulk-tbody .bulk-row-checkbox').forEach(cb => {
-    cb.checked = checked;
-  });
-}
- 
-function renderBulkTable() {
-  const tbody = document.getElementById('bulk-tbody');
-  tbody.innerHTML = _bulkEnquiries.map((row, idx) => {
-    return `
-      <tr style="height:44px; border-bottom:1px solid var(--border); hover-background:var(--bg-3);">
-        <td style="width:30px; padding:6px 4px; text-align:center; border-right:1px solid var(--border); vertical-align:middle;">
-          <input type="checkbox" class="bulk-row-checkbox" style="cursor:pointer;">
-        </td>
-        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
-          <input type="text" class="bulk-cell-input" data-row="${idx}" data-field="name" 
-            value="${escHtml(row.name || '')}" placeholder="Name"
-            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none;"
-            onchange="updateBulkRow(${idx},'name',this.value)"
-            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
-            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
-        </td>
-        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
-          <input type="tel" class="bulk-cell-input" data-row="${idx}" data-field="phone" 
-            value="${escHtml(row.phone || '')}" placeholder="Phone"
-            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none;"
-            onchange="updateBulkRow(${idx},'phone',this.value)"
-            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
-            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
-        </td>
-        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
-          <input type="text" list="bulk-plans-list" class="bulk-cell-input" data-row="${idx}" data-field="plan" 
-            value="${escHtml(row.plan || '')}" placeholder="Plan"
-            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none;"
-            onchange="updateBulkRow(${idx},'plan',this.value)"
-            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
-            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
-        </td>
-        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
-          <select class="bulk-cell-input" data-row="${idx}" data-field="delivery_time" 
-            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none; background:white;"
-            onchange="updateBulkRow(${idx},'delivery_time',this.value)"
-            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
-            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
-            <option value="">${escHtml(row.delivery_time || '— Select —')}</option>
-            ${_bulkTimeSlots.map(t => `<option value="${escHtml(t)}" ${row.delivery_time === t ? 'selected' : ''}>${escHtml(t)}</option>`).join('')}
-          </select>
-        </td>
-        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
-          <input type="date" class="bulk-cell-input" data-row="${idx}" data-field="start_date" 
-            value="${escHtml(row.start_date || '')}" 
-            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none;"
-            onchange="updateBulkRow(${idx},'start_date',this.value)"
-            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
-            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
-        </td>
-        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
-          <select class="bulk-cell-input" data-row="${idx}" data-field="payment_method" 
-            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none; background:white;"
-            onchange="updateBulkRow(${idx},'payment_method',this.value)"
-            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
-            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
-            <option value="upi" ${row.payment_method === 'upi' ? 'selected' : ''}>📱 UPI</option>
-            <option value="cod" ${row.payment_method === 'cod' ? 'selected' : ''}>💵 COD</option>
-          </select>
-        </td>
-        <td style="padding:4px 8px; border-right:1px solid var(--border); vertical-align:middle;">
-          <select class="bulk-cell-input" data-row="${idx}" data-field="status" 
-            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none; background:white;"
-            onchange="updateBulkRow(${idx},'status',this.value)"
-            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
-            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
-            <option value="pending" ${row.status === 'pending' ? 'selected' : ''}>⏳ Pending</option>
-            <option value="approved" ${row.status === 'approved' ? 'selected' : ''}>✅ Approved</option>
-          </select>
-        </td>
-        <td style="padding:4px 8px; vertical-align:middle;">
-          <input type="text" class="bulk-cell-input" data-row="${idx}" data-field="address" 
-            value="${escHtml(row.address || '')}" placeholder="Address (optional)"
-            style="width:100%; padding:6px 8px; border:1px solid var(--border); border-radius:4px; font-size:13px; outline:none;"
-            onchange="updateBulkRow(${idx},'address',this.value)"
-            onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(79,70,229,.1)';"
-            onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';">
-        </td>
-      </tr>
-    `;
-  }).join('');
-  
+const _bulkTimeSlots=['7:00 AM – 9:00 AM','9:00 AM – 11:00 AM','11:00 AM – 1:00 PM','Anytime'];
+function openBulkEnquiriesModal(){_bulkEnquiries=[{}];renderBulkTable();document.getElementById('modal-bulk-enquiries').classList.add('open');document.body.style.overflow='hidden';}
+function closeBulkModal(){document.getElementById('modal-bulk-enquiries').classList.remove('open');document.body.style.overflow='';_bulkEnquiries=[];}
+document.getElementById('modal-bulk-enquiries')?.addEventListener('click',function(e){if(e.target===this)closeBulkModal();});
+function updateRowCount(){document.getElementById('bulk-row-count').textContent=`Rows: ${_bulkEnquiries.length}`;}
+function addBulkRow(){_bulkEnquiries.push({});renderBulkTable();}
+function addBulkRows(n){for(let i=0;i<n;i++)_bulkEnquiries.push({});renderBulkTable();}
+function removeBulkRow(){if(_bulkEnquiries.length>0){_bulkEnquiries.pop();renderBulkTable();}}
+function clearBulkData(){if(!confirm('Clear all rows?'))return;_bulkEnquiries=[{}];renderBulkTable();}
+function toggleBulkSelectAll(){const checked=document.getElementById('bulk-select-all').checked;document.querySelectorAll('#bulk-tbody .bulk-row-checkbox').forEach(cb=>{cb.checked=checked;});}
+function updateBulkRow(rowIdx,field,value){if(_bulkEnquiries[rowIdx])_bulkEnquiries[rowIdx][field]=value;}
+function renderBulkTable(){
+  const tbody=document.getElementById('bulk-tbody');
+  const cellStyle='padding:4px 8px;border-right:1px solid var(--border);vertical-align:middle;';
+  const inputStyle='width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;outline:none;';
+  tbody.innerHTML=_bulkEnquiries.map((row,idx)=>`<tr style="height:44px;border-bottom:1px solid var(--border);">
+    <td style="width:30px;padding:6px 4px;text-align:center;border-right:1px solid var(--border);"><input type="checkbox" class="bulk-row-checkbox"></td>
+    <td style="${cellStyle}"><input type="text" value="${escHtml(row.name||'')}" placeholder="Name" style="${inputStyle}" onchange="updateBulkRow(${idx},'name',this.value)"></td>
+    <td style="${cellStyle}"><input type="tel" value="${escHtml(row.phone||'')}" placeholder="Phone" style="${inputStyle}" onchange="updateBulkRow(${idx},'phone',this.value)"></td>
+    <td style="${cellStyle}"><input type="text" value="${escHtml(row.plan||'')}" placeholder="Plan" style="${inputStyle}" onchange="updateBulkRow(${idx},'plan',this.value)"></td>
+    <td style="${cellStyle}"><select style="${inputStyle}background:white;" onchange="updateBulkRow(${idx},'delivery_time',this.value)">
+      <option value="">— Select —</option>${_bulkTimeSlots.map(t=>`<option value="${t}" ${row.delivery_time===t?'selected':''}>${t}</option>`).join('')}</select></td>
+    <td style="${cellStyle}"><input type="date" value="${escHtml(row.start_date||'')}" style="${inputStyle}" onchange="updateBulkRow(${idx},'start_date',this.value)"></td>
+    <td style="${cellStyle}"><select style="${inputStyle}background:white;" onchange="updateBulkRow(${idx},'payment_method',this.value)">
+      <option value="upi" ${row.payment_method==='upi'||!row.payment_method?'selected':''}>📱 UPI</option><option value="cod" ${row.payment_method==='cod'?'selected':''}>💵 COD</option></select></td>
+    <td style="${cellStyle}"><select style="${inputStyle}background:white;" onchange="updateBulkRow(${idx},'status',this.value)">
+      <option value="pending" ${row.status==='pending'||!row.status?'selected':''}>⏳ Pending</option><option value="approved" ${row.status==='approved'?'selected':''}>✅ Approved</option></select></td>
+    <td style="padding:4px 8px;vertical-align:middle;"><input type="text" value="${escHtml(row.address||'')}" placeholder="Address" style="${inputStyle}" onchange="updateBulkRow(${idx},'address',this.value)"></td>
+  </tr>`).join('');
   updateRowCount();
 }
- 
-function updateBulkRow(rowIdx, field, value) {
-  if (_bulkEnquiries[rowIdx]) {
-    _bulkEnquiries[rowIdx][field] = value;
-  }
-}
- 
-function downloadBulkTemplate() {
-  const data = _bulkEnquiries.map(r => ({
-    name: r.name || '',
-    phone: r.phone || '',
-    plan: r.plan || '',
-    delivery_time: r.delivery_time || '',
-    start_date: r.start_date || '',
-    payment_method: r.payment_method || 'upi',
-    status: r.status || 'pending',
-    address: r.address || ''
-  }));
-  
-  const json = JSON.stringify(data, null, 2);
-  const blob = new Blob([json], { type: 'application/json' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = `enquiries_${new Date().toISOString().split('T')[0]}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
-}
- 
-async function submitBulkEnquiries() {
-  // Filter out empty rows
-  const validRows = _bulkEnquiries.filter(r => (r.name || '').trim() || (r.phone || '').trim());
-  
-  if (!validRows.length) {
-    showToast('❌ Please add at least one enquiry.', 'danger');
-    return;
-  }
-  
-  const btn = document.getElementById('bulk-import-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Importing…';
-  document.getElementById('bulk-status-text').textContent = 'Processing...';
-  
-  try {
-    const res = await fetch('/api/admin/bulk_enquiries_import', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ enquiries: validRows })
-    });
-    
-    const result = await res.json();
-    btn.disabled = false;
-    btn.textContent = '✅ Import Enquiries';
-    
-    if (result.success) {
-      document.getElementById('bulk-status-text').innerHTML = 
-        `<strong style="color:var(--green);">✅ ${result.message}</strong><br>` +
-        `Inserted: <strong>${result.inserted}</strong> | Skipped: <strong>${result.skipped}</strong>`;
-      
-      if (result.errors && result.errors.length > 0) {
-        const errorDiv = document.getElementById('bulk-validation-errors');
-        errorDiv.innerHTML = `<strong>⚠️ ${result.errors.length} error(s):</strong><br>` + 
-          result.errors.map(e => `• ${escHtml(e)}`).join('<br>');
-        errorDiv.style.display = 'block';
-      }
-      
-      showToast(`✅ ${result.message}`, 'success');
-      
-      // Reload enquiries after 2 seconds
-      setTimeout(() => {
-        closeBulkModal();
-        if (_enqLoaded) loadEnquiries(true);
-      }, 2000);
-    } else {
-      showToast('❌ ' + (result.message || 'Import failed'), 'danger');
-      document.getElementById('bulk-status-text').textContent = 'Error: ' + (result.message || 'Unknown error');
-    }
-  } catch (err) {
-    btn.disabled = false;
-    btn.textContent = '✅ Import Enquiries';
-    showToast('❌ Network error. Try again.', 'danger');
-    document.getElementById('bulk-status-text').textContent = 'Network error.';
-  }
+async function submitBulkEnquiries(){
+  const validRows=_bulkEnquiries.filter(r=>(r.name||'').trim()||(r.phone||'').trim());
+  if(!validRows.length){showToast('❌ Please add at least one enquiry.','danger');return;}
+  const btn=document.getElementById('bulk-import-btn');btn.disabled=true;btn.textContent='⏳ Importing…';
+  try{
+    const res=await fetch('/api/admin/bulk_enquiries_import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enquiries:validRows})});
+    const result=await res.json();btn.disabled=false;btn.textContent='✅ Import Enquiries';
+    if(result.success){showToast(`✅ ${result.message}`,'success');setTimeout(()=>{closeBulkModal();if(_enqLoaded)loadEnquiries(true);},2000);}
+    else showToast('❌ '+(result.message||'Import failed'),'danger');
+  }catch{btn.disabled=false;btn.textContent='✅ Import Enquiries';showToast('❌ Network error.','danger');}
 }
 
-function openEditEnquiry(e) {
-  document.getElementById('enq-edit-id').value          = e.id;
-  document.getElementById('enq-edit-name').value        = e.name        || '';
-  document.getElementById('enq-edit-phone').value       = e.phone       || '';
-  document.getElementById('enq-edit-plan').value        = e.plan        || '';
-  document.getElementById('enq-edit-time').value        = e.delivery_time || '';
-  document.getElementById('enq-edit-startdate').value   = e.start_date  || '';
-  document.getElementById('enq-edit-payment').value     = e.payment_method || 'upi';
-  document.getElementById('enq-edit-address').value     = e.address     || '';
-  document.getElementById('enq-edit-status').value      = e.status      || 'pending';
+/* ===== EDIT ENQUIRY ===== */
+function openEditEnquiry(e){
+  document.getElementById('enq-edit-id').value=e.id;
+  document.getElementById('enq-edit-name').value=e.name||'';document.getElementById('enq-edit-phone').value=e.phone||'';
+  document.getElementById('enq-edit-plan').value=e.plan||'';document.getElementById('enq-edit-time').value=e.delivery_time||'';
+  document.getElementById('enq-edit-startdate').value=e.start_date||'';document.getElementById('enq-edit-payment').value=e.payment_method||'upi';
+  document.getElementById('enq-edit-address').value=e.address||'';document.getElementById('enq-edit-status').value=e.status||'pending';
   openModal('modal-edit-enquiry');
 }
-
-async function submitEnquiryEdit() {
-  const id = document.getElementById('enq-edit-id').value;
-  const payload = {
-    name:           document.getElementById('enq-edit-name').value.trim(),
-    phone:          document.getElementById('enq-edit-phone').value.trim(),
-    plan:           document.getElementById('enq-edit-plan').value.trim(),
-    delivery_time:  document.getElementById('enq-edit-time').value,
-    start_date:     document.getElementById('enq-edit-startdate').value,
-    payment_method: document.getElementById('enq-edit-payment').value,
-    address:        document.getElementById('enq-edit-address').value.trim(),
-    status:         document.getElementById('enq-edit-status').value,
-  };
-  if (!payload.name || !payload.phone) { showToast('❌ Name and phone are required.', 'danger'); return; }
-  try {
-    const res  = await fetch(`/api/admin/enquiries/edit/${id}`, {
-      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (data.success) {
-      showToast('✅ Enquiry updated.', 'success');
-      closeModal('modal-edit-enquiry');
-      loadEnquiries(true);   // refresh the table
-    } else {
-      showToast('❌ ' + (data.message || 'Update failed'), 'danger');
-    }
-  } catch { showToast('❌ Network error.', 'danger'); }
+async function submitEnquiryEdit(){
+  const id=document.getElementById('enq-edit-id').value;
+  const payload={name:document.getElementById('enq-edit-name').value.trim(),phone:document.getElementById('enq-edit-phone').value.trim(),
+    plan:document.getElementById('enq-edit-plan').value.trim(),delivery_time:document.getElementById('enq-edit-time').value,
+    start_date:document.getElementById('enq-edit-startdate').value,payment_method:document.getElementById('enq-edit-payment').value,
+    address:document.getElementById('enq-edit-address').value.trim(),status:document.getElementById('enq-edit-status').value};
+  if(!payload.name||!payload.phone){showToast('❌ Name and phone are required.','danger');return;}
+  try{
+    const res=await fetch(`/api/admin/enquiries/edit/${id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();
+    if(data.success){showToast('✅ Enquiry updated.','success');closeModal('modal-edit-enquiry');loadEnquiries(true);}
+    else showToast('❌ '+(data.message||'Update failed'),'danger');
+  }catch{showToast('❌ Network error.','danger');}
 }
-
-
 
 /* ===== BOOT ===== */
 window.addEventListener('DOMContentLoaded',()=>{
