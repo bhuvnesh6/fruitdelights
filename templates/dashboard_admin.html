@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,700;1,9..144,400&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
 :root {
   --bg:#f9fafb;--bg-2:#ffffff;--bg-3:#f3f4f6;--border:#e5e7eb;--border-s:#d1d5db;
@@ -74,6 +75,9 @@ img{display:block;max-width:100%}
 .btn-wa:hover{background:#bbf7d0}
 .btn-warning{background:var(--yellow-soft);color:var(--yellow)}
 .btn-sm{padding:5px 10px;font-size:12px}
+/* Excel download button style */
+.btn-excel{background:linear-gradient(135deg,#16a34a,#15803d);color:white;border:none}
+.btn-excel:hover{background:linear-gradient(135deg,#15803d,#166534)}
 .card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm)}
 .card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .card-title{font-size:15px;font-weight:600}
@@ -271,7 +275,7 @@ tbody tr:hover td{background:var(--bg-3)}
 .inbox-dot{width:8px;height:8px;border-radius:50%;background:var(--wa);display:inline-block;margin-right:4px;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 
-/* ── Manager table (same style as employees) ── */
+/* ── Manager table ── */
 .manager-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:white;flex-shrink:0}
 
 @media(max-width:1024px){.charts-grid{grid-template-columns:1fr}}
@@ -324,7 +328,6 @@ tbody tr:hover td{background:var(--bg-3)}
       <div class="nav-item" data-page="teams" onclick="navigate('teams',this)">
         <span class="nav-icon">🏘️</span> Teams
       </div>
-      <!-- Managers tab — admin only -->
       {% if session.role == 'admin' %}
       <div class="nav-item" data-page="managers" onclick="navigate('managers',this)">
         <span class="nav-icon">🧑‍💼</span> Managers
@@ -434,7 +437,6 @@ tbody tr:hover td{background:var(--bg-3)}
               <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">🔄 Refresh</button>
             </div>
           </div>
-          <!-- Next-day banner (shown dynamically) -->
           <div id="next-day-banner" class="next-day-banner" style="display:none;">
             <span class="nd-icon">🌙</span>
             <div>
@@ -643,7 +645,12 @@ tbody tr:hover td{background:var(--bg-3)}
       <div class="page-section" id="page-customers">
         <div class="section-title-bar">
           <h2>Customers</h2>
-          <button class="btn btn-primary" onclick="openAddUserModal('customer')">＋ Add Customer</button>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-excel btn-sm" onclick="downloadCustomersExcel()" title="Download filtered customers as Excel">
+              📥 Export Excel
+            </button>
+            <button class="btn btn-primary" onclick="openAddUserModal('customer')">＋ Add Customer</button>
+          </div>
         </div>
         <div class="filter-bar">
           <div class="search-wrap"><input class="form-control" id="cust-search" placeholder="Search customers…" oninput="filterCustomers()" style="max-width:220px;"></div>
@@ -683,6 +690,9 @@ tbody tr:hover td{background:var(--bg-3)}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
           <h2 style="font-family:var(--font-disp);font-size:22px;">Web Form Enquiries</h2>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-excel btn-sm" onclick="downloadEnquiriesExcel()" title="Download filtered enquiries as Excel">
+              📥 Export Excel
+            </button>
             <button class="btn btn-primary btn-sm" onclick="openBulkEnquiriesModal()">📥 Bulk Import</button>
             <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">🔄 Refresh</button>
           </div>
@@ -728,7 +738,7 @@ tbody tr:hover td{background:var(--bg-3)}
 
 <!-- ============================================================ MODALS ============================================================ -->
 
-<!-- Add Plan (with alternate_items field) -->
+<!-- Add Plan -->
 <div class="modal-backdrop" id="modal-add-plan">
   <div class="modal">
     <div class="modal-header"><div class="modal-title">New Subscription Plan</div><button class="modal-close" onclick="closeModal('modal-add-plan')">✕</button></div>
@@ -753,7 +763,7 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- Edit Plan (with alternate_items field) -->
+<!-- Edit Plan -->
 <div class="modal-backdrop" id="modal-edit-plan">
   <div class="modal">
     <div class="modal-header"><div class="modal-title">Edit Plan</div><button class="modal-close" onclick="closeModal('modal-edit-plan')">✕</button></div>
@@ -814,7 +824,7 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- Edit Manager (assign team) -->
+<!-- Edit Manager -->
 <div class="modal-backdrop" id="modal-edit-manager">
   <div class="modal">
     <div class="modal-header"><div class="modal-title">Edit Manager</div><button class="modal-close" onclick="closeModal('modal-edit-manager')">✕</button></div>
@@ -1251,6 +1261,10 @@ const pageTitles = {
 };
 const _loaded = { employees:false, customers:false, managers:false };
 
+/* ─── in-memory caches for Excel export ─── */
+let _custData = [];   // full customer objects
+let _enqData  = [];   // full enquiry objects
+
 function navigate(page, el) {
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
   const sec = document.getElementById('page-'+page);
@@ -1279,6 +1293,165 @@ function showToast(msg, type) {
   el.textContent = msg;
   c.appendChild(el);
   setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(40px)'; el.style.transition='.4s'; setTimeout(()=>el.remove(),400); }, 3000);
+}
+
+/* ===== EXCEL EXPORT HELPERS ===== */
+
+/**
+ * Generic function: builds an XLSX from array-of-objects, applies header styling, triggers download.
+ * @param {Array}  rows      - array of plain objects
+ * @param {Array}  headers   - [{key, label}, …] — defines column order and friendly names
+ * @param {string} filename  - e.g. "customers_2025-06-08.xlsx"
+ * @param {string} sheetName - worksheet tab name
+ */
+function exportToExcel(rows, headers, filename, sheetName) {
+  if (!rows || !rows.length) { showToast('No data to export.', 'danger'); return; }
+
+  // Build array-of-arrays: header row first, then data rows
+  const aoaHeaders = headers.map(h => h.label);
+  const aoaRows    = rows.map(r => headers.map(h => {
+    const v = r[h.key];
+    // Clean up nulls, arrays, objects
+    if (v === null || v === undefined) return '';
+    if (Array.isArray(v)) return v.join(', ');
+    return v;
+  }));
+  const aoa = [aoaHeaders, ...aoaRows];
+
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(aoa);
+
+  // Auto column widths
+  const colWidths = headers.map((h, ci) => {
+    const maxLen = Math.max(
+      h.label.length,
+      ...aoaRows.map(r => String(r[ci] || '').length)
+    );
+    return { wch: Math.min(maxLen + 4, 50) };
+  });
+  ws['!cols'] = colWidths;
+
+  // Freeze header row
+  ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
+
+  XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
+  XLSX.writeFile(wb, filename);
+  showToast(`✅ Exported ${rows.length} rows to Excel`, 'success');
+}
+
+/* ── Customers Excel Download ── */
+function downloadCustomersExcel() {
+  // Gather only visible (non-filtered) rows
+  const visibleIds = new Set();
+  document.querySelectorAll('#customers-table tbody tr[data-name]').forEach(tr => {
+    if (tr.style.display !== 'none') {
+      // id is embedded in the edit button's onclick
+      const editBtn = tr.querySelector('button.btn-ghost:last-of-type') || tr.querySelector('[onclick*="openEditCustomer"]');
+      // More reliable: we stored full objects in _custData, match by name+phone
+      const name  = tr.getAttribute('data-name');
+      const team  = tr.getAttribute('data-team');
+      const status= tr.getAttribute('data-status');
+      // We'll store a composite key
+      visibleIds.add(name + '||' + team + '||' + status);
+    }
+  });
+
+  // Filter _custData to only visible rows
+  const rows = _custData.filter(c =>
+    visibleIds.has((c.name||'').toLowerCase() + '||' + (c.team_id||'') + '||' + (c.status||'active'))
+  );
+
+  // Build export rows with clean fields
+  const exportRows = rows.map(c => ({
+    name:            c.name       || '',
+    phone:           c.phone      || '',
+    email:           (c.email||'').endsWith('@fruitedelights.local') ? '' : (c.email||''),
+    plan_name:       c.plan_name !== '—' ? (c.plan_name||'') : '',
+    start_date:      c.start_date || '',
+    status:          c.status     || '',
+    preferred_time:  c.preferred_time || '',
+    address:         c.address    || '',
+    team_name:       c.team_name  || '',
+    team_area:       c.team_area  || '',
+    team_city:       c.team_city  || '',
+    discount_percent:c.discount_percent || 0,
+    discount_amount: c.discount_amount  || 0,
+    off_days:        (c.off_days||[]).join(', '),
+    source:          c.source     || '',
+    created_at:      c.created_at || '',
+  }));
+
+  const headers = [
+    { key:'name',             label:'Name'             },
+    { key:'phone',            label:'Phone'            },
+    { key:'email',            label:'User ID / Email'  },
+    { key:'plan_name',        label:'Plan'             },
+    { key:'start_date',       label:'Start Date'       },
+    { key:'status',           label:'Status'           },
+    { key:'preferred_time',   label:'Preferred Time'   },
+    { key:'address',          label:'Address'          },
+    { key:'team_name',        label:'Team'             },
+    { key:'team_area',        label:'Area'             },
+    { key:'team_city',        label:'City'             },
+    { key:'discount_percent', label:'Discount %'       },
+    { key:'discount_amount',  label:'Flat Discount ₹'  },
+    { key:'off_days',         label:'Off Days'         },
+    { key:'source',           label:'Source'           },
+    { key:'created_at',       label:'Created At'       },
+  ];
+
+  const today    = new Date().toISOString().slice(0,10);
+  const hasFilter = document.getElementById('cust-clear-filters').style.display !== 'none';
+  const label    = hasFilter ? '_filtered' : '_all';
+  exportToExcel(exportRows, headers, `customers${label}_${today}.xlsx`, 'Customers');
+}
+
+/* ── Enquiries Excel Download ── */
+function downloadEnquiriesExcel() {
+  // Gather only visible rows
+  const visibleKeys = new Set();
+  document.querySelectorAll('#enq-table tbody tr[data-name]').forEach(tr => {
+    if (tr.style.display !== 'none') {
+      visibleKeys.add((tr.getAttribute('data-name')||'') + '||' + (tr.getAttribute('data-phone')||'') + '||' + (tr.getAttribute('data-status')||''));
+    }
+  });
+
+  const rows = _enqData.filter(e =>
+    visibleKeys.has((e.name||'').toLowerCase() + '||' + (e.phone||'').toLowerCase() + '||' + (e.status||''))
+  );
+
+  const exportRows = rows.map(e => ({
+    name:           e.name            || '',
+    phone:          e.phone           || '',
+    plan:           e.plan            || '',
+    delivery_time:  e.delivery_time   || '',
+    start_date:     e.start_date      || '',
+    payment_method: e.payment_method  || '',
+    address:        e.address         || '',
+    status:         e.status          || '',
+    created_at:     e.created_at
+      ? new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})
+      : '',
+  }));
+
+  const headers = [
+    { key:'name',           label:'Name'           },
+    { key:'phone',          label:'Phone'          },
+    { key:'plan',           label:'Plan'           },
+    { key:'delivery_time',  label:'Delivery Time'  },
+    { key:'start_date',     label:'Start Date'     },
+    { key:'payment_method', label:'Payment'        },
+    { key:'address',        label:'Address'        },
+    { key:'status',         label:'Status'         },
+    { key:'created_at',     label:'Received On'    },
+  ];
+
+  const today    = new Date().toISOString().slice(0,10);
+  const q        = document.getElementById('enq-search').value.trim();
+  const st       = document.getElementById('enq-status-filter').value;
+  const hasFilter= q || st;
+  const label    = hasFilter ? '_filtered' : '_all';
+  exportToExcel(exportRows, headers, `enquiries${label}_${today}.xlsx`, 'Enquiries');
 }
 
 /* ===== MANAGERS ===== */
@@ -1759,6 +1932,7 @@ async function loadCustomers() {
   tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try {
     const data=await fetch('/api/admin/customers').then(r=>r.json());
+    _custData = data;  // ← cache for Excel export
     _loaded.customers=true;
     const badge=document.getElementById('cust-badge'); if(badge) badge.textContent=data.length;
     if(!data.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">No customers found.</td></tr>`;return;}
@@ -1842,6 +2016,7 @@ async function loadEnquiries(force) {
   tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try {
     const data=await fetch('/api/admin/enquiries_data').then(r=>r.json());
+    _enqData  = data;  // ← cache for Excel export
     _enqLoaded=true;
     const total=data.length,pending=data.filter(e=>e.status==='pending').length,approved=data.filter(e=>e.status==='approved').length;
     document.getElementById('enq-stat-total').textContent=total;
