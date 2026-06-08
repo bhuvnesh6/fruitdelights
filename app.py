@@ -2140,5 +2140,104 @@ def n8n_add_enquiry():
         "message":    "Enquiry created."
     }), 201
 
+
+
+# ---------------------------------------------------------------------------
+# EMPLOYEE – Update customer delivery location (add to app.py)
+# ---------------------------------------------------------------------------
+ 
+@app.route("/api/employee/update_location", methods=["POST"])
+@login_required
+@role_required("employee")
+def update_customer_location():
+    """
+    Employee updates GPS coordinates for a customer's delivery location.
+    Body JSON: { "customer_id": "...", "lat": 27.123, "lng": 78.456 }
+    Stores in users_col under delivery_lat / delivery_lng + updated_at + updated_by.
+    """
+    data        = request.get_json(silent=True) or {}
+    customer_id = data.get("customer_id", "").strip()
+    lat         = data.get("lat")
+    lng         = data.get("lng")
+ 
+    if not customer_id:
+        return jsonify({"success": False, "message": "customer_id is required."}), 400
+    if lat is None or lng is None:
+        return jsonify({"success": False, "message": "lat and lng are required."}), 400
+ 
+    try:
+        lat = float(lat)
+        lng = float(lng)
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "message": "lat and lng must be numbers."}), 400
+ 
+    # Verify customer belongs to the employee's team
+    employee = users_col.find_one({"_id": ObjectId(session["user_id"])})
+    customer = users_col.find_one({"_id": ObjectId(customer_id), "role": "customer"})
+ 
+    if not customer:
+        return jsonify({"success": False, "message": "Customer not found."}), 404
+ 
+    if employee and employee.get("team_id") and str(customer.get("team_id")) != str(employee.get("team_id")):
+        return jsonify({"success": False, "message": "Unauthorized: not your team's customer."}), 403
+ 
+    users_col.update_one(
+        {"_id": ObjectId(customer_id)},
+        {"$set": {
+            "delivery_lat":        lat,
+            "delivery_lng":        lng,
+            "delivery_loc_updated": datetime.now(),
+            "delivery_loc_by":     session.get("name", session["user_id"]),
+        }}
+    )
+ 
+    # Also log in deliveries_col for today's record if exists
+    today_str = datetime.now().strftime("%Y-%m-%d")
+    deliveries_col.update_one(
+        {"customer_id": ObjectId(customer_id), "date": today_str},
+        {"$set": {
+            "delivery_lat": lat,
+            "delivery_lng": lng,
+            "loc_updated_at": datetime.now(),
+            "loc_updated_by": session.get("name", session["user_id"]),
+        }}
+    )
+ 
+    return jsonify({
+        "success": True,
+        "message": f"Location saved for {customer.get('name', '')}.",
+        "lat": lat,
+        "lng": lng,
+    })
+ 
+ 
+@app.route("/api/employee/customer_location/<customer_id>")
+@login_required
+@role_required("employee", "admin", "manager")
+def get_customer_location(customer_id):
+    """Returns stored delivery_lat/lng for a customer if available."""
+    customer = users_col.find_one(
+        {"_id": ObjectId(customer_id)},
+        {"delivery_lat": 1, "delivery_lng": 1, "delivery_loc_updated": 1, "delivery_loc_by": 1, "name": 1}
+    )
+    if not customer:
+        return jsonify({"success": False, "message": "Not found."}), 404
+ 
+    lat = customer.get("delivery_lat")
+    lng = customer.get("delivery_lng")
+    updated = customer.get("delivery_loc_updated")
+ 
+    return jsonify({
+        "success":     True,
+        "has_location": lat is not None and lng is not None,
+        "lat":         lat,
+        "lng":         lng,
+        "updated_at":  updated.isoformat() if isinstance(updated, datetime) else None,
+        "updated_by":  customer.get("delivery_loc_by", ""),
+        "name":        customer.get("name", ""),
+    })
+
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5757)

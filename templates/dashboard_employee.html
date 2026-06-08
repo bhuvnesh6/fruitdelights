@@ -1,646 +1,932 @@
 {% extends "base.html" %}
-{% block title %}Employee Dashboard{% endblock %}
+{% block title %}Deliveries{% endblock %}
 {% block content %}
 
 <style>
-  /* Force white text everywhere — no dark-on-dark */
-  .emp-wrap, .emp-wrap * {
-    color: #f1f5f9;
-  }
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
 
-  :root {
-    --clr-bg:      #0f1117;
-    --clr-card:    #1a1d27;
-    --clr-border:  #2e3347;
-    --clr-accent:  #6c63ff;
-    --clr-success: #22c55e;
-    --clr-warning: #f59e0b;
-    --clr-text:    #f1f5f9;
-    --clr-muted:   #8892a4;
-    --radius:      14px;
-    --radius-sm:   8px;
-  }
+:root {
+  --bg:       #f4f6fa;
+  --surface:  #ffffff;
+  --surface2: #f8f9fc;
+  --border:   #e2e7f0;
+  --border2:  #cdd4e3;
+  --accent:   #4f5de8;
+  --accent2:  #3b4bd6;
+  --green:    #16a34a;
+  --green-bg: #f0fdf4;
+  --green-bd: #bbf7d0;
+  --amber:    #d97706;
+  --amber-bg: #fffbeb;
+  --amber-bd: #fde68a;
+  --red:      #dc2626;
+  --text:     #1e2336;
+  --muted:    #6b7280;
+  --muted2:   #9ca3af;
+  --r:        10px;
+  --r-sm:     6px;
+  --font:     'DM Sans', sans-serif;
+  --mono:     'DM Mono', monospace;
+  --shadow:   0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
+}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-  .emp-wrap {
-    font-family: 'Segoe UI', system-ui, sans-serif;
-    color: #f1f5f9;
-    padding-bottom: 4rem;
-  }
+.wrap {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.25rem .85rem 5rem;
+  font-family: var(--font);
+  color: var(--text);
+}
 
-  /* ── HEADER ── */
-  .emp-header {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    margin-bottom: 1.75rem; flex-wrap: wrap; gap: 1rem;
-  }
-  .emp-header h2 { font-size: 1.5rem; font-weight: 700; letter-spacing: -.02em; color: #f1f5f9; }
-  .emp-header p  { color: #8892a4; margin-top: .3rem; font-size: .9rem; }
-  .task-badge {
-    background: #1a1d27; border: 1px solid #2e3347;
-    border-radius: 999px; padding: .5rem 1.1rem;
-    font-size: .95rem; font-weight: 600; color: #f1f5f9;
-  }
+/* ── TOP BAR ── */
+.top-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 1.1rem; gap: .75rem; flex-wrap: wrap;
+}
+.top-bar h1 {
+  font-size: 1.2rem; font-weight: 700; color: var(--text);
+}
+.count-pill {
+  background: #eef0fb; border: 1px solid #c7cbf5;
+  border-radius: 999px; padding: .22rem .75rem;
+  font-size: .78rem; font-weight: 700; color: var(--accent);
+  font-family: var(--mono);
+}
 
-  /* ── MAP SECTION ── */
-  .map-section {
-    background: #1a1d27; border: 1px solid #2e3347;
-    border-radius: var(--radius); overflow: hidden; margin-bottom: 2rem;
-  }
-  .map-header {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: .9rem 1.25rem; border-bottom: 1px solid #2e3347;
-    flex-wrap: wrap; gap: .75rem;
-  }
-  .map-header-left { display: flex; align-items: center; gap: .75rem; }
-  .map-title   { font-size: 1rem; font-weight: 700; color: #f1f5f9; }
-  .map-subtitle{ font-size: .8rem; color: #8892a4; margin-top: .1rem; }
+/* ── GPS BAR ── */
+.gps-bar {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); padding: .65rem 1rem;
+  display: flex; align-items: center; justify-content: space-between;
+  gap: .75rem; margin-bottom: .85rem; flex-wrap: wrap;
+  box-shadow: var(--shadow);
+}
+.gps-left  { display: flex; align-items: center; gap: .6rem; }
+.gps-dot   {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--amber);
+  animation: blink 1.4s ease-in-out infinite; flex-shrink: 0;
+}
+.gps-dot.live { background: var(--green); }
+.gps-dot.err  { background: var(--red); animation: none; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
+.gps-label { font-size: .82rem; font-weight: 600; color: var(--muted); }
+.gps-label.live { color: var(--green); }
+.gps-label.err  { color: var(--red); }
 
-  .gps-pill {
-    display: inline-flex; align-items: center; gap: .4rem;
-    background: rgba(34,197,94,.15); border: 1px solid rgba(34,197,94,.35);
-    border-radius: 999px; padding: .28rem .85rem;
-    font-size: .78rem; font-weight: 700; color: #22c55e;
-  }
-  .gps-pill.warn { background: rgba(245,158,11,.15); border-color: rgba(245,158,11,.35); color: #f59e0b; }
-  .gps-pill.err  { background: rgba(239,68,68,.15);  border-color: rgba(239,68,68,.35);  color: #ef4444; }
+.gps-actions { display: flex; gap: .5rem; }
+.btn-sm {
+  background: var(--accent); color: #fff; border: none;
+  border-radius: var(--r-sm); padding: .38rem .9rem;
+  font-size: .78rem; font-weight: 700; cursor: pointer;
+  font-family: var(--font); transition: opacity .15s;
+}
+.btn-sm:hover { opacity: .85; }
+.btn-sm.ghost {
+  background: transparent; border: 1px solid var(--border2); color: var(--muted);
+}
+.btn-sm.ghost:hover { border-color: var(--accent); color: var(--accent); }
 
-  .pulse {
-    width: 7px; height: 7px; border-radius: 50%; background: currentColor;
-    animation: pulseAnim 1.4s ease-in-out infinite; flex-shrink: 0;
-  }
-  @keyframes pulseAnim { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.6)} }
+/* ── STOPS STRIP ── */
+.stops-strip {
+  display: flex; align-items: center; gap: 0;
+  overflow-x: auto; padding: .4rem .1rem;
+  scrollbar-width: none; margin-bottom: .85rem;
+}
+.stops-strip::-webkit-scrollbar { display: none; }
+.s-chip {
+  display: inline-flex; align-items: center; gap: .3rem;
+  border: 1px solid var(--border2); border-radius: 999px; background: var(--surface);
+  padding: .22rem .65rem; font-size: .72rem; font-weight: 700;
+  color: var(--muted); white-space: nowrap; flex-shrink: 0;
+}
+.s-chip.me    { border-color: var(--accent); color: var(--accent); background: #eef0fb; }
+.s-chip.done  { border-color: var(--green); color: var(--green); background: var(--green-bg); }
+.s-chip.near  { border-color: var(--amber); color: var(--amber); background: var(--amber-bg); box-shadow: 0 0 6px rgba(217,119,6,.2); }
+.s-sep { font-size: .68rem; color: var(--muted2); padding: 0 .3rem; flex-shrink: 0; font-family: var(--mono); }
 
-  .map-actions { display: flex; gap: .6rem; flex-wrap: wrap; }
-  .btn-map {
-    background: #6c63ff; color: #fff; border: none;
-    border-radius: var(--radius-sm); padding: .48rem 1rem;
-    font-size: .82rem; font-weight: 700; cursor: pointer; transition: opacity .18s;
-  }
-  .btn-map:hover { opacity: .82; }
-  .btn-map.sec {
-    background: transparent; border: 1px solid #2e3347; color: #8892a4;
-  }
-  .btn-map.sec:hover { border-color: #6c63ff; color: #a5a0ff; }
+/* ── TABLE ── */
+.tbl-wrap {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow);
+}
+.del-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.del-table th {
+  background: var(--surface2); color: var(--muted);
+  font-size: .71rem; font-weight: 700;
+  text-transform: uppercase; letter-spacing: .06em;
+  padding: .65rem 1rem; text-align: left;
+  border-bottom: 1px solid var(--border); white-space: nowrap;
+}
+.del-table td {
+  padding: .85rem 1rem; border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+.del-table tr:last-child td { border-bottom: none; }
+.del-table tbody tr { transition: background .12s; }
+.del-table tbody tr:hover { background: var(--surface2); }
+.del-table tbody tr.nearby-row { background: #fffbeb !important; }
 
-  #team-map-iframe { width: 100%; height: 330px; border: none; display: block; }
-  .map-placeholder {
-    height: 260px; display: flex; flex-direction: column;
-    align-items: center; justify-content: center; gap: .8rem;
-    color: #8892a4; font-size: .9rem; padding: 1rem;
-  }
-  .map-placeholder-icon { font-size: 2.8rem; }
-  .map-placeholder strong { color: #f1f5f9; }
+/* Stop circle */
+.stop-circle {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-size: .74rem; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; font-family: var(--mono);
+}
+.stop-circle.done { background: var(--green); }
+.dist-lbl { font-size: .67rem; font-family: var(--mono); color: var(--muted2); margin-top: .2rem; text-align: center; }
 
-  /* stops row */
-  .stops-row {
-    display: flex; align-items: center;
-    padding: .75rem 1.25rem; overflow-x: auto;
-    border-top: 1px solid #2e3347; gap: 0;
-    scrollbar-width: thin; scrollbar-color: #2e3347 transparent;
-  }
-  .stop-chip {
-    display: inline-flex; align-items: center; gap: .35rem;
-    background: #0f1117; border: 1px solid #2e3347;
-    border-radius: 999px; padding: .28rem .75rem;
-    font-size: .76rem; font-weight: 700; color: #8892a4;
-    white-space: nowrap; transition: all .2s; flex-shrink: 0;
-  }
-  .stop-chip.me    { border-color: #6c63ff; color: #a5a0ff; background: rgba(108,99,255,.15); }
-  .stop-chip.done  { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,.12); }
-  .stop-chip.near  { border-color: #f59e0b; color: #f59e0b; background: rgba(245,158,11,.12); animation: nearGlow 1.6s ease-in-out infinite; }
-  @keyframes nearGlow { 0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.3)} 50%{box-shadow:0 0 0 6px rgba(245,158,11,0)} }
-  .stop-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
-  .dist-lbl { font-size: .68rem; color: #4a5168; margin: 0 5px; flex-shrink: 0; white-space: nowrap; }
+/* Customer cell */
+.cname { font-weight: 700; color: var(--text); font-size: .88rem; }
+.csub  { font-size: .73rem; color: var(--muted); margin-top: .1rem; }
 
-  /* ── DELIVERY CARDS ── */
-  .delivery-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: 1.25rem;
-  }
+/* Address */
+.addr-blur { filter: blur(5px); user-select: none; pointer-events: none; color: var(--muted2); font-size: .82rem; }
+.addr-real { font-size: .82rem; color: var(--text); line-height: 1.55; }
+.addr-phone { font-size: .78rem; margin-top: .2rem; }
+.addr-phone a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.addr-phone a:hover { text-decoration: underline; }
 
-  .del-card {
-    background: #1a1d27; border: 1px solid #2e3347;
-    border-radius: var(--radius); overflow: hidden; position: relative;
-    transition: transform .18s, border-color .2s;
-  }
-  .del-card:hover { transform: translateY(-2px); border-color: rgba(108,99,255,.5); }
-  .del-card.nearby-card {
-    border-color: #f59e0b !important;
-    box-shadow: 0 0 0 2px rgba(245,158,11,.18);
-  }
+/* loc tag */
+.loc-tag {
+  display: inline-flex; align-items: center; gap: .2rem;
+  font-size: .67rem; font-weight: 700; color: var(--green);
+  background: var(--green-bg); border: 1px solid var(--green-bd);
+  border-radius: 999px; padding: .1rem .45rem; margin-top: .25rem;
+}
+.loc-tag.by-addr { color: var(--muted); background: var(--surface2); border-color: var(--border); }
 
-  /* stripe */
-  .del-stripe { height: 4px; width: 100%; }
-  .stripe-pending   { background: #f59e0b; }
-  .stripe-accepted  { background: #6c63ff; }
-  .stripe-delivered { background: #22c55e; }
+/* Badges */
+.badge {
+  display: inline-flex; align-items: center; gap: .28rem;
+  border-radius: 999px; padding: .22rem .65rem;
+  font-size: .71rem; font-weight: 800; text-transform: uppercase;
+  letter-spacing: .05em; white-space: nowrap;
+}
+.b-p { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
+.b-a { background: #eef0fb; color: var(--accent); border: 1px solid #c7cbf5; }
+.b-d { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
 
-  .del-body { padding: 1rem 1.2rem 1.1rem; }
+.sub-note { font-size: .7rem; margin-top: .28rem; }
+.sub-mine  { color: var(--green); }
+.sub-other { color: var(--amber); }
 
-  /* stop number circle */
-  .stop-num {
-    position: absolute; top: .7rem; left: .7rem;
-    width: 26px; height: 26px; border-radius: 50%;
-    background: #6c63ff; color: #fff;
-    font-size: .72rem; font-weight: 800;
-    display: flex; align-items: center; justify-content: center; z-index: 3;
-  }
-  .stop-num.done { background: #22c55e; }
+/* Time */
+.time-val { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
 
-  /* card top */
-  .del-top {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    margin-bottom: .9rem; padding-left: 2rem;
-  }
-  .del-name { font-size: 1.05rem; font-weight: 700; color: #f1f5f9; }
-  .del-sub  { font-size: .78rem; color: #8892a4; margin-top: .15rem; }
+/* Actions */
+.actions-cell { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
+.btn-act {
+  display: inline-flex; align-items: center; gap: .25rem;
+  border: none; border-radius: var(--r-sm); padding: .38rem .78rem;
+  font-size: .76rem; font-weight: 700; cursor: pointer;
+  font-family: var(--font); text-decoration: none; transition: opacity .15s;
+  white-space: nowrap;
+}
+.btn-act:hover { opacity: .82; }
+.btn-accept  { background: var(--accent); color: #fff; }
+.btn-deliver { background: var(--green); color: #fff; }
+.btn-nav     { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
+.btn-nav:hover { border-color: var(--accent); color: var(--accent); }
+.btn-pin     { background: transparent; border: 1px solid var(--amber-bd); color: var(--amber); }
+.btn-pin:hover { background: var(--amber-bg); }
+.btn-pin.pinned { border-color: var(--green-bd); color: var(--green); background: var(--green-bg); }
 
-  /* status badge */
-  .status-badge {
-    border-radius: 999px; padding: .22rem .7rem;
-    font-size: .72rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em;
-    white-space: nowrap; flex-shrink: 0;
-  }
-  .b-pending   { background: rgba(245,158,11,.18); color: #fbbf24; border: 1px solid rgba(245,158,11,.35); }
-  .b-accepted  { background: rgba(108,99,255,.18); color: #a5a0ff; border: 1px solid rgba(108,99,255,.35); }
-  .b-delivered { background: rgba(34,197,94,.18);  color: #4ade80; border: 1px solid rgba(34,197,94,.35);  }
+/* ── MOBILE CARDS ── */
+.m-cards { display: none; }
+.m-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); overflow: hidden; margin-bottom: .65rem;
+  box-shadow: var(--shadow);
+}
+.m-card.nearby-row { border-color: var(--amber); }
+.m-stripe { height: 3px; }
+.m-s-p { background: var(--amber); }
+.m-s-a { background: var(--accent); }
+.m-s-d { background: var(--green); }
 
-  /* nearby banner */
-  .near-banner {
-    display: flex; align-items: center; gap: .5rem;
-    background: rgba(245,158,11,.1); border: 1px solid rgba(245,158,11,.3);
-    border-radius: var(--radius-sm); padding: .5rem .8rem;
-    font-size: .8rem; font-weight: 700; color: #fbbf24;
-    margin-bottom: .8rem;
-  }
+.m-head {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .75rem .9rem .5rem;
+}
+.m-info { flex: 1; min-width: 0; }
+.m-name { font-weight: 700; font-size: .92rem; color: var(--text); }
+.m-sub  { font-size: .72rem; color: var(--muted); margin-top: .1rem; font-family: var(--mono); }
 
-  /* address */
-  .addr-zone  { margin-bottom: .9rem; }
-  .addr-label { font-size: .78rem; color: #8892a4; margin-bottom: .35rem; }
+.m-addr {
+  padding: .45rem .9rem .55rem;
+  font-size: .82rem; color: var(--text); line-height: 1.5;
+  border-top: 1px solid var(--border);
+}
+.m-addr-blur { filter: blur(5px); color: var(--muted2); font-size: .8rem; }
+.m-addr-phone { margin-top: .25rem; }
+.m-addr-phone a { color: var(--accent); font-weight: 600; text-decoration: none; }
 
-  .addr-locked {
-    padding: .6rem .85rem; border-radius: var(--radius-sm);
-    background: rgba(255,255,255,.03); border: 1px dashed #2e3347;
-    text-align: center; color: #4a5168; font-size: .83rem;
-  }
-  .addr-locked .blur-text { filter: blur(5px); user-select: none; pointer-events: none; color: #8892a4; }
-  .addr-locked small { display: block; font-size: .72rem; margin-top: .35rem; color: #6c63ff; }
+.m-foot {
+  display: flex; gap: .4rem; padding: .55rem .9rem .7rem;
+  flex-wrap: wrap; border-top: 1px solid var(--border);
+  background: var(--surface2);
+}
 
-  .addr-open {
-    padding: .6rem .85rem; border-radius: var(--radius-sm);
-    background: rgba(34,197,94,.07); border: 1px solid rgba(34,197,94,.25);
-  }
-  .addr-full   { font-size: .9rem; font-weight: 700; color: #f1f5f9; line-height: 1.55; }
-  .addr-detail { font-size: .8rem; color: #8892a4; margin-top: .3rem; }
-  .addr-phone a { color: #a5a0ff; text-decoration: none; font-weight: 700; }
-  .addr-phone a:hover { color: #c4c1ff; }
+/* ── EMPTY ── */
+.empty {
+  text-align: center; padding: 3.5rem 2rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); box-shadow: var(--shadow);
+}
+.empty h3 { font-size: 1.1rem; color: var(--text); margin-bottom: .5rem; }
+.empty p  { color: var(--muted); font-size: .85rem; }
 
-  /* nav button */
-  .btn-nav {
-    width: 100%; display: flex; align-items: center; justify-content: center; gap: .4rem;
-    background: transparent; border: 1px solid #2e3347; color: #8892a4;
-    border-radius: var(--radius-sm); padding: .55rem; font-size: .8rem; font-weight: 700;
-    cursor: pointer; transition: all .18s; margin-top: .55rem; margin-bottom: .4rem;
-  }
-  .btn-nav:hover { border-color: #6c63ff; color: #a5a0ff; }
+/* ── TOAST ── */
+#toast {
+  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(8px);
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--r); padding: .6rem 1.2rem;
+  font-size: .82rem; font-weight: 600; color: var(--text);
+  box-shadow: 0 8px 32px rgba(0,0,0,.12);
+  opacity: 0; transition: opacity .22s, transform .22s;
+  pointer-events: none; z-index: 9999;
+  white-space: nowrap; max-width: 90vw; font-family: var(--font);
+}
+#toast.show  { opacity: 1; transform: translateX(-50%) translateY(0); }
+#toast.success { border-color: var(--green-bd); color: var(--green); }
+#toast.error   { border-color: #fecaca; color: var(--red); }
 
-  /* time */
-  .del-time { font-size: .8rem; color: #8892a4; margin-bottom: .85rem; }
-  .del-time b { color: #d1d5e0; }
+/* ── MAP SECTION ── */
+.map-section {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow);
+  margin-bottom: 1rem;
+}
+.map-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .7rem 1rem; border-bottom: 1px solid var(--border);
+  flex-wrap: wrap; gap: .6rem; background: var(--surface2);
+}
+.map-header-left { display: flex; align-items: center; gap: .6rem; }
+.map-title   { font-size: .9rem; font-weight: 700; color: var(--text); }
+.map-subtitle{ font-size: .72rem; color: var(--muted); }
+.map-header-right { display: flex; gap: .45rem; flex-wrap: wrap; }
 
-  /* footer */
-  .del-footer {
-    display: flex; justify-content: space-between; align-items: center;
-    border-top: 1px solid #2e3347; padding-top: .85rem;
-  }
-  .foot-lbl { font-size: .78rem; font-weight: 700; }
-  .lbl-mine  { color: #4ade80; }
-  .lbl-other { color: #fbbf24; }
-  .lbl-done  { color: #4ade80; }
-  .lbl-wait  { color: #4a5168; }
+#delivery-map {
+  width: 100%; height: 320px; display: block;
+  background: #e8ecf0;
+}
+.map-placeholder-inner {
+  height: 320px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: .65rem;
+  color: var(--muted); font-size: .88rem; background: #f0f3f8;
+}
+.map-placeholder-inner .icon { font-size: 2.5rem; }
+.map-placeholder-inner strong { color: var(--text); }
 
-  .btn-accept {
-    background: #6c63ff; color: #fff; border: none;
-    border-radius: var(--radius-sm); padding: .48rem 1.1rem;
-    font-size: .83rem; font-weight: 800; cursor: pointer; transition: opacity .18s;
-    text-decoration: none; display: inline-block;
-  }
-  .btn-accept:hover { opacity: .82; }
+/* Leaflet popup override */
+.leaflet-popup-content-wrapper {
+  border-radius: 8px !important;
+  box-shadow: 0 4px 16px rgba(0,0,0,.15) !important;
+  font-family: var(--font) !important;
+}
+.leaflet-popup-content { margin: 10px 14px !important; font-size: .82rem !important; line-height: 1.5 !important; }
+.popup-name { font-weight: 700; color: var(--text); font-size: .9rem; }
+.popup-addr { color: var(--muted); margin-top: .15rem; }
+.popup-status { margin-top: .3rem; }
 
-  .btn-deliver {
-    background: #22c55e; color: #fff; border: none;
-    border-radius: var(--radius-sm); padding: .48rem 1.1rem;
-    font-size: .83rem; font-weight: 800; cursor: pointer; transition: opacity .18s;
-    text-decoration: none; display: inline-block;
-  }
-  .btn-deliver:hover { opacity: .82; }
-
-  /* empty */
-  .empty-state {
-    grid-column: 1/-1; text-align: center; padding: 4rem 2rem;
-    background: #1a1d27; border: 1px solid #2e3347; border-radius: var(--radius);
-  }
-  .empty-state h3 { margin-bottom: .75rem; font-size: 1.2rem; color: #f1f5f9; }
-  .empty-state p  { color: #8892a4; }
-
-  @media (max-width: 560px) {
-    .delivery-grid { grid-template-columns: 1fr; }
-    .map-header    { flex-direction: column; }
-  }
+/* ── RESPONSIVE ── */
+@media (max-width: 639px) {
+  .tbl-wrap   { display: none; }
+  .m-cards    { display: block; }
+  .gps-bar    { flex-direction: column; align-items: flex-start; gap: .55rem; }
+  .gps-actions{ width: 100%; }
+  .btn-sm     { flex: 1; justify-content: center; }
+  #delivery-map { height: 260px; }
+}
 </style>
 
-<div class="emp-wrap">
+<!-- Leaflet CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 
-  <!-- HEADER -->
-  <div class="emp-header">
-    <div>
-      <h2>Today's Deliveries</h2>
-      <p>Team route · stops auto-sorted by nearest distance</p>
-    </div>
-    <span class="task-badge">{{ deliveries|length }} Stops</span>
+
+<div class="wrap">
+
+  <!-- TOP BAR -->
+  <div class="top-bar">
+    <h1>📦 Today's Deliveries</h1>
+    <span class="count-pill">{{ deliveries|length }} stops</span>
   </div>
 
-  <!-- ── TEAM MAP ── -->
+  <!-- GPS BAR -->
+  <div class="gps-bar">
+    <div class="gps-left">
+      <div class="gps-dot" id="gps-dot"></div>
+      <span class="gps-label" id="gps-label">GPS not started</span>
+    </div>
+    <div class="gps-actions">
+      <button class="btn-sm" onclick="initRoute()">📍 Sort by Distance</button>
+    </div>
+  </div>
+
+  <!-- STOPS STRIP -->
   {% if deliveries %}
+  <div class="stops-strip" id="stops-strip">
+    <span class="s-chip me">📍 You</span>
+  </div>
+  {% endif %}
+
+  {% if deliveries %}
+
+  <!-- ── MAP SECTION ── -->
   <div class="map-section">
     <div class="map-header">
       <div class="map-header-left">
         <div>
-          <div class="map-title">🗺 Team Delivery Route</div>
-          <div class="map-subtitle">All {{ deliveries|length }} stops · Live GPS · Distance-sorted</div>
+          <div class="map-title">🗺 Route Map</div>
+          <div class="map-subtitle">All {{ deliveries|length }} stops · click a marker for details</div>
         </div>
-        <span class="gps-pill warn" id="gps-pill">
-          <span class="pulse"></span> Waiting for GPS
+      </div>
+      <div class="map-header-right">
+        <button class="btn-sm" onclick="initRoute()">📍 Sort &amp; Plot Route</button>
+        <a id="open-maps-btn" href="#" target="_blank" class="btn-sm ghost" style="display:none;">Open in Maps ↗</a>
+      </div>
+    </div>
+    <div id="map-placeholder" class="map-placeholder-inner">
+      <div class="icon">🗺️</div>
+      <div><strong>Map loads after GPS is granted</strong></div>
+      <div style="font-size:.75rem;">Click "Sort &amp; Plot Route" to see all stops</div>
+    </div>
+    <div id="delivery-map" style="display:none;"></div>
+  </div>
+
+  <!-- ── DESKTOP TABLE ── -->
+  <div class="tbl-wrap">
+    <table class="del-table">
+      <thead>
+        <tr>
+          <th style="width:52px">#</th>
+          <th>Customer</th>
+          <th>Address</th>
+          <th style="width:100px">Time</th>
+          <th style="width:130px">Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody id="del-tbody">
+        {% for delivery in deliveries %}
+        {% set cust = delivery.customer[0] %}
+        {% set is_mine      = delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
+        {% set is_delivered = delivery.status == 'delivered' %}
+        {% set show_addr    = is_mine or is_delivered %}
+
+        <tr id="row-{{ loop.index }}"
+            data-index="{{ loop.index }}"
+            data-cust-id="{{ cust._id }}"
+            data-address="{{ cust.address }}"
+            data-name="{{ cust.name }}"
+            data-status="{{ delivery.status }}"
+            data-ismine="{{ 'true' if is_mine else 'false' }}"
+            data-isdone="{{ 'true' if is_delivered else 'false' }}"
+            data-lat="{{ cust.delivery_lat if cust.delivery_lat else '' }}"
+            data-lng="{{ cust.delivery_lng if cust.delivery_lng else '' }}">
+
+          <!-- # -->
+          <td>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:.18rem;">
+              <div class="stop-circle {% if is_delivered %}done{% endif %}" id="circle-{{ loop.index }}">{{ loop.index }}</div>
+              <div class="dist-lbl" id="dist-{{ loop.index }}">—</div>
+            </div>
+          </td>
+
+          <!-- Customer -->
+          <td>
+            <div class="cname">{{ cust.name }}</div>
+            <div class="csub">{{ cust.phone }}</div>
+          </td>
+
+          <!-- Address -->
+          <td>
+            {% if show_addr %}
+              <div class="addr-real" id="addr-real-{{ loop.index }}">{{ cust.address }}</div>
+              <div class="addr-phone">📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a></div>
+              {% if cust.delivery_lat and cust.delivery_lng %}
+                <div class="loc-tag">📌 GPS pinned</div>
+              {% else %}
+                <div class="loc-tag by-addr">🏠 Using address</div>
+              {% endif %}
+            {% else %}
+              <div id="addr-locked-{{ loop.index }}">
+                <span class="addr-blur">123 Hidden Street · Block A</span>
+              </div>
+              <div id="addr-real-{{ loop.index }}" style="display:none;">
+                <div class="addr-real">{{ cust.address }}</div>
+                <div class="addr-phone">📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a></div>
+                {% if cust.delivery_lat and cust.delivery_lng %}
+                  <div class="loc-tag">📌 GPS pinned</div>
+                {% else %}
+                  <div class="loc-tag by-addr">🏠 Using address</div>
+                {% endif %}
+              </div>
+            {% endif %}
+          </td>
+
+          <!-- Time -->
+          <td><span class="time-val">{{ cust.preferred_time or 'Anytime' }}</span></td>
+
+          <!-- Status -->
+          <td>
+            <span class="badge {% if delivery.status=='pending' %}b-p{% elif delivery.status=='accepted' %}b-a{% else %}b-d{% endif %}">
+              {% if delivery.status == 'pending' %}⏳ Pending
+              {% elif delivery.status == 'accepted' %}⚡ Accepted
+              {% else %}✓ Delivered{% endif %}
+            </span>
+            {% if is_mine %}<div class="sub-note sub-mine">Assigned to you</div>
+            {% elif delivery.status == 'accepted' and not is_mine %}<div class="sub-note sub-other">Taken by teammate</div>
+            {% endif %}
+          </td>
+
+          <!-- Actions -->
+          <td>
+            <div class="actions-cell">
+              <button class="btn-act btn-nav" id="nav-btn-{{ loop.index }}"
+                onclick="navToStop({{ loop.index }})"
+                {% if not show_addr %}style="display:none;"{% endif %}>🧭 Nav</button>
+
+              <button class="btn-act btn-pin {% if cust.delivery_lat and cust.delivery_lng %}pinned{% endif %}"
+                      id="pin-btn-{{ loop.index }}"
+                      onclick="pinLocation({{ loop.index }}, '{{ cust._id }}')"
+                      title="Pin your current GPS to this customer"
+                      {% if not show_addr %}style="display:none;"{% endif %}>
+                {% if cust.delivery_lat and cust.delivery_lng %}📌 Pinned{% else %}📍 Pin{% endif %}
+              </button>
+
+              {% if delivery.status == 'pending' %}
+                <a href="{{ url_for('accept_delivery', delivery_id=delivery._id|string) }}" class="btn-act btn-accept">Accept</a>
+              {% elif is_mine %}
+                <a href="{{ url_for('complete_delivery', delivery_id=delivery._id|string) }}" class="btn-act btn-deliver">✓ Delivered</a>
+              {% endif %}
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── MOBILE CARDS ── -->
+  <div class="m-cards" id="m-cards-wrap">
+    {% for delivery in deliveries %}
+    {% set cust = delivery.customer[0] %}
+    {% set is_mine      = delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
+    {% set is_delivered = delivery.status == 'delivered' %}
+    {% set show_addr    = is_mine or is_delivered %}
+
+    <div class="m-card"
+         id="mcard-{{ loop.index }}"
+         data-index="{{ loop.index }}"
+         data-cust-id="{{ cust._id }}"
+         data-address="{{ cust.address }}"
+         data-status="{{ delivery.status }}"
+         data-ismine="{{ 'true' if is_mine else 'false' }}"
+         data-isdone="{{ 'true' if is_delivered else 'false' }}"
+         data-lat="{{ cust.delivery_lat if cust.delivery_lat else '' }}"
+         data-lng="{{ cust.delivery_lng if cust.delivery_lng else '' }}">
+
+      <div class="m-stripe {% if delivery.status=='pending' %}m-s-p{% elif delivery.status=='accepted' %}m-s-a{% else %}m-s-d{% endif %}"></div>
+
+      <div class="m-head">
+        <div class="stop-circle {% if is_delivered %}done{% endif %}" id="m-circle-{{ loop.index }}">{{ loop.index }}</div>
+        <div class="m-info">
+          <div class="m-name">{{ cust.name }}</div>
+          <div class="m-sub">Stop #<span class="m-stop-lbl">{{ loop.index }}</span> · <span id="m-dist-{{ loop.index }}">—</span></div>
+        </div>
+        <span class="badge {% if delivery.status=='pending' %}b-p{% elif delivery.status=='accepted' %}b-a{% else %}b-d{% endif %}">
+          {% if delivery.status == 'pending' %}⏳{% elif delivery.status == 'accepted' %}⚡{% else %}✓{% endif %}
         </span>
       </div>
-      <div class="map-actions">
-        <button class="btn-map" onclick="initTeamRoute()">📍 Load Route</button>
-        <a id="open-maps-btn" href="#" target="_blank" class="btn-map sec" style="display:none;">Open Maps ↗</a>
+
+      <div class="m-addr">
+        {% if show_addr %}
+          <div id="m-addr-real-{{ loop.index }}">
+            {{ cust.address }}
+            <div class="m-addr-phone">📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a></div>
+            {% if cust.delivery_lat and cust.delivery_lng %}
+              <div class="loc-tag" style="margin-top:.3rem;">📌 GPS pinned</div>
+            {% else %}
+              <div class="loc-tag by-addr" style="margin-top:.3rem;">🏠 Using address</div>
+            {% endif %}
+          </div>
+        {% else %}
+          <div id="m-addr-locked-{{ loop.index }}">
+            <span class="m-addr-blur">Accept or come within 300m to reveal address</span>
+          </div>
+          <div id="m-addr-real-{{ loop.index }}" style="display:none;">
+            {{ cust.address }}
+            <div class="m-addr-phone">📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a></div>
+            {% if cust.delivery_lat and cust.delivery_lng %}
+              <div class="loc-tag" style="margin-top:.3rem;">📌 GPS pinned</div>
+            {% else %}
+              <div class="loc-tag by-addr" style="margin-top:.3rem;">🏠 Using address</div>
+            {% endif %}
+          </div>
+        {% endif %}
+      </div>
+
+      <div class="m-foot">
+        <button class="btn-act btn-nav" id="m-nav-btn-{{ loop.index }}"
+          onclick="navToStop({{ loop.index }})"
+          {% if not show_addr %}style="display:none;"{% endif %}>🧭 Nav</button>
+
+        <button class="btn-act btn-pin {% if cust.delivery_lat and cust.delivery_lng %}pinned{% endif %}"
+                id="m-pin-btn-{{ loop.index }}"
+                onclick="pinLocation({{ loop.index }}, '{{ cust._id }}')"
+                {% if not show_addr %}style="display:none;"{% endif %}>
+          {% if cust.delivery_lat and cust.delivery_lng %}📌 Pinned{% else %}📍 Pin{% endif %}
+        </button>
+
+        {% if delivery.status == 'pending' %}
+          <a href="{{ url_for('accept_delivery', delivery_id=delivery._id|string) }}" class="btn-act btn-accept">Accept</a>
+        {% elif is_mine %}
+          <a href="{{ url_for('complete_delivery', delivery_id=delivery._id|string) }}" class="btn-act btn-deliver">✓ Mark Delivered</a>
+        {% endif %}
       </div>
     </div>
+    {% endfor %}
+  </div>
 
-    <div id="map-placeholder" class="map-placeholder">
-      <div class="map-placeholder-icon">🗺️</div>
-      <div>Click <strong>Load Route</strong> to see all {{ deliveries|length }} stops on one map</div>
-      <div style="font-size:.78rem;color:#4a5168;margin-top:.25rem;">GPS required · Stops sorted by closest distance automatically</div>
-    </div>
-    <iframe id="team-map-iframe" style="display:none;" allowfullscreen loading="lazy"></iframe>
-
-    <div class="stops-row" id="stops-row">
-      <span style="font-size:.76rem;color:#4a5168;">Stops appear here after route loads</span>
-    </div>
+  {% else %}
+  <div class="empty">
+    <h3>🎉 All done for today!</h3>
+    <p>No pending deliveries for your team.</p>
   </div>
   {% endif %}
 
-  <!-- ── DELIVERY CARDS ── -->
-  <div class="delivery-grid" id="delivery-grid">
+</div>
 
-    {% for delivery in deliveries %}
-      {% set cust = delivery.customer[0] %}
-      {% set is_mine      = delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
-      {% set is_delivered = delivery.status == 'delivered' %}
+<div id="toast"></div>
 
-      <div class="del-card"
-           id="card-{{ loop.index }}"
-           data-index="{{ loop.index }}"
-           data-address="{{ cust.address }}"
-           data-name="{{ cust.name }}"
-           data-status="{{ delivery.status }}">
-
-        <!-- Stop number -->
-        <div class="stop-num {% if is_delivered %}done{% endif %}" id="stop-num-{{ loop.index }}">{{ loop.index }}</div>
-
-        <!-- Stripe -->
-        <div class="del-stripe
-          {% if delivery.status == 'pending' %}stripe-pending
-          {% elif delivery.status == 'accepted' %}stripe-accepted
-          {% else %}stripe-delivered{% endif %}">
-        </div>
-
-        <div class="del-body">
-
-          <!-- Top row -->
-          <div class="del-top">
-            <div>
-              <div class="del-name">{{ cust.name }}</div>
-              <div class="del-sub">Stop #<span class="stop-lbl">{{ loop.index }}</span> · Team delivery</div>
-            </div>
-            <span class="status-badge
-              {% if delivery.status == 'pending' %}b-pending
-              {% elif delivery.status == 'accepted' %}b-accepted
-              {% else %}b-delivered{% endif %}">
-              {{ delivery.status | title }}
-            </span>
-          </div>
-
-          <!-- Nearby banner (JS shows this) -->
-          <div class="near-banner" id="near-banner-{{ loop.index }}" style="display:none;">
-            📍 You're nearby — full details revealed!
-          </div>
-
-          <!-- Address zone -->
-          <div class="addr-zone">
-            <div class="addr-label">📦 Delivery Address</div>
-
-            {% if is_mine or is_delivered %}
-              <!-- Always visible -->
-              <div class="addr-open" id="addr-box-{{ loop.index }}">
-                <div class="addr-full">{{ cust.address }}</div>
-                {% if cust.get('floor') %}
-                  <div class="addr-detail">🏢 Floor {{ cust.floor }}</div>
-                {% endif %}
-                {% if cust.get('landmark') %}
-                  <div class="addr-detail">📌 {{ cust.landmark }}</div>
-                {% endif %}
-                <div class="addr-phone" style="margin-top:.5rem;">
-                  📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a>
-                </div>
-              </div>
-              <button class="btn-nav" onclick="navToStop({{ cust.address|tojson }})">🧭 Navigate to this stop</button>
-
-            {% else %}
-              <!-- Locked until accepted or nearby -->
-              <div class="addr-locked" id="addr-locked-{{ loop.index }}">
-                <div class="blur-text">123 Hidden Street · Block A · Floor 2</div>
-                <small>Accept task or get within ~300m to reveal full details</small>
-              </div>
-              <div class="addr-open" id="addr-box-{{ loop.index }}" style="display:none;">
-                <div class="addr-full">{{ cust.address }}</div>
-                {% if cust.get('floor') %}
-                  <div class="addr-detail">🏢 Floor {{ cust.floor }}</div>
-                {% endif %}
-                {% if cust.get('landmark') %}
-                  <div class="addr-detail">📌 {{ cust.landmark }}</div>
-                {% endif %}
-                <div class="addr-phone" style="margin-top:.5rem;">
-                  📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a>
-                </div>
-              </div>
-              <button class="btn-nav" id="nav-btn-{{ loop.index }}" style="display:none;"
-                      onclick="navToStop({{ cust.address|tojson }})">
-                🧭 Navigate to this stop
-              </button>
-            {% endif %}
-          </div>
-
-          <!-- Time -->
-          <div class="del-time">⏱ Preferred time: <b>{{ delivery.preferred_time or 'Anytime' }}</b></div>
-
-          <!-- Footer -->
-          <div class="del-footer">
-            <div class="foot-lbl">
-              {% if is_mine %}
-                <span class="lbl-mine">✓ Assigned To You</span>
-              {% elif delivery.status == 'accepted' %}
-                <span class="lbl-other">⚡ Taken by teammate</span>
-              {% elif is_delivered %}
-                <span class="lbl-done">✓ Delivered</span>
-              {% else %}
-                <span class="lbl-wait">Waiting for pickup</span>
-              {% endif %}
-            </div>
-            <div>
-              {% if delivery.status == 'pending' %}
-                <a href="{{ url_for('accept_delivery', delivery_id=delivery._id|string) }}" class="btn-accept">Accept</a>
-              {% elif is_mine %}
-                <a href="{{ url_for('complete_delivery', delivery_id=delivery._id|string) }}" class="btn-deliver">✓ Mark Delivered</a>
-              {% endif %}
-            </div>
-          </div>
-
-        </div><!-- /.del-body -->
-      </div>
-
-    {% else %}
-      <div class="empty-state">
-        <h3>🎉 No deliveries pending today</h3>
-        <p>All customer deliveries for your team are completed.</p>
-      </div>
-    {% endfor %}
-
-  </div><!-- /.delivery-grid -->
-</div><!-- /.emp-wrap -->
-
+<!-- Leaflet JS -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-/* ── STOP DATA from Jinja ── */
-const RAW_STOPS = [
+const STOPS = [
   {% for delivery in deliveries %}{% set cust = delivery.customer[0] %}{
     index:   {{ loop.index }},
+    custId:  "{{ cust._id }}",
     name:    {{ cust.name | tojson }},
     address: {{ cust.address | tojson }},
     phone:   {{ cust.phone | tojson }},
     status:  {{ delivery.status | tojson }},
-    isMine:  {% if delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}true{% else %}false{% endif %},
-    isDone:  {% if delivery.status == 'delivered' %}true{% else %}false{% endif %},
-    lat: null, lng: null, dist: null,
+    isMine:  {{ 'true' if (delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string) else 'false' }},
+    isDone:  {{ 'true' if delivery.status == 'delivered' else 'false' }},
+    lat:     {{ cust.delivery_lat if cust.delivery_lat else 'null' }},
+    lng:     {{ cust.delivery_lng if cust.delivery_lng else 'null' }},
+    geocodedLat: null, geocodedLng: null, dist: null,
   },{% endfor %}
 ];
 
-let SORTED = [...RAW_STOPS];
-let myLat = null, myLng = null;
-let watchId = null;
+let myLat = null, myLng = null, watchId = null;
 const NEARBY_M = 300;
+let SORTED = [...STOPS];
 
-/* ── HAVERSINE ── */
-function hav(a1,o1,a2,o2){
-  const R=6371000, dA=(a2-a1)*Math.PI/180, dO=(o2-o1)*Math.PI/180;
-  const a=Math.sin(dA/2)**2+Math.cos(a1*Math.PI/180)*Math.cos(a2*Math.PI/180)*Math.sin(dO/2)**2;
-  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+/* ── Leaflet map instance ── */
+let MAP = null;
+let myMarker = null;
+let routeLine = null;
+const leafletMarkers = {};  // index → L.marker
+
+/* ─────────────── TOAST ─────────────── */
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'show ' + type;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => { t.className = ''; }, 3200);
 }
 
-/* ── GEOCODE via Nominatim (free, no key) ── */
-async function geocode(addr){
-  try{
-    const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1`,
-      {headers:{'Accept-Language':'en','User-Agent':'DeliveryApp/1.0'}});
-    const d=await r.json();
-    if(d&&d[0]) return {lat:+d[0].lat, lng:+d[0].lon};
-  }catch(e){}
+/* ─────────────── HAVERSINE ─────────────── */
+function hav(a1, o1, a2, o2) {
+  const R = 6371000, dA = (a2-a1)*Math.PI/180, dO = (o2-o1)*Math.PI/180;
+  const a = Math.sin(dA/2)**2 + Math.cos(a1*Math.PI/180)*Math.cos(a2*Math.PI/180)*Math.sin(dO/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+/* ─────────────── EFFECTIVE COORDS ─────────────── */
+function eLat(s) { return s.lat !== null ? s.lat : s.geocodedLat; }
+function eLng(s) { return s.lng !== null ? s.lng : s.geocodedLng; }
+
+/* ─────────────── GEOCODE (Nominatim) ─────────────── */
+async function geocode(addr) {
+  try {
+    const r = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1`,
+      { headers: { 'Accept-Language': 'en', 'User-Agent': 'FruiteDelights/1.0' } }
+    );
+    const d = await r.json();
+    if (d && d[0]) return { lat: +d[0].lat, lng: +d[0].lon };
+  } catch(e) {}
   return null;
 }
 
-/* ── NEAREST-NEIGHBOUR SORT ── */
-function nnSort(eLat,eLng,stops){
-  const pool=[...stops.filter(s=>s.lat!==null)];
-  const out=[];
-  let cLat=eLat, cLng=eLng;
-  while(pool.length){
-    let bi=-1, bd=Infinity;
-    pool.forEach((s,i)=>{ const d=hav(cLat,cLng,s.lat,s.lng); if(d<bd){bd=d;bi=i;} });
-    pool[bi].dist=Math.round(bd);
-    out.push(pool.splice(bi,1)[0]);
-    cLat=out[out.length-1].lat; cLng=out[out.length-1].lng;
+/* ─────────────── NEAREST-NEIGHBOUR SORT ─────────────── */
+function nnSort(lat0, lng0, stops) {
+  const pool = stops.filter(s => eLat(s) !== null).map(s => ({...s}));
+  const noCoord = stops.filter(s => eLat(s) === null);
+  const out = [];
+  let cLat = lat0, cLng = lng0;
+  while (pool.length) {
+    let bi = -1, bd = Infinity;
+    pool.forEach((s, i) => { const d = hav(cLat, cLng, eLat(s), eLng(s)); if (d < bd) { bd = d; bi = i; } });
+    pool[bi].dist = Math.round(bd);
+    out.push(pool.splice(bi, 1)[0]);
+    cLat = eLat(out[out.length-1]); cLng = eLng(out[out.length-1]);
   }
-  return [...out, ...stops.filter(s=>s.lat===null)];
+  noCoord.forEach(s => { s.dist = null; out.push(s); });
+  return out;
 }
 
-/* ── STOPS ROW ── */
-function buildStopsRow(sorted){
-  const row=document.getElementById('stops-row');
-  row.innerHTML='';
-  const me=document.createElement('span');
-  me.className='stop-chip me';
-  me.innerHTML='<span class="stop-dot"></span> You';
-  row.appendChild(me);
+function fmtDist(m) {
+  if (m === null) return '—';
+  return m >= 1000 ? (m/1000).toFixed(1) + 'km' : m + 'm';
+}
 
-  sorted.forEach((s,i)=>{
-    const dl=document.createElement('span');
-    dl.className='dist-lbl';
-    dl.textContent=s.dist!=null
-      ?(s.dist>=1000?`—${(s.dist/1000).toFixed(1)}km—`:`—${s.dist}m—`)
-      :'—';
-    row.appendChild(dl);
+/* ─────────────── LEAFLET MAP ─────────────── */
+function initMap(centerLat, centerLng) {
+  const ph = document.getElementById('map-placeholder');
+  const mapEl = document.getElementById('delivery-map');
+  if (ph) ph.style.display = 'none';
+  if (mapEl) mapEl.style.display = 'block';
 
-    const ch=document.createElement('span');
-    ch.id=`chip-${s.index}`;
-    ch.className='stop-chip'+(s.isDone?' done':'');
-    ch.innerHTML=`<span class="stop-dot"></span> ${i+1}. ${s.name.split(' ')[0]}`;
-    row.appendChild(ch);
+  if (MAP) { MAP.remove(); MAP = null; }
+  MAP = L.map('delivery-map', { zoomControl: true, attributionControl: false });
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution: '© OpenStreetMap'
+  }).addTo(MAP);
+
+  // Attribution small
+  L.control.attribution({ position: 'bottomright', prefix: false })
+    .addAttribution('© <a href="https://openstreetmap.org">OSM</a>')
+    .addTo(MAP);
+}
+
+function makeStopIcon(num, isDone, isMine) {
+  const bg   = isDone ? '#16a34a' : isMine ? '#2563eb' : '#4f5de8';
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
+    <path d="M16 0C7.163 0 0 7.163 0 16c0 10 16 24 16 24S32 26 32 16C32 7.163 24.837 0 16 0z" fill="${bg}"/>
+    <circle cx="16" cy="16" r="10" fill="white" opacity="0.95"/>
+    <text x="16" y="21" text-anchor="middle" font-size="11" font-weight="800" fill="${bg}" font-family="DM Mono,monospace">${num}</text>
+  </svg>`;
+  return L.divIcon({
+    html: svg, className: '', iconSize: [32, 40], iconAnchor: [16, 40], popupAnchor: [0, -40]
   });
 }
 
-/* ── REORDER CARDS ── */
-function reorderCards(sorted){
-  const grid=document.getElementById('delivery-grid');
-  sorted.forEach((s,i)=>{
-    const card=document.getElementById(`card-${s.index}`);
-    if(!card) return;
-    grid.appendChild(card);
-    const nb=document.getElementById(`stop-num-${s.index}`);
-    if(nb) nb.textContent=i+1;
-    const sl=card.querySelector('.stop-lbl');
-    if(sl) sl.textContent=i+1;
+function makeMyIcon() {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
+    <circle cx="11" cy="11" r="10" fill="#4f5de8" stroke="white" stroke-width="2.5"/>
+    <circle cx="11" cy="11" r="4" fill="white"/>
+  </svg>`;
+  return L.divIcon({ html: svg, className: '', iconSize: [22, 22], iconAnchor: [11, 11] });
+}
+
+function renderMap(sorted) {
+  if (!MAP) return;
+
+  // Clear old markers + line
+  Object.values(leafletMarkers).forEach(m => m.remove());
+  Object.keys(leafletMarkers).forEach(k => delete leafletMarkers[k]);
+  if (routeLine) { routeLine.remove(); routeLine = null; }
+  if (myMarker)  { myMarker.remove(); myMarker = null; }
+
+  const bounds = [];
+
+  // My location marker
+  myMarker = L.marker([myLat, myLng], { icon: makeMyIcon(), zIndexOffset: 1000 })
+    .addTo(MAP)
+    .bindPopup('<div class="popup-name">📍 Your Location</div>');
+  bounds.push([myLat, myLng]);
+
+  // Route line coords: me → sorted stops with coords
+  const lineCoords = [[myLat, myLng]];
+
+  sorted.forEach((s, i) => {
+    const sLat = eLat(s), sLng = eLng(s);
+    if (sLat === null) return;
+
+    const icon = makeStopIcon(i + 1, s.isDone, s.isMine);
+    const statusLabel = s.isDone ? '✓ Delivered' : s.isMine ? '⚡ Accepted (yours)' : s.status === 'pending' ? '⏳ Pending' : '⚡ Accepted';
+    const popup = `
+      <div class="popup-name">${i+1}. ${s.name}</div>
+      <div class="popup-addr">${s.address}</div>
+      <div class="popup-addr">📞 ${s.phone}</div>
+      <div class="popup-status">${statusLabel}</div>
+      ${s.dist !== null ? `<div class="popup-addr" style="margin-top:.2rem;">📏 ${fmtDist(s.dist)} from you</div>` : ''}
+      ${s.lat !== null ? '<div class="popup-addr" style="color:#16a34a;">📌 GPS pinned</div>' : ''}
+    `;
+    const marker = L.marker([sLat, sLng], { icon })
+      .addTo(MAP)
+      .bindPopup(popup);
+    leafletMarkers[s.index] = marker;
+    lineCoords.push([sLat, sLng]);
+    bounds.push([sLat, sLng]);
+  });
+
+  // Draw dashed route line
+  if (lineCoords.length > 1) {
+    routeLine = L.polyline(lineCoords, {
+      color: '#4f5de8', weight: 3, opacity: 0.7,
+      dashArray: '8, 6'
+    }).addTo(MAP);
+  }
+
+  // Fit map to all markers
+  if (bounds.length > 1) {
+    MAP.fitBounds(bounds, { padding: [30, 30] });
+  } else if (bounds.length === 1) {
+    MAP.setView(bounds[0], 15);
+  }
+}
+
+/* Update my location dot on map while watching */
+function updateMyDot() {
+  if (!MAP || !myMarker) return;
+  myMarker.setLatLng([myLat, myLng]);
+}
+
+/* ─────────────── APPLY SORT ─────────────── */
+function applySort(sorted) {
+  SORTED = sorted;
+  sorted.forEach((s, i) => {
+    const n = i + 1;
+    ['circle', 'm-circle'].forEach(p => { const el = document.getElementById(`${p}-${s.index}`); if (el) el.textContent = n; });
+    ['dist', 'm-dist'].forEach(p => { const el = document.getElementById(`${p}-${s.index}`); if (el) el.textContent = fmtDist(s.dist); });
+  });
+  const tbody = document.getElementById('del-tbody');
+  if (tbody) sorted.forEach(s => { const r = document.getElementById(`row-${s.index}`); if (r) tbody.appendChild(r); });
+  const mwrap = document.getElementById('m-cards-wrap');
+  if (mwrap) sorted.forEach(s => { const c = document.getElementById(`mcard-${s.index}`); if (c) mwrap.appendChild(c); });
+  buildStrip(sorted);
+}
+
+/* ─────────────── STOPS STRIP ─────────────── */
+function buildStrip(sorted) {
+  const strip = document.getElementById('stops-strip');
+  if (!strip) return;
+  strip.innerHTML = '<span class="s-chip me">📍 You</span>';
+  sorted.forEach((s, i) => {
+    const sep = document.createElement('span'); sep.className = 's-sep';
+    sep.textContent = s.dist !== null ? fmtDist(s.dist) : '·'; strip.appendChild(sep);
+    const chip = document.createElement('span'); chip.id = `chip-${s.index}`;
+    chip.className = 's-chip' + (s.isDone ? ' done' : '');
+    chip.textContent = `${i+1}. ${s.name.split(' ')[0]}`;
+    // Click chip → open map popup
+    chip.style.cursor = 'pointer';
+    chip.addEventListener('click', () => {
+      const mk = leafletMarkers[s.index];
+      if (mk) { MAP.setView(mk.getLatLng(), 16); mk.openPopup(); }
+    });
+    strip.appendChild(chip);
   });
 }
 
-/* ── MAP URL — use OpenStreetMap/OSRM embed for multi-stop ── */
-function buildMapUrl(eLat,eLng,sorted){
-  /* Build a Google Maps embed showing markers for all stops.
-     For multi-waypoint we use the "q" parameter trick — embed shows
-     the destination pin; we'll use the open-in-maps link for full route */
-  if(!sorted.length) return null;
-  // show all coords as markers via OpenStreetMap embed (no key needed)
-  const pts=sorted.filter(s=>s.lat).map(s=>`${s.lat},${s.lng}`);
-  if(!pts.length) return null;
-
-  /* fallback: use Google Maps embed pointing to first undelivered stop,
-     while the open-in-maps link carries all waypoints */
-  const first=sorted.find(s=>!s.isDone && s.lat) || sorted.find(s=>s.lat);
-  if(!first) return null;
-  return `https://maps.google.com/maps?saddr=${eLat},${eLng}&daddr=${encodeURIComponent(first.address)}&t=&z=14&ie=UTF8&iwloc=&output=embed`;
+/* ─────────────── GPS WATCH ─────────────── */
+function startWatch() {
+  if (!navigator.geolocation || watchId) return;
+  watchId = navigator.geolocation.watchPosition(onPos, null, { enableHighAccuracy: true, maximumAge: 8000 });
 }
 
-/* Full multi-stop nav link (opens Google Maps app) */
-function buildFullNavUrl(eLat,eLng,sorted){
-  const withCoords=sorted.filter(s=>s.lat);
-  if(!withCoords.length) return '#';
-  const dest=encodeURIComponent(withCoords[withCoords.length-1].address);
-  const wpts=withCoords.slice(0,-1).map(s=>encodeURIComponent(s.address)).join('|');
-  let url=`https://www.google.com/maps/dir/?api=1&origin=${eLat},${eLng}&destination=${dest}&travelmode=driving`;
-  if(wpts) url+=`&waypoints=${wpts}`;
-  return url;
-}
+function onPos(pos) {
+  myLat = pos.coords.latitude; myLng = pos.coords.longitude;
+  setGps('live', `Live GPS`);
+  updateMyDot();
 
-/* ── PROXIMITY WATCH ── */
-function startWatch(){
-  if(!navigator.geolocation||watchId) return;
-  watchId=navigator.geolocation.watchPosition(onPos,null,
-    {enableHighAccuracy:true, maximumAge:8000});
-}
-
-function onPos(pos){
-  myLat=pos.coords.latitude; myLng=pos.coords.longitude;
-
-  SORTED.forEach(stop=>{
-    if(!stop.lat||!stop.lng) return;
-    const d=hav(myLat,myLng,stop.lat,stop.lng);
-    const near=d<=NEARBY_M;
-    const card=document.getElementById(`card-${stop.index}`);
-    if(!card) return;
-
-    /* chip colour */
-    const chip=document.getElementById(`chip-${stop.index}`);
-    if(chip&&!stop.isDone) chip.className='stop-chip'+(near?' near':'');
-
-    /* card glow */
-    card.classList.toggle('nearby-card', near&&!stop.isDone);
-
-    /* reveal details */
-    if(near||stop.isMine||stop.isDone){
-      const locked =document.getElementById(`addr-locked-${stop.index}`);
-      const box    =document.getElementById(`addr-box-${stop.index}`);
-      const banner =document.getElementById(`near-banner-${stop.index}`);
-      const navBtn =document.getElementById(`nav-btn-${stop.index}`);
-      if(locked)  locked.style.display ='none';
-      if(box)     box.style.display    ='block';
-      if(navBtn)  navBtn.style.display ='flex';
-      if(banner&&near&&!stop.isMine&&!stop.isDone) banner.style.display='flex';
-    }
+  SORTED.forEach(stop => {
+    const sLat = eLat(stop), sLng = eLng(stop);
+    if (sLat === null) return;
+    const d = hav(myLat, myLng, sLat, sLng);
+    const near = d <= NEARBY_M;
+    const chip = document.getElementById(`chip-${stop.index}`);
+    if (chip && !stop.isDone) chip.className = 's-chip' + (near ? ' near' : '');
+    document.getElementById(`row-${stop.index}`)?.classList.toggle('nearby-row', near && !stop.isDone);
+    document.getElementById(`mcard-${stop.index}`)?.classList.toggle('nearby-row', near && !stop.isDone);
+    if (near) revealAddress(stop.index);
   });
 }
 
-/* ── NAVIGATE TO SINGLE STOP ── */
-function navToStop(addr){
-  const url=myLat&&myLng
-    ?`https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${encodeURIComponent(addr)}&travelmode=driving`
-    :`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`;
-  window.open(url,'_blank');
+function setGps(state, label) {
+  const dot = document.getElementById('gps-dot');
+  const lbl = document.getElementById('gps-label');
+  if (dot) dot.className = 'gps-dot ' + (state === 'live' ? 'live' : state === 'err' ? 'err' : '');
+  if (lbl) { lbl.textContent = label; lbl.className = 'gps-label ' + (state === 'live' ? 'live' : state === 'err' ? 'err' : ''); }
 }
 
-/* ── INIT TEAM ROUTE ── */
-async function initTeamRoute(){
-  const pill=document.getElementById('gps-pill');
-  pill.className='gps-pill warn';
-  pill.innerHTML='<span class="pulse"></span> Getting GPS…';
+function revealAddress(idx) {
+  ['', 'm-'].forEach(p => {
+    const locked = document.getElementById(`${p}addr-locked-${idx}`);
+    if (locked) locked.style.display = 'none';
+    const real = document.getElementById(`${p}addr-real-${idx}`); if (real) real.style.display = '';
+    const nav  = document.getElementById(`${p}nav-btn-${idx}`);  if (nav)  nav.style.display  = '';
+    const pin  = document.getElementById(`${p}pin-btn-${idx}`);  if (pin)  pin.style.display  = '';
+  });
+}
 
-  navigator.geolocation.getCurrentPosition(async pos=>{
-    myLat=pos.coords.latitude; myLng=pos.coords.longitude;
-    pill.innerHTML='<span class="pulse"></span> Geocoding '+RAW_STOPS.length+' stops…';
+/* ─────────────── INIT ROUTE ─────────────── */
+async function initRoute() {
+  setGps('', 'Getting GPS…');
+  navigator.geolocation.getCurrentPosition(async pos => {
+    myLat = pos.coords.latitude; myLng = pos.coords.longitude;
+    setGps('', `Geocoding ${STOPS.length} stops…`);
 
-    /* geocode all in parallel */
-    await Promise.all(RAW_STOPS.map(async s=>{
-      const c=await geocode(s.address);
-      if(c){s.lat=c.lat; s.lng=c.lng;}
+    // Init map early so user sees it loading
+    initMap(myLat, myLng);
+
+    // Geocode stops without saved coords
+    await Promise.all(STOPS.map(async s => {
+      if (s.lat !== null) return;
+      const c = await geocode(s.address);
+      if (c) { s.geocodedLat = c.lat; s.geocodedLng = c.lng; }
     }));
 
-    /* sort */
-    SORTED=nnSort(myLat,myLng,RAW_STOPS);
+    const sorted = nnSort(myLat, myLng, STOPS);
+    applySort(sorted);
+    renderMap(sorted);
 
-    buildStopsRow(SORTED);
-    reorderCards(SORTED);
-
-    /* map */
-    const mapUrl=buildMapUrl(myLat,myLng,SORTED);
-    const iframe=document.getElementById('team-map-iframe');
-    const ph=document.getElementById('map-placeholder');
-    if(mapUrl){
-      iframe.src=mapUrl;
-      iframe.style.display='block';
-      ph.style.display='none';
+    // Open-in-maps link (Google Maps multi-stop)
+    const withCoords = sorted.filter(s => eLat(s) !== null);
+    if (withCoords.length) {
+      const dest = encodeURIComponent(withCoords[withCoords.length-1].address);
+      const wpts = withCoords.slice(0,-1).map(s => encodeURIComponent(s.address)).join('|');
+      let url = `https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${dest}&travelmode=driving`;
+      if (wpts) url += `&waypoints=${wpts}`;
+      const btn = document.getElementById('open-maps-btn');
+      if (btn) { btn.href = url; btn.style.display = 'inline-block'; }
     }
 
-    /* open-in-maps link */
-    const fullUrl=buildFullNavUrl(myLat,myLng,SORTED);
-    const btn=document.getElementById('open-maps-btn');
-    btn.href=fullUrl; btn.style.display='inline-block';
-
-    pill.className='gps-pill';
-    pill.innerHTML='<span class="pulse"></span> Live GPS Active';
-
+    setGps('live', 'Live GPS');
     startWatch();
+    showToast('Route sorted & mapped!', 'success');
 
-  }, err=>{
-    pill.className='gps-pill err';
-    pill.innerHTML='⚠ GPS denied';
-    alert('Allow location access and try again. Needed for route sorting.');
-  },{enableHighAccuracy:true, timeout:12000, maximumAge:0});
+  }, err => {
+    setGps('err', 'GPS denied');
+    showToast('Allow location access and try again.', 'error');
+  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
 }
 
-/* auto-init if employee already has accepted tasks */
-window.addEventListener('DOMContentLoaded',()=>{
-  if(RAW_STOPS.some(s=>s.isMine)) initTeamRoute();
+/* ─────────────── NAV TO STOP ─────────────── */
+function navToStop(idx) {
+  const stop = STOPS.find(s => s.index === idx);
+  if (!stop) return;
+  const sLat = eLat(stop), sLng = eLng(stop);
+  let url;
+  if (sLat && myLat) {
+    url = `https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${sLat},${sLng}&travelmode=driving`;
+  } else if (myLat) {
+    url = `https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${encodeURIComponent(stop.address)}&travelmode=driving`;
+  } else {
+    url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`;
+  }
+  window.open(url, '_blank');
+}
+
+/* ─────────────── PIN LOCATION ─────────────── */
+async function pinLocation(idx, custId) {
+  if (!myLat || !myLng) {
+    showToast('Click "Sort & Plot Route" first to get GPS.', 'error');
+    return;
+  }
+  ['', 'm-'].forEach(p => {
+    const btn = document.getElementById(`${p}pin-btn-${idx}`);
+    if (btn) { btn.textContent = '⏳ Saving…'; btn.disabled = true; }
+  });
+  try {
+    const res = await fetch('/api/employee/update_location', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_id: custId, lat: myLat, lng: myLng })
+    });
+    const data = await res.json();
+    if (data.success) {
+      const stop = STOPS.find(s => s.custId === custId);
+      if (stop) { stop.lat = myLat; stop.lng = myLng; }
+      ['', 'm-'].forEach(p => {
+        const btn = document.getElementById(`${p}pin-btn-${idx}`);
+        if (btn) { btn.textContent = '📌 Pinned'; btn.classList.add('pinned'); btn.disabled = false; }
+      });
+      // Refresh map marker to show pinned icon
+      if (MAP) { const s2 = nnSort(myLat, myLng, STOPS); renderMap(s2); }
+      showToast(`📌 Location pinned for stop #${idx}`, 'success');
+    } else { throw new Error(data.message); }
+  } catch(e) {
+    ['', 'm-'].forEach(p => {
+      const btn = document.getElementById(`${p}pin-btn-${idx}`);
+      if (btn) { btn.textContent = '📍 Pin'; btn.disabled = false; }
+    });
+    showToast('Could not save. Try again.', 'error');
+  }
+}
+
+/* ─────────────── AUTO INIT ─────────────── */
+window.addEventListener('DOMContentLoaded', () => {
+  if (STOPS.some(s => s.isMine)) setTimeout(initRoute, 400);
 });
 </script>
 
