@@ -45,9 +45,7 @@
   display: flex; align-items: center; justify-content: space-between;
   margin-bottom: 1.1rem; gap: .75rem; flex-wrap: wrap;
 }
-.top-bar h1 {
-  font-size: 1.2rem; font-weight: 700; color: var(--text);
-}
+.top-bar h1 { font-size: 1.2rem; font-weight: 700; color: var(--text); }
 .count-pill {
   background: #eef0fb; border: 1px solid #c7cbf5;
   border-radius: 999px; padding: .22rem .75rem;
@@ -159,6 +157,16 @@
 }
 .loc-tag.by-addr { color: var(--muted); background: var(--surface2); border-color: var(--border); }
 
+/* photo tag */
+.photo-tag {
+  display: inline-flex; align-items: center; gap: .2rem;
+  font-size: .67rem; font-weight: 700; color: #7c3aed;
+  background: #f5f3ff; border: 1px solid #ddd6fe;
+  border-radius: 999px; padding: .1rem .45rem; margin-top: .25rem;
+  cursor: pointer; text-decoration: none;
+}
+.photo-tag:hover { background: #ede9fe; }
+
 /* Badges */
 .badge {
   display: inline-flex; align-items: center; gap: .28rem;
@@ -194,6 +202,21 @@
 .btn-pin     { background: transparent; border: 1px solid var(--amber-bd); color: var(--amber); }
 .btn-pin:hover { background: var(--amber-bg); }
 .btn-pin.pinned { border-color: var(--green-bd); color: var(--green); background: var(--green-bg); }
+.btn-photo   { background: transparent; border: 1px solid #ddd6fe; color: #7c3aed; }
+.btn-photo:hover { background: #f5f3ff; }
+.btn-photo.has-photo { border-color: #c4b5fd; background: #f5f3ff; }
+
+/* View photo button */
+.btn-view-photo {
+  background: transparent; border: 1px solid #c4b5fd; color: #7c3aed;
+}
+.btn-view-photo:hover { background: #f5f3ff; }
+
+/* View address photo button — always visible, orange tint */
+.btn-view-img {
+  background: transparent; border: 1px solid var(--amber-bd); color: var(--amber);
+}
+.btn-view-img:hover { background: var(--amber-bg); }
 
 /* ── MOBILE CARDS ── */
 .m-cards { display: none; }
@@ -230,6 +253,130 @@
   flex-wrap: wrap; border-top: 1px solid var(--border);
   background: var(--surface2);
 }
+
+/* ── PHOTO UPLOAD MODAL ── */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,.55);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 10000; padding: 1rem;
+  opacity: 0; pointer-events: none; transition: opacity .22s;
+}
+.modal-overlay.open { opacity: 1; pointer-events: all; }
+.modal-box {
+  background: var(--surface); border-radius: var(--r);
+  box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  max-width: 420px; width: 100%; padding: 1.4rem;
+  transform: translateY(10px); transition: transform .22s;
+  max-height: 90vh; overflow-y: auto;
+}
+.modal-overlay.open .modal-box { transform: translateY(0); }
+.modal-title {
+  font-size: 1rem; font-weight: 700; color: var(--text);
+  margin-bottom: 1rem; display: flex; align-items: center;
+  justify-content: space-between;
+}
+.modal-close {
+  background: none; border: none; cursor: pointer;
+  font-size: 1.2rem; color: var(--muted); padding: 0 .2rem;
+}
+.modal-close:hover { color: var(--red); }
+
+/* Drop zone */
+.drop-zone {
+  border: 2px dashed var(--border2); border-radius: var(--r);
+  padding: 2rem 1rem; text-align: center; cursor: pointer;
+  transition: border-color .15s, background .15s; position: relative;
+}
+.drop-zone:hover, .drop-zone.drag-over {
+  border-color: var(--accent); background: #eef0fb;
+}
+.drop-zone input[type=file] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer;
+}
+.drop-icon { font-size: 2rem; margin-bottom: .5rem; }
+.drop-text { font-size: .85rem; color: var(--muted); line-height: 1.5; }
+.drop-text strong { color: var(--text); }
+
+/* Preview */
+.photo-preview {
+  margin-top: .85rem; display: none;
+  border-radius: var(--r-sm); overflow: hidden;
+  border: 1px solid var(--border); position: relative;
+}
+.photo-preview img {
+  width: 100%; max-height: 200px; object-fit: cover; display: block;
+}
+.preview-remove {
+  position: absolute; top: .4rem; right: .4rem;
+  background: rgba(0,0,0,.6); color: #fff; border: none;
+  border-radius: 50%; width: 26px; height: 26px; cursor: pointer;
+  font-size: .85rem; display: flex; align-items: center; justify-content: center;
+}
+
+/* Upload progress */
+.upload-progress { margin-top: .75rem; display: none; }
+.progress-bar-wrap {
+  height: 6px; background: var(--border); border-radius: 999px; overflow: hidden;
+}
+.progress-bar {
+  height: 100%; background: var(--accent); border-radius: 999px;
+  width: 0; transition: width .2s;
+}
+.progress-label { font-size: .72rem; color: var(--muted); margin-top: .3rem; }
+
+.modal-actions {
+  display: flex; gap: .6rem; margin-top: 1rem; justify-content: flex-end;
+}
+
+/* Existing photo panel */
+.existing-photo {
+  margin-top: .75rem; display: none;
+  border-radius: var(--r-sm); overflow: hidden;
+  border: 1px solid var(--green-bd); background: var(--green-bg);
+  padding: .6rem;
+}
+.existing-photo-label {
+  font-size: .72rem; font-weight: 700; color: var(--green);
+  margin-bottom: .4rem; display: flex; align-items: center; gap: .3rem;
+}
+.existing-photo img {
+  width: 100%; max-height: 180px; object-fit: cover;
+  border-radius: var(--r-sm); display: block;
+}
+.existing-photo a {
+  display: block; margin-top: .35rem;
+  font-size: .72rem; color: var(--accent); text-align: center;
+}
+
+/* ── VIEW IMAGE LIGHTBOX ── */
+.lightbox {
+  position: fixed; inset: 0; background: rgba(0,0,0,.88);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 20000; padding: 1rem;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+  flex-direction: column; gap: .75rem;
+}
+.lightbox.open { opacity: 1; pointer-events: all; }
+.lightbox img {
+  max-width: 100%; max-height: 80vh; border-radius: var(--r);
+  box-shadow: 0 20px 60px rgba(0,0,0,.5); object-fit: contain;
+  display: block;
+}
+.lightbox-caption {
+  color: rgba(255,255,255,.85); font-size: .82rem; font-family: var(--font);
+  text-align: center; max-width: 480px;
+}
+.lightbox-actions {
+  display: flex; gap: .6rem;
+}
+.lb-btn {
+  border: none; border-radius: var(--r-sm); padding: .42rem 1rem;
+  font-size: .8rem; font-weight: 700; cursor: pointer; font-family: var(--font);
+}
+.lb-close { background: rgba(255,255,255,.15); color: #fff; }
+.lb-close:hover { background: rgba(255,255,255,.25); }
+.lb-open  { background: var(--accent); color: #fff; text-decoration: none; display: inline-flex; align-items: center; }
+.lb-open:hover { opacity: .85; }
 
 /* ── EMPTY ── */
 .empty {
@@ -271,10 +418,7 @@
 .map-subtitle{ font-size: .72rem; color: var(--muted); }
 .map-header-right { display: flex; gap: .45rem; flex-wrap: wrap; }
 
-#delivery-map {
-  width: 100%; height: 320px; display: block;
-  background: #e8ecf0;
-}
+#delivery-map { width: 100%; height: 320px; display: block; background: #e8ecf0; }
 .map-placeholder-inner {
   height: 320px; display: flex; flex-direction: column;
   align-items: center; justify-content: center; gap: .65rem;
@@ -283,10 +427,8 @@
 .map-placeholder-inner .icon { font-size: 2.5rem; }
 .map-placeholder-inner strong { color: var(--text); }
 
-/* Leaflet popup override */
 .leaflet-popup-content-wrapper {
-  border-radius: 8px !important;
-  box-shadow: 0 4px 16px rgba(0,0,0,.15) !important;
+  border-radius: 8px !important; box-shadow: 0 4px 16px rgba(0,0,0,.15) !important;
   font-family: var(--font) !important;
 }
 .leaflet-popup-content { margin: 10px 14px !important; font-size: .82rem !important; line-height: 1.5 !important; }
@@ -305,9 +447,7 @@
 }
 </style>
 
-<!-- Leaflet CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
-
 
 <div class="wrap">
 
@@ -337,7 +477,7 @@
 
   {% if deliveries %}
 
-  <!-- ── MAP SECTION ── -->
+  <!-- MAP -->
   <div class="map-section">
     <div class="map-header">
       <div class="map-header-left">
@@ -359,7 +499,7 @@
     <div id="delivery-map" style="display:none;"></div>
   </div>
 
-  <!-- ── DESKTOP TABLE ── -->
+  <!-- DESKTOP TABLE -->
   <div class="tbl-wrap">
     <table class="del-table">
       <thead>
@@ -378,19 +518,27 @@
         {% set is_mine      = delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
         {% set is_delivered = delivery.status == 'delivered' %}
         {% set show_addr    = is_mine or is_delivered %}
+        {% set delivery_id_str = delivery._id|string %}
+        {# proof_photo_url is set on real delivery docs; for virtual deliveries
+           fall back to latest_proof_photo_url stored on the customer document #}
+        {% set _del_photo  = delivery.proof_photo_url if (delivery.proof_photo_url is defined and delivery.proof_photo_url) else '' %}
+        {% set _cust_photo = cust.latest_proof_photo_url if (cust.latest_proof_photo_url is defined and cust.latest_proof_photo_url) else '' %}
+        {% set photo_url   = _del_photo if _del_photo else _cust_photo %}
+        {% set has_photo   = photo_url | length > 0 %}
 
         <tr id="row-{{ loop.index }}"
             data-index="{{ loop.index }}"
             data-cust-id="{{ cust._id }}"
+            data-delivery-id="{{ delivery_id_str }}"
             data-address="{{ cust.address }}"
             data-name="{{ cust.name }}"
             data-status="{{ delivery.status }}"
             data-ismine="{{ 'true' if is_mine else 'false' }}"
             data-isdone="{{ 'true' if is_delivered else 'false' }}"
             data-lat="{{ cust.delivery_lat if cust.delivery_lat else '' }}"
-            data-lng="{{ cust.delivery_lng if cust.delivery_lng else '' }}">
+            data-lng="{{ cust.delivery_lng if cust.delivery_lng else '' }}"
+            data-photo-url="{{ photo_url }}">
 
-          <!-- # -->
           <td>
             <div style="display:flex;flex-direction:column;align-items:center;gap:.18rem;">
               <div class="stop-circle {% if is_delivered %}done{% endif %}" id="circle-{{ loop.index }}">{{ loop.index }}</div>
@@ -398,13 +546,11 @@
             </div>
           </td>
 
-          <!-- Customer -->
           <td>
             <div class="cname">{{ cust.name }}</div>
             <div class="csub">{{ cust.phone }}</div>
           </td>
 
-          <!-- Address -->
           <td>
             {% if show_addr %}
               <div class="addr-real" id="addr-real-{{ loop.index }}">{{ cust.address }}</div>
@@ -413,6 +559,9 @@
                 <div class="loc-tag">📌 GPS pinned</div>
               {% else %}
                 <div class="loc-tag by-addr">🏠 Using address</div>
+              {% endif %}
+              {% if has_photo %}
+                <button class="photo-tag" onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">📷 Photo proof</button>
               {% endif %}
             {% else %}
               <div id="addr-locked-{{ loop.index }}">
@@ -426,14 +575,15 @@
                 {% else %}
                   <div class="loc-tag by-addr">🏠 Using address</div>
                 {% endif %}
+                {% if has_photo %}
+                  <button class="photo-tag" onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">📷 Photo proof</button>
+                {% endif %}
               </div>
             {% endif %}
           </td>
 
-          <!-- Time -->
           <td><span class="time-val">{{ cust.preferred_time or 'Anytime' }}</span></td>
 
-          <!-- Status -->
           <td>
             <span class="badge {% if delivery.status=='pending' %}b-p{% elif delivery.status=='accepted' %}b-a{% else %}b-d{% endif %}">
               {% if delivery.status == 'pending' %}⏳ Pending
@@ -445,9 +595,17 @@
             {% endif %}
           </td>
 
-          <!-- Actions -->
           <td>
             <div class="actions-cell">
+
+              {# ── VIEW PHOTO — always visible for any employee if photo exists ── #}
+              {% if has_photo %}
+              <button class="btn-act btn-view-photo"
+                      onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">
+                🖼 View Photo
+              </button>
+              {% endif %}
+
               <button class="btn-act btn-nav" id="nav-btn-{{ loop.index }}"
                 onclick="navToStop({{ loop.index }})"
                 {% if not show_addr %}style="display:none;"{% endif %}>🧭 Nav</button>
@@ -458,6 +616,13 @@
                       title="Pin your current GPS to this customer"
                       {% if not show_addr %}style="display:none;"{% endif %}>
                 {% if cust.delivery_lat and cust.delivery_lng %}📌 Pinned{% else %}📍 Pin{% endif %}
+              </button>
+
+              <button class="btn-act btn-photo {% if has_photo %}has-photo{% endif %}"
+                      id="photo-btn-{{ loop.index }}"
+                      onclick="openPhotoModal({{ loop.index }}, '{{ delivery_id_str }}', '{{ photo_url }}')"
+                      {% if not show_addr %}style="display:none;"{% endif %}>
+                {% if has_photo %}📷 Replace{% else %}📷 Upload{% endif %}
               </button>
 
               {% if delivery.status == 'pending' %}
@@ -473,24 +638,31 @@
     </table>
   </div>
 
-  <!-- ── MOBILE CARDS ── -->
+  <!-- MOBILE CARDS -->
   <div class="m-cards" id="m-cards-wrap">
     {% for delivery in deliveries %}
     {% set cust = delivery.customer[0] %}
     {% set is_mine      = delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
     {% set is_delivered = delivery.status == 'delivered' %}
     {% set show_addr    = is_mine or is_delivered %}
+    {% set delivery_id_str = delivery._id|string %}
+    {% set _del_photo  = delivery.proof_photo_url if (delivery.proof_photo_url is defined and delivery.proof_photo_url) else '' %}
+    {% set _cust_photo = cust.latest_proof_photo_url if (cust.latest_proof_photo_url is defined and cust.latest_proof_photo_url) else '' %}
+    {% set photo_url   = _del_photo if _del_photo else _cust_photo %}
+    {% set has_photo   = photo_url | length > 0 %}
 
     <div class="m-card"
          id="mcard-{{ loop.index }}"
          data-index="{{ loop.index }}"
          data-cust-id="{{ cust._id }}"
+         data-delivery-id="{{ delivery_id_str }}"
          data-address="{{ cust.address }}"
          data-status="{{ delivery.status }}"
          data-ismine="{{ 'true' if is_mine else 'false' }}"
          data-isdone="{{ 'true' if is_delivered else 'false' }}"
          data-lat="{{ cust.delivery_lat if cust.delivery_lat else '' }}"
-         data-lng="{{ cust.delivery_lng if cust.delivery_lng else '' }}">
+         data-lng="{{ cust.delivery_lng if cust.delivery_lng else '' }}"
+         data-photo-url="{{ photo_url }}">
 
       <div class="m-stripe {% if delivery.status=='pending' %}m-s-p{% elif delivery.status=='accepted' %}m-s-a{% else %}m-s-d{% endif %}"></div>
 
@@ -515,10 +687,18 @@
             {% else %}
               <div class="loc-tag by-addr" style="margin-top:.3rem;">🏠 Using address</div>
             {% endif %}
+            {% if has_photo %}
+              <button class="photo-tag" style="margin-top:.3rem;"
+                onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">📷 Photo proof</button>
+            {% endif %}
           </div>
         {% else %}
           <div id="m-addr-locked-{{ loop.index }}">
             <span class="m-addr-blur">Accept or come within 300m to reveal address</span>
+            {% if has_photo %}
+              <br><button class="photo-tag" style="margin-top:.4rem;filter:none;"
+                onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','Address photo')">🖼 View drop spot</button>
+            {% endif %}
           </div>
           <div id="m-addr-real-{{ loop.index }}" style="display:none;">
             {{ cust.address }}
@@ -528,11 +708,23 @@
             {% else %}
               <div class="loc-tag by-addr" style="margin-top:.3rem;">🏠 Using address</div>
             {% endif %}
+            {% if has_photo %}
+              <button class="photo-tag" style="margin-top:.3rem;"
+                onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">📷 Photo proof</button>
+            {% endif %}
           </div>
         {% endif %}
       </div>
 
       <div class="m-foot">
+        {# ── VIEW PHOTO — always visible for any employee if photo exists ── #}
+        {% if has_photo %}
+        <button class="btn-act btn-view-photo"
+                onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">
+          🖼 View Photo
+        </button>
+        {% endif %}
+
         <button class="btn-act btn-nav" id="m-nav-btn-{{ loop.index }}"
           onclick="navToStop({{ loop.index }})"
           {% if not show_addr %}style="display:none;"{% endif %}>🧭 Nav</button>
@@ -542,6 +734,13 @@
                 onclick="pinLocation({{ loop.index }}, '{{ cust._id }}')"
                 {% if not show_addr %}style="display:none;"{% endif %}>
           {% if cust.delivery_lat and cust.delivery_lng %}📌 Pinned{% else %}📍 Pin{% endif %}
+        </button>
+
+        <button class="btn-act btn-photo {% if has_photo %}has-photo{% endif %}"
+                id="m-photo-btn-{{ loop.index }}"
+                onclick="openPhotoModal({{ loop.index }}, '{{ delivery_id_str }}', '{{ photo_url }}')"
+                {% if not show_addr %}style="display:none;"{% endif %}>
+          {% if has_photo %}📷 Replace{% else %}📷 Upload{% endif %}
         </button>
 
         {% if delivery.status == 'pending' %}
@@ -561,25 +760,81 @@
   </div>
   {% endif %}
 
+</div><!-- /wrap -->
+
+<!-- PHOTO UPLOAD MODAL -->
+<div class="modal-overlay" id="photo-modal">
+  <div class="modal-box">
+    <div class="modal-title">
+      <span>📷 Upload Delivery Photo</span>
+      <button class="modal-close" onclick="closePhotoModal()">✕</button>
+    </div>
+
+    <div class="existing-photo" id="existing-photo-wrap">
+      <div class="existing-photo-label">✅ Photo already uploaded</div>
+      <img id="existing-photo-img" src="" alt="Existing proof"/>
+      <a id="existing-photo-link" href="" target="_blank">View full size ↗</a>
+    </div>
+
+    <div class="drop-zone" id="drop-zone">
+      <input type="file" id="photo-file-input" accept="image/*" capture="environment"/>
+      <div class="drop-icon">📸</div>
+      <div class="drop-text">
+        <strong>Tap to take a photo or choose from gallery</strong><br>
+        Photo of house gate, nameplate, or delivery spot
+      </div>
+    </div>
+
+    <div class="photo-preview" id="photo-preview">
+      <img id="photo-preview-img" src="" alt="Preview"/>
+      <button class="preview-remove" onclick="clearPhoto()" title="Remove">✕</button>
+    </div>
+
+    <div class="upload-progress" id="upload-progress">
+      <div class="progress-bar-wrap">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+      <div class="progress-label" id="progress-label">Uploading…</div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-sm ghost" onclick="closePhotoModal()">Cancel</button>
+      <button class="btn-sm" id="upload-submit-btn" onclick="submitPhoto()" disabled>Upload Photo</button>
+    </div>
+  </div>
+</div>
+
+<!-- VIEW ADDRESS IMAGE LIGHTBOX -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lb-img" src="" alt="Address photo"/>
+  <div class="lightbox-caption" id="lb-caption"></div>
+  <div class="lightbox-actions" onclick="event.stopPropagation()">
+    <button class="lb-btn lb-close" onclick="closeLightbox()">✕ Close</button>
+    <a class="lb-btn lb-open" id="lb-open-link" href="" target="_blank">↗ Open full size</a>
+  </div>
 </div>
 
 <div id="toast"></div>
 
-<!-- Leaflet JS -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
+const CLOUDINARY_CLOUD  = "{{ config.CLOUDINARY_CLOUD_NAME }}";
+const CLOUDINARY_PRESET = "{{ config.CLOUDINARY_UPLOAD_PRESET }}";
+
 const STOPS = [
   {% for delivery in deliveries %}{% set cust = delivery.customer[0] %}{
-    index:   {{ loop.index }},
-    custId:  "{{ cust._id }}",
-    name:    {{ cust.name | tojson }},
-    address: {{ cust.address | tojson }},
-    phone:   {{ cust.phone | tojson }},
-    status:  {{ delivery.status | tojson }},
-    isMine:  {{ 'true' if (delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string) else 'false' }},
-    isDone:  {{ 'true' if delivery.status == 'delivered' else 'false' }},
-    lat:     {{ cust.delivery_lat if cust.delivery_lat else 'null' }},
-    lng:     {{ cust.delivery_lng if cust.delivery_lng else 'null' }},
+    index:       {{ loop.index }},
+    custId:      "{{ cust._id }}",
+    deliveryId:  "{{ delivery._id|string }}",
+    name:        {{ cust.name | tojson }},
+    address:     {{ cust.address | tojson }},
+    phone:       {{ cust.phone | tojson }},
+    status:      {{ delivery.status | tojson }},
+    isMine:      {{ 'true' if (delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string) else 'false' }},
+    isDone:      {{ 'true' if delivery.status == 'delivered' else 'false' }},
+    lat:         {{ cust.delivery_lat if cust.delivery_lat else 'null' }},
+    lng:         {{ cust.delivery_lng if cust.delivery_lng else 'null' }},
+    photoUrl:    {{ photo_url | tojson }},
     geocodedLat: null, geocodedLng: null, dist: null,
   },{% endfor %}
 ];
@@ -588,13 +843,12 @@ let myLat = null, myLng = null, watchId = null;
 const NEARBY_M = 300;
 let SORTED = [...STOPS];
 
-/* ── Leaflet map instance ── */
-let MAP = null;
-let myMarker = null;
-let routeLine = null;
-const leafletMarkers = {};  // index → L.marker
+let MAP = null, myMarker = null, routeLine = null;
+const leafletMarkers = {};
 
-/* ─────────────── TOAST ─────────────── */
+let _photoDeliveryId = null, _photoStopIndex = null, _photoFile = null;
+
+/* ── TOAST ── */
 let toastTimer;
 function showToast(msg, type = '') {
   const t = document.getElementById('toast');
@@ -603,18 +857,16 @@ function showToast(msg, type = '') {
   toastTimer = setTimeout(() => { t.className = ''; }, 3200);
 }
 
-/* ─────────────── HAVERSINE ─────────────── */
+/* ── HAVERSINE ── */
 function hav(a1, o1, a2, o2) {
   const R = 6371000, dA = (a2-a1)*Math.PI/180, dO = (o2-o1)*Math.PI/180;
   const a = Math.sin(dA/2)**2 + Math.cos(a1*Math.PI/180)*Math.cos(a2*Math.PI/180)*Math.sin(dO/2)**2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
 }
-
-/* ─────────────── EFFECTIVE COORDS ─────────────── */
 function eLat(s) { return s.lat !== null ? s.lat : s.geocodedLat; }
 function eLng(s) { return s.lng !== null ? s.lng : s.geocodedLng; }
 
-/* ─────────────── GEOCODE (Nominatim) ─────────────── */
+/* ── GEOCODE ── */
 async function geocode(addr) {
   try {
     const r = await fetch(
@@ -627,9 +879,9 @@ async function geocode(addr) {
   return null;
 }
 
-/* ─────────────── NEAREST-NEIGHBOUR SORT ─────────────── */
+/* ── NN SORT ── */
 function nnSort(lat0, lng0, stops) {
-  const pool = stops.filter(s => eLat(s) !== null).map(s => ({...s}));
+  const pool    = stops.filter(s => eLat(s) !== null).map(s => ({...s}));
   const noCoord = stops.filter(s => eLat(s) === null);
   const out = [];
   let cLat = lat0, cLng = lng0;
@@ -643,41 +895,30 @@ function nnSort(lat0, lng0, stops) {
   noCoord.forEach(s => { s.dist = null; out.push(s); });
   return out;
 }
-
 function fmtDist(m) {
   if (m === null) return '—';
   return m >= 1000 ? (m/1000).toFixed(1) + 'km' : m + 'm';
 }
 
-/* ─────────────── LEAFLET MAP ─────────────── */
-function initMap(centerLat, centerLng) {
-  const ph = document.getElementById('map-placeholder');
-  const mapEl = document.getElementById('delivery-map');
-  if (ph) ph.style.display = 'none';
-  if (mapEl) mapEl.style.display = 'block';
-
+/* ── LEAFLET MAP ── */
+function initMap(lat, lng) {
+  document.getElementById('map-placeholder').style.display = 'none';
+  document.getElementById('delivery-map').style.display = 'block';
   if (MAP) { MAP.remove(); MAP = null; }
   MAP = L.map('delivery-map', { zoomControl: true, attributionControl: false });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19, attribution: '© OpenStreetMap'
-  }).addTo(MAP);
-
-  // Attribution small
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(MAP);
   L.control.attribution({ position: 'bottomright', prefix: false })
-    .addAttribution('© <a href="https://openstreetmap.org">OSM</a>')
-    .addTo(MAP);
+    .addAttribution('© <a href="https://openstreetmap.org">OSM</a>').addTo(MAP);
 }
 
 function makeStopIcon(num, isDone, isMine) {
-  const bg   = isDone ? '#16a34a' : isMine ? '#2563eb' : '#4f5de8';
+  const bg = isDone ? '#16a34a' : isMine ? '#2563eb' : '#4f5de8';
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
     <path d="M16 0C7.163 0 0 7.163 0 16c0 10 16 24 16 24S32 26 32 16C32 7.163 24.837 0 16 0z" fill="${bg}"/>
     <circle cx="16" cy="16" r="10" fill="white" opacity="0.95"/>
     <text x="16" y="21" text-anchor="middle" font-size="11" font-weight="800" fill="${bg}" font-family="DM Mono,monospace">${num}</text>
   </svg>`;
-  return L.divIcon({
-    html: svg, className: '', iconSize: [32, 40], iconAnchor: [16, 40], popupAnchor: [0, -40]
-  });
+  return L.divIcon({ html: svg, className: '', iconSize: [32,40], iconAnchor: [16,40], popupAnchor: [0,-40] });
 }
 
 function makeMyIcon() {
@@ -685,80 +926,58 @@ function makeMyIcon() {
     <circle cx="11" cy="11" r="10" fill="#4f5de8" stroke="white" stroke-width="2.5"/>
     <circle cx="11" cy="11" r="4" fill="white"/>
   </svg>`;
-  return L.divIcon({ html: svg, className: '', iconSize: [22, 22], iconAnchor: [11, 11] });
+  return L.divIcon({ html: svg, className: '', iconSize: [22,22], iconAnchor: [11,11] });
 }
 
 function renderMap(sorted) {
   if (!MAP) return;
-
-  // Clear old markers + line
   Object.values(leafletMarkers).forEach(m => m.remove());
   Object.keys(leafletMarkers).forEach(k => delete leafletMarkers[k]);
   if (routeLine) { routeLine.remove(); routeLine = null; }
   if (myMarker)  { myMarker.remove(); myMarker = null; }
-
-  const bounds = [];
-
-  // My location marker
+  const bounds = [], lineCoords = [[myLat, myLng]];
   myMarker = L.marker([myLat, myLng], { icon: makeMyIcon(), zIndexOffset: 1000 })
-    .addTo(MAP)
-    .bindPopup('<div class="popup-name">📍 Your Location</div>');
+    .addTo(MAP).bindPopup('<div class="popup-name">📍 Your Location</div>');
   bounds.push([myLat, myLng]);
-
-  // Route line coords: me → sorted stops with coords
-  const lineCoords = [[myLat, myLng]];
-
   sorted.forEach((s, i) => {
     const sLat = eLat(s), sLng = eLng(s);
     if (sLat === null) return;
-
-    const icon = makeStopIcon(i + 1, s.isDone, s.isMine);
+    const icon = makeStopIcon(i+1, s.isDone, s.isMine);
     const statusLabel = s.isDone ? '✓ Delivered' : s.isMine ? '⚡ Accepted (yours)' : s.status === 'pending' ? '⏳ Pending' : '⚡ Accepted';
+    const photoHtml = s.photoUrl
+      ? `<div style="margin-top:.4rem;"><button onclick="viewAddressPhoto('${s.photoUrl}','${s.name.replace(/'/g,"\\'")}','${s.address.replace(/'/g,"\\'")}'); MAP && MAP.closePopup();" style="background:#f5f3ff;border:1px solid #ddd6fe;color:#7c3aed;border-radius:6px;padding:.25rem .6rem;font-size:.72rem;font-weight:700;cursor:pointer;">🖼 View address photo</button></div>`
+      : '';
     const popup = `
       <div class="popup-name">${i+1}. ${s.name}</div>
       <div class="popup-addr">${s.address}</div>
       <div class="popup-addr">📞 ${s.phone}</div>
       <div class="popup-status">${statusLabel}</div>
-      ${s.dist !== null ? `<div class="popup-addr" style="margin-top:.2rem;">📏 ${fmtDist(s.dist)} from you</div>` : ''}
-      ${s.lat !== null ? '<div class="popup-addr" style="color:#16a34a;">📌 GPS pinned</div>' : ''}
+      ${s.dist !== null ? `<div class="popup-addr" style="margin-top:.2rem;">📏 ${fmtDist(s.dist)}</div>` : ''}
+      ${s.lat !== null ? '<div class="popup-addr" style="color:#16a34a;margin-top:.1rem;">📌 GPS pinned</div>' : ''}
+      ${photoHtml}
     `;
-    const marker = L.marker([sLat, sLng], { icon })
-      .addTo(MAP)
-      .bindPopup(popup);
+    const marker = L.marker([sLat, sLng], { icon }).addTo(MAP).bindPopup(popup);
     leafletMarkers[s.index] = marker;
     lineCoords.push([sLat, sLng]);
     bounds.push([sLat, sLng]);
   });
-
-  // Draw dashed route line
-  if (lineCoords.length > 1) {
-    routeLine = L.polyline(lineCoords, {
-      color: '#4f5de8', weight: 3, opacity: 0.7,
-      dashArray: '8, 6'
-    }).addTo(MAP);
-  }
-
-  // Fit map to all markers
-  if (bounds.length > 1) {
-    MAP.fitBounds(bounds, { padding: [30, 30] });
-  } else if (bounds.length === 1) {
-    MAP.setView(bounds[0], 15);
-  }
+  if (lineCoords.length > 1)
+    routeLine = L.polyline(lineCoords, { color: '#4f5de8', weight: 3, opacity: 0.7, dashArray: '8,6' }).addTo(MAP);
+  if (bounds.length > 1) MAP.fitBounds(bounds, { padding: [30,30] });
+  else if (bounds.length === 1) MAP.setView(bounds[0], 15);
 }
 
-/* Update my location dot on map while watching */
 function updateMyDot() {
-  if (!MAP || !myMarker) return;
-  myMarker.setLatLng([myLat, myLng]);
+  if (MAP && myMarker) myMarker.setLatLng([myLat, myLng]);
 }
 
-/* ─────────────── APPLY SORT ─────────────── */
+/* ── APPLY SORT ── */
 function applySort(sorted) {
   SORTED = sorted;
   sorted.forEach((s, i) => {
-    const n = i + 1;
-    ['circle', 'm-circle'].forEach(p => { const el = document.getElementById(`${p}-${s.index}`); if (el) el.textContent = n; });
-    ['dist', 'm-dist'].forEach(p => { const el = document.getElementById(`${p}-${s.index}`); if (el) el.textContent = fmtDist(s.dist); });
+    const n = i+1;
+    ['circle','m-circle'].forEach(p => { const el = document.getElementById(`${p}-${s.index}`); if (el) el.textContent = n; });
+    ['dist','m-dist'].forEach(p => { const el = document.getElementById(`${p}-${s.index}`); if (el) el.textContent = fmtDist(s.dist); });
   });
   const tbody = document.getElementById('del-tbody');
   if (tbody) sorted.forEach(s => { const r = document.getElementById(`row-${s.index}`); if (r) tbody.appendChild(r); });
@@ -767,7 +986,7 @@ function applySort(sorted) {
   buildStrip(sorted);
 }
 
-/* ─────────────── STOPS STRIP ─────────────── */
+/* ── STOPS STRIP ── */
 function buildStrip(sorted) {
   const strip = document.getElementById('stops-strip');
   if (!strip) return;
@@ -778,7 +997,6 @@ function buildStrip(sorted) {
     const chip = document.createElement('span'); chip.id = `chip-${s.index}`;
     chip.className = 's-chip' + (s.isDone ? ' done' : '');
     chip.textContent = `${i+1}. ${s.name.split(' ')[0]}`;
-    // Click chip → open map popup
     chip.style.cursor = 'pointer';
     chip.addEventListener('click', () => {
       const mk = leafletMarkers[s.index];
@@ -788,7 +1006,7 @@ function buildStrip(sorted) {
   });
 }
 
-/* ─────────────── GPS WATCH ─────────────── */
+/* ── GPS WATCH ── */
 function startWatch() {
   if (!navigator.geolocation || watchId) return;
   watchId = navigator.geolocation.watchPosition(onPos, null, { enableHighAccuracy: true, maximumAge: 8000 });
@@ -796,9 +1014,8 @@ function startWatch() {
 
 function onPos(pos) {
   myLat = pos.coords.latitude; myLng = pos.coords.longitude;
-  setGps('live', `Live GPS`);
+  setGps('live', 'Live GPS');
   updateMyDot();
-
   SORTED.forEach(stop => {
     const sLat = eLat(stop), sLng = eLng(stop);
     if (sLat === null) return;
@@ -820,37 +1037,30 @@ function setGps(state, label) {
 }
 
 function revealAddress(idx) {
-  ['', 'm-'].forEach(p => {
-    const locked = document.getElementById(`${p}addr-locked-${idx}`);
-    if (locked) locked.style.display = 'none';
-    const real = document.getElementById(`${p}addr-real-${idx}`); if (real) real.style.display = '';
-    const nav  = document.getElementById(`${p}nav-btn-${idx}`);  if (nav)  nav.style.display  = '';
-    const pin  = document.getElementById(`${p}pin-btn-${idx}`);  if (pin)  pin.style.display  = '';
+  ['','m-'].forEach(p => {
+    const locked = document.getElementById(`${p}addr-locked-${idx}`); if (locked) locked.style.display = 'none';
+    const real   = document.getElementById(`${p}addr-real-${idx}`);   if (real)   real.style.display   = '';
+    const nav    = document.getElementById(`${p}nav-btn-${idx}`);     if (nav)    nav.style.display    = '';
+    const pin    = document.getElementById(`${p}pin-btn-${idx}`);     if (pin)    pin.style.display    = '';
+    const photo  = document.getElementById(`${p}photo-btn-${idx}`);   if (photo)  photo.style.display  = '';
   });
 }
 
-/* ─────────────── INIT ROUTE ─────────────── */
+/* ── INIT ROUTE ── */
 async function initRoute() {
   setGps('', 'Getting GPS…');
   navigator.geolocation.getCurrentPosition(async pos => {
     myLat = pos.coords.latitude; myLng = pos.coords.longitude;
     setGps('', `Geocoding ${STOPS.length} stops…`);
-
-    // Init map early so user sees it loading
     initMap(myLat, myLng);
-
-    // Geocode stops without saved coords
     await Promise.all(STOPS.map(async s => {
       if (s.lat !== null) return;
       const c = await geocode(s.address);
       if (c) { s.geocodedLat = c.lat; s.geocodedLng = c.lng; }
     }));
-
     const sorted = nnSort(myLat, myLng, STOPS);
     applySort(sorted);
     renderMap(sorted);
-
-    // Open-in-maps link (Google Maps multi-stop)
     const withCoords = sorted.filter(s => eLat(s) !== null);
     if (withCoords.length) {
       const dest = encodeURIComponent(withCoords[withCoords.length-1].address);
@@ -860,63 +1070,52 @@ async function initRoute() {
       const btn = document.getElementById('open-maps-btn');
       if (btn) { btn.href = url; btn.style.display = 'inline-block'; }
     }
-
     setGps('live', 'Live GPS');
     startWatch();
     showToast('Route sorted & mapped!', 'success');
-
   }, err => {
     setGps('err', 'GPS denied');
     showToast('Allow location access and try again.', 'error');
   }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
 }
 
-/* ─────────────── NAV TO STOP ─────────────── */
+/* ── NAV ── */
 function navToStop(idx) {
   const stop = STOPS.find(s => s.index === idx);
   if (!stop) return;
   const sLat = eLat(stop), sLng = eLng(stop);
   let url;
-  if (sLat && myLat) {
-    url = `https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${sLat},${sLng}&travelmode=driving`;
-  } else if (myLat) {
-    url = `https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${encodeURIComponent(stop.address)}&travelmode=driving`;
-  } else {
-    url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`;
-  }
+  if (sLat && myLat) url = `https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${sLat},${sLng}&travelmode=driving`;
+  else if (myLat)    url = `https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${encodeURIComponent(stop.address)}&travelmode=driving`;
+  else               url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`;
   window.open(url, '_blank');
 }
 
-/* ─────────────── PIN LOCATION ─────────────── */
+/* ── PIN LOCATION ── */
 async function pinLocation(idx, custId) {
-  if (!myLat || !myLng) {
-    showToast('Click "Sort & Plot Route" first to get GPS.', 'error');
-    return;
-  }
-  ['', 'm-'].forEach(p => {
+  if (!myLat || !myLng) { showToast('Click "Sort & Plot Route" first to get GPS.', 'error'); return; }
+  ['','m-'].forEach(p => {
     const btn = document.getElementById(`${p}pin-btn-${idx}`);
     if (btn) { btn.textContent = '⏳ Saving…'; btn.disabled = true; }
   });
   try {
-    const res = await fetch('/api/employee/update_location', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+    const res  = await fetch('/api/employee/update_location', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ customer_id: custId, lat: myLat, lng: myLng })
     });
     const data = await res.json();
     if (data.success) {
       const stop = STOPS.find(s => s.custId === custId);
       if (stop) { stop.lat = myLat; stop.lng = myLng; }
-      ['', 'm-'].forEach(p => {
+      ['','m-'].forEach(p => {
         const btn = document.getElementById(`${p}pin-btn-${idx}`);
         if (btn) { btn.textContent = '📌 Pinned'; btn.classList.add('pinned'); btn.disabled = false; }
       });
-      // Refresh map marker to show pinned icon
       if (MAP) { const s2 = nnSort(myLat, myLng, STOPS); renderMap(s2); }
       showToast(`📌 Location pinned for stop #${idx}`, 'success');
     } else { throw new Error(data.message); }
   } catch(e) {
-    ['', 'm-'].forEach(p => {
+    ['','m-'].forEach(p => {
       const btn = document.getElementById(`${p}pin-btn-${idx}`);
       if (btn) { btn.textContent = '📍 Pin'; btn.disabled = false; }
     });
@@ -924,10 +1123,158 @@ async function pinLocation(idx, custId) {
   }
 }
 
-/* ─────────────── AUTO INIT ─────────────── */
+/* ────────────────────────────────────────────────────────────────
+   VIEW ADDRESS IMAGE LIGHTBOX — available to ALL employees
+──────────────────────────────────────────────────────────────────*/
+function viewAddressPhoto(url, name, address) {
+  if (!url) return;
+  document.getElementById('lb-img').src = url;
+  document.getElementById('lb-caption').textContent = `📍 ${name} — ${address}`;
+  document.getElementById('lb-open-link').href = url;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lb-img').src = '';
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+
+/* ────────────────────────────────────────────────────────────────
+   PHOTO UPLOAD MODAL
+──────────────────────────────────────────────────────────────────*/
+function openPhotoModal(idx, deliveryId, existingUrl) {
+  _photoDeliveryId = deliveryId;
+  _photoStopIndex  = idx;
+  _photoFile       = null;
+  clearPhoto();
+  document.getElementById('upload-progress').style.display = 'none';
+  document.getElementById('progress-bar').style.width = '0';
+
+  const existWrap = document.getElementById('existing-photo-wrap');
+  const existImg  = document.getElementById('existing-photo-img');
+  const existLink = document.getElementById('existing-photo-link');
+  if (existingUrl) {
+    existWrap.style.display = 'block';
+    existImg.src  = existingUrl;
+    existLink.href = existingUrl;
+  } else {
+    existWrap.style.display = 'none';
+  }
+  document.getElementById('photo-modal').classList.add('open');
+}
+
+function closePhotoModal() {
+  document.getElementById('photo-modal').classList.remove('open');
+  _photoDeliveryId = null; _photoStopIndex = null; _photoFile = null;
+  clearPhoto();
+}
+
+function clearPhoto() {
+  _photoFile = null;
+  document.getElementById('photo-file-input').value = '';
+  document.getElementById('photo-preview').style.display = 'none';
+  document.getElementById('photo-preview-img').src = '';
+  document.getElementById('upload-submit-btn').disabled = true;
+}
+
+document.getElementById('photo-file-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  _photoFile = file;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    document.getElementById('photo-preview-img').src = ev.target.result;
+    document.getElementById('photo-preview').style.display = 'block';
+    document.getElementById('upload-submit-btn').disabled = false;
+  };
+  reader.readAsDataURL(file);
+});
+
+const dz = document.getElementById('drop-zone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => {
+  e.preventDefault(); dz.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) {
+    _photoFile = file;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      document.getElementById('photo-preview-img').src = ev.target.result;
+      document.getElementById('photo-preview').style.display = 'block';
+      document.getElementById('upload-submit-btn').disabled = false;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+async function submitPhoto() {
+  if (!_photoFile || !_photoDeliveryId) return;
+  const btn          = document.getElementById('upload-submit-btn');
+  const progressWrap = document.getElementById('upload-progress');
+  const progressBar  = document.getElementById('progress-bar');
+  const progressLbl  = document.getElementById('progress-label');
+
+  btn.disabled = true; btn.textContent = 'Uploading…';
+  progressWrap.style.display = 'block';
+
+  try {
+    /* ── 1. Upload to Cloudinary ── */
+    const fd = new FormData();
+    fd.append('file', _photoFile);
+    fd.append('upload_preset', CLOUDINARY_PRESET);
+    fd.append('folder', 'delivery_proofs');
+
+    const cloudUrl = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
+      xhr.upload.onprogress = e => {
+        if (e.lengthComputable) {
+          const pct = Math.round(e.loaded / e.total * 90);
+          progressBar.style.width = pct + '%';
+          progressLbl.textContent = `Uploading… ${pct}%`;
+        }
+      };
+      xhr.onload = () => {
+        if (xhr.status === 200) resolve(JSON.parse(xhr.responseText).secure_url);
+        else reject(new Error('Cloudinary upload failed: ' + xhr.status));
+      };
+      xhr.onerror = () => reject(new Error('Network error'));
+      xhr.send(fd);
+    });
+
+    progressBar.style.width = '95%';
+    progressLbl.textContent = 'Saving to record…';
+
+    /* ── 2. Save URL to backend ── */
+    const saveRes  = await fetch('/api/employee/save_proof_photo', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ delivery_id: _photoDeliveryId, photo_url: cloudUrl })
+    });
+    const saveData = await saveRes.json();
+    if (!saveData.success) throw new Error(saveData.message || 'Save failed');
+
+    progressBar.style.width = '100%';
+    progressLbl.textContent = 'Done! Refreshing…';
+
+    showToast('📷 Photo uploaded! Refreshing…', 'success');
+
+    /* ── 3. Reload page so all buttons/photos update from DB ── */
+    setTimeout(() => { window.location.reload(); }, 1200);
+
+  } catch(err) {
+    progressWrap.style.display = 'none';
+    btn.disabled = false; btn.textContent = 'Upload Photo';
+    showToast('Upload failed: ' + err.message, 'error');
+  }
+}
+
+document.getElementById('photo-modal').addEventListener('click', function(e) {
+  if (e.target === this) closePhotoModal();
+});
+
 window.addEventListener('DOMContentLoaded', () => {
   if (STOPS.some(s => s.isMine)) setTimeout(initRoute, 400);
 });
 </script>
-
 {% endblock %}

@@ -10,14 +10,28 @@ import calendar
 from functools import wraps
 from wp import send_whatsapp
 from outwpmsg import send_whatsapp_msg
+import cloudinary
+
+import cloudinary.uploader
+
+
 
 
 load_dotenv()
 
 
+cloudinary.config(
+    cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME"),
+    api_key    = os.getenv("CLOUDINARY_API_KEY"),
+    api_secret = os.getenv("CLOUDINARY_API_SECRET"),
+    secure     = True,
+)
+
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "super-secret-key-change-in-production")
 
+app.config["CLOUDINARY_CLOUD_NAME"]    = os.getenv("CLOUDINARY_CLOUD_NAME", "")
+app.config["CLOUDINARY_UPLOAD_PRESET"] = os.getenv("CLOUDINARY_UPLOAD_PRESET", "")
 
 # Mongo Config
 MONGO_URI = os.getenv("MONGO_URI")
@@ -1490,28 +1504,39 @@ def dashboard_employee():
     if not employee or "team_id" not in employee:
         flash("You are not assigned to any team.", "danger")
         return redirect(url_for("home"))
+ 
     today_str  = datetime.now().strftime("%Y-%m-%d")
     day_name   = datetime.now().strftime("%A")
     emp_id_str = str(employee["_id"])
+ 
     existing_deliveries = list(deliveries_col.find({
         "team_id": employee["team_id"],
         "date":    today_str
     }))
     delivery_map = {str(d["customer_id"]): d for d in existing_deliveries}
+ 
+    # ── PATCH: only active customers (status == "active" OR status field absent) ──
     customers = list(users_col.find({
         "role":    "customer",
         "team_id": employee["team_id"],
-        "status":  {"$ne": "inactive"}
+        "status":  "active",          # ← was {"$ne": "inactive"}, now strict active-only
     }))
+ 
     final_deliveries = []
     for cust in customers:
         cust_id_str = str(cust["_id"])
+ 
+        # Skip customer's weekly off-day
         if day_name in cust.get("off_days", []):
             continue
+ 
+        # Skip customer's holiday for today
         if today_str in cust.get("holidays", []):
             continue
+ 
         if cust_id_str in delivery_map:
             delivery = delivery_map[cust_id_str]
+            # Skip if already marked cancelled_holiday
             if delivery.get("status") == "cancelled_holiday":
                 continue
             delivery["customer"] = [cust]
@@ -1525,10 +1550,11 @@ def dashboard_employee():
                 "status":         "pending",
                 "assigned_to":    None,
                 "preferred_time": cust.get("preferred_time", "Anytime"),
+                "proof_photo_url": cust.get("latest_proof_photo_url") or None,     # new field default
                 "customer":       [cust]
             }
             final_deliveries.append(virtual_delivery)
-
+ 
     def sort_key(d):
         if d["status"] == "accepted" and str(d.get("assigned_to", "")) == emp_id_str:
             return 0
@@ -1537,9 +1563,16 @@ def dashboard_employee():
         if d["status"] == "accepted":
             return 2
         return 3
-
+ 
     final_deliveries.sort(key=sort_key)
-    return render_template("dashboard_employee.html", deliveries=final_deliveries)
+    return render_template(
+    "dashboard_employee.html",
+    deliveries=final_deliveries,
+    photo_url="",
+    cloudinary_cloud_name=app.config["CLOUDINARY_CLOUD_NAME"],
+    cloudinary_upload_preset=app.config["CLOUDINARY_UPLOAD_PRESET"]
+)
+ 
 
 
 @app.route("/employee/accept/<delivery_id>")
@@ -2237,6 +2270,135 @@ def get_customer_location(customer_id):
         "name":        customer.get("name", ""),
     })
 
+
+@app.route("/api/employee/save_proof_photo", methods=["POST"])
+@login_required
+@role_required("employee")
+def save_proof_photo():
+    data        = request.get_json(silent=True) or {}
+    delivery_id = data.get("delivery_id", "").strip()
+    photo_url   = data.get("photo_url", "").strip()
+
+    if not delivery_id or not photo_url:
+        return jsonify({"success": False, "message": "delivery_id and photo_url are required."}), 400
+
+    if "cloudinary.com" not in photo_url and not photo_url.startswith("https://"):
+        return jsonify({"success": False, "message": "Invalid photo URL."}), 400
+
+    uploader_name = session.get("name", session["user_id"])
+    now           = datetime.now()
+
+    # ── VIRTUAL delivery (not yet created in DB) ─────────────────
+    if delivery_id.startswith("virtual_"):
+        customer_id_str = delivery_id.replace("virtual_", "")
+        today_str       = now.strftime("%Y-%m-%d")
+        employee_id     = ObjectId(session["user_id"])
+
+        try:
+            customer = users_col.find_one({"_id": ObjectId(customer_id_str)})
+        except Exception:
+            return jsonify({"success": False, "message": "Customer not found."}), 404
+
+        if not customer:
+            return jsonify({"success": False, "message": "Customer not found."}), 404
+
+        # Upsert the delivery record first so we get a real _id
+        existing = deliveries_col.find_one({"customer_id": customer["_id"], "date": today_str})
+        if existing:
+            real_delivery_id = str(existing["_id"])
+            deliveries_col.update_one(
+                {"_id": existing["_id"]},
+                {"$set": {
+                    "proof_photo_url":   photo_url,
+                    "photo_uploaded_at": now,
+                    "photo_uploaded_by": uploader_name,
+                }}
+            )
+        else:
+            result = deliveries_col.insert_one({
+                "customer_id":       customer["_id"],
+                "team_id":           customer.get("team_id"),
+                "date":              today_str,
+                "status":            "pending",
+                "assigned_to":       employee_id,
+                "preferred_time":    customer.get("preferred_time"),
+                "proof_photo_url":   photo_url,
+                "photo_uploaded_at": now,
+                "photo_uploaded_by": uploader_name,
+            })
+            real_delivery_id = str(result.inserted_id)
+
+        # Now write to customer doc with correct real delivery _id in log
+        users_col.update_one(
+            {"_id": customer["_id"]},
+            {
+                "$set": {
+                    "latest_proof_photo_url": photo_url,
+                    "latest_photo_at":        now,
+                    "latest_photo_by":        uploader_name,
+                },
+                "$push": {
+                    "photo_log": {
+                        "url":         photo_url,
+                        "uploaded_at": now,
+                        "uploaded_by": uploader_name,
+                        "delivery_id": real_delivery_id,
+                        "date":        today_str,
+                    }
+                },
+            }
+        )
+
+        return jsonify({"success": True, "message": "Photo saved.", "photo_url": photo_url})
+
+    # ── REAL delivery record ──────────────────────────────────────
+    try:
+        delivery = deliveries_col.find_one({"_id": ObjectId(delivery_id)})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid delivery_id."}), 400
+
+    if not delivery:
+        return jsonify({"success": False, "message": "Delivery not found."}), 404
+
+    # Verify this delivery belongs to the employee's team
+    employee = users_col.find_one({"_id": ObjectId(session["user_id"])})
+    if (employee and employee.get("team_id")
+            and str(delivery.get("team_id")) != str(employee.get("team_id"))):
+        return jsonify({"success": False, "message": "Unauthorized: not your team's delivery."}), 403
+
+    deliveries_col.update_one(
+        {"_id": ObjectId(delivery_id)},
+        {"$set": {
+            "proof_photo_url":   photo_url,
+            "photo_uploaded_at": now,
+            "photo_uploaded_by": uploader_name,
+        }}
+    )
+
+    today_str = now.strftime("%Y-%m-%d")
+
+    # Write to customer doc — delivery["customer_id"] is already an ObjectId
+    users_col.update_one(
+        {"_id": delivery["customer_id"]},
+        {
+            "$set": {
+                "latest_proof_photo_url": photo_url,
+                "latest_photo_at":        now,
+                "latest_photo_by":        uploader_name,
+            },
+            "$push": {
+                "photo_log": {
+                    "url":         photo_url,
+                    "uploaded_at": now,
+                    "uploaded_by": uploader_name,
+                    "delivery_id": delivery_id,
+                    "date":        today_str,
+                }
+            },
+        }
+    )
+
+    return jsonify({"success": True, "message": "Photo saved.", "photo_url": photo_url})
 
 
 if __name__ == "__main__":
