@@ -131,6 +131,36 @@ def _manager_team_filter():
         return {"team_id": None}   # manager with no team sees nothing
     return {}
 
+# ── helper — place this just before dashboard_employee() ──────
+def _enrich_delivery_plan(delivery_dict: dict, cust: dict, today_date) -> dict:
+    """
+    Adds plan_name, is_alternate_plan, today_item to a delivery dict.
+    Mutates in-place and returns it.
+    """
+    plan = None
+    if cust.get("plan_id"):
+        plan = plans_col.find_one({"_id": ObjectId(cust["plan_id"])})
+ 
+    if plan:
+        alt_items = plan.get("alternate_items", [])
+        is_alt    = bool(alt_items and len(alt_items) >= 2)
+        if isinstance(today_date, str):
+            from datetime import date as _date
+            today_date = _date.fromisoformat(today_date)
+        today_item = _get_alternate_item_for_date(plan, today_date) if is_alt else None
+ 
+        delivery_dict["plan_name"]         = plan.get("name", "")
+        delivery_dict["is_alternate_plan"] = is_alt
+        delivery_dict["today_item"]        = today_item   # e.g. "Sprouts" or None
+        delivery_dict["plan_id_str"]       = str(plan["_id"])
+    else:
+        # sample / no plan
+        delivery_dict["plan_name"]         = cust.get("sample", "")
+        delivery_dict["is_alternate_plan"] = False
+        delivery_dict["today_item"]        = None
+ 
+    return delivery_dict
+
 # ---------------------------------------------------------------------------
 # INVOICE HELPERS
 # ---------------------------------------------------------------------------
@@ -1508,6 +1538,7 @@ def dashboard_employee():
     today_str  = datetime.now().strftime("%Y-%m-%d")
     day_name   = datetime.now().strftime("%A")
     emp_id_str = str(employee["_id"])
+    today      = datetime.now().date() 
  
     existing_deliveries = list(deliveries_col.find({
         "team_id": employee["team_id"],
@@ -1522,39 +1553,34 @@ def dashboard_employee():
         "status":  "active",          # ← was {"$ne": "inactive"}, now strict active-only
     }))
  
-    final_deliveries = []
+    final_deliveries = []  
     for cust in customers:
-        cust_id_str = str(cust["_id"])
- 
-        # Skip customer's weekly off-day
-        if day_name in cust.get("off_days", []):
-            continue
- 
-        # Skip customer's holiday for today
-        if today_str in cust.get("holidays", []):
-            continue
- 
-        if cust_id_str in delivery_map:
-            delivery = delivery_map[cust_id_str]
-            # Skip if already marked cancelled_holiday
-            if delivery.get("status") == "cancelled_holiday":
-                continue
-            delivery["customer"] = [cust]
-            final_deliveries.append(delivery)
-        else:
-            virtual_delivery = {
-                "_id":            f"virtual_{cust_id_str}",
-                "customer_id":    cust["_id"],
-                "team_id":        employee["team_id"],
-                "date":           today_str,
-                "status":         "pending",
-                "assigned_to":    None,
-                "preferred_time": cust.get("preferred_time", "Anytime"),
-                "proof_photo_url": cust.get("latest_proof_photo_url") or None,     # new field default
-                "customer":       [cust]
-            }
-            final_deliveries.append(virtual_delivery)
- 
+      cust_id_str = str(cust["_id"])
+      if day_name in cust.get("off_days", []):
+          continue
+      if today_str in cust.get("holidays", []):
+          continue
+      if cust_id_str in delivery_map:
+          delivery = delivery_map[cust_id_str]
+          if delivery.get("status") == "cancelled_holiday":
+              continue
+          delivery["customer"] = [cust]
+          _enrich_delivery_plan(delivery, cust, today)   # ← ADD THIS LINE
+          final_deliveries.append(delivery)
+      else:
+          virtual_delivery = {
+              "_id":            f"virtual_{cust_id_str}",
+              "customer_id":    cust["_id"],
+              "team_id":        employee["team_id"],
+              "date":           today_str,
+              "status":         "pending",
+              "assigned_to":    None,
+              "preferred_time": cust.get("preferred_time", "Anytime"),
+              "proof_photo_url": cust.get("latest_proof_photo_url") or None,
+              "customer":       [cust]
+          }
+          _enrich_delivery_plan(virtual_delivery, cust, today)  # ← ADD THIS LINE
+          final_deliveries.append(virtual_delivery)
     def sort_key(d):
         if d["status"] == "accepted" and str(d.get("assigned_to", "")) == emp_id_str:
             return 0

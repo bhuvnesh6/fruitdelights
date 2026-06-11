@@ -3,814 +3,799 @@
 {% block content %}
 
 <style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&display=swap');
 
+/* ═══════════════════════════════════════════
+   DESIGN TOKENS
+═══════════════════════════════════════════ */
 :root {
-  --bg:       #f4f6fa;
-  --surface:  #ffffff;
-  --surface2: #f8f9fc;
-  --border:   #e2e7f0;
-  --border2:  #cdd4e3;
-  --accent:   #4f5de8;
-  --accent2:  #3b4bd6;
-  --green:    #16a34a;
-  --green-bg: #f0fdf4;
-  --green-bd: #bbf7d0;
-  --amber:    #d97706;
-  --amber-bg: #fffbeb;
-  --amber-bd: #fde68a;
-  --red:      #dc2626;
-  --text:     #1e2336;
-  --muted:    #6b7280;
-  --muted2:   #9ca3af;
-  --r:        10px;
-  --r-sm:     6px;
-  --font:     'DM Sans', sans-serif;
-  --mono:     'DM Mono', monospace;
-  --shadow:   0 1px 4px rgba(0,0,0,.07), 0 4px 16px rgba(0,0,0,.05);
+  --bg:        #f7f8fb;
+  --bg2:       #ffffff;
+  --bg3:       #eef0f5;
+  --border:    rgba(15,17,23,.08);
+  --border2:   rgba(15,17,23,.14);
+
+  --accent:    #6c63ff;
+  --accent-d:  #5750e3;
+  --accent-g:  linear-gradient(135deg,#6c63ff,#9b8cff);
+
+  --green:     #16a34a;
+  --green-d:   #15803d;
+  --green-g:   linear-gradient(135deg,#22c55e,#4ade80);
+  --green-dim: rgba(34,197,94,.10);
+
+  --amber:     #b45309;
+  --amber-dim: rgba(245,158,11,.12);
+  --amber-bd:  rgba(245,158,11,.35);
+
+  --red:       #dc2626;
+  --red-dim:   rgba(239,68,68,.08);
+
+  --purple:    #9333ea;
+  --purple-dim:rgba(168,85,247,.10);
+
+  --orange:    #ea580c;
+  --orange-dim:rgba(251,146,60,.12);
+
+  --txt:       #0f1117;
+  --txt2:      #475569;
+  --txt3:      #94a3b8;
+
+  --r:         14px;
+  --r-sm:      8px;
+  --r-xs:      5px;
+  --font:      'Inter', sans-serif;
+  --mono:      'JetBrains Mono', monospace;
+  --sh:        0 1px 3px rgba(15,17,23,.08), 0 8px 24px rgba(15,17,23,.06);
+  --sh-card:   0 2px 8px rgba(15,17,23,.06), 0 16px 48px rgba(15,17,23,.05);
 }
 
-*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+
+body { background:var(--bg); color:var(--txt); font-family:var(--font); -webkit-font-smoothing:antialiased; }
 
 .wrap {
-  max-width: 980px;
+  max-width: 600px;
   margin: 0 auto;
-  padding: 1.25rem .85rem 5rem;
-  font-family: var(--font);
-  color: var(--text);
+  padding: 0 0 100px;
+  min-height: 100vh;
 }
 
-/* ── TOP BAR ── */
-.top-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 1.1rem; gap: .75rem; flex-wrap: wrap;
+/* ── STICKY HEADER ── */
+.emp-header {
+  position: sticky; top: 0; z-index: 200;
+  background: rgba(247,248,251,.92);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 16px;
 }
-.top-bar h1 { font-size: 1.2rem; font-weight: 700; color: var(--text); }
-.count-pill {
-  background: #eef0fb; border: 1px solid #c7cbf5;
-  border-radius: 999px; padding: .22rem .75rem;
-  font-size: .78rem; font-weight: 700; color: var(--accent);
-  font-family: var(--mono);
-}
-
-/* ── GPS BAR ── */
-.gps-bar {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r); padding: .65rem 1rem;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: .75rem; margin-bottom: .85rem; flex-wrap: wrap;
-  box-shadow: var(--shadow);
-}
-.gps-left  { display: flex; align-items: center; gap: .6rem; }
-.gps-dot   {
-  width: 8px; height: 8px; border-radius: 50%; background: var(--amber);
-  animation: blink 1.4s ease-in-out infinite; flex-shrink: 0;
-}
-.gps-dot.live { background: var(--green); }
-.gps-dot.err  { background: var(--red); animation: none; }
-@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.25} }
-.gps-label { font-size: .82rem; font-weight: 600; color: var(--muted); }
-.gps-label.live { color: var(--green); }
-.gps-label.err  { color: var(--red); }
-
-.gps-actions { display: flex; gap: .5rem; }
-.btn-sm {
-  background: var(--accent); color: #fff; border: none;
-  border-radius: var(--r-sm); padding: .38rem .9rem;
-  font-size: .78rem; font-weight: 700; cursor: pointer;
-  font-family: var(--font); transition: opacity .15s;
-}
-.btn-sm:hover { opacity: .85; }
-.btn-sm.ghost {
-  background: transparent; border: 1px solid var(--border2); color: var(--muted);
-}
-.btn-sm.ghost:hover { border-color: var(--accent); color: var(--accent); }
-
-/* ── STOPS STRIP ── */
-.stops-strip {
-  display: flex; align-items: center; gap: 0;
-  overflow-x: auto; padding: .4rem .1rem;
-  scrollbar-width: none; margin-bottom: .85rem;
-}
-.stops-strip::-webkit-scrollbar { display: none; }
-.s-chip {
-  display: inline-flex; align-items: center; gap: .3rem;
-  border: 1px solid var(--border2); border-radius: 999px; background: var(--surface);
-  padding: .22rem .65rem; font-size: .72rem; font-weight: 700;
-  color: var(--muted); white-space: nowrap; flex-shrink: 0;
-}
-.s-chip.me    { border-color: var(--accent); color: var(--accent); background: #eef0fb; }
-.s-chip.done  { border-color: var(--green); color: var(--green); background: var(--green-bg); }
-.s-chip.near  { border-color: var(--amber); color: var(--amber); background: var(--amber-bg); box-shadow: 0 0 6px rgba(217,119,6,.2); }
-.s-sep { font-size: .68rem; color: var(--muted2); padding: 0 .3rem; flex-shrink: 0; font-family: var(--mono); }
-
-/* ── TABLE ── */
-.tbl-wrap {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow);
-}
-.del-table { width: 100%; border-collapse: collapse; font-size: .85rem; }
-.del-table th {
-  background: var(--surface2); color: var(--muted);
-  font-size: .71rem; font-weight: 700;
-  text-transform: uppercase; letter-spacing: .06em;
-  padding: .65rem 1rem; text-align: left;
-  border-bottom: 1px solid var(--border); white-space: nowrap;
-}
-.del-table td {
-  padding: .85rem 1rem; border-bottom: 1px solid var(--border);
-  vertical-align: middle;
-}
-.del-table tr:last-child td { border-bottom: none; }
-.del-table tbody tr { transition: background .12s; }
-.del-table tbody tr:hover { background: var(--surface2); }
-.del-table tbody tr.nearby-row { background: #fffbeb !important; }
-
-/* Stop circle */
-.stop-circle {
-  width: 28px; height: 28px; border-radius: 50%;
-  background: var(--accent); color: #fff;
-  font-size: .74rem; font-weight: 800;
-  display: flex; align-items: center; justify-content: center;
-  flex-shrink: 0; font-family: var(--mono);
-}
-.stop-circle.done { background: var(--green); }
-.dist-lbl { font-size: .67rem; font-family: var(--mono); color: var(--muted2); margin-top: .2rem; text-align: center; }
-
-/* Customer cell */
-.cname { font-weight: 700; color: var(--text); font-size: .88rem; }
-.csub  { font-size: .73rem; color: var(--muted); margin-top: .1rem; }
-
-/* Address */
-.addr-blur { filter: blur(5px); user-select: none; pointer-events: none; color: var(--muted2); font-size: .82rem; }
-.addr-real { font-size: .82rem; color: var(--text); line-height: 1.55; }
-.addr-phone { font-size: .78rem; margin-top: .2rem; }
-.addr-phone a { color: var(--accent); text-decoration: none; font-weight: 600; }
-.addr-phone a:hover { text-decoration: underline; }
-
-/* loc tag */
-.loc-tag {
-  display: inline-flex; align-items: center; gap: .2rem;
-  font-size: .67rem; font-weight: 700; color: var(--green);
-  background: var(--green-bg); border: 1px solid var(--green-bd);
-  border-radius: 999px; padding: .1rem .45rem; margin-top: .25rem;
-}
-.loc-tag.by-addr { color: var(--muted); background: var(--surface2); border-color: var(--border); }
-
-/* photo tag */
-.photo-tag {
-  display: inline-flex; align-items: center; gap: .2rem;
-  font-size: .67rem; font-weight: 700; color: #7c3aed;
-  background: #f5f3ff; border: 1px solid #ddd6fe;
-  border-radius: 999px; padding: .1rem .45rem; margin-top: .25rem;
-  cursor: pointer; text-decoration: none;
-}
-.photo-tag:hover { background: #ede9fe; }
-
-/* Badges */
-.badge {
-  display: inline-flex; align-items: center; gap: .28rem;
-  border-radius: 999px; padding: .22rem .65rem;
-  font-size: .71rem; font-weight: 800; text-transform: uppercase;
-  letter-spacing: .05em; white-space: nowrap;
-}
-.b-p { background: var(--amber-bg); color: var(--amber); border: 1px solid var(--amber-bd); }
-.b-a { background: #eef0fb; color: var(--accent); border: 1px solid #c7cbf5; }
-.b-d { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-bd); }
-
-.sub-note { font-size: .7rem; margin-top: .28rem; }
-.sub-mine  { color: var(--green); }
-.sub-other { color: var(--amber); }
-
-/* Time */
-.time-val { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
-
-/* Actions */
-.actions-cell { display: flex; gap: .4rem; align-items: center; flex-wrap: wrap; }
-.btn-act {
-  display: inline-flex; align-items: center; gap: .25rem;
-  border: none; border-radius: var(--r-sm); padding: .38rem .78rem;
-  font-size: .76rem; font-weight: 700; cursor: pointer;
-  font-family: var(--font); text-decoration: none; transition: opacity .15s;
-  white-space: nowrap;
-}
-.btn-act:hover { opacity: .82; }
-.btn-accept  { background: var(--accent); color: #fff; }
-.btn-deliver { background: var(--green); color: #fff; }
-.btn-nav     { background: transparent; border: 1px solid var(--border2); color: var(--muted); }
-.btn-nav:hover { border-color: var(--accent); color: var(--accent); }
-.btn-pin     { background: transparent; border: 1px solid var(--amber-bd); color: var(--amber); }
-.btn-pin:hover { background: var(--amber-bg); }
-.btn-pin.pinned { border-color: var(--green-bd); color: var(--green); background: var(--green-bg); }
-.btn-photo   { background: transparent; border: 1px solid #ddd6fe; color: #7c3aed; }
-.btn-photo:hover { background: #f5f3ff; }
-.btn-photo.has-photo { border-color: #c4b5fd; background: #f5f3ff; }
-
-/* View photo button */
-.btn-view-photo {
-  background: transparent; border: 1px solid #c4b5fd; color: #7c3aed;
-}
-.btn-view-photo:hover { background: #f5f3ff; }
-
-/* View address photo button — always visible, orange tint */
-.btn-view-img {
-  background: transparent; border: 1px solid var(--amber-bd); color: var(--amber);
-}
-.btn-view-img:hover { background: var(--amber-bg); }
-
-/* ── MOBILE CARDS ── */
-.m-cards { display: none; }
-.m-card {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r); overflow: hidden; margin-bottom: .65rem;
-  box-shadow: var(--shadow);
-}
-.m-card.nearby-row { border-color: var(--amber); }
-.m-stripe { height: 3px; }
-.m-s-p { background: var(--amber); }
-.m-s-a { background: var(--accent); }
-.m-s-d { background: var(--green); }
-
-.m-head {
-  display: flex; align-items: center; gap: .7rem;
-  padding: .75rem .9rem .5rem;
-}
-.m-info { flex: 1; min-width: 0; }
-.m-name { font-weight: 700; font-size: .92rem; color: var(--text); }
-.m-sub  { font-size: .72rem; color: var(--muted); margin-top: .1rem; font-family: var(--mono); }
-
-.m-addr {
-  padding: .45rem .9rem .55rem;
-  font-size: .82rem; color: var(--text); line-height: 1.5;
-  border-top: 1px solid var(--border);
-}
-.m-addr-blur { filter: blur(5px); color: var(--muted2); font-size: .8rem; }
-.m-addr-phone { margin-top: .25rem; }
-.m-addr-phone a { color: var(--accent); font-weight: 600; text-decoration: none; }
-
-.m-foot {
-  display: flex; gap: .4rem; padding: .55rem .9rem .7rem;
-  flex-wrap: wrap; border-top: 1px solid var(--border);
-  background: var(--surface2);
-}
-
-/* ── PHOTO UPLOAD MODAL ── */
-.modal-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,.55);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 10000; padding: 1rem;
-  opacity: 0; pointer-events: none; transition: opacity .22s;
-}
-.modal-overlay.open { opacity: 1; pointer-events: all; }
-.modal-box {
-  background: var(--surface); border-radius: var(--r);
-  box-shadow: 0 20px 60px rgba(0,0,0,.25);
-  max-width: 420px; width: 100%; padding: 1.4rem;
-  transform: translateY(10px); transition: transform .22s;
-  max-height: 90vh; overflow-y: auto;
-}
-.modal-overlay.open .modal-box { transform: translateY(0); }
-.modal-title {
-  font-size: 1rem; font-weight: 700; color: var(--text);
-  margin-bottom: 1rem; display: flex; align-items: center;
+.header-inner {
+  display: flex; align-items: center;
   justify-content: space-between;
+  height: 56px; gap: 10px;
+}
+.header-left { display:flex; align-items:center; gap:10px; }
+.header-logo {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: var(--accent-g); display:flex; align-items:center;
+  justify-content:center; font-size:16px; flex-shrink:0;
+}
+.header-title { font-size:.9rem; font-weight:700; color:var(--txt); }
+.header-sub   { font-size:.68rem; color:var(--txt3); font-family:var(--mono); }
+.header-right { display:flex; align-items:center; gap:8px; }
+
+/* date pill */
+.date-pill {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius:999px; padding:.22rem .7rem;
+  font-size:.68rem; font-weight:700; color:var(--txt2);
+  font-family:var(--mono); white-space:nowrap;
+}
+
+/* ── STATS BAR ── */
+.stats-bar {
+  display: grid; grid-template-columns: repeat(3,1fr);
+  gap: 1px; background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.stat-item {
+  background: var(--bg2); padding:12px 8px;
+  text-align:center;
+}
+.stat-num  { font-size:1.3rem; font-weight:900; font-family:var(--mono); line-height:1; }
+.stat-lbl  { font-size:.6rem; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--txt3); margin-top:3px; }
+.stat-p    { color:var(--amber); }
+.stat-a    { color:var(--accent); }
+.stat-d    { color:var(--green); }
+
+/* ── GPS RIBBON ── */
+.gps-ribbon {
+  margin: 12px 16px 0;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r); padding:12px 14px;
+  display:flex; align-items:center; justify-content:space-between;
+  gap:10px;
+}
+.gps-left-wrap { display:flex; align-items:center; gap:8px; }
+.pulse-dot {
+  width:8px; height:8px; border-radius:50%;
+  background: var(--amber); flex-shrink:0;
+  animation: pulse-anim 1.6s ease-in-out infinite;
+}
+.pulse-dot.live { background:var(--green); }
+.pulse-dot.err  { background:var(--red); animation:none; }
+@keyframes pulse-anim { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.3;transform:scale(.8)} }
+.gps-txt  { font-size:.78rem; font-weight:600; color:var(--txt2); }
+.gps-txt.live { color:var(--green); }
+.gps-txt.err  { color:var(--red); }
+.btn-gps {
+  background: var(--accent); color:#fff;
+  border:none; border-radius:var(--r-sm); padding:.45rem 1rem;
+  font-size:.75rem; font-weight:800; cursor:pointer; font-family:var(--font);
+  white-space:nowrap; flex-shrink:0; transition:opacity .15s;
+}
+.btn-gps:hover { opacity:.85; }
+
+/* ── MAP CARD ── */
+.map-card {
+  margin: 10px 16px 0;
+  background: var(--bg2); border:1px solid var(--border);
+  border-radius: var(--r); overflow:hidden;
+}
+.map-card-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 14px; border-bottom:1px solid var(--border);
+}
+.map-card-title { font-size:.82rem; font-weight:700; color:var(--txt); display:flex; align-items:center; gap:6px; }
+.btn-open-maps {
+  background:transparent; border:1px solid var(--border2);
+  color:var(--txt2); border-radius:var(--r-xs);
+  padding:.28rem .65rem; font-size:.68rem; font-weight:700;
+  cursor:pointer; font-family:var(--font); text-decoration:none;
+  transition:all .15s; white-space:nowrap;
+}
+.btn-open-maps:hover { border-color:var(--accent); color:var(--accent); }
+#delivery-map { width:100%; height:220px; display:block; }
+.map-placeholder {
+  height:160px; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:6px;
+  color:var(--txt3); font-size:.8rem;
+}
+.map-placeholder .mp-icon { font-size:2rem; }
+
+/* ── SECTION LABEL ── */
+.section-label {
+  padding: 18px 16px 8px;
+  font-size:.65rem; font-weight:800; text-transform:uppercase;
+  letter-spacing:.1em; color:var(--txt3);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.section-label .s-count {
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:999px; padding:.15rem .55rem;
+  font-size:.65rem; font-weight:700; color:var(--txt2); font-family:var(--mono);
+}
+
+/* ── DELIVERY CARD ── */
+.d-card {
+  margin: 0 16px 10px;
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: var(--r); overflow:hidden;
+  box-shadow: var(--sh-card); transition:border-color .2s;
+}
+.d-card.nearby  { border-color: rgba(245,158,11,.4); }
+.d-card.is-mine { border-color: rgba(108,99,255,.35); }
+.d-card.is-done { border-color: rgba(34,197,94,.25); }
+
+.d-accent-bar { height:3px; width:100%; }
+.bar-p { background: linear-gradient(90deg,var(--amber),#fbbf24); }
+.bar-a { background: var(--accent-g); }
+.bar-d { background: var(--green-g); }
+
+/* card top row */
+.d-top {
+  display:flex; align-items:flex-start;
+  padding:13px 14px 10px; gap:11px;
+}
+.stop-num {
+  width:34px; height:34px; border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:.8rem; font-weight:900; flex-shrink:0;
+  font-family:var(--mono); border:1px solid;
+}
+.stop-num-p { background:var(--amber-dim); color:var(--amber); border-color:var(--amber-bd); }
+.stop-num-a { background:rgba(108,99,255,.15); color:var(--accent); border-color:rgba(108,99,255,.3); }
+.stop-num-d { background:var(--green-dim); color:var(--green); border-color:rgba(34,197,94,.3); }
+
+.d-meta { flex:1; min-width:0; }
+.d-name { font-size:.95rem; font-weight:800; color:var(--txt); line-height:1.2; }
+.d-sub  {
+  display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+  margin-top:4px;
+}
+.d-phone { font-size:.72rem; font-family:var(--mono); color:var(--txt3); }
+.d-time  { font-size:.68rem; font-weight:700; color:var(--txt3);
+           background:var(--bg3); border:1px solid var(--border);
+           border-radius:999px; padding:.1rem .45rem; }
+.d-dist  { font-size:.68rem; font-family:var(--mono); color:var(--txt3); }
+
+.badge-wrap { display:flex; flex-direction:column; align-items:flex-end; gap:4px; flex-shrink:0; }
+.badge {
+  display:inline-flex; align-items:center; gap:.2rem;
+  border-radius:999px; padding:.2rem .6rem;
+  font-size:.65rem; font-weight:800; text-transform:uppercase;
+  letter-spacing:.05em; white-space:nowrap;
+}
+.b-p { background:var(--amber-dim); color:var(--amber); border:1px solid var(--amber-bd); }
+.b-a { background:rgba(108,99,255,.15); color:var(--accent); border:1px solid rgba(108,99,255,.3); }
+.b-d { background:var(--green-dim); color:var(--green); border:1px solid rgba(34,197,94,.3); }
+.mine-tag { font-size:.6rem; font-weight:700; color:var(--accent); font-family:var(--mono); }
+.other-tag{ font-size:.6rem; font-weight:700; color:var(--amber); font-family:var(--mono); }
+
+/* ── BOX TYPE CHIP — THE HERO FEATURE ── */
+.box-type-row {
+  margin: 0 14px 10px;
+  display:flex; align-items:center; gap:8px;
+}
+.box-chip {
+  display:inline-flex; align-items:center; gap:5px;
+  border-radius:var(--r-sm); padding:.35rem .75rem;
+  font-size:.8rem; font-weight:800; line-height:1;
+  border:1px solid;
+}
+.box-chip-alt  {
+  background: linear-gradient(135deg,rgba(168,85,247,.15),rgba(251,146,60,.1));
+  color: #c084fc; border-color: rgba(168,85,247,.3);
+}
+.box-chip-std  {
+  background: rgba(34,197,94,.1);
+  color: var(--green); border-color: rgba(34,197,94,.25);
+}
+.box-chip-icon { font-size:.95rem; }
+.box-label-sm  {
+  font-size:.62rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:.07em; color:var(--txt3); flex-shrink:0;
+}
+/* today indicator pill */
+.today-marker {
+  display:inline-flex; align-items:center; gap:4px;
+  background:rgba(251,146,60,.15); border:1px solid rgba(251,146,60,.3);
+  color:var(--orange); border-radius:999px;
+  padding:.12rem .5rem; font-size:.6rem; font-weight:800;
+  text-transform:uppercase; letter-spacing:.06em;
+}
+.today-dot {
+  width:5px; height:5px; border-radius:50%;
+  background:var(--orange); animation:pulse-anim 1.4s ease-in-out infinite;
+}
+
+/* ── ADDRESS SECTION ── */
+.d-addr-wrap { padding:0 14px 10px; }
+.d-addr-locked {
+  display:flex; align-items:center; gap:6px;
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:var(--r-sm); padding:10px 12px;
+}
+.lock-icon { font-size:.85rem; opacity:.4; }
+.lock-txt  { font-size:.75rem; color:var(--txt3); }
+
+.d-addr-real { display:none; }
+.addr-line  { font-size:.82rem; color:var(--txt2); line-height:1.55; }
+.addr-call  {
+  display:inline-flex; align-items:center; gap:5px;
+  color:var(--accent); font-size:.78rem; font-weight:700;
+  text-decoration:none; margin-top:5px;
+}
+.addr-call:hover { text-decoration:underline; }
+.tag-row    { display:flex; flex-wrap:wrap; gap:5px; margin-top:7px; }
+.loc-tag    {
+  display:inline-flex; align-items:center; gap:3px;
+  font-size:.62rem; font-weight:700; border-radius:999px;
+  padding:.1rem .45rem; border:1px solid;
+}
+.tag-gps    { color:var(--green); background:var(--green-dim); border-color:rgba(34,197,94,.3); }
+.tag-addr   { color:var(--txt3); background:var(--bg3); border-color:var(--border2); }
+.tag-photo  {
+  color:var(--purple); background:var(--purple-dim);
+  border-color:rgba(168,85,247,.3);
+  cursor:pointer; text-decoration:none;
+}
+.tag-photo:hover { background:rgba(168,85,247,.2); }
+
+/* ── ACTION BUTTONS ── */
+.d-actions {
+  display:grid; gap:7px; padding:0 14px 13px;
+}
+/* primary action row */
+.d-primary { display:grid; grid-template-columns:1fr; gap:7px; }
+.d-primary.has-two { grid-template-columns:1fr 1fr; }
+/* secondary row */
+.d-secondary { display:flex; gap:7px; flex-wrap:wrap; }
+
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:5px;
+  border:none; border-radius:var(--r-sm); padding:0 14px;
+  height:40px; font-size:.78rem; font-weight:800;
+  cursor:pointer; font-family:var(--font); transition:opacity .15s, transform .1s;
+  text-decoration:none; white-space:nowrap; letter-spacing:.01em;
+}
+.btn:hover  { opacity:.88; }
+.btn:active { transform:scale(.97); }
+
+.btn-accept  { background:var(--accent-g); color:#fff; }
+.btn-deliver { background:var(--green-g); color:#fff; }
+.btn-nav     {
+  background:var(--bg3); border:1px solid var(--border2);
+  color:var(--txt2); flex:1;
+}
+.btn-nav:hover { border-color:var(--accent); color:var(--accent); }
+.btn-pin     {
+  background:var(--bg3); border:1px solid var(--amber-bd);
+  color:var(--amber); flex:1;
+}
+.btn-pin:hover   { background:var(--amber-dim); }
+.btn-pin.pinned  { border-color:rgba(34,197,94,.4); color:var(--green); background:var(--green-dim); }
+.btn-photo   {
+  background:var(--bg3); border:1px solid rgba(168,85,247,.3);
+  color:var(--purple); flex:1;
+}
+.btn-photo:hover { background:var(--purple-dim); }
+.btn-photo.has-photo { background:var(--purple-dim); }
+.btn-view-photo {
+  background:var(--bg3); border:1px solid var(--amber-bd);
+  color:var(--amber);
+}
+.btn-view-photo:hover { background:var(--amber-dim); }
+
+/* full-width */
+.btn-full { width:100%; }
+
+/* ── EMPTY STATE ── */
+.empty-state {
+  margin:40px 16px; text-align:center;
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--r); padding:48px 24px;
+}
+.empty-icon { font-size:3rem; margin-bottom:12px; }
+.empty-title{ font-size:1.1rem; font-weight:800; color:var(--txt); }
+.empty-body { font-size:.82rem; color:var(--txt3); margin-top:6px; }
+
+/* ── PHOTO MODAL ── */
+.modal-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.75);
+  display:flex; align-items:flex-end; justify-content:center;
+  z-index:10000; padding:0;
+  opacity:0; pointer-events:none; transition:opacity .22s;
+}
+.modal-overlay.open { opacity:1; pointer-events:all; }
+.modal-sheet {
+  background:var(--bg2); border:1px solid var(--border2);
+  border-radius:20px 20px 0 0;
+  width:100%; max-width:600px; padding:20px 20px 32px;
+  transform:translateY(40px); transition:transform .25s;
+  max-height:90vh; overflow-y:auto;
+}
+.modal-overlay.open .modal-sheet { transform:translateY(0); }
+.modal-handle {
+  width:40px; height:4px; border-radius:999px;
+  background:var(--bg3); margin:0 auto 18px;
+}
+.modal-title {
+  font-size:1rem; font-weight:800; color:var(--txt);
+  margin-bottom:16px; display:flex; align-items:center;
+  justify-content:space-between;
 }
 .modal-close {
-  background: none; border: none; cursor: pointer;
-  font-size: 1.2rem; color: var(--muted); padding: 0 .2rem;
+  background:var(--bg3); border:none; cursor:pointer;
+  border-radius:50%; width:28px; height:28px;
+  color:var(--txt3); font-size:.85rem;
+  display:flex; align-items:center; justify-content:center;
 }
-.modal-close:hover { color: var(--red); }
+.modal-close:hover { color:var(--red); }
 
-/* Drop zone */
 .drop-zone {
-  border: 2px dashed var(--border2); border-radius: var(--r);
-  padding: 2rem 1rem; text-align: center; cursor: pointer;
-  transition: border-color .15s, background .15s; position: relative;
+  border:2px dashed var(--border2); border-radius:var(--r);
+  padding:28px 16px; text-align:center; cursor:pointer;
+  transition:border-color .15s, background .15s; position:relative;
+  background:var(--bg3);
 }
 .drop-zone:hover, .drop-zone.drag-over {
-  border-color: var(--accent); background: #eef0fb;
+  border-color:var(--accent); background:rgba(108,99,255,.07);
 }
-.drop-zone input[type=file] {
-  position: absolute; inset: 0; opacity: 0; cursor: pointer;
-}
-.drop-icon { font-size: 2rem; margin-bottom: .5rem; }
-.drop-text { font-size: .85rem; color: var(--muted); line-height: 1.5; }
-.drop-text strong { color: var(--text); }
+.drop-zone input[type=file] { position:absolute; inset:0; opacity:0; cursor:pointer; }
+.drop-icon  { font-size:2.2rem; margin-bottom:8px; }
+.drop-text  { font-size:.8rem; color:var(--txt3); line-height:1.6; }
+.drop-text strong { color:var(--txt); }
 
-/* Preview */
-.photo-preview {
-  margin-top: .85rem; display: none;
-  border-radius: var(--r-sm); overflow: hidden;
-  border: 1px solid var(--border); position: relative;
-}
-.photo-preview img {
-  width: 100%; max-height: 200px; object-fit: cover; display: block;
-}
+.photo-preview { margin-top:12px; display:none; border-radius:var(--r-sm); overflow:hidden; position:relative; }
+.photo-preview img { width:100%; max-height:220px; object-fit:cover; display:block; }
 .preview-remove {
-  position: absolute; top: .4rem; right: .4rem;
-  background: rgba(0,0,0,.6); color: #fff; border: none;
-  border-radius: 50%; width: 26px; height: 26px; cursor: pointer;
-  font-size: .85rem; display: flex; align-items: center; justify-content: center;
+  position:absolute; top:8px; right:8px; background:rgba(0,0,0,.7);
+  color:#fff; border:none; border-radius:50%; width:28px; height:28px;
+  cursor:pointer; font-size:.8rem; display:flex; align-items:center; justify-content:center;
 }
 
-/* Upload progress */
-.upload-progress { margin-top: .75rem; display: none; }
-.progress-bar-wrap {
-  height: 6px; background: var(--border); border-radius: 999px; overflow: hidden;
-}
-.progress-bar {
-  height: 100%; background: var(--accent); border-radius: 999px;
-  width: 0; transition: width .2s;
-}
-.progress-label { font-size: .72rem; color: var(--muted); margin-top: .3rem; }
+.upload-progress { margin-top:12px; display:none; }
+.progress-track { height:5px; background:var(--bg3); border-radius:999px; overflow:hidden; }
+.progress-fill  { height:100%; background:var(--accent-g); border-radius:999px; width:0; transition:width .2s; }
+.progress-lbl   { font-size:.7rem; color:var(--txt3); margin-top:5px; }
 
-.modal-actions {
-  display: flex; gap: .6rem; margin-top: 1rem; justify-content: flex-end;
+.existing-panel {
+  margin-top:12px; display:none;
+  background:rgba(34,197,94,.07); border:1px solid rgba(34,197,94,.2);
+  border-radius:var(--r-sm); padding:10px 12px;
 }
+.existing-label { font-size:.68rem; font-weight:800; color:var(--green); margin-bottom:6px; }
+.existing-panel img { width:100%; max-height:180px; object-fit:cover; border-radius:var(--r-xs); }
+.existing-panel a { display:block; font-size:.7rem; color:var(--accent); margin-top:6px; text-align:center; }
 
-/* Existing photo panel */
-.existing-photo {
-  margin-top: .75rem; display: none;
-  border-radius: var(--r-sm); overflow: hidden;
-  border: 1px solid var(--green-bd); background: var(--green-bg);
-  padding: .6rem;
-}
-.existing-photo-label {
-  font-size: .72rem; font-weight: 700; color: var(--green);
-  margin-bottom: .4rem; display: flex; align-items: center; gap: .3rem;
-}
-.existing-photo img {
-  width: 100%; max-height: 180px; object-fit: cover;
-  border-radius: var(--r-sm); display: block;
-}
-.existing-photo a {
-  display: block; margin-top: .35rem;
-  font-size: .72rem; color: var(--accent); text-align: center;
-}
+.modal-footer { display:flex; gap:8px; margin-top:16px; }
+.btn-cancel { background:var(--bg3); border:1px solid var(--border2); color:var(--txt3); flex:1; }
+.btn-cancel:hover { color:var(--txt); }
+.btn-upload-go { background:var(--accent-g); color:#fff; flex:2; }
+.btn-upload-go:disabled { opacity:.4; cursor:not-allowed; }
 
-/* ── VIEW IMAGE LIGHTBOX ── */
+/* ── LIGHTBOX ── */
 .lightbox {
-  position: fixed; inset: 0; background: rgba(0,0,0,.88);
-  display: flex; align-items: center; justify-content: center;
-  z-index: 20000; padding: 1rem;
-  opacity: 0; pointer-events: none; transition: opacity .2s;
-  flex-direction: column; gap: .75rem;
+  position:fixed; inset:0; background:rgba(0,0,0,.92);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  z-index:20000; padding:20px; gap:12px;
+  opacity:0; pointer-events:none; transition:opacity .2s;
 }
-.lightbox.open { opacity: 1; pointer-events: all; }
-.lightbox img {
-  max-width: 100%; max-height: 80vh; border-radius: var(--r);
-  box-shadow: 0 20px 60px rgba(0,0,0,.5); object-fit: contain;
-  display: block;
-}
-.lightbox-caption {
-  color: rgba(255,255,255,.85); font-size: .82rem; font-family: var(--font);
-  text-align: center; max-width: 480px;
-}
-.lightbox-actions {
-  display: flex; gap: .6rem;
-}
-.lb-btn {
-  border: none; border-radius: var(--r-sm); padding: .42rem 1rem;
-  font-size: .8rem; font-weight: 700; cursor: pointer; font-family: var(--font);
-}
-.lb-close { background: rgba(255,255,255,.15); color: #fff; }
-.lb-close:hover { background: rgba(255,255,255,.25); }
-.lb-open  { background: var(--accent); color: #fff; text-decoration: none; display: inline-flex; align-items: center; }
-.lb-open:hover { opacity: .85; }
-
-/* ── EMPTY ── */
-.empty {
-  text-align: center; padding: 3.5rem 2rem;
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r); box-shadow: var(--shadow);
-}
-.empty h3 { font-size: 1.1rem; color: var(--text); margin-bottom: .5rem; }
-.empty p  { color: var(--muted); font-size: .85rem; }
+.lightbox.open { opacity:1; pointer-events:all; }
+.lightbox img { max-width:100%; max-height:70vh; border-radius:var(--r); object-fit:contain; display:block; }
+.lb-caption { color:rgba(255,255,255,.7); font-size:.78rem; text-align:center; max-width:400px; }
+.lb-btns { display:flex; gap:8px; }
+.lb-btn { border:none; border-radius:var(--r-sm); padding:.5rem 1.1rem; font-size:.78rem; font-weight:700; cursor:pointer; font-family:var(--font); }
+.lb-close{ background:rgba(255,255,255,.12); color:#fff; }
+.lb-close:hover { background:rgba(255,255,255,.2); }
+.lb-open { background:var(--accent-g); color:#fff; text-decoration:none; display:inline-flex; align-items:center; }
 
 /* ── TOAST ── */
 #toast {
-  position: fixed; bottom: 1.5rem; left: 50%; transform: translateX(-50%) translateY(8px);
-  background: #fff; border: 1px solid var(--border);
-  border-radius: var(--r); padding: .6rem 1.2rem;
-  font-size: .82rem; font-weight: 600; color: var(--text);
-  box-shadow: 0 8px 32px rgba(0,0,0,.12);
-  opacity: 0; transition: opacity .22s, transform .22s;
-  pointer-events: none; z-index: 9999;
-  white-space: nowrap; max-width: 90vw; font-family: var(--font);
+  position:fixed; bottom:80px; left:50%; transform:translateX(-50%) translateY(8px);
+  background:var(--bg2); border:1px solid var(--border2);
+  border-radius:var(--r); padding:.6rem 1.2rem;
+  font-size:.8rem; font-weight:700; color:var(--txt);
+  box-shadow:var(--sh); opacity:0; transition:opacity .2s, transform .2s;
+  pointer-events:none; z-index:9999; white-space:nowrap;
+  max-width:90vw; font-family:var(--font);
 }
-#toast.show  { opacity: 1; transform: translateX(-50%) translateY(0); }
-#toast.success { border-color: var(--green-bd); color: var(--green); }
-#toast.error   { border-color: #fecaca; color: var(--red); }
+#toast.show   { opacity:1; transform:translateX(-50%) translateY(0); }
+#toast.ok     { border-color:rgba(34,197,94,.4); color:var(--green); }
+#toast.err    { border-color:rgba(239,68,68,.4); color:var(--red); }
 
-/* ── MAP SECTION ── */
-.map-section {
-  background: var(--surface); border: 1px solid var(--border);
-  border-radius: var(--r); overflow: hidden; box-shadow: var(--shadow);
-  margin-bottom: 1rem;
+/* ── STOPS SCROLL ── */
+.stops-row {
+  padding:0 16px; margin:10px 0 0;
+  display:flex; align-items:center; gap:0;
+  overflow-x:auto; scrollbar-width:none;
 }
-.map-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: .7rem 1rem; border-bottom: 1px solid var(--border);
-  flex-wrap: wrap; gap: .6rem; background: var(--surface2);
+.stops-row::-webkit-scrollbar { display:none; }
+.s-chip {
+  display:inline-flex; align-items:center; gap:3px;
+  border:1px solid var(--border2); border-radius:999px;
+  background:var(--bg3); padding:.2rem .6rem;
+  font-size:.65rem; font-weight:800; color:var(--txt3);
+  white-space:nowrap; flex-shrink:0; cursor:pointer; transition:all .15s;
 }
-.map-header-left { display: flex; align-items: center; gap: .6rem; }
-.map-title   { font-size: .9rem; font-weight: 700; color: var(--text); }
-.map-subtitle{ font-size: .72rem; color: var(--muted); }
-.map-header-right { display: flex; gap: .45rem; flex-wrap: wrap; }
+.s-chip:hover { border-color:var(--accent); color:var(--accent); }
+.s-chip.you   { border-color:rgba(108,99,255,.4); color:var(--accent); background:rgba(108,99,255,.1); }
+.s-chip.done  { border-color:rgba(34,197,94,.4); color:var(--green); background:var(--green-dim); }
+.s-chip.near  { border-color:var(--amber-bd); color:var(--amber); background:var(--amber-dim); }
+.s-sep { font-size:.6rem; color:var(--txt3); padding:0 3px; flex-shrink:0; font-family:var(--mono); }
 
-#delivery-map { width: 100%; height: 320px; display: block; background: #e8ecf0; }
-.map-placeholder-inner {
-  height: 320px; display: flex; flex-direction: column;
-  align-items: center; justify-content: center; gap: .65rem;
-  color: var(--muted); font-size: .88rem; background: #f0f3f8;
-}
-.map-placeholder-inner .icon { font-size: 2.5rem; }
-.map-placeholder-inner strong { color: var(--text); }
+/* leaflet override */
+/* leaflet override */
+.leaflet-popup-content-wrapper { border-radius:10px !important; box-shadow:var(--sh) !important; background:var(--bg2) !important; border:1px solid var(--border2); }
+.leaflet-popup-content { color:var(--txt) !important; font-family:var(--font) !important; font-size:.8rem !important; margin:10px 14px !important; }
+.leaflet-popup-tip { background:var(--bg2) !important; }
+.popup-name { font-weight:800; font-size:.9rem; margin-bottom:2px; }
+.popup-sub  { color:var(--txt3); font-size:.74rem; }
+.popup-box  { margin-top:5px; font-size:.74rem; font-weight:700; }
 
-.leaflet-popup-content-wrapper {
-  border-radius: 8px !important; box-shadow: 0 4px 16px rgba(0,0,0,.15) !important;
-  font-family: var(--font) !important;
-}
-.leaflet-popup-content { margin: 10px 14px !important; font-size: .82rem !important; line-height: 1.5 !important; }
-.popup-name { font-weight: 700; color: var(--text); font-size: .9rem; }
-.popup-addr { color: var(--muted); margin-top: .15rem; }
-.popup-status { margin-top: .3rem; }
-
-/* ── RESPONSIVE ── */
-@media (max-width: 639px) {
-  .tbl-wrap   { display: none; }
-  .m-cards    { display: block; }
-  .gps-bar    { flex-direction: column; align-items: flex-start; gap: .55rem; }
-  .gps-actions{ width: 100%; }
-  .btn-sm     { flex: 1; justify-content: center; }
-  #delivery-map { height: 260px; }
-}
+/* ensure page body bg stays consistent */
+html { background:var(--bg); }
 </style>
 
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"/>
 
 <div class="wrap">
 
-  <!-- TOP BAR -->
-  <div class="top-bar">
-    <h1>📦 Today's Deliveries</h1>
-    <span class="count-pill">{{ deliveries|length }} stops</span>
+  <!-- ═══ STICKY HEADER ═══ -->
+  <div class="emp-header">
+    <div class="header-inner">
+      <div class="header-left">
+        <div class="header-logo">🍓</div>
+        <div>
+          <div class="header-title">Deliveries</div>
+          <div class="header-sub">{{ session.name }}</div>
+        </div>
+      </div>
+      <div class="header-right">
+        <div class="date-pill" id="today-label">—</div>
+      </div>
+    </div>
   </div>
 
-  <!-- GPS BAR -->
-  <div class="gps-bar">
-    <div class="gps-left">
-      <div class="gps-dot" id="gps-dot"></div>
-      <span class="gps-label" id="gps-label">GPS not started</span>
+  <!-- ═══ STATS BAR ═══ -->
+  <div class="stats-bar">
+    {% set pending_count   = deliveries | selectattr('status','equalto','pending')   | list | length %}
+    {% set accepted_count  = deliveries | selectattr('status','equalto','accepted')  | list | length %}
+    {% set delivered_count = deliveries | selectattr('status','equalto','delivered') | list | length %}
+    <div class="stat-item">
+      <div class="stat-num stat-p">{{ pending_count }}</div>
+      <div class="stat-lbl">Pending</div>
     </div>
-    <div class="gps-actions">
-      <button class="btn-sm" onclick="initRoute()">📍 Sort by Distance</button>
+    <div class="stat-item">
+      <div class="stat-num stat-a">{{ accepted_count }}</div>
+      <div class="stat-lbl">Accepted</div>
+    </div>
+    <div class="stat-item">
+      <div class="stat-num stat-d">{{ delivered_count }}</div>
+      <div class="stat-lbl">Done</div>
     </div>
   </div>
 
-  <!-- STOPS STRIP -->
+  <!-- ═══ GPS RIBBON ═══ -->
+  <div class="gps-ribbon">
+    <div class="gps-left-wrap">
+      <div class="pulse-dot" id="gps-dot"></div>
+      <span class="gps-txt" id="gps-label">GPS not started</span>
+    </div>
+    <button class="btn-gps" onclick="initRoute()">📍 Sort by Distance</button>
+  </div>
+
+  <!-- ═══ STOPS SCROLL ═══ -->
   {% if deliveries %}
-  <div class="stops-strip" id="stops-strip">
-    <span class="s-chip me">📍 You</span>
+  <div class="stops-row" id="stops-row">
+    <span class="s-chip you">📍 You</span>
   </div>
   {% endif %}
 
   {% if deliveries %}
 
-  <!-- MAP -->
-  <div class="map-section">
-    <div class="map-header">
-      <div class="map-header-left">
-        <div>
-          <div class="map-title">🗺 Route Map</div>
-          <div class="map-subtitle">All {{ deliveries|length }} stops · click a marker for details</div>
-        </div>
-      </div>
-      <div class="map-header-right">
-        <button class="btn-sm" onclick="initRoute()">📍 Sort &amp; Plot Route</button>
-        <a id="open-maps-btn" href="#" target="_blank" class="btn-sm ghost" style="display:none;">Open in Maps ↗</a>
+  <!-- ═══ MAP ═══ -->
+  <div class="map-card" style="margin-top:10px;">
+    <div class="map-card-header">
+      <div class="map-card-title">🗺 Route Map</div>
+      <div style="display:flex;gap:6px;align-items:center;">
+        <button class="btn-open-maps" onclick="initRoute()">Sort &amp; Plot</button>
+        <a id="open-maps-btn" href="#" target="_blank" class="btn-open-maps" style="display:none;">Open in Maps ↗</a>
       </div>
     </div>
-    <div id="map-placeholder" class="map-placeholder-inner">
-      <div class="icon">🗺️</div>
-      <div><strong>Map loads after GPS is granted</strong></div>
-      <div style="font-size:.75rem;">Click "Sort &amp; Plot Route" to see all stops</div>
+    <div id="map-placeholder" class="map-placeholder">
+      <div class="mp-icon">🗺️</div>
+      <div>Tap <strong>Sort by Distance</strong> to plot route</div>
     </div>
     <div id="delivery-map" style="display:none;"></div>
   </div>
 
-  <!-- DESKTOP TABLE -->
-  <div class="tbl-wrap">
-    <table class="del-table">
-      <thead>
-        <tr>
-          <th style="width:52px">#</th>
-          <th>Customer</th>
-          <th>Address</th>
-          <th style="width:100px">Time</th>
-          <th style="width:130px">Status</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody id="del-tbody">
-        {% for delivery in deliveries %}
-        {% set cust = delivery.customer[0] %}
-        {% set is_mine      = delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
-        {% set is_delivered = delivery.status == 'delivered' %}
-        {% set show_addr    = is_mine or is_delivered %}
-        {% set delivery_id_str = delivery._id|string %}
-        {# proof_photo_url is set on real delivery docs; for virtual deliveries
-           fall back to latest_proof_photo_url stored on the customer document #}
-        {% set _del_photo  = delivery.proof_photo_url if (delivery.proof_photo_url is defined and delivery.proof_photo_url) else '' %}
-        {% set _cust_photo = cust.latest_proof_photo_url if (cust.latest_proof_photo_url is defined and cust.latest_proof_photo_url) else '' %}
-        {% set photo_url   = _del_photo if _del_photo else _cust_photo %}
-        {% set has_photo   = photo_url | length > 0 %}
-
-        <tr id="row-{{ loop.index }}"
-            data-index="{{ loop.index }}"
-            data-cust-id="{{ cust._id }}"
-            data-delivery-id="{{ delivery_id_str }}"
-            data-address="{{ cust.address }}"
-            data-name="{{ cust.name }}"
-            data-status="{{ delivery.status }}"
-            data-ismine="{{ 'true' if is_mine else 'false' }}"
-            data-isdone="{{ 'true' if is_delivered else 'false' }}"
-            data-lat="{{ cust.delivery_lat if cust.delivery_lat else '' }}"
-            data-lng="{{ cust.delivery_lng if cust.delivery_lng else '' }}"
-            data-photo-url="{{ photo_url }}">
-
-          <td>
-            <div style="display:flex;flex-direction:column;align-items:center;gap:.18rem;">
-              <div class="stop-circle {% if is_delivered %}done{% endif %}" id="circle-{{ loop.index }}">{{ loop.index }}</div>
-              <div class="dist-lbl" id="dist-{{ loop.index }}">—</div>
-            </div>
-          </td>
-
-          <td>
-            <div class="cname">{{ cust.name }}</div>
-            <div class="csub">{{ cust.phone }}</div>
-          </td>
-
-          <td>
-            {% if show_addr %}
-              <div class="addr-real" id="addr-real-{{ loop.index }}">{{ cust.address }}</div>
-              <div class="addr-phone">📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a></div>
-              {% if cust.delivery_lat and cust.delivery_lng %}
-                <div class="loc-tag">📌 GPS pinned</div>
-              {% else %}
-                <div class="loc-tag by-addr">🏠 Using address</div>
-              {% endif %}
-              {% if has_photo %}
-                <button class="photo-tag" onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">📷 Photo proof</button>
-              {% endif %}
-            {% else %}
-              <div id="addr-locked-{{ loop.index }}">
-                <span class="addr-blur">123 Hidden Street · Block A</span>
-              </div>
-              <div id="addr-real-{{ loop.index }}" style="display:none;">
-                <div class="addr-real">{{ cust.address }}</div>
-                <div class="addr-phone">📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a></div>
-                {% if cust.delivery_lat and cust.delivery_lng %}
-                  <div class="loc-tag">📌 GPS pinned</div>
-                {% else %}
-                  <div class="loc-tag by-addr">🏠 Using address</div>
-                {% endif %}
-                {% if has_photo %}
-                  <button class="photo-tag" onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">📷 Photo proof</button>
-                {% endif %}
-              </div>
-            {% endif %}
-          </td>
-
-          <td><span class="time-val">{{ cust.preferred_time or 'Anytime' }}</span></td>
-
-          <td>
-            <span class="badge {% if delivery.status=='pending' %}b-p{% elif delivery.status=='accepted' %}b-a{% else %}b-d{% endif %}">
-              {% if delivery.status == 'pending' %}⏳ Pending
-              {% elif delivery.status == 'accepted' %}⚡ Accepted
-              {% else %}✓ Delivered{% endif %}
-            </span>
-            {% if is_mine %}<div class="sub-note sub-mine">Assigned to you</div>
-            {% elif delivery.status == 'accepted' and not is_mine %}<div class="sub-note sub-other">Taken by teammate</div>
-            {% endif %}
-          </td>
-
-          <td>
-            <div class="actions-cell">
-
-              {# ── VIEW PHOTO — always visible for any employee if photo exists ── #}
-              {% if has_photo %}
-              <button class="btn-act btn-view-photo"
-                      onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">
-                🖼 View Photo
-              </button>
-              {% endif %}
-
-              <button class="btn-act btn-nav" id="nav-btn-{{ loop.index }}"
-                onclick="navToStop({{ loop.index }})"
-                {% if not show_addr %}style="display:none;"{% endif %}>🧭 Nav</button>
-
-              <button class="btn-act btn-pin {% if cust.delivery_lat and cust.delivery_lng %}pinned{% endif %}"
-                      id="pin-btn-{{ loop.index }}"
-                      onclick="pinLocation({{ loop.index }}, '{{ cust._id }}')"
-                      title="Pin your current GPS to this customer"
-                      {% if not show_addr %}style="display:none;"{% endif %}>
-                {% if cust.delivery_lat and cust.delivery_lng %}📌 Pinned{% else %}📍 Pin{% endif %}
-              </button>
-
-              <button class="btn-act btn-photo {% if has_photo %}has-photo{% endif %}"
-                      id="photo-btn-{{ loop.index }}"
-                      onclick="openPhotoModal({{ loop.index }}, '{{ delivery_id_str }}', '{{ photo_url }}')"
-                      {% if not show_addr %}style="display:none;"{% endif %}>
-                {% if has_photo %}📷 Replace{% else %}📷 Upload{% endif %}
-              </button>
-
-              {% if delivery.status == 'pending' %}
-                <a href="{{ url_for('accept_delivery', delivery_id=delivery._id|string) }}" class="btn-act btn-accept">Accept</a>
-              {% elif is_mine %}
-                <a href="{{ url_for('complete_delivery', delivery_id=delivery._id|string) }}" class="btn-act btn-deliver">✓ Delivered</a>
-              {% endif %}
-            </div>
-          </td>
-        </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <!-- ═══ DELIVERY CARDS ═══ -->
+  <div class="section-label">
+    All Stops
+    <span class="s-count">{{ deliveries | length }}</span>
   </div>
 
-  <!-- MOBILE CARDS -->
-  <div class="m-cards" id="m-cards-wrap">
-    {% for delivery in deliveries %}
-    {% set cust = delivery.customer[0] %}
-    {% set is_mine      = delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
-    {% set is_delivered = delivery.status == 'delivered' %}
-    {% set show_addr    = is_mine or is_delivered %}
-    {% set delivery_id_str = delivery._id|string %}
-    {% set _del_photo  = delivery.proof_photo_url if (delivery.proof_photo_url is defined and delivery.proof_photo_url) else '' %}
-    {% set _cust_photo = cust.latest_proof_photo_url if (cust.latest_proof_photo_url is defined and cust.latest_proof_photo_url) else '' %}
-    {% set photo_url   = _del_photo if _del_photo else _cust_photo %}
-    {% set has_photo   = photo_url | length > 0 %}
+  <div id="cards-wrap">
+  {% for delivery in deliveries %}
+  {% set cust = delivery.customer[0] %}
+  {% set is_mine      = delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string %}
+  {% set is_delivered = delivery.status == 'delivered' %}
+  {% set show_addr    = is_mine or is_delivered %}
+  {% set delivery_id_str = delivery._id|string %}
+  {% set _del_photo   = delivery.proof_photo_url if (delivery.proof_photo_url is defined and delivery.proof_photo_url) else '' %}
+  {% set _cust_photo  = cust.latest_proof_photo_url if (cust.latest_proof_photo_url is defined and cust.latest_proof_photo_url) else '' %}
+  {% set photo_url    = _del_photo if _del_photo else _cust_photo %}
+  {% set has_photo    = photo_url | length > 0 %}
+  {# ── plan / box-type info passed from route ── #}
+  {% set plan_name    = delivery.plan_name if delivery.plan_name is defined else '' %}
+  {% set is_alt       = delivery.is_alternate_plan if delivery.is_alternate_plan is defined else false %}
+  {% set box_item     = delivery.today_item if (delivery.today_item is defined and delivery.today_item) else plan_name %}
 
-    <div class="m-card"
-         id="mcard-{{ loop.index }}"
-         data-index="{{ loop.index }}"
-         data-cust-id="{{ cust._id }}"
-         data-delivery-id="{{ delivery_id_str }}"
-         data-address="{{ cust.address }}"
-         data-status="{{ delivery.status }}"
-         data-ismine="{{ 'true' if is_mine else 'false' }}"
-         data-isdone="{{ 'true' if is_delivered else 'false' }}"
-         data-lat="{{ cust.delivery_lat if cust.delivery_lat else '' }}"
-         data-lng="{{ cust.delivery_lng if cust.delivery_lng else '' }}"
-         data-photo-url="{{ photo_url }}">
+  <div class="d-card {% if is_mine %}is-mine{% elif is_delivered %}is-done{% endif %}"
+       id="card-{{ loop.index }}"
+       data-index="{{ loop.index }}"
+       data-cust-id="{{ cust._id }}"
+       data-delivery-id="{{ delivery_id_str }}"
+       data-address="{{ cust.address | e }}"
+       data-name="{{ cust.name | e }}"
+       data-status="{{ delivery.status }}"
+       data-ismine="{{ 'true' if is_mine else 'false' }}"
+       data-isdone="{{ 'true' if is_delivered else 'false' }}"
+       data-lat="{{ cust.delivery_lat if cust.delivery_lat else '' }}"
+       data-lng="{{ cust.delivery_lng if cust.delivery_lng else '' }}"
+       data-photo-url="{{ photo_url }}"
+       data-box-item="{{ box_item | e }}"
+       data-is-alt="{{ 'true' if is_alt else 'false' }}">
 
-      <div class="m-stripe {% if delivery.status=='pending' %}m-s-p{% elif delivery.status=='accepted' %}m-s-a{% else %}m-s-d{% endif %}"></div>
+    <!-- accent bar -->
+    <div class="d-accent-bar {% if delivery.status=='pending' %}bar-p{% elif delivery.status=='accepted' %}bar-a{% else %}bar-d{% endif %}"></div>
 
-      <div class="m-head">
-        <div class="stop-circle {% if is_delivered %}done{% endif %}" id="m-circle-{{ loop.index }}">{{ loop.index }}</div>
-        <div class="m-info">
-          <div class="m-name">{{ cust.name }}</div>
-          <div class="m-sub">Stop #<span class="m-stop-lbl">{{ loop.index }}</span> · <span id="m-dist-{{ loop.index }}">—</span></div>
+    <!-- top row -->
+    <div class="d-top">
+      <div class="stop-num {% if delivery.status=='pending' %}stop-num-p{% elif delivery.status=='accepted' %}stop-num-a{% else %}stop-num-d{% endif %}"
+           id="stop-num-{{ loop.index }}">{{ loop.index }}</div>
+      <div class="d-meta">
+        <div class="d-name">{{ cust.name }}</div>
+        <div class="d-sub">
+          <span class="d-phone">{{ cust.phone }}</span>
+          {% if cust.preferred_time %}<span class="d-time">{{ cust.preferred_time }}</span>{% endif %}
+          <span class="d-dist" id="dist-{{ loop.index }}"></span>
         </div>
+      </div>
+      <div class="badge-wrap">
         <span class="badge {% if delivery.status=='pending' %}b-p{% elif delivery.status=='accepted' %}b-a{% else %}b-d{% endif %}">
-          {% if delivery.status == 'pending' %}⏳{% elif delivery.status == 'accepted' %}⚡{% else %}✓{% endif %}
+          {% if delivery.status=='pending' %}⏳ Pending
+          {% elif delivery.status=='accepted' %}⚡ Active
+          {% else %}✓ Done{% endif %}
         </span>
-      </div>
-
-      <div class="m-addr">
-        {% if show_addr %}
-          <div id="m-addr-real-{{ loop.index }}">
-            {{ cust.address }}
-            <div class="m-addr-phone">📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a></div>
-            {% if cust.delivery_lat and cust.delivery_lng %}
-              <div class="loc-tag" style="margin-top:.3rem;">📌 GPS pinned</div>
-            {% else %}
-              <div class="loc-tag by-addr" style="margin-top:.3rem;">🏠 Using address</div>
-            {% endif %}
-            {% if has_photo %}
-              <button class="photo-tag" style="margin-top:.3rem;"
-                onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">📷 Photo proof</button>
-            {% endif %}
-          </div>
-        {% else %}
-          <div id="m-addr-locked-{{ loop.index }}">
-            <span class="m-addr-blur">Accept or come within 300m to reveal address</span>
-            {% if has_photo %}
-              <br><button class="photo-tag" style="margin-top:.4rem;filter:none;"
-                onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','Address photo')">🖼 View drop spot</button>
-            {% endif %}
-          </div>
-          <div id="m-addr-real-{{ loop.index }}" style="display:none;">
-            {{ cust.address }}
-            <div class="m-addr-phone">📞 <a href="tel:{{ cust.phone }}">{{ cust.phone }}</a></div>
-            {% if cust.delivery_lat and cust.delivery_lng %}
-              <div class="loc-tag" style="margin-top:.3rem;">📌 GPS pinned</div>
-            {% else %}
-              <div class="loc-tag by-addr" style="margin-top:.3rem;">🏠 Using address</div>
-            {% endif %}
-            {% if has_photo %}
-              <button class="photo-tag" style="margin-top:.3rem;"
-                onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">📷 Photo proof</button>
-            {% endif %}
-          </div>
-        {% endif %}
-      </div>
-
-      <div class="m-foot">
-        {# ── VIEW PHOTO — always visible for any employee if photo exists ── #}
-        {% if has_photo %}
-        <button class="btn-act btn-view-photo"
-                onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address }}')">
-          🖼 View Photo
-        </button>
-        {% endif %}
-
-        <button class="btn-act btn-nav" id="m-nav-btn-{{ loop.index }}"
-          onclick="navToStop({{ loop.index }})"
-          {% if not show_addr %}style="display:none;"{% endif %}>🧭 Nav</button>
-
-        <button class="btn-act btn-pin {% if cust.delivery_lat and cust.delivery_lng %}pinned{% endif %}"
-                id="m-pin-btn-{{ loop.index }}"
-                onclick="pinLocation({{ loop.index }}, '{{ cust._id }}')"
-                {% if not show_addr %}style="display:none;"{% endif %}>
-          {% if cust.delivery_lat and cust.delivery_lng %}📌 Pinned{% else %}📍 Pin{% endif %}
-        </button>
-
-        <button class="btn-act btn-photo {% if has_photo %}has-photo{% endif %}"
-                id="m-photo-btn-{{ loop.index }}"
-                onclick="openPhotoModal({{ loop.index }}, '{{ delivery_id_str }}', '{{ photo_url }}')"
-                {% if not show_addr %}style="display:none;"{% endif %}>
-          {% if has_photo %}📷 Replace{% else %}📷 Upload{% endif %}
-        </button>
-
-        {% if delivery.status == 'pending' %}
-          <a href="{{ url_for('accept_delivery', delivery_id=delivery._id|string) }}" class="btn-act btn-accept">Accept</a>
-        {% elif is_mine %}
-          <a href="{{ url_for('complete_delivery', delivery_id=delivery._id|string) }}" class="btn-act btn-deliver">✓ Mark Delivered</a>
+        {% if is_mine %}<span class="mine-tag">← assigned to you</span>
+        {% elif delivery.status=='accepted' %}<span class="other-tag">taken</span>
         {% endif %}
       </div>
     </div>
-    {% endfor %}
+
+    <!-- ★ BOX TYPE — prominent, always visible ★ -->
+    {% if box_item %}
+    <div class="box-type-row">
+      <span class="box-label-sm">Today's Box:</span>
+      <span class="box-chip {% if is_alt %}box-chip-alt{% else %}box-chip-std{% endif %}">
+        <span class="box-chip-icon">{% if is_alt %}🔄{% else %}📦{% endif %}</span>
+        <span>{{ box_item }}</span>
+      </span>
+      {% if is_alt %}
+      <span class="today-marker">
+        <span class="today-dot"></span> Alternate
+      </span>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- address -->
+    <div class="d-addr-wrap">
+      {% if show_addr %}
+      <div class="d-addr-real" id="addr-real-{{ loop.index }}" style="display:block;">
+        <div class="addr-line">{{ cust.address }}</div>
+        <a href="tel:{{ cust.phone }}" class="addr-call">📞 {{ cust.phone }}</a>
+        <div class="tag-row">
+          {% if cust.delivery_lat and cust.delivery_lng %}
+            <span class="loc-tag tag-gps">📌 GPS pinned</span>
+          {% else %}
+            <span class="loc-tag tag-addr">🏠 Address only</span>
+          {% endif %}
+          {% if has_photo %}
+            <a class="loc-tag tag-photo" onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address | e }}')">📷 Photo proof</a>
+          {% endif %}
+        </div>
+      </div>
+      {% else %}
+      <div id="addr-locked-{{ loop.index }}" class="d-addr-locked">
+        <span class="lock-icon">🔒</span>
+        <span class="lock-txt">Accept to reveal address &amp; tools</span>
+      </div>
+      <div class="d-addr-real" id="addr-real-{{ loop.index }}">
+        <div class="addr-line">{{ cust.address }}</div>
+        <a href="tel:{{ cust.phone }}" class="addr-call">📞 {{ cust.phone }}</a>
+        <div class="tag-row">
+          {% if cust.delivery_lat and cust.delivery_lng %}
+            <span class="loc-tag tag-gps">📌 GPS pinned</span>
+          {% else %}
+            <span class="loc-tag tag-addr">🏠 Address only</span>
+          {% endif %}
+          {% if has_photo %}
+            <a class="loc-tag tag-photo" onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address | e }}')">📷 Photo proof</a>
+          {% endif %}
+        </div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- actions -->
+    <div class="d-actions">
+
+      {# Primary CTA #}
+      {% if delivery.status == 'pending' %}
+      <div class="d-primary">
+        <a href="{{ url_for('accept_delivery', delivery_id=delivery._id|string) }}" class="btn btn-accept btn-full">⚡ Accept Delivery</a>
+      </div>
+      {% elif is_mine %}
+      <div class="d-primary">
+        <a href="{{ url_for('complete_delivery', delivery_id=delivery._id|string) }}" class="btn btn-deliver btn-full">✓ Mark Delivered</a>
+      </div>
+      {% endif %}
+
+      {# Secondary tools — only if address is revealed #}
+      <div class="d-secondary" id="tools-{{ loop.index }}" {% if not show_addr %}style="display:none;"{% endif %}>
+        <button class="btn btn-nav" id="nav-btn-{{ loop.index }}" onclick="navToStop({{ loop.index }})">🧭 Nav</button>
+
+        <button class="btn btn-pin {% if cust.delivery_lat and cust.delivery_lng %}pinned{% endif %}"
+                id="pin-btn-{{ loop.index }}"
+                onclick="pinLocation({{ loop.index }}, '{{ cust._id }}')">
+          {% if cust.delivery_lat and cust.delivery_lng %}📌 Pinned{% else %}📍 Pin{% endif %}
+        </button>
+
+        <button class="btn btn-photo {% if has_photo %}has-photo{% endif %}"
+                id="photo-btn-{{ loop.index }}"
+                onclick="openPhotoModal({{ loop.index }}, '{{ delivery_id_str }}', '{{ photo_url }}')">
+          {% if has_photo %}📷 Replace{% else %}📷 Photo{% endif %}
+        </button>
+
+        {% if has_photo %}
+        <button class="btn btn-view-photo" onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','{{ cust.address | e }}')">
+          🖼 View
+        </button>
+        {% endif %}
+      </div>
+
+      {# Always show view photo if it exists, even for locked cards #}
+      {% if has_photo and not show_addr %}
+      <div class="d-secondary">
+        <button class="btn btn-view-photo btn-full" onclick="viewAddressPhoto('{{ photo_url }}','{{ cust.name }}','Drop spot photo')">🖼 View Drop Spot Photo</button>
+      </div>
+      {% endif %}
+
+    </div>
   </div>
+  {% endfor %}
+  </div><!-- /cards-wrap -->
 
   {% else %}
-  <div class="empty">
-    <h3>🎉 All done for today!</h3>
-    <p>No pending deliveries for your team.</p>
+  <div class="empty-state">
+    <div class="empty-icon">🎉</div>
+    <div class="empty-title">All done for today!</div>
+    <div class="empty-body">No deliveries assigned to your team.</div>
   </div>
   {% endif %}
 
 </div><!-- /wrap -->
 
-<!-- PHOTO UPLOAD MODAL -->
+<!-- ═══ PHOTO MODAL (bottom sheet) ═══ -->
 <div class="modal-overlay" id="photo-modal">
-  <div class="modal-box">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
     <div class="modal-title">
       <span>📷 Upload Delivery Photo</span>
       <button class="modal-close" onclick="closePhotoModal()">✕</button>
     </div>
 
-    <div class="existing-photo" id="existing-photo-wrap">
-      <div class="existing-photo-label">✅ Photo already uploaded</div>
-      <img id="existing-photo-img" src="" alt="Existing proof"/>
-      <a id="existing-photo-link" href="" target="_blank">View full size ↗</a>
+    <div class="existing-panel" id="existing-panel">
+      <div class="existing-label">✅ Current photo on file</div>
+      <img id="existing-img" src="" alt="Existing"/>
+      <a id="existing-link" href="" target="_blank">View full size ↗</a>
     </div>
 
     <div class="drop-zone" id="drop-zone">
       <input type="file" id="photo-file-input" accept="image/*" capture="environment"/>
       <div class="drop-icon">📸</div>
-      <div class="drop-text">
-        <strong>Tap to take a photo or choose from gallery</strong><br>
-        Photo of house gate, nameplate, or delivery spot
-      </div>
+      <div class="drop-text"><strong>Tap to take photo or choose from gallery</strong><br>Photo of gate, nameplate or drop spot</div>
     </div>
 
     <div class="photo-preview" id="photo-preview">
       <img id="photo-preview-img" src="" alt="Preview"/>
-      <button class="preview-remove" onclick="clearPhoto()" title="Remove">✕</button>
+      <button class="preview-remove" onclick="clearPhoto()">✕</button>
     </div>
 
     <div class="upload-progress" id="upload-progress">
-      <div class="progress-bar-wrap">
-        <div class="progress-bar" id="progress-bar"></div>
-      </div>
-      <div class="progress-label" id="progress-label">Uploading…</div>
+      <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="progress-lbl" id="progress-lbl">Uploading…</div>
     </div>
 
-    <div class="modal-actions">
-      <button class="btn-sm ghost" onclick="closePhotoModal()">Cancel</button>
-      <button class="btn-sm" id="upload-submit-btn" onclick="submitPhoto()" disabled>Upload Photo</button>
+    <div class="modal-footer">
+      <button class="btn btn-cancel" onclick="closePhotoModal()">Cancel</button>
+      <button class="btn btn-upload-go" id="upload-go-btn" onclick="submitPhoto()" disabled>Upload Photo</button>
     </div>
   </div>
 </div>
 
-<!-- VIEW ADDRESS IMAGE LIGHTBOX -->
+<!-- ═══ LIGHTBOX ═══ -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
-  <img id="lb-img" src="" alt="Address photo"/>
-  <div class="lightbox-caption" id="lb-caption"></div>
-  <div class="lightbox-actions" onclick="event.stopPropagation()">
+  <img id="lb-img" src="" alt="Photo"/>
+  <div class="lb-caption" id="lb-caption"></div>
+  <div class="lb-btns" onclick="event.stopPropagation()">
     <button class="lb-btn lb-close" onclick="closeLightbox()">✕ Close</button>
-    <a class="lb-btn lb-open" id="lb-open-link" href="" target="_blank">↗ Open full size</a>
+    <a class="lb-btn lb-open" id="lb-open-link" href="" target="_blank">↗ Full size</a>
   </div>
 </div>
 
@@ -818,463 +803,394 @@
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
-const CLOUDINARY_CLOUD  = "{{ config.CLOUDINARY_CLOUD_NAME }}";
-const CLOUDINARY_PRESET = "{{ config.CLOUDINARY_UPLOAD_PRESET }}";
+const CLOUDINARY_CLOUD  = {{ config.CLOUDINARY_CLOUD_NAME | tojson }};
+const CLOUDINARY_PRESET = {{ config.CLOUDINARY_UPLOAD_PRESET | tojson }};
 
+/* ── Today label ── */
+(function(){
+  const d = new Date();
+  const days=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  document.getElementById('today-label').textContent =
+    days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()];
+})();
+
+/* ── Build STOPS array from DOM ── */
 const STOPS = [
-  {% for delivery in deliveries %}{% set cust = delivery.customer[0] %}{
-    index:       {{ loop.index }},
-    custId:      "{{ cust._id }}",
-    deliveryId:  "{{ delivery._id|string }}",
-    name:        {{ cust.name | tojson }},
-    address:     {{ cust.address | tojson }},
-    phone:       {{ cust.phone | tojson }},
-    status:      {{ delivery.status | tojson }},
-    isMine:      {{ 'true' if (delivery.status == 'accepted' and delivery.assigned_to|string == session['user_id']|string) else 'false' }},
-    isDone:      {{ 'true' if delivery.status == 'delivered' else 'false' }},
-    lat:         {{ cust.delivery_lat if cust.delivery_lat else 'null' }},
-    lng:         {{ cust.delivery_lng if cust.delivery_lng else 'null' }},
-    photoUrl:    {{ photo_url | tojson }},
-    geocodedLat: null, geocodedLng: null, dist: null,
-  },{% endfor %}
+  {% for delivery in deliveries %}
+  {% set cust = delivery.customer[0] %}
+  {% set _del_photo  = delivery.proof_photo_url if (delivery.proof_photo_url is defined and delivery.proof_photo_url) else '' %}
+  {% set _cust_photo = cust.latest_proof_photo_url if (cust.latest_proof_photo_url is defined and cust.latest_proof_photo_url) else '' %}
+  {% set photo_url   = _del_photo if _del_photo else _cust_photo %}
+  {% set box_item    = delivery.today_item if (delivery.today_item is defined and delivery.today_item) else (delivery.plan_name if delivery.plan_name is defined else '') %}
+  {
+    index:      {{ loop.index }},
+    custId:     {{ cust._id | string | tojson }},
+    deliveryId: {{ delivery._id | string | tojson }},
+    name:       {{ cust.name | tojson }},
+    address:    {{ cust.address | tojson }},
+    phone:      {{ cust.phone | tojson }},
+    status:     {{ delivery.status | tojson }},
+    isMine:     {{ 'true' if (delivery.status=='accepted' and delivery.assigned_to|string == session['user_id']|string) else 'false' }},
+    isDone:     {{ 'true' if delivery.status=='delivered' else 'false' }},
+    lat:        {{ cust.delivery_lat if cust.delivery_lat else 'null' }},
+    lng:        {{ cust.delivery_lng if cust.delivery_lng else 'null' }},
+    photoUrl:   {{ photo_url | tojson }},
+    boxItem:    {{ box_item | tojson }},
+    isAlt:      {{ 'true' if (delivery.is_alternate_plan is defined and delivery.is_alternate_plan) else 'false' }},
+    geocodedLat:null, geocodedLng:null, dist:null,
+  },
+  {% endfor %}
 ];
 
-let myLat = null, myLng = null, watchId = null;
+let myLat=null, myLng=null, watchId=null;
 const NEARBY_M = 300;
 let SORTED = [...STOPS];
-
-let MAP = null, myMarker = null, routeLine = null;
+let MAP=null, myMarker=null, routeLine=null;
 const leafletMarkers = {};
 
-let _photoDeliveryId = null, _photoStopIndex = null, _photoFile = null;
+let _photoDeliveryId=null, _photoStopIdx=null, _photoFile=null;
 
 /* ── TOAST ── */
 let toastTimer;
-function showToast(msg, type = '') {
-  const t = document.getElementById('toast');
-  t.textContent = msg; t.className = 'show ' + type;
+function showToast(msg, type=''){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.className='show '+type;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.className = ''; }, 3200);
+  toastTimer=setTimeout(()=>{t.className='';},3000);
 }
 
 /* ── HAVERSINE ── */
-function hav(a1, o1, a2, o2) {
-  const R = 6371000, dA = (a2-a1)*Math.PI/180, dO = (o2-o1)*Math.PI/180;
-  const a = Math.sin(dA/2)**2 + Math.cos(a1*Math.PI/180)*Math.cos(a2*Math.PI/180)*Math.sin(dO/2)**2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+function hav(a1,o1,a2,o2){
+  const R=6371000,dA=(a2-a1)*Math.PI/180,dO=(o2-o1)*Math.PI/180;
+  const a=Math.sin(dA/2)**2+Math.cos(a1*Math.PI/180)*Math.cos(a2*Math.PI/180)*Math.sin(dO/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
 }
-function eLat(s) { return s.lat !== null ? s.lat : s.geocodedLat; }
-function eLng(s) { return s.lng !== null ? s.lng : s.geocodedLng; }
+function eLat(s){ return s.lat!==null?s.lat:s.geocodedLat; }
+function eLng(s){ return s.lng!==null?s.lng:s.geocodedLng; }
+function fmtDist(m){ return m===null?'':m>=1000?(m/1000).toFixed(1)+'km':m+'m'; }
 
 /* ── GEOCODE ── */
-async function geocode(addr) {
-  try {
-    const r = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1`,
-      { headers: { 'Accept-Language': 'en', 'User-Agent': 'FruiteDelights/1.0' } }
-    );
-    const d = await r.json();
-    if (d && d[0]) return { lat: +d[0].lat, lng: +d[0].lon };
-  } catch(e) {}
+async function geocode(addr){
+  try{
+    const r=await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(addr)}&format=json&limit=1`,
+      {headers:{'Accept-Language':'en','User-Agent':'FruiteDelights/1.0'}});
+    const d=await r.json();
+    if(d&&d[0]) return{lat:+d[0].lat,lng:+d[0].lon};
+  }catch(e){}
   return null;
 }
 
 /* ── NN SORT ── */
-function nnSort(lat0, lng0, stops) {
-  const pool    = stops.filter(s => eLat(s) !== null).map(s => ({...s}));
-  const noCoord = stops.filter(s => eLat(s) === null);
-  const out = [];
-  let cLat = lat0, cLng = lng0;
-  while (pool.length) {
-    let bi = -1, bd = Infinity;
-    pool.forEach((s, i) => { const d = hav(cLat, cLng, eLat(s), eLng(s)); if (d < bd) { bd = d; bi = i; } });
-    pool[bi].dist = Math.round(bd);
-    out.push(pool.splice(bi, 1)[0]);
-    cLat = eLat(out[out.length-1]); cLng = eLng(out[out.length-1]);
+function nnSort(lat0,lng0,stops){
+  const pool=stops.filter(s=>eLat(s)!==null).map(s=>({...s}));
+  const noCoord=stops.filter(s=>eLat(s)===null);
+  const out=[];
+  let cL=lat0,cO=lng0;
+  while(pool.length){
+    let bi=-1,bd=Infinity;
+    pool.forEach((s,i)=>{const d=hav(cL,cO,eLat(s),eLng(s));if(d<bd){bd=d;bi=i;}});
+    pool[bi].dist=Math.round(bd); out.push(pool.splice(bi,1)[0]);
+    cL=eLat(out[out.length-1]); cO=eLng(out[out.length-1]);
   }
-  noCoord.forEach(s => { s.dist = null; out.push(s); });
+  noCoord.forEach(s=>{s.dist=null;out.push(s);});
   return out;
 }
-function fmtDist(m) {
-  if (m === null) return '—';
-  return m >= 1000 ? (m/1000).toFixed(1) + 'km' : m + 'm';
+
+/* ── MAP ── */
+function initMap(lat,lng){
+  document.getElementById('map-placeholder').style.display='none';
+  document.getElementById('delivery-map').style.display='block';
+  if(MAP){MAP.remove();MAP=null;}
+  MAP=L.map('delivery-map',{zoomControl:true,attributionControl:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(MAP);
 }
 
-/* ── LEAFLET MAP ── */
-function initMap(lat, lng) {
-  document.getElementById('map-placeholder').style.display = 'none';
-  document.getElementById('delivery-map').style.display = 'block';
-  if (MAP) { MAP.remove(); MAP = null; }
-  MAP = L.map('delivery-map', { zoomControl: true, attributionControl: false });
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(MAP);
-  L.control.attribution({ position: 'bottomright', prefix: false })
-    .addAttribution('© <a href="https://openstreetmap.org">OSM</a>').addTo(MAP);
-}
-
-function makeStopIcon(num, isDone, isMine) {
-  const bg = isDone ? '#16a34a' : isMine ? '#2563eb' : '#4f5de8';
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">
-    <path d="M16 0C7.163 0 0 7.163 0 16c0 10 16 24 16 24S32 26 32 16C32 7.163 24.837 0 16 0z" fill="${bg}"/>
-    <circle cx="16" cy="16" r="10" fill="white" opacity="0.95"/>
-    <text x="16" y="21" text-anchor="middle" font-size="11" font-weight="800" fill="${bg}" font-family="DM Mono,monospace">${num}</text>
+function makeStopIcon(num,isDone,isMine){
+  const bg=isDone?'#22c55e':isMine?'#5750e3':'#6c63ff';
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="30" height="38" viewBox="0 0 30 38">
+    <path d="M15 0C6.716 0 0 6.716 0 15c0 9.375 15 23 15 23S30 24.375 30 15C30 6.716 23.284 0 15 0z" fill="${bg}"/>
+    <circle cx="15" cy="15" r="9" fill="rgba(255,255,255,.95)"/>
+    <text x="15" y="19.5" text-anchor="middle" font-size="9.5" font-weight="900" fill="${bg}" font-family="JetBrains Mono,monospace">${num}</text>
   </svg>`;
-  return L.divIcon({ html: svg, className: '', iconSize: [32,40], iconAnchor: [16,40], popupAnchor: [0,-40] });
+  return L.divIcon({html:svg,className:'',iconSize:[30,38],iconAnchor:[15,38],popupAnchor:[0,-38]});
 }
 
-function makeMyIcon() {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22">
-    <circle cx="11" cy="11" r="10" fill="#4f5de8" stroke="white" stroke-width="2.5"/>
-    <circle cx="11" cy="11" r="4" fill="white"/>
+function makeMyIcon(){
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+    <circle cx="10" cy="10" r="9" fill="#6c63ff" stroke="white" stroke-width="2.5"/>
+    <circle cx="10" cy="10" r="3.5" fill="white"/>
   </svg>`;
-  return L.divIcon({ html: svg, className: '', iconSize: [22,22], iconAnchor: [11,11] });
+  return L.divIcon({html:svg,className:'',iconSize:[20,20],iconAnchor:[10,10]});
 }
 
-function renderMap(sorted) {
-  if (!MAP) return;
-  Object.values(leafletMarkers).forEach(m => m.remove());
-  Object.keys(leafletMarkers).forEach(k => delete leafletMarkers[k]);
-  if (routeLine) { routeLine.remove(); routeLine = null; }
-  if (myMarker)  { myMarker.remove(); myMarker = null; }
-  const bounds = [], lineCoords = [[myLat, myLng]];
-  myMarker = L.marker([myLat, myLng], { icon: makeMyIcon(), zIndexOffset: 1000 })
-    .addTo(MAP).bindPopup('<div class="popup-name">📍 Your Location</div>');
-  bounds.push([myLat, myLng]);
-  sorted.forEach((s, i) => {
-    const sLat = eLat(s), sLng = eLng(s);
-    if (sLat === null) return;
-    const icon = makeStopIcon(i+1, s.isDone, s.isMine);
-    const statusLabel = s.isDone ? '✓ Delivered' : s.isMine ? '⚡ Accepted (yours)' : s.status === 'pending' ? '⏳ Pending' : '⚡ Accepted';
-    const photoHtml = s.photoUrl
-      ? `<div style="margin-top:.4rem;"><button onclick="viewAddressPhoto('${s.photoUrl}','${s.name.replace(/'/g,"\\'")}','${s.address.replace(/'/g,"\\'")}'); MAP && MAP.closePopup();" style="background:#f5f3ff;border:1px solid #ddd6fe;color:#7c3aed;border-radius:6px;padding:.25rem .6rem;font-size:.72rem;font-weight:700;cursor:pointer;">🖼 View address photo</button></div>`
-      : '';
-    const popup = `
-      <div class="popup-name">${i+1}. ${s.name}</div>
-      <div class="popup-addr">${s.address}</div>
-      <div class="popup-addr">📞 ${s.phone}</div>
-      <div class="popup-status">${statusLabel}</div>
-      ${s.dist !== null ? `<div class="popup-addr" style="margin-top:.2rem;">📏 ${fmtDist(s.dist)}</div>` : ''}
-      ${s.lat !== null ? '<div class="popup-addr" style="color:#16a34a;margin-top:.1rem;">📌 GPS pinned</div>' : ''}
-      ${photoHtml}
-    `;
-    const marker = L.marker([sLat, sLng], { icon }).addTo(MAP).bindPopup(popup);
-    leafletMarkers[s.index] = marker;
-    lineCoords.push([sLat, sLng]);
-    bounds.push([sLat, sLng]);
+function renderMap(sorted){
+  if(!MAP)return;
+  Object.values(leafletMarkers).forEach(m=>m.remove());
+  Object.keys(leafletMarkers).forEach(k=>delete leafletMarkers[k]);
+  if(routeLine){routeLine.remove();routeLine=null;}
+  if(myMarker){myMarker.remove();myMarker=null;}
+  const bounds=[[myLat,myLng]],lineCoords=[[myLat,myLng]];
+  myMarker=L.marker([myLat,myLng],{icon:makeMyIcon(),zIndexOffset:1000}).addTo(MAP)
+    .bindPopup('<div class="popup-name">📍 Your Location</div>');
+  sorted.forEach((s,i)=>{
+    const sL=eLat(s),sO=eLng(s); if(sL===null)return;
+    const boxHtml=s.boxItem?`<div class="popup-box">${s.isAlt?'🔄':'📦'} ${s.boxItem}</div>`:'';
+    const popup=`<div class="popup-name">${i+1}. ${s.name}</div><div class="popup-sub">${s.address}</div>${boxHtml}${s.dist!==null?`<div class="popup-sub" style="margin-top:3px;">📏 ${fmtDist(s.dist)}</div>`:''}`;
+    const mk=L.marker([sL,sO],{icon:makeStopIcon(i+1,s.isDone,s.isMine)}).addTo(MAP).bindPopup(popup);
+    leafletMarkers[s.index]=mk;
+    lineCoords.push([sL,sO]); bounds.push([sL,sO]);
   });
-  if (lineCoords.length > 1)
-    routeLine = L.polyline(lineCoords, { color: '#4f5de8', weight: 3, opacity: 0.7, dashArray: '8,6' }).addTo(MAP);
-  if (bounds.length > 1) MAP.fitBounds(bounds, { padding: [30,30] });
-  else if (bounds.length === 1) MAP.setView(bounds[0], 15);
+  if(lineCoords.length>1)
+    routeLine=L.polyline(lineCoords,{color:'#6c63ff',weight:2.5,opacity:.65,dashArray:'7,5'}).addTo(MAP);
+  if(bounds.length>1)MAP.fitBounds(bounds,{padding:[24,24]});
+  else MAP.setView([myLat,myLng],14);
 }
 
-function updateMyDot() {
-  if (MAP && myMarker) myMarker.setLatLng([myLat, myLng]);
-}
-
-/* ── APPLY SORT ── */
-function applySort(sorted) {
-  SORTED = sorted;
-  sorted.forEach((s, i) => {
-    const n = i+1;
-    ['circle','m-circle'].forEach(p => { const el = document.getElementById(`${p}-${s.index}`); if (el) el.textContent = n; });
-    ['dist','m-dist'].forEach(p => { const el = document.getElementById(`${p}-${s.index}`); if (el) el.textContent = fmtDist(s.dist); });
+/* ── APPLY SORT (re-order DOM) ── */
+function applySort(sorted){
+  SORTED=sorted;
+  sorted.forEach((s,i)=>{
+    const n=i+1;
+    const circle=document.getElementById(`stop-num-${s.index}`);
+    if(circle) circle.textContent=n;
+    const dist=document.getElementById(`dist-${s.index}`);
+    if(dist) dist.textContent=s.dist!==null?fmtDist(s.dist):'';
   });
-  const tbody = document.getElementById('del-tbody');
-  if (tbody) sorted.forEach(s => { const r = document.getElementById(`row-${s.index}`); if (r) tbody.appendChild(r); });
-  const mwrap = document.getElementById('m-cards-wrap');
-  if (mwrap) sorted.forEach(s => { const c = document.getElementById(`mcard-${s.index}`); if (c) mwrap.appendChild(c); });
-  buildStrip(sorted);
+  const wrap=document.getElementById('cards-wrap');
+  if(wrap) sorted.forEach(s=>{const c=document.getElementById(`card-${s.index}`);if(c)wrap.appendChild(c);});
+  buildStopsRow(sorted);
 }
 
-/* ── STOPS STRIP ── */
-function buildStrip(sorted) {
-  const strip = document.getElementById('stops-strip');
-  if (!strip) return;
-  strip.innerHTML = '<span class="s-chip me">📍 You</span>';
-  sorted.forEach((s, i) => {
-    const sep = document.createElement('span'); sep.className = 's-sep';
-    sep.textContent = s.dist !== null ? fmtDist(s.dist) : '·'; strip.appendChild(sep);
-    const chip = document.createElement('span'); chip.id = `chip-${s.index}`;
-    chip.className = 's-chip' + (s.isDone ? ' done' : '');
-    chip.textContent = `${i+1}. ${s.name.split(' ')[0]}`;
-    chip.style.cursor = 'pointer';
-    chip.addEventListener('click', () => {
-      const mk = leafletMarkers[s.index];
-      if (mk) { MAP.setView(mk.getLatLng(), 16); mk.openPopup(); }
-    });
-    strip.appendChild(chip);
+/* ── STOPS SCROLL ROW ── */
+function buildStopsRow(sorted){
+  const row=document.getElementById('stops-row');if(!row)return;
+  row.innerHTML='<span class="s-chip you">📍 You</span>';
+  sorted.forEach((s,i)=>{
+    const sep=document.createElement('span');sep.className='s-sep';sep.textContent='›';row.appendChild(sep);
+    const chip=document.createElement('span');chip.id=`chip-${s.index}`;
+    chip.className='s-chip'+(s.isDone?' done':'');
+    chip.textContent=`${i+1}. ${s.name.split(' ')[0]}`;
+    chip.addEventListener('click',()=>{const mk=leafletMarkers[s.index];if(mk){MAP.setView(mk.getLatLng(),16);mk.openPopup();}});
+    row.appendChild(chip);
   });
 }
 
 /* ── GPS WATCH ── */
-function startWatch() {
-  if (!navigator.geolocation || watchId) return;
-  watchId = navigator.geolocation.watchPosition(onPos, null, { enableHighAccuracy: true, maximumAge: 8000 });
+function startWatch(){
+  if(!navigator.geolocation||watchId)return;
+  watchId=navigator.geolocation.watchPosition(onPos,null,{enableHighAccuracy:true,maximumAge:8000});
 }
 
-function onPos(pos) {
-  myLat = pos.coords.latitude; myLng = pos.coords.longitude;
-  setGps('live', 'Live GPS');
-  updateMyDot();
-  SORTED.forEach(stop => {
-    const sLat = eLat(stop), sLng = eLng(stop);
-    if (sLat === null) return;
-    const d = hav(myLat, myLng, sLat, sLng);
-    const near = d <= NEARBY_M;
-    const chip = document.getElementById(`chip-${stop.index}`);
-    if (chip && !stop.isDone) chip.className = 's-chip' + (near ? ' near' : '');
-    document.getElementById(`row-${stop.index}`)?.classList.toggle('nearby-row', near && !stop.isDone);
-    document.getElementById(`mcard-${stop.index}`)?.classList.toggle('nearby-row', near && !stop.isDone);
-    if (near) revealAddress(stop.index);
+function onPos(pos){
+  myLat=pos.coords.latitude; myLng=pos.coords.longitude;
+  setGps('live','Live GPS');
+  if(MAP&&myMarker) myMarker.setLatLng([myLat,myLng]);
+  SORTED.forEach(stop=>{
+    const sL=eLat(stop),sO=eLng(stop); if(sL===null)return;
+    const d=hav(myLat,myLng,sL,sO), near=d<=NEARBY_M;
+    const chip=document.getElementById(`chip-${stop.index}`);
+    if(chip&&!stop.isDone) chip.className='s-chip'+(near?' near':'');
+    if(near) revealAddress(stop.index);
+    const card=document.getElementById(`card-${stop.index}`);
+    if(card) card.classList.toggle('nearby',near&&!stop.isDone);
   });
 }
 
-function setGps(state, label) {
-  const dot = document.getElementById('gps-dot');
-  const lbl = document.getElementById('gps-label');
-  if (dot) dot.className = 'gps-dot ' + (state === 'live' ? 'live' : state === 'err' ? 'err' : '');
-  if (lbl) { lbl.textContent = label; lbl.className = 'gps-label ' + (state === 'live' ? 'live' : state === 'err' ? 'err' : ''); }
+function setGps(state,label){
+  const dot=document.getElementById('gps-dot'),lbl=document.getElementById('gps-label');
+  if(dot) dot.className='pulse-dot'+(state==='live'?' live':state==='err'?' err':'');
+  if(lbl){lbl.textContent=label;lbl.className='gps-txt'+(state==='live'?' live':state==='err'?' err':'');}
 }
 
-function revealAddress(idx) {
-  ['','m-'].forEach(p => {
-    const locked = document.getElementById(`${p}addr-locked-${idx}`); if (locked) locked.style.display = 'none';
-    const real   = document.getElementById(`${p}addr-real-${idx}`);   if (real)   real.style.display   = '';
-    const nav    = document.getElementById(`${p}nav-btn-${idx}`);     if (nav)    nav.style.display    = '';
-    const pin    = document.getElementById(`${p}pin-btn-${idx}`);     if (pin)    pin.style.display    = '';
-    const photo  = document.getElementById(`${p}photo-btn-${idx}`);   if (photo)  photo.style.display  = '';
-  });
+function revealAddress(idx){
+  const locked=document.getElementById(`addr-locked-${idx}`); if(locked) locked.style.display='none';
+  const real=document.getElementById(`addr-real-${idx}`);     if(real)   real.style.display='block';
+  const tools=document.getElementById(`tools-${idx}`);         if(tools)  tools.style.display='flex';
 }
 
 /* ── INIT ROUTE ── */
-async function initRoute() {
-  setGps('', 'Getting GPS…');
-  navigator.geolocation.getCurrentPosition(async pos => {
-    myLat = pos.coords.latitude; myLng = pos.coords.longitude;
-    setGps('', `Geocoding ${STOPS.length} stops…`);
-    initMap(myLat, myLng);
-    await Promise.all(STOPS.map(async s => {
-      if (s.lat !== null) return;
-      const c = await geocode(s.address);
-      if (c) { s.geocodedLat = c.lat; s.geocodedLng = c.lng; }
+async function initRoute(){
+  setGps('','Getting GPS…');
+  navigator.geolocation.getCurrentPosition(async pos=>{
+    myLat=pos.coords.latitude; myLng=pos.coords.longitude;
+    setGps('','Geocoding stops…');
+    initMap(myLat,myLng);
+    await Promise.all(STOPS.map(async s=>{
+      if(s.lat!==null)return;
+      const c=await geocode(s.address);
+      if(c){s.geocodedLat=c.lat;s.geocodedLng=c.lng;}
     }));
-    const sorted = nnSort(myLat, myLng, STOPS);
-    applySort(sorted);
-    renderMap(sorted);
-    const withCoords = sorted.filter(s => eLat(s) !== null);
-    if (withCoords.length) {
-      const dest = encodeURIComponent(withCoords[withCoords.length-1].address);
-      const wpts = withCoords.slice(0,-1).map(s => encodeURIComponent(s.address)).join('|');
-      let url = `https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${dest}&travelmode=driving`;
-      if (wpts) url += `&waypoints=${wpts}`;
-      const btn = document.getElementById('open-maps-btn');
-      if (btn) { btn.href = url; btn.style.display = 'inline-block'; }
+    const sorted=nnSort(myLat,myLng,STOPS);
+    applySort(sorted); renderMap(sorted);
+    const withCoords=sorted.filter(s=>eLat(s)!==null);
+    if(withCoords.length){
+      const dest=encodeURIComponent(withCoords[withCoords.length-1].address);
+      const wpts=withCoords.slice(0,-1).map(s=>encodeURIComponent(s.address)).join('|');
+      let url=`https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${dest}&travelmode=driving`;
+      if(wpts)url+=`&waypoints=${wpts}`;
+      const btn=document.getElementById('open-maps-btn');
+      if(btn){btn.href=url;btn.style.display='inline-block';}
     }
-    setGps('live', 'Live GPS');
+    setGps('live','Live GPS');
     startWatch();
-    showToast('Route sorted & mapped!', 'success');
-  }, err => {
-    setGps('err', 'GPS denied');
-    showToast('Allow location access and try again.', 'error');
-  }, { enableHighAccuracy: true, timeout: 12000, maximumAge: 0 });
+    showToast('Route sorted!','ok');
+  },err=>{
+    setGps('err','GPS denied');
+    showToast('Allow location and try again.','err');
+  },{enableHighAccuracy:true,timeout:12000,maximumAge:0});
 }
 
 /* ── NAV ── */
-function navToStop(idx) {
-  const stop = STOPS.find(s => s.index === idx);
-  if (!stop) return;
-  const sLat = eLat(stop), sLng = eLng(stop);
+function navToStop(idx){
+  const s=STOPS.find(x=>x.index===idx); if(!s)return;
+  const sL=eLat(s),sO=eLng(s);
   let url;
-  if (sLat && myLat) url = `https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${sLat},${sLng}&travelmode=driving`;
-  else if (myLat)    url = `https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${encodeURIComponent(stop.address)}&travelmode=driving`;
-  else               url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(stop.address)}`;
-  window.open(url, '_blank');
+  if(sL&&myLat) url=`https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${sL},${sO}&travelmode=driving`;
+  else if(myLat) url=`https://www.google.com/maps/dir/?api=1&origin=${myLat},${myLng}&destination=${encodeURIComponent(s.address)}&travelmode=driving`;
+  else           url=`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.address)}`;
+  window.open(url,'_blank');
 }
 
 /* ── PIN LOCATION ── */
-async function pinLocation(idx, custId) {
-  if (!myLat || !myLng) { showToast('Click "Sort & Plot Route" first to get GPS.', 'error'); return; }
-  ['','m-'].forEach(p => {
-    const btn = document.getElementById(`${p}pin-btn-${idx}`);
-    if (btn) { btn.textContent = '⏳ Saving…'; btn.disabled = true; }
-  });
-  try {
-    const res  = await fetch('/api/employee/update_location', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ customer_id: custId, lat: myLat, lng: myLng })
+async function pinLocation(idx,custId){
+  if(!myLat||!myLng){showToast('Tap "Sort by Distance" first.','err');return;}
+  const btn=document.getElementById(`pin-btn-${idx}`);
+  if(btn){btn.textContent='⏳…';btn.disabled=true;}
+  try{
+    const res=await fetch('/api/employee/update_location',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({customer_id:custId,lat:myLat,lng:myLng})
     });
-    const data = await res.json();
-    if (data.success) {
-      const stop = STOPS.find(s => s.custId === custId);
-      if (stop) { stop.lat = myLat; stop.lng = myLng; }
-      ['','m-'].forEach(p => {
-        const btn = document.getElementById(`${p}pin-btn-${idx}`);
-        if (btn) { btn.textContent = '📌 Pinned'; btn.classList.add('pinned'); btn.disabled = false; }
-      });
-      if (MAP) { const s2 = nnSort(myLat, myLng, STOPS); renderMap(s2); }
-      showToast(`📌 Location pinned for stop #${idx}`, 'success');
-    } else { throw new Error(data.message); }
-  } catch(e) {
-    ['','m-'].forEach(p => {
-      const btn = document.getElementById(`${p}pin-btn-${idx}`);
-      if (btn) { btn.textContent = '📍 Pin'; btn.disabled = false; }
-    });
-    showToast('Could not save. Try again.', 'error');
+    const d=await res.json();
+    if(d.success){
+      const stop=STOPS.find(s=>s.custId===custId);
+      if(stop){stop.lat=myLat;stop.lng=myLng;}
+      if(btn){btn.textContent='📌 Pinned';btn.classList.add('pinned');btn.disabled=false;}
+      if(MAP){const sorted=nnSort(myLat,myLng,STOPS);renderMap(sorted);}
+      showToast('📌 Location pinned!','ok');
+    }else throw new Error(d.message);
+  }catch(e){
+    if(btn){btn.textContent='📍 Pin';btn.disabled=false;}
+    showToast('Could not save. Try again.','err');
   }
 }
 
-/* ────────────────────────────────────────────────────────────────
-   VIEW ADDRESS IMAGE LIGHTBOX — available to ALL employees
-──────────────────────────────────────────────────────────────────*/
-function viewAddressPhoto(url, name, address) {
-  if (!url) return;
-  document.getElementById('lb-img').src = url;
-  document.getElementById('lb-caption').textContent = `📍 ${name} — ${address}`;
-  document.getElementById('lb-open-link').href = url;
+/* ── VIEW PHOTO LIGHTBOX ── */
+function viewAddressPhoto(url,name,address){
+  if(!url)return;
+  document.getElementById('lb-img').src=url;
+  document.getElementById('lb-caption').textContent=`📍 ${name} — ${address}`;
+  document.getElementById('lb-open-link').href=url;
   document.getElementById('lightbox').classList.add('open');
 }
-function closeLightbox() {
+function closeLightbox(){
   document.getElementById('lightbox').classList.remove('open');
-  document.getElementById('lb-img').src = '';
+  document.getElementById('lb-img').src='';
 }
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeLightbox(); });
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeLightbox();});
 
-/* ────────────────────────────────────────────────────────────────
-   PHOTO UPLOAD MODAL
-──────────────────────────────────────────────────────────────────*/
-function openPhotoModal(idx, deliveryId, existingUrl) {
-  _photoDeliveryId = deliveryId;
-  _photoStopIndex  = idx;
-  _photoFile       = null;
+/* ── PHOTO MODAL ── */
+function openPhotoModal(idx,deliveryId,existingUrl){
+  _photoDeliveryId=deliveryId; _photoStopIdx=idx; _photoFile=null;
   clearPhoto();
-  document.getElementById('upload-progress').style.display = 'none';
-  document.getElementById('progress-bar').style.width = '0';
-
-  const existWrap = document.getElementById('existing-photo-wrap');
-  const existImg  = document.getElementById('existing-photo-img');
-  const existLink = document.getElementById('existing-photo-link');
-  if (existingUrl) {
-    existWrap.style.display = 'block';
-    existImg.src  = existingUrl;
-    existLink.href = existingUrl;
-  } else {
-    existWrap.style.display = 'none';
-  }
+  document.getElementById('upload-progress').style.display='none';
+  document.getElementById('progress-fill').style.width='0';
+  const ep=document.getElementById('existing-panel');
+  if(existingUrl){
+    ep.style.display='block';
+    document.getElementById('existing-img').src=existingUrl;
+    document.getElementById('existing-link').href=existingUrl;
+  }else{ ep.style.display='none'; }
   document.getElementById('photo-modal').classList.add('open');
 }
-
-function closePhotoModal() {
+function closePhotoModal(){
   document.getElementById('photo-modal').classList.remove('open');
-  _photoDeliveryId = null; _photoStopIndex = null; _photoFile = null;
-  clearPhoto();
+  _photoDeliveryId=null;_photoStopIdx=null;_photoFile=null; clearPhoto();
+}
+function clearPhoto(){
+  _photoFile=null;
+  document.getElementById('photo-file-input').value='';
+  document.getElementById('photo-preview').style.display='none';
+  document.getElementById('photo-preview-img').src='';
+  document.getElementById('upload-go-btn').disabled=true;
 }
 
-function clearPhoto() {
-  _photoFile = null;
-  document.getElementById('photo-file-input').value = '';
-  document.getElementById('photo-preview').style.display = 'none';
-  document.getElementById('photo-preview-img').src = '';
-  document.getElementById('upload-submit-btn').disabled = true;
-}
-
-document.getElementById('photo-file-input').addEventListener('change', function(e) {
-  const file = e.target.files[0];
-  if (!file) return;
-  _photoFile = file;
-  const reader = new FileReader();
-  reader.onload = ev => {
-    document.getElementById('photo-preview-img').src = ev.target.result;
-    document.getElementById('photo-preview').style.display = 'block';
-    document.getElementById('upload-submit-btn').disabled = false;
+document.getElementById('photo-file-input').addEventListener('change',function(e){
+  const f=e.target.files[0]; if(!f)return;
+  _photoFile=f;
+  const r=new FileReader();
+  r.onload=ev=>{
+    document.getElementById('photo-preview-img').src=ev.target.result;
+    document.getElementById('photo-preview').style.display='block';
+    document.getElementById('upload-go-btn').disabled=false;
   };
-  reader.readAsDataURL(file);
+  r.readAsDataURL(f);
 });
 
-const dz = document.getElementById('drop-zone');
-dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
-dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
-dz.addEventListener('drop', e => {
-  e.preventDefault(); dz.classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('image/')) {
-    _photoFile = file;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      document.getElementById('photo-preview-img').src = ev.target.result;
-      document.getElementById('photo-preview').style.display = 'block';
-      document.getElementById('upload-submit-btn').disabled = false;
+const dz=document.getElementById('drop-zone');
+dz.addEventListener('dragover',e=>{e.preventDefault();dz.classList.add('drag-over');});
+dz.addEventListener('dragleave',()=>dz.classList.remove('drag-over'));
+dz.addEventListener('drop',e=>{
+  e.preventDefault();dz.classList.remove('drag-over');
+  const f=e.dataTransfer.files[0];
+  if(f&&f.type.startsWith('image/')){
+    _photoFile=f;
+    const r=new FileReader();
+    r.onload=ev=>{
+      document.getElementById('photo-preview-img').src=ev.target.result;
+      document.getElementById('photo-preview').style.display='block';
+      document.getElementById('upload-go-btn').disabled=false;
     };
-    reader.readAsDataURL(file);
+    r.readAsDataURL(f);
   }
 });
 
-async function submitPhoto() {
-  if (!_photoFile || !_photoDeliveryId) return;
-  const btn          = document.getElementById('upload-submit-btn');
-  const progressWrap = document.getElementById('upload-progress');
-  const progressBar  = document.getElementById('progress-bar');
-  const progressLbl  = document.getElementById('progress-label');
-
-  btn.disabled = true; btn.textContent = 'Uploading…';
-  progressWrap.style.display = 'block';
-
-  try {
-    /* ── 1. Upload to Cloudinary ── */
-    const fd = new FormData();
-    fd.append('file', _photoFile);
-    fd.append('upload_preset', CLOUDINARY_PRESET);
-    fd.append('folder', 'delivery_proofs');
-
-    const cloudUrl = await new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
-      xhr.upload.onprogress = e => {
-        if (e.lengthComputable) {
-          const pct = Math.round(e.loaded / e.total * 90);
-          progressBar.style.width = pct + '%';
-          progressLbl.textContent = `Uploading… ${pct}%`;
-        }
+async function submitPhoto(){
+  if(!_photoFile||!_photoDeliveryId)return;
+  const btn=document.getElementById('upload-go-btn');
+  const pw=document.getElementById('upload-progress');
+  const pf=document.getElementById('progress-fill');
+  const pl=document.getElementById('progress-lbl');
+  btn.disabled=true; btn.textContent='Uploading…';
+  pw.style.display='block';
+  try{
+    const fd=new FormData();
+    fd.append('file',_photoFile);
+    fd.append('upload_preset',CLOUDINARY_PRESET);
+    fd.append('folder','delivery_proofs');
+    const cloudUrl=await new Promise((resolve,reject)=>{
+      const xhr=new XMLHttpRequest();
+      xhr.open('POST',`https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/image/upload`);
+      xhr.upload.onprogress=e=>{
+        if(e.lengthComputable){const p=Math.round(e.loaded/e.total*90);pf.style.width=p+'%';pl.textContent=`Uploading… ${p}%`;}
       };
-      xhr.onload = () => {
-        if (xhr.status === 200) resolve(JSON.parse(xhr.responseText).secure_url);
-        else reject(new Error('Cloudinary upload failed: ' + xhr.status));
-      };
-      xhr.onerror = () => reject(new Error('Network error'));
+      xhr.onload=()=>xhr.status===200?resolve(JSON.parse(xhr.responseText).secure_url):reject(new Error('Upload failed '+xhr.status));
+      xhr.onerror=()=>reject(new Error('Network error'));
       xhr.send(fd);
     });
-
-    progressBar.style.width = '95%';
-    progressLbl.textContent = 'Saving to record…';
-
-    /* ── 2. Save URL to backend ── */
-    const saveRes  = await fetch('/api/employee/save_proof_photo', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ delivery_id: _photoDeliveryId, photo_url: cloudUrl })
+    pf.style.width='95%'; pl.textContent='Saving…';
+    const sr=await fetch('/api/employee/save_proof_photo',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({delivery_id:_photoDeliveryId,photo_url:cloudUrl})
     });
-    const saveData = await saveRes.json();
-    if (!saveData.success) throw new Error(saveData.message || 'Save failed');
-
-    progressBar.style.width = '100%';
-    progressLbl.textContent = 'Done! Refreshing…';
-
-    showToast('📷 Photo uploaded! Refreshing…', 'success');
-
-    /* ── 3. Reload page so all buttons/photos update from DB ── */
-    setTimeout(() => { window.location.reload(); }, 1200);
-
-  } catch(err) {
-    progressWrap.style.display = 'none';
-    btn.disabled = false; btn.textContent = 'Upload Photo';
-    showToast('Upload failed: ' + err.message, 'error');
+    const sd=await sr.json();
+    if(!sd.success) throw new Error(sd.message||'Save failed');
+    pf.style.width='100%'; pl.textContent='Done! Refreshing…';
+    showToast('📷 Photo saved!','ok');
+    setTimeout(()=>window.location.reload(),1200);
+  }catch(err){
+    pw.style.display='none';
+    btn.disabled=false; btn.textContent='Upload Photo';
+    showToast('Upload failed: '+err.message,'err');
   }
 }
 
-document.getElementById('photo-modal').addEventListener('click', function(e) {
-  if (e.target === this) closePhotoModal();
-});
+document.getElementById('photo-modal').addEventListener('click',function(e){if(e.target===this)closePhotoModal();});
 
-window.addEventListener('DOMContentLoaded', () => {
-  if (STOPS.some(s => s.isMine)) setTimeout(initRoute, 400);
+/* ── AUTO-INIT if has accepted stop ── */
+window.addEventListener('DOMContentLoaded',()=>{
+  if(STOPS.some(s=>s.isMine)) setTimeout(initRoute,500);
 });
 </script>
 {% endblock %}
