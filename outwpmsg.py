@@ -5,52 +5,50 @@ import os
 load_dotenv()
 
 
-def send_whatsapp_msg(identifier: str, message: str) -> bool:
+def send_whatsapp_msg(phone: str, message: str) -> bool:
     """
-    Send a WhatsApp message from admin to any contact.
-    
-    identifier: whatsappId (e.g. '63582796566668@lid') OR phone number string.
-                If it contains '@', it is sent as-is as the number field.
-                Otherwise it is treated as a plain phone number.
-    message:    Plain text message to send.
-    
-    Uses the same Api endpoint as wp.py but is a separate function
-    so admin-CRM sends don't interfere with credential-sending logic.
-    """
-    load_dotenv()
-    api_key = os.getenv("WP_API_KEY")
-    base_url = os.getenv("WP_API_BASE", "https://wpvo.phishnix.site")
-    instance = os.getenv("WP_INSTANCE", "Fruit_Delights")
+    Send WhatsApp message using Evolution API.
 
-    # Normalise identifier
-    number = identifier.strip() if identifier else ""
-    if not number:
-        print("outwpmsg: empty identifier, skipping send.")
+    phone:
+        917303938618
+
+    message:
+        Plain text message
+    """
+
+    phone = str(phone).strip() if phone else ""
+
+    if not phone:
+        print("[outwpmsg] Empty phone number")
+        return False
+
+    # Prevent accidental LID/group sends
+    if "@" in phone:
+        print(f"[outwpmsg] Invalid phone number received: {phone}")
         return False
 
     try:
         response = requests.post(
-            f"{base_url}/admin/send-message",
+            f"{os.getenv('EVOLUTION_URL')}/message/sendText/{os.getenv('EVOLUTION_INSTANCE')}",
             headers={
-                "x-api-key": api_key,
+                "apikey": os.getenv("EVOLUTION_API_KEY"),
                 "Content-Type": "application/json"
             },
             json={
-                "instanceName": instance,
-                "number": number,
-                "message": message
+                "number": phone,
+                "text": message
             },
             timeout=30
         )
+
         print(
-            f"[outwpmsg] Sent to {number} | "
+            f"[outwpmsg] Sent to {phone} | "
             f"Status: {response.status_code} | "
-            f"Body: {response.text[:120]}"
+            f"Body: {response.text[:300]}"
         )
-        return response.status_code == 200
+
+        return response.status_code in (200, 201)
 
     except Exception as e:
-        print(f"[outwpmsg] Error sending to {number}: {e}")
+        print(f"[outwpmsg] Error sending to {phone}: {e}")
         return False
-    
-  

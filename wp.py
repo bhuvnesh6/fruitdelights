@@ -1,33 +1,32 @@
 import requests
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 def send_whatsapp(number, message):
     try:
         response = requests.post(
-            "https://wpvo.phishnix.site/admin/send-message",
+            f"{os.getenv('EVOLUTION_URL')}/message/sendText/{os.getenv('EVOLUTION_INSTANCE')}",
             headers={
-                "x-api-key": os.getenv("WP_API_KEY"),
+                "apikey": os.getenv("EVOLUTION_API_KEY"),
                 "Content-Type": "application/json"
             },
             json={
-                "instanceName": "Fruit_Delights",
                 "number": str(number),
-                "message": message
+                "text": message
             },
             timeout=30
         )
 
-        print(
-            f"WhatsApp sent to {number} | "
-            f"Status: {response.status_code}"
-        )
+        
 
-        return response.status_code == 200
+
+        return response.status_code in [200, 201]
 
     except Exception as e:
         print("WhatsApp Error:", str(e))
         return False
     
     
-    
+
