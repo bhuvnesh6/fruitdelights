@@ -1936,6 +1936,79 @@ def api_boxes_needed():
  
     return jsonify(result)
 
+@app.route("/api/admin/customer_plan_status/<customer_id>")
+@login_required
+@role_required("admin", "manager")
+def customer_plan_status(customer_id):
+    """
+    Returns plan progress for a customer:
+    - total scheduled days in plan period
+    - delivered so far
+    - days remaining (excluding off_days, holidays, future non-delivery days)
+    - pending (scheduled but not yet delivered)
+    """
+    try:
+        customer = users_col.find_one({"_id": ObjectId(customer_id)})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid customer ID"}), 400
+
+    if not customer:
+        return jsonify({"success": False, "message": "Customer not found"}), 404
+
+    plan = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
+    if not plan:
+        return jsonify({"success": False, "has_plan": False})
+
+    period_start, period_end = _calculate_invoice_period(customer, plan)
+    off_days  = customer.get("off_days", [])
+    holidays  = set(customer.get("holidays", []))
+    today     = date.today()
+
+    total_scheduled = 0
+    delivered       = 0
+    pending_past    = 0
+    remaining_days  = 0
+
+    current = period_start
+    while current <= period_end:
+        day_name = current.strftime("%A")
+        date_str = current.strftime("%Y-%m-%d")
+        if day_name in off_days or date_str in holidays:
+            current += timedelta(days=1)
+            continue
+        total_scheduled += 1
+        if current <= today:
+            delivery = deliveries_col.find_one({
+                "customer_id": ObjectId(customer_id),
+                "date": date_str,
+                "status": "delivered"
+            })
+            if delivery:
+                delivered += 1
+            else:
+                pending_past += 1
+        else:
+            remaining_days += 1
+        current += timedelta(days=1)
+
+    completion_pct = round((delivered / total_scheduled * 100)) if total_scheduled else 0
+
+    return jsonify({
+        "success":         True,
+        "has_plan":        True,
+        "plan_name":       plan.get("name", ""),
+        "period_start":    period_start.strftime("%Y-%m-%d"),
+        "period_end":      period_end.strftime("%Y-%m-%d"),
+        "total_scheduled": total_scheduled,
+        "delivered":       delivered,
+        "pending_past":    pending_past,
+        "remaining_days":  remaining_days,
+        "completion_pct":  completion_pct,
+        "today":           today.strftime("%Y-%m-%d"),
+        "plan_price":      float(plan.get("price_per_month") or plan.get("price_per_day") or 0),
+        "duration_days":   int(plan.get("duration_days", 0)),
+    })
+
 # ---------------------------------------------------------------------------
 # ADMIN – Sample customers detail for Boxes view
 # ---------------------------------------------------------------------------
@@ -2198,6 +2271,92 @@ def get_customer_location(customer_id):
         "updated_at":  updated.isoformat() if isinstance(updated, datetime) else None,
         "updated_by":  customer.get("delivery_loc_by", ""),
         "name":        customer.get("name", ""),
+    })
+
+
+@app.route("/api/employee/my_boxes")
+@login_required
+@role_required("employee")
+def employee_my_boxes():
+    """
+    Returns box counts for the employee's team, plan-wise.
+    After 3 PM → shows next day's boxes.
+    Excludes inactive customers, off-day customers, holiday customers.
+    """
+    employee = users_col.find_one({"_id": ObjectId(session["user_id"])})
+    if not employee or not employee.get("team_id"):
+        return jsonify({"success": False, "message": "Not assigned to a team"}), 400
+
+    now = datetime.now()
+    if now.hour >= 15:
+        target_date = (now + timedelta(days=1)).date()
+        is_next_day = True
+    else:
+        target_date = now.date()
+        is_next_day = False
+
+    target_str = target_date.strftime("%Y-%m-%d")
+    day_name   = target_date.strftime("%A")
+
+    team_id = employee["team_id"]
+    team    = teams_col.find_one({"_id": team_id})
+
+    # Active customers in this team
+    customers = list(users_col.find({
+        "role":    "customer",
+        "status":  "active",
+        "team_id": team_id,
+    }))
+
+    plans     = list(plans_col.find())
+    plan_map  = {str(p["_id"]): p for p in plans}
+
+    plan_counts   = {}   # plan_id → {name, count, alt_item, is_alt}
+    sample_counts = {}   # label → count
+    total         = 0
+
+    for c in customers:
+        # Skip off-days
+        if day_name in c.get("off_days", []):
+            continue
+        # Skip holidays
+        if target_str in c.get("holidays", []):
+            continue
+
+        if c.get("plan_id") and not c.get("sample"):
+            pid  = str(c["plan_id"])
+            plan = plan_map.get(pid)
+            if not plan:
+                continue
+            alt_items = plan.get("alternate_items", [])
+            is_alt    = bool(alt_items and len(alt_items) >= 2)
+            alt_label = _get_alternate_item_for_date(plan, target_date) if is_alt else None
+            if pid not in plan_counts:
+                plan_counts[pid] = {
+                    "plan_id":   pid,
+                    "plan_name": plan.get("name", ""),
+                    "count":     0,
+                    "is_alt":    is_alt,
+                    "alt_item":  alt_label,
+                    "price":     float(plan.get("price_per_month") or plan.get("price_per_day") or 0),
+                }
+            plan_counts[pid]["count"] += 1
+            total += 1
+
+        elif c.get("sample"):
+            label = c.get("sample", "Sample")
+            sample_counts[label] = sample_counts.get(label, 0) + 1
+            total += 1
+
+    return jsonify({
+        "success":     True,
+        "is_next_day": is_next_day,
+        "target_date": target_str,
+        "team_name":   team.get("name", "") if team else "",
+        "team_area":   team.get("area", "") if team else "",
+        "total":       total,
+        "plans":       sorted(plan_counts.values(), key=lambda x: -x["count"]),
+        "samples":     [{"label": k, "count": v} for k, v in sample_counts.items()],
     })
 
 

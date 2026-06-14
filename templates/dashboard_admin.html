@@ -1078,6 +1078,12 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="detail-field"><div class="detail-field-label">Source</div><div class="detail-field-value" id="view-source">—</div></div>
         <div class="detail-field"><div class="detail-field-label">Member Since</div><div class="detail-field-value" id="view-created">—</div></div>
         <div class="detail-field"><div class="detail-field-label">Account Status</div><div class="detail-field-value" id="view-acct-status">—</div></div>
+        <div class="detail-section-label">📦 Plan Progress</div>
+<div id="view-plan-status-wrap">
+  <div style="display:flex;align-items:center;gap:10px;padding:20px;color:var(--text-3);">
+    <div class="spinner-sm"></div> <span style="font-size:13px;">Loading plan status…</span>
+  </div>
+</div>
       </div>
     </div>
     <div class="detail-section-label">🏘️ Team Assignment</div>
@@ -1686,6 +1692,8 @@ function openViewModal(userData, role) {
     else openEditEmployee(userData.id, userData.name, userData.email, userData.phone, userData.team_id);
   };
   openModal('modal-view-user');
+  if (role === 'customer') loadCustomerPlanStatus(userData.id);
+
 }
 
 /* ===== SAMPLE CUSTOMERS MODAL ===== */
@@ -2245,6 +2253,60 @@ async function submitEnquiryEdit(){
     else showToast('❌ '+(data.message||'Update failed'),'danger');
   }catch{showToast('❌ Network error.','danger');}
 }
+
+
+/*customer plan staus*/
+
+async function loadCustomerPlanStatus(customerId) {
+  const wrap = document.getElementById('view-plan-status-wrap');
+  if (!wrap) return;
+  wrap.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:16px;color:var(--text-3);"><div class="spinner-sm"></div><span style="font-size:13px;">Loading…</span></div>`;
+  try {
+    const d = await fetch(`/api/admin/customer_plan_status/${customerId}`).then(r => r.json());
+    if (!d.success || !d.has_plan) {
+      wrap.innerHTML = `<div style="padding:12px 0;color:var(--text-3);font-size:13px;">No active plan assigned.</div>`;
+      return;
+    }
+    const barColor = d.completion_pct >= 80 ? 'var(--green)' : d.completion_pct >= 40 ? '#f59e0b' : 'var(--accent)';
+    wrap.innerHTML = `
+      <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
+          <div>
+            <span style="font-weight:700;font-size:14px;">${escHtml(d.plan_name)}</span>
+            <span style="font-size:11px;color:var(--text-3);margin-left:8px;">${d.period_start} → ${d.period_end}</span>
+          </div>
+          <span style="font-size:20px;font-weight:700;color:${barColor};">${d.completion_pct}%</span>
+        </div>
+        <div style="height:8px;background:var(--border);border-radius:99px;overflow:hidden;margin-bottom:14px;">
+          <div style="height:100%;width:${d.completion_pct}%;background:${barColor};border-radius:99px;transition:width .5s;"></div>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
+          <div style="text-align:center;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;">
+            <div style="font-size:20px;font-weight:700;color:var(--text);">${d.total_scheduled}</div>
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-3);margin-top:2px;">Total Days</div>
+          </div>
+          <div style="text-align:center;background:var(--green-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;">
+            <div style="font-size:20px;font-weight:700;color:var(--green);">${d.delivered}</div>
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--green);margin-top:2px;">Delivered</div>
+          </div>
+          <div style="text-align:center;background:var(--yellow-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;">
+            <div style="font-size:20px;font-weight:700;color:var(--yellow);">${d.pending_past}</div>
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--yellow);margin-top:2px;">Missed</div>
+          </div>
+          <div style="text-align:center;background:var(--blue-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;">
+            <div style="font-size:20px;font-weight:700;color:var(--blue);">${d.remaining_days}</div>
+            <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--blue);margin-top:2px;">Remaining</div>
+          </div>
+        </div>
+        <div style="margin-top:10px;font-size:11px;color:var(--text-3);">
+          Off-days and holidays are excluded. "Missed" = past scheduled days with no delivery recorded.
+        </div>
+      </div>`;
+  } catch {
+    wrap.innerHTML = `<div style="padding:12px 0;color:var(--red);font-size:13px;">Failed to load plan status.</div>`;
+  }
+}
+
 
 /* ===== BOOT ===== */
 window.addEventListener('DOMContentLoaded',()=>{

@@ -102,13 +102,14 @@ html, body {
 /* ── MENU PANEL (slide from top-right) ── */
 .menu-panel {
   position: fixed; top: 0; right: 0; z-index: 400;
-  width: min(280px, 85vw);
+  width: min(300px, 88vw);
   background: var(--card-bg); backdrop-filter: blur(28px);
   border-radius: 0 0 0 var(--r);
   box-shadow: 0 8px 40px rgba(15,10,30,.28);
   padding: 56px 16px 20px;
   transform: translateX(110%); transition: transform .3s cubic-bezier(.4,0,.2,1);
   display: flex; flex-direction: column; gap: 10px;
+  max-height: 92vh; overflow-y: auto;
 }
 .menu-panel.open { transform: translateX(0); }
 
@@ -186,6 +187,95 @@ html, body {
 }
 .btn-maps:hover { background: var(--accent-soft); border-color: var(--accent-bd); color: var(--accent); }
 
+/* ── BOXES PANEL (in menu) ── */
+.boxes-panel {
+  background: var(--bg3); border-radius: var(--r-sm);
+  overflow: hidden;
+}
+.boxes-panel-header {
+  padding: 10px 12px 8px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.boxes-panel-title {
+  font-size: .75rem; font-weight: 800; color: var(--txt);
+  display: flex; align-items: center; gap: 5px;
+}
+.boxes-panel-sub {
+  font-size: .6rem; color: var(--txt3); font-family: var(--mono);
+}
+.boxes-total-chip {
+  background: var(--accent-g); color: #fff; border-radius: 999px;
+  padding: .2rem .6rem; font-size: .7rem; font-weight: 900;
+  font-family: var(--mono);
+}
+.boxes-next-badge {
+  display: inline-flex; align-items: center; gap: 3px;
+  background: rgba(168,85,247,.15); border: 1px solid rgba(168,85,247,.3);
+  color: #9333ea; border-radius: 999px;
+  padding: .1rem .45rem; font-size: .58rem; font-weight: 800;
+  text-transform: uppercase; letter-spacing: .05em; margin-left: 5px;
+}
+.boxes-divider { height: 1px; background: var(--border); margin: 0 12px; }
+.plan-box-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; gap: 8px;
+}
+.plan-box-row:not(:last-child) { border-bottom: 1px solid var(--border); }
+.plan-box-left { flex: 1; min-width: 0; }
+.plan-box-name {
+  font-size: .73rem; font-weight: 700; color: var(--txt);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.plan-box-sub {
+  font-size: .6rem; color: var(--txt3); margin-top: 2px;
+  display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+}
+.alt-badge {
+  display: inline-flex; align-items: center; gap: 2px;
+  background: linear-gradient(135deg,rgba(168,85,247,.15),rgba(251,146,60,.1));
+  border: 1px solid rgba(168,85,247,.25);
+  color: #c084fc; border-radius: 999px;
+  padding: .06rem .35rem; font-size: .56rem; font-weight: 800;
+}
+.sample-badge {
+  display: inline-flex; align-items: center;
+  background: rgba(251,146,60,.12); border: 1px solid rgba(251,146,60,.3);
+  color: #ea580c; border-radius: 999px;
+  padding: .06rem .35rem; font-size: .56rem; font-weight: 800;
+}
+.plan-box-count {
+  font-size: 1.1rem; font-weight: 900; font-family: var(--mono);
+  color: var(--accent); flex-shrink: 0;
+  background: var(--accent-soft); border: 1px solid var(--accent-bd);
+  border-radius: var(--r-xs); padding: .1rem .45rem; min-width: 32px;
+  text-align: center;
+}
+.plan-box-count.count-sample { color: var(--orange); background: var(--orange-dim); border-color: rgba(251,146,60,.3); }
+.boxes-empty {
+  padding: 14px 12px; text-align: center;
+  font-size: .72rem; color: var(--txt3);
+}
+.boxes-loading {
+  padding: 12px; text-align: center;
+  font-size: .7rem; color: var(--txt3); display: flex;
+  align-items: center; justify-content: center; gap: 6px;
+}
+.spin-sm {
+  width: 14px; height: 14px; border-radius: 50%;
+  border: 2px solid var(--border2); border-top-color: var(--accent);
+  animation: spin .7s linear infinite; flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.boxes-error {
+  padding: 10px 12px; font-size: .68rem; color: var(--red); text-align: center;
+}
+.btn-boxes-refresh {
+  display: flex; align-items: center; justify-content: center; gap: 4px;
+  background: none; border: none; color: var(--txt3); font-size: .62rem;
+  font-weight: 700; cursor: pointer; padding: 0; font-family: var(--font);
+}
+.btn-boxes-refresh:hover { color: var(--accent); }
+
 /* ── BOTTOM SHEET ── */
 .bottom-sheet {
   position: fixed; bottom: 0; left: 0; right: 0; z-index: 200;
@@ -193,9 +283,8 @@ html, body {
   border-radius: 20px 20px 0 0;
   box-shadow: 0 -6px 40px rgba(15,10,30,.3);
   display: flex; flex-direction: column;
-  /* default: peek at 90px (handle + name bar), drag to expand */
   transform: translateY(0);
-  transition: none; /* js-driven */
+  transition: none;
   will-change: transform;
   max-height: 92vh;
   touch-action: none;
@@ -555,6 +644,19 @@ html, body {
     <div class="menu-stat"><div class="menu-stat-num stat-d">{{ delivered_count }}</div><div class="menu-stat-lbl">Done</div></div>
   </div>
 
+  <!-- ── BOXES TO PACK ── -->
+  <div class="menu-section-label" style="display:flex;align-items:center;justify-content:space-between;">
+    <span>Boxes to Pack</span>
+    <button class="btn-boxes-refresh" id="boxes-refresh-btn" onclick="loadMyBoxes(true)">↻ Refresh</button>
+  </div>
+  <div class="boxes-panel" id="boxes-panel">
+    <div class="boxes-loading" id="boxes-loading">
+      <div class="spin-sm"></div> Loading…
+    </div>
+    <div id="boxes-content" style="display:none;"></div>
+    <div class="boxes-error" id="boxes-error" style="display:none;">Failed to load. <button class="btn-boxes-refresh" onclick="loadMyBoxes(true)">Retry</button></div>
+  </div>
+
   <div class="menu-section-label">Actions</div>
   <button class="btn-sort" onclick="initRoute();closeMenu();">📍 Sort by Distance</button>
   <a id="open-maps-btn" href="#" target="_blank" class="btn-maps">🗺 Open Route in Maps ↗</a>
@@ -846,9 +948,97 @@ function closeMenu(){
   document.getElementById('menu-overlay').classList.remove('open');
 }
 
+/* ── BOXES TO PACK ── */
+let _boxesLoaded = false;
+
+async function loadMyBoxes(force) {
+  if (_boxesLoaded && !force) return;
+  const loading = document.getElementById('boxes-loading');
+  const content = document.getElementById('boxes-content');
+  const error   = document.getElementById('boxes-error');
+  loading.style.display = 'flex';
+  content.style.display = 'none';
+  error.style.display   = 'none';
+  try {
+    const d = await fetch('/api/employee/my_boxes').then(r => r.json());
+    loading.style.display = 'none';
+    if (!d.success) { error.style.display = 'block'; return; }
+    _boxesLoaded = true;
+
+    const isNext  = d.is_next_day;
+    const dateStr = d.target_date || '';
+    // Format date nicely
+    let dateLbl = '';
+    if (dateStr) {
+      const parts = dateStr.split('-');
+      const dt    = new Date(+parts[0], +parts[1]-1, +parts[2]);
+      const days  = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+      const mons  = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      dateLbl = days[dt.getDay()]+' '+dt.getDate()+' '+mons[dt.getMonth()];
+    }
+
+    const nextBadge = isNext
+      ? `<span class="boxes-next-badge">🌙 Tomorrow</span>`
+      : '';
+
+    let rows = '';
+
+    // Plan rows
+    (d.plans || []).forEach(p => {
+      const altHtml = p.is_alt && p.alt_item
+        ? `<span class="alt-badge">🔄 ${escHtml(p.alt_item)}</span>`
+        : '';
+      rows += `
+        <div class="plan-box-row">
+          <div class="plan-box-left">
+            <div class="plan-box-name">${escHtml(p.plan_name)}</div>
+            <div class="plan-box-sub">${altHtml || '<span style="color:var(--txt3)">Standard box</span>'}</div>
+          </div>
+          <div class="plan-box-count">${p.count}</div>
+        </div>`;
+    });
+
+    // Sample rows
+    (d.samples || []).forEach(s => {
+      rows += `
+        <div class="plan-box-row">
+          <div class="plan-box-left">
+            <div class="plan-box-name">${escHtml(s.label)}</div>
+            <div class="plan-box-sub"><span class="sample-badge">🧪 Sample</span></div>
+          </div>
+          <div class="plan-box-count count-sample">${s.count}</div>
+        </div>`;
+    });
+
+    if (!rows) {
+      rows = `<div class="boxes-empty">No boxes for ${isNext ? 'tomorrow' : 'today'}.</div>`;
+    }
+
+    content.innerHTML = `
+      <div class="boxes-panel-header">
+        <div>
+          <div class="boxes-panel-title">📦 Pack List ${nextBadge}</div>
+          <div class="boxes-panel-sub">${d.team_name}${d.team_area ? ' · '+d.team_area : ''} · ${dateLbl}</div>
+        </div>
+        <div class="boxes-total-chip">${d.total}</div>
+      </div>
+      <div class="boxes-divider"></div>
+      ${rows}
+    `;
+    content.style.display = 'block';
+  } catch (e) {
+    loading.style.display = 'none';
+    error.style.display   = 'block';
+  }
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
 /* ── BOTTOM SHEET DRAG + TOGGLE ── */
 const sheet = document.getElementById('bottom-sheet');
-const PEEK_H = 90; // px visible when collapsed (handle + peek row)
+const PEEK_H = 90;
 let sheetExpanded = false;
 let isDragging = false, dragStartY = 0, dragStartTransY = 0, currentTransY = 0;
 
@@ -857,7 +1047,7 @@ function getCollapsedTransY(){
 }
 
 function setSheetY(y, animate){
-  const min = 0; // fully open
+  const min = 0;
   const max = getCollapsedTransY();
   y = Math.max(min, Math.min(max, y));
   currentTransY = y;
@@ -869,7 +1059,6 @@ function snapSheet(open){
   sheetExpanded = open;
   sheet.classList.toggle('expanded', open);
   setSheetY(open ? 0 : getCollapsedTransY(), true);
-  // update map padding
   if(MAP) setTimeout(()=>MAP.invalidateSize(),360);
 }
 
@@ -879,7 +1068,6 @@ function toggleSheet(){
 
 window.addEventListener('resize', ()=>{ if(!sheetExpanded) setSheetY(getCollapsedTransY(), false); });
 
-/* drag */
 const dragHandle = document.getElementById('sheet-drag-handle');
 function onDragStart(clientY){
   isDragging=true; dragStartY=clientY; dragStartTransY=currentTransY;
@@ -1034,11 +1222,9 @@ function buildStopsStrip(sorted){
   });
 }
 
-/* ── CARD TAPPED → FOCUS ON MAP ── */
 function cardTapped(idx){
   const prev=activeCardIdx;
   activeCardIdx=(prev===idx)?null:idx;
-  // remove old active
   if(prev!==null){
     const prevCard=document.getElementById(`card-${prev}`);
     if(prevCard)prevCard.classList.remove('map-active');
@@ -1061,11 +1247,9 @@ function focusStop(idx){
   const sL=eLat(stop),sO=eLng(stop);
   if(sL===null)return;
   const mk=leafletMarkers[idx];
-  // re-render to update icon size
   if(activeCardIdx===idx) renderMap(SORTED);
   MAP.setView([sL,sO],16,{animate:true});
   if(mk)setTimeout(()=>mk.openPopup(),300);
-  // collapse sheet to see map
   if(sheetExpanded){snapSheet(false);}
 }
 
@@ -1126,9 +1310,7 @@ async function initRoute(){
     setGps('live','Live GPS');
     startWatch();
     showToast('Route sorted!','ok');
-    // collapse to see map
     snapSheet(false);
-    // fit map
     const bounds=[[myLat,myLng],...withCoords.map(s=>[eLat(s),eLng(s)])];
     if(bounds.length>1)MAP.fitBounds(bounds,{padding:[60,PEEK_H+20]});
   },err=>{
@@ -1263,8 +1445,9 @@ async function submitPhoto(){
 
 /* ── INIT ── */
 window.addEventListener('DOMContentLoaded',()=>{
-  // start collapsed
   snapSheet(false);
+  // Load boxes immediately so it's ready when menu opens
+  loadMyBoxes(false);
   if(STOPS.some(s=>s.isMine))setTimeout(initRoute,500);
 });
 </script>
