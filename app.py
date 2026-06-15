@@ -11,14 +11,10 @@ from functools import wraps
 from wp import send_whatsapp
 from outwpmsg import send_whatsapp_msg
 import cloudinary
-
 import cloudinary.uploader
 
 
-
-
 load_dotenv()
-
 
 cloudinary.config(
     cloud_name = os.getenv("CLOUDINARY_CLOUD_NAME"),
@@ -39,7 +35,6 @@ DB_NAME   = os.getenv("DB_NAME")
 client    = MongoClient(MONGO_URI)
 db        = client[DB_NAME]
 
-
 # Collections
 users_col      = db.users
 teams_col      = db.teams
@@ -47,7 +42,55 @@ plans_col      = db.plans
 deliveries_col = db.deliveries
 invoices_col   = db.invoices
 enquiries_col  = db.enquiries
-wa_inbox_col   = db.wa_inbox          # ← NEW: WhatsApp conversation store
+wa_inbox_col   = db.wa_inbox
+
+
+# ---------------------------------------------------------------------------
+# PLAN SCHEDULE HELPERS
+# ---------------------------------------------------------------------------
+
+# Plans with fixed working-day schedules keyed by duration.
+# 22-day plan = Mon-Fri only  → exclude Sat + Sun
+# 26-day plan = Mon-Sat only  → exclude Sun only
+# Any other duration          → no structural exclusion (use customer off_days/holidays only)
+PLAN_SCHEDULE_EXCLUSIONS = {
+    22: ["Saturday", "Sunday"],
+    26: ["Sunday"],
+}
+
+
+def _plan_excluded_days(plan):
+    """
+    Returns weekday names that are structurally excluded for this plan based on its duration.
+    e.g. for a 22-day plan: ['Saturday', 'Sunday']
+    These are built into the plan itself and are NOT the same as customer off_days.
+    """
+    duration = int(plan.get("duration_days", 0))
+    return PLAN_SCHEDULE_EXCLUSIONS.get(duration, [])
+
+
+def _day_schedulable_for_plan(plan, target_date, customer_off_days, customer_holidays):
+    """
+    Returns True if a delivery should happen on target_date for this plan + customer combo.
+    Order of checks:
+      1. Plan structural exclusions (22-day → no Sat/Sun, 26-day → no Sun)
+      2. Customer off_days
+      3. Customer holidays
+    """
+    if isinstance(target_date, str):
+        target_date = date.fromisoformat(target_date)
+
+    day_name = target_date.strftime("%A")
+    date_str = target_date.strftime("%Y-%m-%d")
+
+    if day_name in _plan_excluded_days(plan):
+        return False
+    if day_name in (customer_off_days or []):
+        return False
+    if date_str in (customer_holidays or set()):
+        return False
+
+    return True
 
 
 # ---------------------------------------------------------------------------
@@ -78,11 +121,9 @@ def role_required(*roles):
 # HELPERS
 # ---------------------------------------------------------------------------
 def send_credentials_whatsapp(email, password, name, phone):
-    """Send login credentials to customer's WhatsApp."""
     phone = "".join(filter(str.isdigit, str(phone)))
     if len(phone) == 10:
         phone = "91" + phone
-
     msg = (
         f"🍓 Fruit Delights\n\n"
         f"Hello {name},\n\n"
@@ -96,14 +137,16 @@ def send_credentials_whatsapp(email, password, name, phone):
 
 
 def _generate_customer_login_id(name: str) -> str:
+    """
+    Generate a short login ID: firstname (max 8 chars) + 4-char hex @ fd
+    e.g. rahul4a2c@fd   (short, clean, unique)
+    """
     parts = re.sub(r'[^a-zA-Z0-9 ]', '', name).strip().split()
     base  = parts[0][:8].lower() if parts else "user"
-    if len(parts) > 1:
-        base += parts[1][:2].lower()
     suffix    = secrets.token_hex(2)
-    candidate = f"{base}{suffix}@fruitedelights.com"
+    candidate = f"{base}{suffix}@fd"
     while users_col.find_one({"email": candidate}):
-        candidate = f"{base}{secrets.token_hex(2)}@fruitedelights.com"
+        candidate = f"{base}{secrets.token_hex(2)}@fd"
     return candidate
 
 
@@ -112,54 +155,46 @@ def _resolve_customer_email(phone, existing_email=""):
     if email:
         return email
     safe_phone = "".join(filter(str.isdigit, phone or "unknown"))
-    generated  = f"{safe_phone}@fruitedelights.local"
+    generated  = f"{safe_phone}@fd"
     if users_col.find_one({"email": generated}):
-        generated = f"{safe_phone}_{secrets.token_hex(3)}@fruitedelights.local"
+        generated = f"{safe_phone}_{secrets.token_hex(2)}@fd"
     return generated
 
 
 def _manager_team_filter():
-    """
-    Returns a dict with team_id restriction if current session user is a manager.
-    Returns {} (no restriction) if admin.
-    """
     if session.get("role") == "manager":
         user = users_col.find_one({"_id": ObjectId(session["user_id"])})
         tid  = user.get("team_id") if user else None
         if tid:
             return {"team_id": ObjectId(tid)}
-        return {"team_id": None}   # manager with no team sees nothing
+        return {"team_id": None}
     return {}
 
-# ── helper — place this just before dashboard_employee() ──────
+
 def _enrich_delivery_plan(delivery_dict: dict, cust: dict, today_date) -> dict:
-    """
-    Adds plan_name, is_alternate_plan, today_item to a delivery dict.
-    Mutates in-place and returns it.
-    """
+    """Adds plan_name, is_alternate_plan, today_item to a delivery dict."""
     plan = None
     if cust.get("plan_id"):
         plan = plans_col.find_one({"_id": ObjectId(cust["plan_id"])})
- 
+
     if plan:
         alt_items = plan.get("alternate_items", [])
         is_alt    = bool(alt_items and len(alt_items) >= 2)
         if isinstance(today_date, str):
-            from datetime import date as _date
-            today_date = _date.fromisoformat(today_date)
+            today_date = date.fromisoformat(today_date)
         today_item = _get_alternate_item_for_date(plan, today_date) if is_alt else None
- 
+
         delivery_dict["plan_name"]         = plan.get("name", "")
         delivery_dict["is_alternate_plan"] = is_alt
-        delivery_dict["today_item"]        = today_item   # e.g. "Sprouts" or None
+        delivery_dict["today_item"]        = today_item
         delivery_dict["plan_id_str"]       = str(plan["_id"])
     else:
-        # sample / no plan
         delivery_dict["plan_name"]         = cust.get("sample", "")
         delivery_dict["is_alternate_plan"] = False
         delivery_dict["today_item"]        = None
- 
+
     return delivery_dict
+
 
 # ---------------------------------------------------------------------------
 # INVOICE HELPERS
@@ -194,23 +229,35 @@ def _calculate_invoice_period(customer, plan):
 
 
 def _billable_days_in_period(customer, period_start, period_end):
-    off_days  = customer.get("off_days", [])
-    holidays  = set(customer.get("holidays", []))
+    """
+    Count schedulable days (respecting plan structure + customer off_days/holidays)
+    and actually delivered days within the period.
+    """
+    plan     = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
+    off_days = customer.get("off_days", [])
+    holidays = set(customer.get("holidays", []))
     schedulable = 0
     delivered   = 0
     current     = period_start
     while current <= period_end:
-        day_name = current.strftime("%A")
-        date_str = current.strftime("%Y-%m-%d")
-        if day_name not in off_days and date_str not in holidays:
-            schedulable += 1
-            delivery = deliveries_col.find_one({
-                "customer_id": ObjectId(customer["_id"]),
-                "date":        date_str,
-                "status":      "delivered"
-            })
-            if delivery:
-                delivered += 1
+        if plan:
+            if not _day_schedulable_for_plan(plan, current, off_days, holidays):
+                current += timedelta(days=1)
+                continue
+        else:
+            day_name = current.strftime("%A")
+            date_str = current.strftime("%Y-%m-%d")
+            if day_name in off_days or date_str in holidays:
+                current += timedelta(days=1)
+                continue
+        schedulable += 1
+        delivery = deliveries_col.find_one({
+            "customer_id": ObjectId(customer["_id"]),
+            "date":        current.strftime("%Y-%m-%d"),
+            "status":      "delivered"
+        })
+        if delivery:
+            delivered += 1
         current += timedelta(days=1)
     return schedulable, delivered
 
@@ -250,12 +297,12 @@ def estimate_upcoming_bill(customer, month=None, year=None):
     price_total              = float(plan.get("price_per_month", plan.get("price_per_day", 0)))
     tax_pct                  = float(plan.get("tax_percent", 0))
     period_start, period_end = _calculate_invoice_period(customer, plan)
-    off_days     = customer.get("off_days", [])
-    holidays     = set(customer.get("holidays", []))
+    off_days  = customer.get("off_days", [])
+    holidays  = set(customer.get("holidays", []))
     billable_days = 0
     current = period_start
     while current <= period_end:
-        if current.strftime("%A") not in off_days and current.strftime("%Y-%m-%d") not in holidays:
+        if _day_schedulable_for_plan(plan, current, off_days, holidays):
             billable_days += 1
         current += timedelta(days=1)
     subtotal = round(price_total, 2)
@@ -315,27 +362,23 @@ def _send_invoice_whatsapp(customer, invoice):
 # ---------------------------------------------------------------------------
 # WA INBOX HELPERS
 # ---------------------------------------------------------------------------
-INBOX_RETENTION_DAYS = 14   # messages older than this are auto-deleted
-
-
-def _wa_thread_id(enquiry_id: str) -> str:
-    """Canonical thread key for one enquiry conversation."""
-    return str(enquiry_id)
+INBOX_RETENTION_DAYS = 14
 
 
 def _wa_prune_old_messages(enquiry_id: str):
-    """Delete individual messages older than INBOX_RETENTION_DAYS from the thread."""
     cutoff = datetime.utcnow() - timedelta(days=INBOX_RETENTION_DAYS)
     wa_inbox_col.update_one(
         {"enquiry_id": enquiry_id},
         {"$pull": {"messages": {"ts": {"$lt": cutoff}}}}
     )
 
+
 def _normalise_phone(raw: str) -> str:
     digits = "".join(filter(str.isdigit, str(raw or "").split("@")[0]))
     if len(digits) == 10:
         return "91" + digits
     return digits
+
 
 def _wa_append_message(enquiry_id: str, direction: str, body: str,
                         phone: str = "", push_name: str = "", message_id: str = ""):
@@ -364,19 +407,22 @@ def _wa_append_message(enquiry_id: str, direction: str, body: str,
     _wa_prune_old_messages(enquiry_id)
 
 
-#plan helpers 
-
+# ---------------------------------------------------------------------------
+# PLAN ALTERNATE ITEM HELPER
+# ---------------------------------------------------------------------------
 def _get_alternate_item_for_date(plan, target_date):
     """
-    Returns the alternate item label for a given date.
-    Uses the plan's start_date as anchor (day 0 = first item).
-    Falls back to a reference date of 2024-01-01 if no anchor.
+    Returns the alternate item label for a given date using a fixed epoch.
+    alternate_items = ["Fruit", "Sprouts"] → alternates daily from 2024-01-01.
+    Supports any number of items (2, 3, etc.)
+    In the plan admin UI, enter them comma-separated:
+      e.g.  "Fruit, Sprouts"  or  "Red Fruit, Green Fruit, Sprouts"
     """
     alt_items = plan.get("alternate_items", [])
     if not alt_items or len(alt_items) < 2:
-        return None   # not an alternate plan
- 
-    # Use a fixed epoch so alternation is consistent across all customers
+        return None
+    if isinstance(target_date, str):
+        target_date = date.fromisoformat(target_date)
     epoch = date(2024, 1, 1)
     delta = (target_date - epoch).days
     idx   = delta % len(alt_items)
@@ -466,12 +512,11 @@ def dashboard_admin():
     now   = datetime.now()
     today = now.strftime("%Y-%m-%d")
     tf    = _manager_team_filter()
- 
-    # Build customer query with optional team restriction
+
     cust_q = {"role": "customer"}
     if tf:
         cust_q.update(tf)
- 
+
     stats = {
         "total_customers":    users_col.count_documents(cust_q),
         "total_employees":    users_col.count_documents({**{"role": "employee"}, **tf}),
@@ -480,8 +525,7 @@ def dashboard_admin():
         "on_holiday_today":   deliveries_col.count_documents({**{"status": "cancelled_holiday", "date": today}, **tf}),
         "active_teams":       teams_col.count_documents({}),
     }
- 
-    # Admin sees all teams/plans; manager sees only their team
+
     if session.get("role") == "manager":
         user = users_col.find_one({"_id": ObjectId(session["user_id"])})
         assigned_tid = user.get("team_id") if user else None
@@ -489,14 +533,15 @@ def dashboard_admin():
         teams = [t for t in teams if t]
     else:
         teams = list(teams_col.find())
- 
+
     plans = list(plans_col.find())
     for t in teams: t["_id"] = str(t["_id"])
     for p in plans: p["_id"] = str(p["_id"])
- 
+
     return render_template("dashboard_admin.html",
                            stats=stats, teams=teams, plans=plans,
                            active_page="home")
+
 
 @app.route("/api/admin/employees")
 @login_required
@@ -520,6 +565,7 @@ def api_employees():
             "team_city": team.get("city", ""),
         })
     return jsonify(result)
+
 
 @app.route("/api/admin/customers")
 @login_required
@@ -569,6 +615,7 @@ def api_customers():
         })
     return jsonify(result)
 
+
 # ---------------------------------------------------------------------------
 # ADMIN – enquiries DATA API
 # ---------------------------------------------------------------------------
@@ -577,7 +624,6 @@ def api_customers():
 @role_required("admin", "manager")
 def api_enquiries_data():
     enquiries = list(enquiries_col.find({"tag": "form_enquiry"}).sort("created_at", -1))
-    # build a set of enquiry IDs that have inbox messages
     enq_ids_with_msgs = set(
         str(doc["enquiry_id"])
         for doc in wa_inbox_col.find({}, {"enquiry_id": 1})
@@ -629,7 +675,6 @@ def admin_analytics():
     for t in teams:
         cnt = deliveries_col.count_documents({"team_id": t["_id"], "status": "pending", "date": today})
         area_data.append({"area": t.get("area", t["name"]), "pending": cnt})
-
     return jsonify({"timeseries": results, "area_pending": area_data})
 
 
@@ -664,16 +709,17 @@ def add_plan():
     alt_raw  = request.form.get("alternate_items", "").strip()
     alt_list = [x.strip() for x in alt_raw.split(",") if x.strip()] if alt_raw else []
     plans_col.insert_one({
-        "name":             request.form.get("name"),
-        "description":      request.form.get("description"),
-        "price_per_month":  float(request.form.get("price_per_month", 0)),
-        "duration_days":    int(request.form.get("duration_days", 0)),
-        "tax_percent":      float(request.form.get("tax_percent", 0)),
-        "alternate_items":  alt_list,   # [] means normal plan
-        "created_at":       datetime.now()
+        "name":            request.form.get("name"),
+        "description":     request.form.get("description"),
+        "price_per_month": float(request.form.get("price_per_month", 0)),
+        "duration_days":   int(request.form.get("duration_days", 0)),
+        "tax_percent":     float(request.form.get("tax_percent", 0)),
+        "alternate_items": alt_list,   # e.g. ["Fruit", "Sprouts"]
+        "created_at":      datetime.now()
     })
     flash(f"✅ Plan '{request.form.get('name')}' created successfully.", "success")
     return redirect(url_for("dashboard_admin"))
+
 
 @app.route("/admin/plans/edit/<plan_id>", methods=["POST"])
 @login_required
@@ -691,6 +737,7 @@ def edit_plan(plan_id):
     }})
     flash("Plan updated.", "success")
     return redirect(url_for("dashboard_admin"))
+
 
 @app.route("/admin/plans/delete/<plan_id>", methods=["POST"])
 @login_required
@@ -781,9 +828,6 @@ def list_employees():
                            active_page="employees")
 
 
-# ---------------------------------------------------------------------------
-# ADMIN – Reset employee credentials  ← NEW
-# ---------------------------------------------------------------------------
 @app.route("/admin/employees/reset-credentials/<employee_id>", methods=["POST"])
 @login_required
 @role_required("admin", "manager")
@@ -791,20 +835,14 @@ def reset_employee_credentials(employee_id):
     employee = users_col.find_one({"_id": ObjectId(employee_id), "role": "employee"})
     if not employee:
         return jsonify({"success": False, "message": "Employee not found."}), 404
-
     new_password = secrets.token_urlsafe(8)
-    users_col.update_one(
-        {"_id": ObjectId(employee_id)},
-        {"$set": {"password": generate_password_hash(new_password)}}
-    )
-
+    users_col.update_one({"_id": ObjectId(employee_id)},
+                         {"$set": {"password": generate_password_hash(new_password)}})
     phone = "".join(filter(str.isdigit, str(employee.get("phone", ""))))
     if len(phone) == 10:
         phone = "91" + phone
-
     name     = employee.get("name", "")
     login_id = employee.get("email", "")
-
     msg = (
         f"🍓 Fruit Delights – Login Credentials Reset\n\n"
         f"Hello {name},\n\n"
@@ -814,16 +852,14 @@ def reset_employee_credentials(employee_id):
         f"Login:\nhttps://fruitedelights.com/login\n\n"
         f"If you did not request this, contact your manager immediately."
     )
-
     wa_sent = False
     if phone:
         wa_sent = send_whatsapp(phone, msg)
-
     return jsonify({
-        "success":  True,
-        "wa_sent":  wa_sent,
-        "name":     name,
-        "message":  f"Credentials reset for {name}." + (" Sent on WhatsApp." if wa_sent else " WhatsApp delivery failed."),
+        "success": True,
+        "wa_sent": wa_sent,
+        "name":    name,
+        "message": f"Credentials reset for {name}." + (" Sent on WhatsApp." if wa_sent else " WhatsApp delivery failed."),
     })
 
 
@@ -896,13 +932,13 @@ def add_user():
 def edit_user(user_id):
     role  = request.form.get("role")
     phone = request.form.get("phone", "").strip()
-    if role == "customer":
-        existing       = users_col.find_one({"_id": ObjectId(user_id)}, {"email": 1})
-        existing_email = (existing or {}).get("email", "")
-        form_email     = request.form.get("email", "").strip()
-        email          = form_email if form_email else existing_email
-    else:
-        email = request.form.get("email", "").strip()
+
+    # Always preserve existing email — never blank it accidentally
+    existing_user  = users_col.find_one({"_id": ObjectId(user_id)}, {"email": 1})
+    existing_email = (existing_user or {}).get("email", "")
+    form_email     = request.form.get("email", "").strip()
+    email          = form_email if form_email else existing_email
+
     update = {
         "name":  request.form.get("name"),
         "email": email,
@@ -946,6 +982,48 @@ def delete_user(user_id):
     flash("User removed.", "warning")
     next_page = request.form.get("next", "dashboard_admin")
     return redirect(url_for(next_page))
+
+
+# ---------------------------------------------------------------------------
+# API – Get single user details (for edit-form auto-populate)
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/user/<user_id>")
+@login_required
+@role_required("admin", "manager")
+def api_get_user(user_id):
+    """
+    Returns full user data so the edit form can auto-populate every field,
+    including the email (login ID) field.
+    Call this when opening the edit modal: GET /api/admin/user/<id>
+    """
+    try:
+        user = users_col.find_one({"_id": ObjectId(user_id)})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid user ID"}), 400
+    if not user:
+        return jsonify({"success": False, "message": "User not found"}), 404
+
+    start_date = user.get("start_date")
+    if isinstance(start_date, datetime):
+        start_date = start_date.strftime("%Y-%m-%d")
+
+    return jsonify({
+        "success":          True,
+        "id":               str(user["_id"]),
+        "name":             user.get("name", ""),
+        "email":            user.get("email", ""),   # ← login ID to show in form
+        "phone":            user.get("phone", ""),
+        "role":             user.get("role", ""),
+        "team_id":          str(user.get("team_id", "")),
+        "plan_id":          str(user.get("plan_id", "")),
+        "address":          user.get("address", ""),
+        "preferred_time":   user.get("preferred_time", ""),
+        "off_days":         user.get("off_days", []),
+        "start_date":       start_date or "",
+        "discount_percent": float(user.get("discount_percent", 0) or 0),
+        "discount_amount":  float(user.get("discount_amount",  0) or 0),
+        "status":           user.get("status", "active"),
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -1204,7 +1282,7 @@ def enquiry_count():
 
 
 # ---------------------------------------------------------------------------
-# WHATSAPP INBOX – Send message from admin  ← NEW
+# WHATSAPP INBOX – Send message from admin
 # ---------------------------------------------------------------------------
 @app.route("/api/admin/wa_send", methods=["POST"])
 @login_required
@@ -1213,39 +1291,25 @@ def wa_send():
     data       = request.get_json(silent=True) or {}
     enquiry_id = data.get("enquiry_id", "").strip()
     message    = data.get("message", "").strip()
-
     if not enquiry_id or not message:
         return jsonify({"success": False, "message": "enquiry_id and message are required."}), 400
-
     enq = enquiries_col.find_one({"_id": ObjectId(enquiry_id)})
     if not enq:
         return jsonify({"success": False, "message": "Enquiry not found."}), 404
-
     phone = _normalise_phone(enq.get("phone", ""))
     if not phone:
         return jsonify({"success": False, "message": "No phone number found on this enquiry."}), 400
-
     ok = send_whatsapp_msg(phone, message)
-
     if ok:
-        _wa_append_message(
-            enquiry_id=enquiry_id,
-            direction="out",
-            body=message,
-            phone=phone,
-        )
-
+        _wa_append_message(enquiry_id=enquiry_id, direction="out", body=message, phone=phone)
     return jsonify({"success": ok, "message": "Sent." if ok else "WhatsApp delivery failed."})
 
-# ---------------------------------------------------------------------------
-# WHATSAPP INBOX – Get thread for one enquiry  ← NEW
-# ---------------------------------------------------------------------------
+
 @app.route("/api/admin/wa_thread/<enquiry_id>")
 @login_required
 @role_required("admin", "manager")
 def wa_thread(enquiry_id):
     doc = wa_inbox_col.find_one({"enquiry_id": enquiry_id})
-
     if not doc:
         enq = enquiries_col.find_one({"_id": ObjectId(enquiry_id)})
         if enq:
@@ -1255,10 +1319,8 @@ def wa_thread(enquiry_id):
                 doc = wa_inbox_col.find_one({"enquiry_id": f"unknown_{norm[2:]}"})
             if doc:
                 wa_inbox_col.update_one({"_id": doc["_id"]}, {"$set": {"enquiry_id": enquiry_id}})
-
     if not doc:
         return jsonify({"messages": [], "push_name": "", "phone": ""})
-
     messages = []
     for m in doc.get("messages", []):
         messages.append({
@@ -1270,9 +1332,6 @@ def wa_thread(enquiry_id):
     return jsonify({"messages": messages, "push_name": doc.get("push_name", ""), "phone": doc.get("phone", "")})
 
 
-# ---------------------------------------------------------------------------
-# WHATSAPP INBOX – Incoming webhook (PUBLIC – called by n8n)  ← NEW
-# ---------------------------------------------------------------------------
 @app.route("/api/webhook/wa_incoming", methods=["POST"])
 def wa_incoming_webhook():
     data       = request.get_json(silent=True) or {}
@@ -1280,13 +1339,10 @@ def wa_incoming_webhook():
     body       = (data.get("body") or "").strip()
     push_name  = (data.get("pushName") or "").strip()
     message_id = (data.get("messageId") or "").strip()
-
     if not body:
         return jsonify({"status": "ignored", "reason": "empty body"}), 200
-
     norm_phone = _normalise_phone(phone_raw)
     phone_10   = norm_phone[2:] if len(norm_phone) == 12 and norm_phone.startswith("91") else norm_phone
-
     enq = None
     enquiry_id_str = (data.get("enquiry_id") or "").strip()
     if enquiry_id_str:
@@ -1294,121 +1350,82 @@ def wa_incoming_webhook():
             enq = enquiries_col.find_one({"_id": ObjectId(enquiry_id_str)})
         except Exception:
             pass
-
     if not enq:
         enq = enquiries_col.find_one({"phone": {"$in": [norm_phone, phone_10, phone_raw]}, "tag": "form_enquiry"})
-
     if not enq:
         bucket_id = f"unknown_{norm_phone or phone_raw}"
         _wa_append_message(enquiry_id=bucket_id, direction="in", body=body,
                            phone=norm_phone, push_name=push_name, message_id=message_id)
         return jsonify({"status": "saved", "matched": False, "bucket": bucket_id}), 200
-
     enq_id = str(enq["_id"])
     _wa_append_message(enquiry_id=enq_id, direction="in", body=body,
                        phone=norm_phone, push_name=push_name, message_id=message_id)
     return jsonify({"status": "saved", "matched": True, "enquiry_id": enq_id}), 200
 
-@app.route("/api/admin/enquiry_count")
-@login_required
-@role_required("admin", "manager")
-def enquiry_count_dup():
-    # duplicate guard – remove if original is above
-    pass
-# Remove above stub – already defined. Flask uses first definition.
 
-
-# ═══════════════════════════════════════════════════════════════════════════
-# ADD THIS ROUTE TO app.py (after the /admin/enquiries/delete route)
-# ═══════════════════════════════════════════════════════════════════════════
-
+# ---------------------------------------------------------------------------
+# BULK IMPORT / EXPORT
+# ---------------------------------------------------------------------------
 @app.route("/api/admin/bulk_enquiries_import", methods=["POST"])
 @login_required
 @role_required("admin", "manager")
 def bulk_enquiries_import():
-    """
-    Bulk import enquiries from frontend spreadsheet-like data.
-    Expected JSON body: { "enquiries": [ { "name": "...", "phone": "...", ... }, ... ] }
-    """
-    data = request.get_json(silent=True) or {}
+    data           = request.get_json(silent=True) or {}
     enquiries_list = data.get("enquiries", [])
-    
     if not enquiries_list:
         return jsonify({"success": False, "message": "No enquiries provided."}), 400
-    
     if not isinstance(enquiries_list, list):
         return jsonify({"success": False, "message": "enquiries must be a list."}), 400
-    
     inserted = 0
-    skipped = 0
-    errors = []
-    
-    plans = list(plans_col.find({}))
-    plan_map = {p.get("name", ""): p for p in plans}
-    
+    skipped  = 0
+    errors   = []
     for idx, enq_data in enumerate(enquiries_list):
         try:
-            # Validate required fields
-            name = (enq_data.get("name") or "").strip()
+            name  = (enq_data.get("name") or "").strip()
             phone = (enq_data.get("phone") or "").strip()
-            
             if not name or not phone:
                 skipped += 1
                 errors.append(f"Row {idx + 1}: Name and phone are required.")
                 continue
-            
-            # Check for duplicates
             existing = enquiries_col.find_one({"phone": phone, "tag": "form_enquiry"})
             if existing:
                 skipped += 1
                 errors.append(f"Row {idx + 1}: Phone {phone} already exists.")
                 continue
-            
-            # Extract fields
-            plan_name = (enq_data.get("plan") or "").strip()
-            delivery_time = (enq_data.get("delivery_time") or "").strip()
-            start_date = (enq_data.get("start_date") or "").strip()
-            address = (enq_data.get("address") or "").strip()
+            plan_name      = (enq_data.get("plan") or "").strip()
+            delivery_time  = (enq_data.get("delivery_time") or "").strip()
+            start_date     = (enq_data.get("start_date") or "").strip()
+            address        = (enq_data.get("address") or "").strip()
             payment_method = (enq_data.get("payment_method") or "upi").strip().lower()
-            status = (enq_data.get("status") or "pending").strip().lower()
-            
-            # Validate status
+            status         = (enq_data.get("status") or "pending").strip().lower()
             if status not in ["pending", "approved", "converted"]:
                 status = "pending"
-            
-            # Validate payment method
             if payment_method not in ["upi", "cod"]:
                 payment_method = "upi"
-            
-            # Insert the enquiry
-            enquiry_doc = {
-                "name": name,
-                "phone": phone,
-                "address": address,
-                "delivery_time": delivery_time,
-                "start_date": start_date,
-                "plan": plan_name,
+            enquiries_col.insert_one({
+                "name":           name,
+                "phone":          phone,
+                "address":        address,
+                "delivery_time":  delivery_time,
+                "start_date":     start_date,
+                "plan":           plan_name,
                 "payment_method": payment_method,
-                "status": status,
-                "source": "admin_bulk_import",
-                "tag": "form_enquiry",
-                "created_at": datetime.now(),
-            }
-            
-            result = enquiries_col.insert_one(enquiry_doc)
+                "status":         status,
+                "source":         "admin_bulk_import",
+                "tag":            "form_enquiry",
+                "created_at":     datetime.now(),
+            })
             inserted += 1
-            
         except Exception as e:
             skipped += 1
             errors.append(f"Row {idx + 1}: {str(e)}")
-    
     return jsonify({
-        "success": True,
+        "success":  True,
         "inserted": inserted,
-        "skipped": skipped,
-        "total": len(enquiries_list),
-        "errors": errors[:10],  # Limit to first 10 errors
-        "message": f"✅ Imported {inserted} enquiries. {skipped} skipped."
+        "skipped":  skipped,
+        "total":    len(enquiries_list),
+        "errors":   errors[:10],
+        "message":  f"✅ Imported {inserted} enquiries. {skipped} skipped."
     })
 
 
@@ -1416,24 +1433,19 @@ def bulk_enquiries_import():
 @login_required
 @role_required("admin", "manager")
 def enquiries_export():
-    """
-    Export all enquiries as JSON for download (template for bulk import).
-    """
     enquiries = list(enquiries_col.find({"tag": "form_enquiry"}).limit(1000))
-    
     data = []
     for e in enquiries:
         data.append({
-            "name": e.get("name", ""),
-            "phone": e.get("phone", ""),
-            "address": e.get("address", ""),
-            "plan": e.get("plan", ""),
-            "delivery_time": e.get("delivery_time", ""),
-            "start_date": e.get("start_date", ""),
+            "name":           e.get("name", ""),
+            "phone":          e.get("phone", ""),
+            "address":        e.get("address", ""),
+            "plan":           e.get("plan", ""),
+            "delivery_time":  e.get("delivery_time", ""),
+            "start_date":     e.get("start_date", ""),
             "payment_method": e.get("payment_method", "upi"),
-            "status": e.get("status", "pending"),
+            "status":         e.get("status", "pending"),
         })
-    
     return jsonify(data)
 
 
@@ -1448,53 +1460,62 @@ def dashboard_employee():
     if not employee or "team_id" not in employee:
         flash("You are not assigned to any team.", "danger")
         return redirect(url_for("home"))
- 
+
     today_str  = datetime.now().strftime("%Y-%m-%d")
-    day_name   = datetime.now().strftime("%A")
     emp_id_str = str(employee["_id"])
-    today      = datetime.now().date() 
- 
+    today      = datetime.now().date()
+
     existing_deliveries = list(deliveries_col.find({
         "team_id": employee["team_id"],
         "date":    today_str
     }))
     delivery_map = {str(d["customer_id"]): d for d in existing_deliveries}
- 
-    # ── PATCH: only active customers (status == "active" OR status field absent) ──
+
     customers = list(users_col.find({
         "role":    "customer",
         "team_id": employee["team_id"],
-        "status":  "active",          # ← was {"$ne": "inactive"}, now strict active-only
+        "status":  "active",
     }))
- 
-    final_deliveries = []  
+
+    final_deliveries = []
     for cust in customers:
-      cust_id_str = str(cust["_id"])
-      if day_name in cust.get("off_days", []):
-          continue
-      if today_str in cust.get("holidays", []):
-          continue
-      if cust_id_str in delivery_map:
-          delivery = delivery_map[cust_id_str]
-          if delivery.get("status") == "cancelled_holiday":
-              continue
-          delivery["customer"] = [cust]
-          _enrich_delivery_plan(delivery, cust, today)   # ← ADD THIS LINE
-          final_deliveries.append(delivery)
-      else:
-          virtual_delivery = {
-              "_id":            f"virtual_{cust_id_str}",
-              "customer_id":    cust["_id"],
-              "team_id":        employee["team_id"],
-              "date":           today_str,
-              "status":         "pending",
-              "assigned_to":    None,
-              "preferred_time": cust.get("preferred_time", "Anytime"),
-              "proof_photo_url": cust.get("latest_proof_photo_url") or None,
-              "customer":       [cust]
-          }
-          _enrich_delivery_plan(virtual_delivery, cust, today)  # ← ADD THIS LINE
-          final_deliveries.append(virtual_delivery)
+        cust_id_str = str(cust["_id"])
+        plan = plans_col.find_one({"_id": ObjectId(cust["plan_id"])}) if cust.get("plan_id") else None
+
+        # Use plan-aware scheduling (handles 22-day/26-day structural exclusions)
+        if plan:
+            if not _day_schedulable_for_plan(plan, today, cust.get("off_days", []), set(cust.get("holidays", []))):
+                continue
+        else:
+            # Sample / no-plan customer: just check off_days + holidays
+            day_name = today.strftime("%A")
+            if day_name in cust.get("off_days", []):
+                continue
+            if today_str in cust.get("holidays", []):
+                continue
+
+        if cust_id_str in delivery_map:
+            delivery = delivery_map[cust_id_str]
+            if delivery.get("status") == "cancelled_holiday":
+                continue
+            delivery["customer"] = [cust]
+            _enrich_delivery_plan(delivery, cust, today)
+            final_deliveries.append(delivery)
+        else:
+            virtual_delivery = {
+                "_id":             f"virtual_{cust_id_str}",
+                "customer_id":     cust["_id"],
+                "team_id":         employee["team_id"],
+                "date":            today_str,
+                "status":          "pending",
+                "assigned_to":     None,
+                "preferred_time":  cust.get("preferred_time", "Anytime"),
+                "proof_photo_url": cust.get("latest_proof_photo_url") or None,
+                "customer":        [cust]
+            }
+            _enrich_delivery_plan(virtual_delivery, cust, today)
+            final_deliveries.append(virtual_delivery)
+
     def sort_key(d):
         if d["status"] == "accepted" and str(d.get("assigned_to", "")) == emp_id_str:
             return 0
@@ -1503,16 +1524,15 @@ def dashboard_employee():
         if d["status"] == "accepted":
             return 2
         return 3
- 
+
     final_deliveries.sort(key=sort_key)
     return render_template(
-    "dashboard_employee.html",
-    deliveries=final_deliveries,
-    photo_url="",
-    cloudinary_cloud_name=app.config["CLOUDINARY_CLOUD_NAME"],
-    cloudinary_upload_preset=app.config["CLOUDINARY_UPLOAD_PRESET"]
-)
- 
+        "dashboard_employee.html",
+        deliveries=final_deliveries,
+        photo_url="",
+        cloudinary_cloud_name=app.config["CLOUDINARY_CLOUD_NAME"],
+        cloudinary_upload_preset=app.config["CLOUDINARY_UPLOAD_PRESET"]
+    )
 
 
 @app.route("/employee/accept/<delivery_id>")
@@ -1619,21 +1639,26 @@ def mark_holiday():
 # ---------------------------------------------------------------------------
 @app.route("/api/system/generate_daily", methods=["GET"])
 def generate_daily_deliveries():
-    today    = datetime.now()
+    today    = datetime.now().date()
     date_str = today.strftime("%Y-%m-%d")
-    day_name = today.strftime("%A")
-    customers = users_col.find({"role": "customer"})
+    customers = users_col.find({"role": "customer", "status": "active"})
     count = 0
     for cust in customers:
-        if day_name in cust.get("off_days", []):
-            continue
-        if date_str in cust.get("holidays", []):
-            continue
+        plan = plans_col.find_one({"_id": ObjectId(cust["plan_id"])}) if cust.get("plan_id") else None
+        if plan:
+            if not _day_schedulable_for_plan(plan, today, cust.get("off_days", []), set(cust.get("holidays", []))):
+                continue
+        else:
+            day_name = today.strftime("%A")
+            if day_name in cust.get("off_days", []):
+                continue
+            if date_str in cust.get("holidays", []):
+                continue
         exists = deliveries_col.find_one({"customer_id": cust["_id"], "date": date_str})
         if not exists:
             deliveries_col.insert_one({
                 "customer_id":    cust["_id"],
-                "team_id":        cust["team_id"],
+                "team_id":        cust.get("team_id"),
                 "date":           date_str,
                 "status":         "pending",
                 "assigned_to":    None,
@@ -1786,30 +1811,27 @@ def test_invoice():
 
 
 # ---------------------------------------------------------------------------
-# ADMIN – Boxes needed today
+# ADMIN – Boxes needed today/tomorrow
 # ---------------------------------------------------------------------------
 @app.route("/api/admin/boxes_needed")
 @login_required
 @role_required("admin", "manager")
 def api_boxes_needed():
-    now      = datetime.now()
-    tf       = _manager_team_filter()
- 
-    # ── After 1pm → show next day's boxes ──────────────────
+    now = datetime.now()
+    tf  = _manager_team_filter()
+
     if now.hour >= 13:
         target_date = (now + timedelta(days=1)).date()
         is_next_day = True
     else:
         target_date = now.date()
         is_next_day = False
- 
-    today_str  = now.strftime("%Y-%m-%d")        # always today for holiday checks
+
     target_str = target_date.strftime("%Y-%m-%d")
-    day_name   = target_date.strftime("%A")
- 
+
     plans  = list(plans_col.find())
     teams  = list(teams_col.find())
- 
+
     base_cust_q = {
         "role":    "customer",
         "status":  "active",
@@ -1822,9 +1844,8 @@ def api_boxes_needed():
     }
     if tf:
         base_cust_q.update(tf)
- 
     active_customers = list(users_col.find(base_cust_q))
- 
+
     sample_q = {
         "role":   "customer",
         "status": "active",
@@ -1833,27 +1854,23 @@ def api_boxes_needed():
     if tf:
         sample_q.update(tf)
     sample_customers = list(users_col.find(sample_q))
- 
+
     team_map = {str(t["_id"]): t for t in teams}
     result   = []
- 
+
     for plan in plans:
         plan_id   = str(plan["_id"])
         plan_name = plan.get("name", "")
         alt_items = plan.get("alternate_items", [])
- 
-        # Determine today's alternate item label
         alt_label = _get_alternate_item_for_date(plan, target_date)
- 
+
         team_breakdown = {}
         active_count   = 0
- 
+
         for c in active_customers:
             if str(c.get("plan_id", "")) != plan_id:
                 continue
-            if day_name in c.get("off_days", []):
-                continue
-            if target_str in c.get("holidays", []):
+            if not _day_schedulable_for_plan(plan, target_date, c.get("off_days", []), set(c.get("holidays", []))):
                 continue
             active_count += 1
             tid = str(c.get("team_id", ""))
@@ -1866,24 +1883,25 @@ def api_boxes_needed():
                     "count":     0,
                 }
             team_breakdown[tid]["count"] += 1
- 
+
         matched_sample_count = 0
         for c in sample_customers:
             if str(c.get("plan_id", "")) == plan_id:
+                day_name = target_date.strftime("%A")
                 if day_name not in c.get("off_days", []) and target_str not in c.get("holidays", []):
                     matched_sample_count += 1
- 
+
         pending_enq_count = 0
-        if not tf:   # only show enquiry counts to admin
+        if not tf:
             pending_enq_count = enquiries_col.count_documents({
                 "tag":    "form_enquiry",
                 "status": "pending",
                 "plan":   {"$regex": re.escape(plan_name[:20]), "$options": "i"}
             }) if plan_name else 0
- 
+
         if active_count == 0 and matched_sample_count == 0 and pending_enq_count == 0:
             continue
- 
+
         result.append({
             "plan_id":           plan_id,
             "plan_name":         plan_name,
@@ -1895,26 +1913,26 @@ def api_boxes_needed():
             "total_boxes":       active_count + matched_sample_count,
             "teams":             sorted(team_breakdown.values(), key=lambda x: -x["count"]),
             "is_sample_plan":    False,
-            # ── alternate plan info ──
             "is_alternate_plan": bool(alt_items and len(alt_items) >= 2),
             "alternate_items":   alt_items,
-            "today_item":        alt_label,        # e.g. "Sprouts"
+            "today_item":        alt_label,
             "is_next_day":       is_next_day,
             "target_date":       target_str,
         })
- 
-    # Unmatched sample customers
+
+    # Unmatched sample customers (no plan_id)
     unmatched_samples: dict = {}
     for c in sample_customers:
         if c.get("plan_id"):
             continue
+        day_name = target_date.strftime("%A")
         if day_name in c.get("off_days", []):
             continue
         if target_str in c.get("holidays", []):
             continue
         label = c.get("sample", "Sample")
         unmatched_samples[label] = unmatched_samples.get(label, 0) + 1
- 
+
     for label, count in unmatched_samples.items():
         result.append({
             "plan_id":           None,
@@ -1933,20 +1951,17 @@ def api_boxes_needed():
             "is_next_day":       is_next_day,
             "target_date":       target_str,
         })
- 
+
     return jsonify(result)
 
+
+# ---------------------------------------------------------------------------
+# ADMIN – Customer plan progress (FIXED for 22/26-day plans)
+# ---------------------------------------------------------------------------
 @app.route("/api/admin/customer_plan_status/<customer_id>")
 @login_required
 @role_required("admin", "manager")
 def customer_plan_status(customer_id):
-    """
-    Returns plan progress for a customer:
-    - total scheduled days in plan period
-    - delivered so far
-    - days remaining (excluding off_days, holidays, future non-delivery days)
-    - pending (scheduled but not yet delivered)
-    """
     try:
         customer = users_col.find_one({"_id": ObjectId(customer_id)})
     except Exception:
@@ -1959,55 +1974,56 @@ def customer_plan_status(customer_id):
     if not plan:
         return jsonify({"success": False, "has_plan": False})
 
-    period_start, period_end = _calculate_invoice_period(customer, plan)
-    off_days  = customer.get("off_days", [])
-    holidays  = set(customer.get("holidays", []))
-    today     = date.today()
+    duration_days = int(plan.get("duration_days", 0))
+    start_date = _parse_start_date(customer)
 
-    total_scheduled = 0
-    delivered       = 0
-    pending_past    = 0
-    remaining_days  = 0
+    if not start_date or duration_days <= 0:
+        return jsonify({
+            "success": False,
+            "has_plan": False,
+            "message": "No valid start date or duration"
+        })
 
-    current = period_start
-    while current <= period_end:
-        day_name = current.strftime("%A")
-        date_str = current.strftime("%Y-%m-%d")
-        if day_name in off_days or date_str in holidays:
-            current += timedelta(days=1)
-            continue
-        total_scheduled += 1
-        if current <= today:
-            delivery = deliveries_col.find_one({
-                "customer_id": ObjectId(customer_id),
-                "date": date_str,
-                "status": "delivered"
-            })
-            if delivery:
-                delivered += 1
-            else:
-                pending_past += 1
-        else:
-            remaining_days += 1
-        current += timedelta(days=1)
+    period_start = start_date
+    period_end = start_date + timedelta(days=duration_days - 1)
+    today = date.today()
 
-    completion_pct = round((delivered / total_scheduled * 100)) if total_scheduled else 0
+    delivered_count = deliveries_col.count_documents({
+        "customer_id": customer["_id"],
+        "status": "delivered"
+    })
+
+    remaining_days = max(0, duration_days - delivered_count)
+
+    completion_pct = round(
+        (delivered_count / duration_days) * 100
+    ) if duration_days else 0
 
     return jsonify({
-        "success":         True,
-        "has_plan":        True,
-        "plan_name":       plan.get("name", ""),
-        "period_start":    period_start.strftime("%Y-%m-%d"),
-        "period_end":      period_end.strftime("%Y-%m-%d"),
-        "total_scheduled": total_scheduled,
-        "delivered":       delivered,
-        "pending_past":    pending_past,
-        "remaining_days":  remaining_days,
-        "completion_pct":  completion_pct,
-        "today":           today.strftime("%Y-%m-%d"),
-        "plan_price":      float(plan.get("price_per_month") or plan.get("price_per_day") or 0),
-        "duration_days":   int(plan.get("duration_days", 0)),
+        "success": True,
+        "has_plan": True,
+        "plan_name": plan.get("name", ""),
+        "period_start": period_start.strftime("%Y-%m-%d"),
+        "period_end": period_end.strftime("%Y-%m-%d"),
+        "duration_days": duration_days,
+        "delivered": delivered_count,
+        "remaining_days": remaining_days,
+        "completion_pct": completion_pct,
+        "today": today.strftime("%Y-%m-%d"),
+        "plan_price": float(
+            plan.get("price_per_month")
+            or plan.get("price_per_day")
+            or 0
+        ),
+        "is_alternate_plan": bool(
+            plan.get("alternate_items")
+            and len(plan.get("alternate_items", [])) >= 2
+        ),
+        "alternate_items": plan.get("alternate_items", []),
+        "today_item": _get_alternate_item_for_date(plan, today),
     })
+
+
 
 # ---------------------------------------------------------------------------
 # ADMIN – Sample customers detail for Boxes view
@@ -2017,8 +2033,8 @@ def customer_plan_status(customer_id):
 @role_required("admin", "manager")
 def api_sample_customers():
     label     = request.args.get("label", "").strip()
-    today_str = datetime.now().strftime("%Y-%m-%d")
-    day_name  = datetime.now().strftime("%A")
+    today     = datetime.now().date()
+    today_str = today.strftime("%Y-%m-%d")
     query = {
         "role":   "customer",
         "status": "active",
@@ -2031,6 +2047,7 @@ def api_sample_customers():
     team_map  = {str(t["_id"]): t for t in teams}
     result = []
     for c in customers:
+        day_name = today.strftime("%A")
         if day_name in c.get("off_days", []):
             continue
         if today_str in c.get("holidays", []):
@@ -2077,9 +2094,10 @@ def assign_team_to_customer():
     except Exception as e:
         return jsonify({"success": False, "message": str(e)}), 500
 
+
 @app.route("/api/admin/managers")
 @login_required
-@role_required("admin")          # admin only
+@role_required("admin")
 def api_managers():
     managers = list(users_col.find({"role": "manager"}))
     teams    = list(teams_col.find())
@@ -2098,8 +2116,8 @@ def api_managers():
             "team_area": team.get("area", ""),
         })
     return jsonify(result)
- 
- 
+
+
 @app.route("/admin/managers/assign-team", methods=["POST"])
 @login_required
 @role_required("admin")
@@ -2120,26 +2138,21 @@ def assign_team_to_manager():
 
 
 # ---------------------------------------------------------------------------
-# N8N – Add enquiry from WhatsApp incoming message
+# N8N – Add enquiry from WhatsApp
 # ---------------------------------------------------------------------------
 @app.route("/api/enq/add_enquiry", methods=["POST"])
 def n8n_add_enquiry():
     token = request.headers.get("X-Api-Key") or request.args.get("token")
     if token != os.getenv("Token_SECRET"):
         return jsonify({"error": "Unauthorized"}), 401
-
-    data = request.get_json(silent=True) or {}
-
+    data      = request.get_json(silent=True) or {}
     push_name = (data.get("pushName") or "").strip()
     body      = (data.get("body") or "").strip()
-
     phone_raw = (data.get("phoneNumber") or data.get("from") or "").strip()
     if not phone_raw:
         return jsonify({"success": False, "message": "Missing 'phoneNumber'."}), 400
-
     norm_phone = _normalise_phone(phone_raw)
     phone_10   = norm_phone[2:] if len(norm_phone) == 12 and norm_phone.startswith("91") else norm_phone
-
     existing = enquiries_col.find_one({
         "phone":  {"$in": [norm_phone, phone_10]},
         "tag":    "form_enquiry",
@@ -2147,7 +2160,6 @@ def n8n_add_enquiry():
     })
     if existing:
         return jsonify({"success": False, "message": "Pending enquiry already exists.", "enquiry_id": str(existing["_id"])}), 409
-
     enquiry_doc = {
         "name":       push_name,
         "phone":      norm_phone,
@@ -2156,19 +2168,11 @@ def n8n_add_enquiry():
         "status":     "pending",
         "created_at": datetime.now(),
     }
-
     result = enquiries_col.insert_one(enquiry_doc)
     enq_id = str(result.inserted_id)
-
     if body:
-        _wa_append_message(
-            enquiry_id=enq_id,
-            direction="in",
-            body=body,
-            phone=norm_phone,
-            push_name=push_name,
-        )
-
+        _wa_append_message(enquiry_id=enq_id, direction="in", body=body,
+                           phone=norm_phone, push_name=push_name)
     return jsonify({
         "success":    True,
         "enquiry_id": enq_id,
@@ -2179,98 +2183,79 @@ def n8n_add_enquiry():
 
 
 # ---------------------------------------------------------------------------
-# EMPLOYEE – Update customer delivery location (add to app.py)
+# EMPLOYEE – GPS location
 # ---------------------------------------------------------------------------
- 
 @app.route("/api/employee/update_location", methods=["POST"])
 @login_required
 @role_required("employee")
 def update_customer_location():
-    """
-    Employee updates GPS coordinates for a customer's delivery location.
-    Body JSON: { "customer_id": "...", "lat": 27.123, "lng": 78.456 }
-    Stores in users_col under delivery_lat / delivery_lng + updated_at + updated_by.
-    """
     data        = request.get_json(silent=True) or {}
     customer_id = data.get("customer_id", "").strip()
     lat         = data.get("lat")
     lng         = data.get("lng")
- 
     if not customer_id:
         return jsonify({"success": False, "message": "customer_id is required."}), 400
     if lat is None or lng is None:
         return jsonify({"success": False, "message": "lat and lng are required."}), 400
- 
     try:
         lat = float(lat)
         lng = float(lng)
     except (TypeError, ValueError):
         return jsonify({"success": False, "message": "lat and lng must be numbers."}), 400
- 
-    # Verify customer belongs to the employee's team
     employee = users_col.find_one({"_id": ObjectId(session["user_id"])})
     customer = users_col.find_one({"_id": ObjectId(customer_id), "role": "customer"})
- 
     if not customer:
         return jsonify({"success": False, "message": "Customer not found."}), 404
- 
     if employee and employee.get("team_id") and str(customer.get("team_id")) != str(employee.get("team_id")):
         return jsonify({"success": False, "message": "Unauthorized: not your team's customer."}), 403
- 
     users_col.update_one(
         {"_id": ObjectId(customer_id)},
         {"$set": {
-            "delivery_lat":        lat,
-            "delivery_lng":        lng,
+            "delivery_lat":         lat,
+            "delivery_lng":         lng,
             "delivery_loc_updated": datetime.now(),
-            "delivery_loc_by":     session.get("name", session["user_id"]),
+            "delivery_loc_by":      session.get("name", session["user_id"]),
         }}
     )
- 
-    # Also log in deliveries_col for today's record if exists
     today_str = datetime.now().strftime("%Y-%m-%d")
     deliveries_col.update_one(
         {"customer_id": ObjectId(customer_id), "date": today_str},
         {"$set": {
-            "delivery_lat": lat,
-            "delivery_lng": lng,
+            "delivery_lat":   lat,
+            "delivery_lng":   lng,
             "loc_updated_at": datetime.now(),
             "loc_updated_by": session.get("name", session["user_id"]),
         }}
     )
- 
     return jsonify({
         "success": True,
         "message": f"Location saved for {customer.get('name', '')}.",
         "lat": lat,
         "lng": lng,
     })
- 
- 
+
+
 @app.route("/api/employee/customer_location/<customer_id>")
 @login_required
 @role_required("employee", "admin", "manager")
 def get_customer_location(customer_id):
-    """Returns stored delivery_lat/lng for a customer if available."""
     customer = users_col.find_one(
         {"_id": ObjectId(customer_id)},
         {"delivery_lat": 1, "delivery_lng": 1, "delivery_loc_updated": 1, "delivery_loc_by": 1, "name": 1}
     )
     if not customer:
         return jsonify({"success": False, "message": "Not found."}), 404
- 
-    lat = customer.get("delivery_lat")
-    lng = customer.get("delivery_lng")
+    lat     = customer.get("delivery_lat")
+    lng     = customer.get("delivery_lng")
     updated = customer.get("delivery_loc_updated")
- 
     return jsonify({
-        "success":     True,
+        "success":      True,
         "has_location": lat is not None and lng is not None,
-        "lat":         lat,
-        "lng":         lng,
-        "updated_at":  updated.isoformat() if isinstance(updated, datetime) else None,
-        "updated_by":  customer.get("delivery_loc_by", ""),
-        "name":        customer.get("name", ""),
+        "lat":          lat,
+        "lng":          lng,
+        "updated_at":   updated.isoformat() if isinstance(updated, datetime) else None,
+        "updated_by":   customer.get("delivery_loc_by", ""),
+        "name":         customer.get("name", ""),
     })
 
 
@@ -2278,15 +2263,9 @@ def get_customer_location(customer_id):
 @login_required
 @role_required("employee")
 def employee_my_boxes():
-    """
-    Returns box counts for the employee's team, plan-wise.
-    After 3 PM → shows next day's boxes.
-    Excludes inactive customers, off-day customers, holiday customers.
-    """
     employee = users_col.find_one({"_id": ObjectId(session["user_id"])})
     if not employee or not employee.get("team_id"):
         return jsonify({"success": False, "message": "Not assigned to a team"}), 400
-
     now = datetime.now()
     if now.hour >= 15:
         target_date = (now + timedelta(days=1)).date()
@@ -2294,39 +2273,26 @@ def employee_my_boxes():
     else:
         target_date = now.date()
         is_next_day = False
-
     target_str = target_date.strftime("%Y-%m-%d")
-    day_name   = target_date.strftime("%A")
-
-    team_id = employee["team_id"]
-    team    = teams_col.find_one({"_id": team_id})
-
-    # Active customers in this team
-    customers = list(users_col.find({
+    team_id    = employee["team_id"]
+    team       = teams_col.find_one({"_id": team_id})
+    customers  = list(users_col.find({
         "role":    "customer",
         "status":  "active",
         "team_id": team_id,
     }))
-
-    plans     = list(plans_col.find())
-    plan_map  = {str(p["_id"]): p for p in plans}
-
-    plan_counts   = {}   # plan_id → {name, count, alt_item, is_alt}
-    sample_counts = {}   # label → count
+    plans    = list(plans_col.find())
+    plan_map = {str(p["_id"]): p for p in plans}
+    plan_counts   = {}
+    sample_counts = {}
     total         = 0
-
     for c in customers:
-        # Skip off-days
-        if day_name in c.get("off_days", []):
-            continue
-        # Skip holidays
-        if target_str in c.get("holidays", []):
-            continue
-
         if c.get("plan_id") and not c.get("sample"):
             pid  = str(c["plan_id"])
             plan = plan_map.get(pid)
             if not plan:
+                continue
+            if not _day_schedulable_for_plan(plan, target_date, c.get("off_days", []), set(c.get("holidays", []))):
                 continue
             alt_items = plan.get("alternate_items", [])
             is_alt    = bool(alt_items and len(alt_items) >= 2)
@@ -2342,12 +2308,15 @@ def employee_my_boxes():
                 }
             plan_counts[pid]["count"] += 1
             total += 1
-
         elif c.get("sample"):
+            day_name = target_date.strftime("%A")
+            if day_name in c.get("off_days", []):
+                continue
+            if target_str in c.get("holidays", []):
+                continue
             label = c.get("sample", "Sample")
             sample_counts[label] = sample_counts.get(label, 0) + 1
             total += 1
-
     return jsonify({
         "success":     True,
         "is_next_day": is_next_day,
@@ -2367,31 +2336,22 @@ def save_proof_photo():
     data        = request.get_json(silent=True) or {}
     delivery_id = data.get("delivery_id", "").strip()
     photo_url   = data.get("photo_url", "").strip()
-
     if not delivery_id or not photo_url:
         return jsonify({"success": False, "message": "delivery_id and photo_url are required."}), 400
-
     if "cloudinary.com" not in photo_url and not photo_url.startswith("https://"):
         return jsonify({"success": False, "message": "Invalid photo URL."}), 400
-
     uploader_name = session.get("name", session["user_id"])
     now           = datetime.now()
-
-    # ── VIRTUAL delivery (not yet created in DB) ─────────────────
     if delivery_id.startswith("virtual_"):
         customer_id_str = delivery_id.replace("virtual_", "")
         today_str       = now.strftime("%Y-%m-%d")
         employee_id     = ObjectId(session["user_id"])
-
         try:
             customer = users_col.find_one({"_id": ObjectId(customer_id_str)})
         except Exception:
             return jsonify({"success": False, "message": "Customer not found."}), 404
-
         if not customer:
             return jsonify({"success": False, "message": "Customer not found."}), 404
-
-        # Upsert the delivery record first so we get a real _id
         existing = deliveries_col.find_one({"customer_id": customer["_id"], "date": today_str})
         if existing:
             real_delivery_id = str(existing["_id"])
@@ -2416,8 +2376,6 @@ def save_proof_photo():
                 "photo_uploaded_by": uploader_name,
             })
             real_delivery_id = str(result.inserted_id)
-
-        # Now write to customer doc with correct real delivery _id in log
         users_col.update_one(
             {"_id": customer["_id"]},
             {
@@ -2437,24 +2395,18 @@ def save_proof_photo():
                 },
             }
         )
-
         return jsonify({"success": True, "message": "Photo saved.", "photo_url": photo_url})
 
-    # ── REAL delivery record ──────────────────────────────────────
     try:
         delivery = deliveries_col.find_one({"_id": ObjectId(delivery_id)})
     except Exception:
         return jsonify({"success": False, "message": "Invalid delivery_id."}), 400
-
     if not delivery:
         return jsonify({"success": False, "message": "Delivery not found."}), 404
-
-    # Verify this delivery belongs to the employee's team
     employee = users_col.find_one({"_id": ObjectId(session["user_id"])})
     if (employee and employee.get("team_id")
             and str(delivery.get("team_id")) != str(employee.get("team_id"))):
         return jsonify({"success": False, "message": "Unauthorized: not your team's delivery."}), 403
-
     deliveries_col.update_one(
         {"_id": ObjectId(delivery_id)},
         {"$set": {
@@ -2463,10 +2415,7 @@ def save_proof_photo():
             "photo_uploaded_by": uploader_name,
         }}
     )
-
     today_str = now.strftime("%Y-%m-%d")
-
-    # Write to customer doc — delivery["customer_id"] is already an ObjectId
     users_col.update_one(
         {"_id": delivery["customer_id"]},
         {
@@ -2486,7 +2435,6 @@ def save_proof_photo():
             },
         }
     )
-
     return jsonify({"success": True, "message": "Photo saved.", "photo_url": photo_url})
 
 

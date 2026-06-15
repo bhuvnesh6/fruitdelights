@@ -2282,31 +2282,27 @@ async function loadCustomerPlanStatus(customerId) {
         </div>
         <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
           <div style="text-align:center;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;">
-            <div style="font-size:20px;font-weight:700;color:var(--text);">${d.total_scheduled}</div>
+            <div style="font-size:20px;font-weight:700;color:var(--text);">${d.duration_days}</div>
             <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-3);margin-top:2px;">Total Days</div>
           </div>
           <div style="text-align:center;background:var(--green-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;">
             <div style="font-size:20px;font-weight:700;color:var(--green);">${d.delivered}</div>
             <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--green);margin-top:2px;">Delivered</div>
           </div>
-          <div style="text-align:center;background:var(--yellow-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;">
-            <div style="font-size:20px;font-weight:700;color:var(--yellow);">${d.pending_past}</div>
-            <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--yellow);margin-top:2px;">Missed</div>
-          </div>
+          
           <div style="text-align:center;background:var(--blue-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;">
             <div style="font-size:20px;font-weight:700;color:var(--blue);">${d.remaining_days}</div>
             <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--blue);margin-top:2px;">Remaining</div>
           </div>
         </div>
         <div style="margin-top:10px;font-size:11px;color:var(--text-3);">
-          Off-days and holidays are excluded. "Missed" = past scheduled days with no delivery recorded.
+          Delivered count from all records in DB • Off-days and holidays excluded from total • Missed = past scheduled days with no delivery
         </div>
       </div>`;
   } catch {
     wrap.innerHTML = `<div style="padding:12px 0;color:var(--red);font-size:13px;">Failed to load plan status.</div>`;
   }
 }
-
 
 /* ===== BOOT ===== */
 window.addEventListener('DOMContentLoaded',()=>{
