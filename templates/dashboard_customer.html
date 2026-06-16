@@ -3,22 +3,16 @@
 
 {% block content %}
 <style>
-    /* Your Theme Variables */
     :root {
-        /* Surfaces */
         --bg:          #f9fafb;
         --bg-2:        #ffffff;
         --bg-3:        #f3f4f6;
         --border:      #e5e7eb;
         --border-s:    #d1d5db;
-
-        /* Accent – Indigo */
         --accent:      #4f46e5;
         --accent-hover:#4338ca;
         --accent-soft: #eef2ff;
         --accent-glow: rgba(79,70,229,0.18);
-
-        /* Semantic */
         --green:       #10b981;
         --green-soft:  #d1fae5;
         --yellow:      #f59e0b;
@@ -27,28 +21,20 @@
         --red-soft:    #fee2e2;
         --blue:        #3b82f6;
         --blue-soft:   #dbeafe;
-
-        /* Text */
         --text:        #111827;
         --text-2:      #6b7280;
         --text-3:      #9ca3af;
-
-        /* Shadows & Dimensions */
         --shadow-sm:   0 1px 2px 0 rgb(0 0 0 / 0.05);
         --shadow-md:   0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
         --shadow-lg:   0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
         --sidebar-w:   256px;
         --radius:      12px;
         --radius-sm:   8px;
-
-        /* Fonts */
         --font-body:   'DM Sans', sans-serif;
         --font-disp:   'Fraunces', serif;
-        
         --transition:  all 0.2s ease-in-out;
     }
 
-    /* Layout Reset for the App Wrapper */
     .saas-app-wrapper {
         display: flex;
         min-height: 80vh;
@@ -61,7 +47,6 @@
         color: var(--text);
     }
 
-    /* Desktop/Tablet Sidebar */
     .saas-sidebar {
         width: var(--sidebar-w);
         background-color: var(--bg-2);
@@ -70,6 +55,7 @@
         display: flex;
         flex-direction: column;
         gap: 0.5rem;
+        flex-shrink: 0;
     }
 
     .brand-title {
@@ -83,9 +69,7 @@
         gap: 0.5rem;
     }
 
-    .brand-title span {
-        color: var(--accent);
-    }
+    .brand-title span { color: var(--accent); }
 
     .nav-item {
         display: flex;
@@ -102,41 +86,27 @@
         text-align: left;
         font-size: 0.95rem;
         font-family: var(--font-body);
+        width: 100%;
     }
+    .nav-item:hover { background-color: var(--bg-3); color: var(--text); }
+    .nav-item.active { background-color: var(--accent-soft); color: var(--accent); font-weight: 600; }
 
-    .nav-item:hover {
-        background-color: var(--bg-3);
-        color: var(--text);
-    }
-
-    .nav-item.active {
-        background-color: var(--accent-soft);
-        color: var(--accent);
-        font-weight: 600;
-    }
-
-    /* Main Content Area */
     .saas-main {
         flex: 1;
         padding: 3rem;
         position: relative;
+        overflow-y: auto;
+        min-width: 0;
     }
 
-    .tab-content {
-        display: none;
-        animation: fadeIn 0.3s ease;
-    }
-
-    .tab-content.active {
-        display: block;
-    }
+    .tab-content { display: none; animation: fadeIn 0.3s ease; }
+    .tab-content.active { display: block; }
 
     @keyframes fadeIn {
         from { opacity: 0; transform: translateY(5px); }
-        to { opacity: 1; transform: translateY(0); }
+        to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* Premium Cards */
     .saas-card {
         background: var(--bg-2);
         border-radius: var(--radius);
@@ -144,7 +114,7 @@
         box-shadow: var(--shadow-md);
         border: 1px solid var(--border);
         margin-bottom: 1.5rem;
-        max-width: 600px;
+        max-width: 680px;
     }
 
     .saas-card h2 {
@@ -165,7 +135,6 @@
         display: block;
     }
 
-    /* Badges */
     .saas-badge {
         display: inline-flex;
         padding: 0.35rem 0.85rem;
@@ -173,10 +142,9 @@
         font-size: 0.85rem;
         font-weight: 600;
     }
-    .badge-done { background-color: var(--green-soft); color: var(--green); }
+    .badge-done    { background-color: var(--green-soft); color: var(--green); }
     .badge-pending { background-color: var(--yellow-soft); color: var(--yellow); }
 
-    /* Inputs & Buttons */
     .saas-input {
         width: 100%;
         padding: 0.75rem 1rem;
@@ -190,7 +158,6 @@
         background-color: var(--bg-2);
         color: var(--text);
     }
-
     .saas-input:focus {
         outline: none;
         border-color: var(--accent);
@@ -210,14 +177,12 @@
         cursor: pointer;
         transition: var(--transition);
     }
-
     .saas-btn:hover {
         background-color: var(--accent-hover);
         transform: translateY(-1px);
         box-shadow: var(--shadow-sm);
     }
 
-    /* Partner Box */
     .partner-box {
         background: var(--bg);
         padding: 1.25rem;
@@ -226,26 +191,194 @@
         border: 1px solid var(--border);
     }
 
+    /* ── Plan Progress ── */
+    .plan-progress-card {
+        background: var(--bg-2);
+        border-radius: var(--radius);
+        padding: 2rem;
+        box-shadow: var(--shadow-md);
+        border: 1px solid var(--border);
+        margin-bottom: 1.5rem;
+        max-width: 680px;
+    }
+
+    .plan-progress-header {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .plan-progress-title {
+        font-family: var(--font-disp);
+        font-size: 1.35rem;
+        font-weight: 600;
+        color: var(--text);
+        margin: 0 0 0.25rem 0;
+    }
+
+    .plan-meta-row {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1.25rem;
+    }
+
+    .plan-meta-chip {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        background: var(--bg-3);
+        border: 1px solid var(--border);
+        border-radius: 9999px;
+        padding: 0.3rem 0.9rem;
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: var(--text-2);
+    }
+
+    .plan-meta-chip .chip-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    .chip-dot-green  { background: var(--green); }
+    .chip-dot-gray   { background: var(--border-s); }
+    .chip-dot-red    { background: var(--red); }
+    .chip-dot-accent { background: var(--accent); }
+
+    /* Progress bar */
+    .progress-bar-wrap {
+        background: var(--bg-3);
+        border-radius: 9999px;
+        height: 8px;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+    }
+    .progress-bar-fill {
+        height: 100%;
+        border-radius: 9999px;
+        background: linear-gradient(90deg, var(--green) 0%, #34d399 100%);
+        transition: width 0.6s ease;
+    }
+    .progress-bar-label {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.82rem;
+        color: var(--text-3);
+        margin-bottom: 1.5rem;
+    }
+
+    /* Box grid */
+    .box-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+
+    .day-box {
+        width: 28px;
+        height: 28px;
+        border-radius: 5px;
+        position: relative;
+        cursor: default;
+        flex-shrink: 0;
+        transition: transform 0.15s ease;
+    }
+    .day-box:hover { transform: scale(1.25); z-index: 10; }
+
+    .day-box.status-delivered { background: var(--green); }
+    .day-box.status-holiday   { background: var(--red-soft); border: 1.5px solid #fca5a5; }
+    .day-box.status-missed    { background: var(--red); }
+    .day-box.status-today     {
+        background: var(--accent-soft);
+        border: 2px solid var(--accent);
+        box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    .day-box.status-upcoming  { background: var(--bg-3); border: 1.5px solid var(--border); }
+
+    /* Tooltip */
+    .day-box::after {
+        content: attr(data-tip);
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: #1f2937;
+        color: #fff;
+        font-size: 0.72rem;
+        font-family: var(--font-body);
+        white-space: nowrap;
+        padding: 4px 8px;
+        border-radius: 6px;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.15s;
+        z-index: 100;
+    }
+    .day-box:hover::after { opacity: 1; }
+
+    /* Legend */
+    .box-legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 1.25rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+    }
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        font-size: 0.8rem;
+        color: var(--text-2);
+    }
+    .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 3px;
+        flex-shrink: 0;
+    }
+
+    /* Loading skeleton */
+    .plan-skeleton {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+    }
+    .skel-box {
+        width: 28px;
+        height: 28px;
+        border-radius: 5px;
+        background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.2s infinite;
+    }
+    @keyframes shimmer {
+        0%   { background-position: -200% 0; }
+        100% { background-position:  200% 0; }
+    }
+
     /* Mobile Bottom Nav */
     .saas-bottom-nav {
         display: none;
         position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        bottom: 0; left: 0; right: 0;
         background: var(--bg-2);
         border-top: 1px solid var(--border);
         box-shadow: 0 -4px 6px -1px rgb(0 0 0 / 0.05);
         z-index: 50;
         padding-bottom: env(safe-area-inset-bottom);
     }
-
     .bottom-nav-inner {
         display: flex;
         justify-content: space-around;
         padding: 0.5rem 0;
     }
-
     .bottom-nav-item {
         display: flex;
         flex-direction: column;
@@ -260,12 +393,8 @@
         cursor: pointer;
         font-family: var(--font-body);
     }
+    .bottom-nav-item.active { color: var(--accent); }
 
-    .bottom-nav-item.active {
-        color: var(--accent);
-    }
-
-    /* Media Queries for Mobile */
     @media (max-width: 768px) {
         .saas-app-wrapper {
             border: none;
@@ -273,49 +402,45 @@
             border-radius: 0;
             background: transparent;
         }
-        .saas-sidebar {
-            display: none;
-        }
-        .saas-bottom-nav {
-            display: block;
-        }
-        .saas-main {
-            padding: 1.5rem 1rem 6rem 1rem; /* Extra padding at bottom for nav */
-        }
-        .saas-card {
-            padding: 1.5rem;
-        }
+        .saas-sidebar { display: none; }
+        .saas-bottom-nav { display: block; }
+        .saas-main { padding: 1.5rem 1rem 6rem 1rem; }
+        .saas-card, .plan-progress-card { padding: 1.25rem; }
+        .day-box { width: 24px; height: 24px; border-radius: 4px; }
+        .skel-box { width: 24px; height: 24px; }
+        .plan-progress-header { flex-direction: column; }
     }
 </style>
 
 <div class="saas-app-wrapper">
-    <!-- Desktop/Tablet Sidebar -->
+    <!-- Desktop Sidebar -->
     <aside class="saas-sidebar">
         <div class="brand-title">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             Fruit <span>Delights</span>
         </div>
-        
         <button class="nav-item active" onclick="switchTab('delivery')" id="nav-desktop-delivery">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
             Delivery
         </button>
-        
+        <button class="nav-item" onclick="switchTab('plan')" id="nav-desktop-plan">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+            My Plan
+        </button>
         <button class="nav-item" onclick="switchTab('pause')" id="nav-desktop-pause">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="10" y1="15" x2="10" y2="9"></line><line x1="14" y1="15" x2="14" y2="9"></line></svg>
             Pause Delivery
         </button>
-        
         <button class="nav-item" onclick="switchTab('billing')" id="nav-desktop-billing">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
             Billing
         </button>
     </aside>
 
-    <!-- Main Content Area -->
+    <!-- Main Content -->
     <main class="saas-main">
-        
-        <!-- View 1: Today's Delivery -->
+
+        <!-- Tab: Delivery -->
         <div id="tab-delivery" class="tab-content active">
             <div class="saas-card">
                 <h2>Today's Delivery</h2>
@@ -326,12 +451,10 @@
                             {{ delivery.status | title }}
                         </span>
                     </div>
-                    
                     <span class="form-label">Preferred Time</span>
                     <div style="color: var(--text); font-size: 1.1rem; margin-bottom: 1rem;">
                         {{ delivery.preferred_time }}
                     </div>
-
                     {% if partner %}
                     <div class="partner-box">
                         <span class="form-label">Your Delivery Partner</span>
@@ -349,7 +472,17 @@
             </div>
         </div>
 
-        <!-- View 2: Pause Delivery -->
+        <!-- Tab: My Plan Progress -->
+        <div id="tab-plan" class="tab-content">
+            <div class="plan-progress-card" id="plan-progress-card">
+                <!-- JS renders this -->
+                <div class="plan-skeleton">
+                    {% for i in range(26) %}<div class="skel-box"></div>{% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Tab: Pause Delivery -->
         <div id="tab-pause" class="tab-content">
             <div class="saas-card">
                 <h2>Manage Schedule</h2>
@@ -362,38 +495,57 @@
             </div>
         </div>
 
-        <!-- View 3: Billing -->
+        <!-- Tab: Billing -->
         <div id="tab-billing" class="tab-content">
             <div class="saas-card">
                 <h2>Current Billing</h2>
-                <span class="form-label">Estimated Bill (Month-to-Date)</span>
-               
-                <div style="background: var(--bg); padding: 1rem; border-radius: var(--radius-sm); border-left: 4px solid var(--accent);">
-                    <p style="font-size: 0.9rem; color: var(--text-2); margin: 0;">
-                        <p>Billable Days: {{ estimated_bill.days }}</p>
-<p>Subtotal: ₹{{ estimated_bill.subtotal }}</p>
-<p>Tax: ₹{{ estimated_bill.tax }}</p>
-<p>Total: ₹{{ estimated_bill.total }}</p>
-                    </p>
+                <span class="form-label">Estimated Bill</span>
+                <div style="background: var(--bg); padding: 1rem 1.25rem; border-radius: var(--radius-sm); border-left: 4px solid var(--accent); margin-bottom: 1rem;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                        <span style="color:var(--text-2);font-size:0.9rem;">Billable Days</span>
+                        <span style="font-weight:600;color:var(--text);">{{ estimated_bill.days }}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                        <span style="color:var(--text-2);font-size:0.9rem;">Subtotal</span>
+                        <span style="font-weight:600;color:var(--text);">₹{{ estimated_bill.subtotal }}</span>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                        <span style="color:var(--text-2);font-size:0.9rem;">Tax</span>
+                        <span style="font-weight:600;color:var(--text);">₹{{ estimated_bill.tax }}</span>
+                    </div>
+                    {% if estimated_bill.discount and estimated_bill.discount > 0 %}
+                    <div style="display:flex;justify-content:space-between;margin-bottom:0.5rem;">
+                        <span style="color:var(--text-2);font-size:0.9rem;">Discount</span>
+                        <span style="font-weight:600;color:var(--green);">-₹{{ estimated_bill.discount }}</span>
+                    </div>
+                    {% endif %}
+                    <div style="display:flex;justify-content:space-between;padding-top:0.5rem;border-top:1px solid var(--border);">
+                        <span style="color:var(--text);font-size:1rem;font-weight:600;">Total Due</span>
+                        <span style="font-weight:700;color:var(--accent);font-size:1.1rem;">₹{{ estimated_bill.total }}</span>
+                    </div>
                 </div>
             </div>
         </div>
 
     </main>
 
-    <!-- Mobile Bottom Navigation -->
+    <!-- Mobile Bottom Nav -->
     <nav class="saas-bottom-nav">
         <div class="bottom-nav-inner">
             <button class="bottom-nav-item active" onclick="switchTab('delivery')" id="nav-mobile-delivery">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13"></rect><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"></polygon><circle cx="5.5" cy="18.5" r="2.5"></circle><circle cx="18.5" cy="18.5" r="2.5"></circle></svg>
                 Delivery
             </button>
+            <button class="bottom-nav-item" onclick="switchTab('plan')" id="nav-mobile-plan">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                My Plan
+            </button>
             <button class="bottom-nav-item" onclick="switchTab('pause')" id="nav-mobile-pause">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="10" y1="15" x2="10" y2="9"></line><line x1="14" y1="15" x2="14" y2="9"></line></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="10" y1="15" x2="10" y2="9"></line><line x1="14" y1="15" x2="14" y2="9"></line></svg>
                 Pause
             </button>
             <button class="bottom-nav-item" onclick="switchTab('billing')" id="nav-mobile-billing">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                 Billing
             </button>
         </div>
@@ -401,14 +553,128 @@
 </div>
 
 <script>
-    function switchTab(tabName) {
-        document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-        document.querySelectorAll('.bottom-nav-item').forEach(el => el.classList.remove('active'));
+    const ALL_TABS = ['delivery', 'plan', 'pause', 'billing'];
+    let planLoaded = false;
 
+    function switchTab(tabName) {
+        ALL_TABS.forEach(t => {
+            document.getElementById('tab-' + t).classList.remove('active');
+            const dm = document.getElementById('nav-desktop-' + t);
+            const mm = document.getElementById('nav-mobile-' + t);
+            if (dm) dm.classList.remove('active');
+            if (mm) mm.classList.remove('active');
+        });
         document.getElementById('tab-' + tabName).classList.add('active');
-        document.getElementById('nav-desktop-' + tabName).classList.add('active');
-        document.getElementById('nav-mobile-' + tabName).classList.add('active');
+        const dm = document.getElementById('nav-desktop-' + tabName);
+        const mm = document.getElementById('nav-mobile-' + tabName);
+        if (dm) dm.classList.add('active');
+        if (mm) mm.classList.add('active');
+
+        if (tabName === 'plan' && !planLoaded) {
+            loadPlanProgress();
+        }
+    }
+
+    async function loadPlanProgress() {
+        const card = document.getElementById('plan-progress-card');
+        try {
+            const res  = await fetch('/api/customer/my_plan_status');
+            const data = await res.json();
+
+            if (!data.success || !data.has_plan) {
+                card.innerHTML = `
+                  <h2 style="font-family:var(--font-disp);font-size:1.35rem;font-weight:600;color:var(--text);margin-bottom:1rem;">My Plan</h2>
+                  <div style="text-align:center;padding:2rem 0;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--border-s)" stroke-width="2" style="margin-bottom:1rem;"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                    <p style="color:var(--text-2);font-size:1rem;margin:0;">No active plan found.</p>
+                  </div>`;
+                planLoaded = true;
+                return;
+            }
+
+            const { plan_name, duration_days, delivered, remaining_days,
+                    completion_pct, period_start, period_end,
+                    boxes, is_alternate_plan, today_item } = data;
+
+            // Stats chips
+            const altBadge = is_alternate_plan && today_item
+                ? `<div class="plan-meta-chip"><span class="chip-dot chip-dot-accent"></span>Today: <strong style="color:var(--text)">${today_item}</strong></div>`
+                : '';
+
+            // Progress bar
+            const barHtml = `
+              <div class="progress-bar-wrap">
+                <div class="progress-bar-fill" style="width:${completion_pct}%"></div>
+              </div>
+              <div class="progress-bar-label">
+                <span>${delivered} of ${duration_days} days delivered</span>
+                <span>${completion_pct}% complete</span>
+              </div>`;
+
+            // Box grid
+            const statusLabel = {
+                delivered: 'Delivered',
+                holiday:   'Holiday / Off',
+                missed:    'Missed',
+                today:     'Today',
+                upcoming:  'Upcoming',
+            };
+
+            const boxesHtml = boxes.map(b => {
+                const tip = `${b.date} (${b.day}) — ${statusLabel[b.status] || b.status}`;
+                return `<div class="day-box status-${b.status}" data-tip="${tip}" title="${tip}"></div>`;
+            }).join('');
+
+            // Legend
+            const legend = `
+              <div class="box-legend">
+                <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div> Delivered</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--bg-3);border:1.5px solid var(--border-s)"></div> Upcoming</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--red-soft);border:1.5px solid #fca5a5"></div> Holiday</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--red)"></div> Missed</div>
+                <div class="legend-item"><div class="legend-dot" style="background:var(--accent-soft);border:2px solid var(--accent)"></div> Today</div>
+              </div>`;
+
+            const periodFmt = d => {
+                const dt = new Date(d + 'T00:00:00');
+                return dt.toLocaleDateString('en-IN', { day:'numeric', month:'short', year:'numeric' });
+            };
+
+            card.innerHTML = `
+              <div class="plan-progress-header">
+                <div>
+                  <p class="plan-progress-title">${plan_name}</p>
+                  <p style="color:var(--text-3);font-size:0.85rem;margin:0;">
+                    ${periodFmt(period_start)} – ${periodFmt(period_end)}
+                  </p>
+                </div>
+                <span class="saas-badge" style="background:var(--accent-soft);color:var(--accent);">
+                  ${duration_days}-day plan
+                </span>
+              </div>
+
+              <div class="plan-meta-row">
+                <div class="plan-meta-chip">
+                  <span class="chip-dot chip-dot-green"></span>
+                  ${delivered} delivered
+                </div>
+                <div class="plan-meta-chip">
+                  <span class="chip-dot chip-dot-gray"></span>
+                  ${remaining_days} remaining
+                </div>
+                ${altBadge}
+              </div>
+
+              ${barHtml}
+
+              <span class="form-label" style="margin-bottom:0.75rem;">Day-by-day breakdown</span>
+              <div class="box-grid">${boxesHtml}</div>
+              ${legend}`;
+
+            planLoaded = true;
+        } catch(e) {
+            card.innerHTML = `<p style="color:var(--red);padding:1rem 0;">Failed to load plan data. Please refresh.</p>`;
+        }
     }
 </script>
 {% endblock %}

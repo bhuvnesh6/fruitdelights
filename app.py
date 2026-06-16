@@ -1589,6 +1589,123 @@ def complete_delivery(delivery_id):
         )
     return redirect(url_for("dashboard_employee"))
 
+@app.route("/api/employee/accept_delivery/<delivery_id>", methods=["POST"])
+@login_required
+@role_required("employee")
+def api_accept_delivery(delivery_id):
+    """AJAX accept — no page redirect, returns JSON."""
+    employee_id = ObjectId(session["user_id"])
+    today_str   = datetime.now().strftime("%Y-%m-%d")
+ 
+    if delivery_id.startswith("virtual_"):
+        customer_id_str = delivery_id.replace("virtual_", "")
+        try:
+            customer = users_col.find_one({"_id": ObjectId(customer_id_str)})
+        except Exception:
+            return jsonify({"success": False, "message": "Invalid customer ID"}), 400
+        if not customer:
+            return jsonify({"success": False, "message": "Customer not found"}), 404
+ 
+        existing = deliveries_col.find_one({"customer_id": customer["_id"], "date": today_str})
+        if existing:
+            if existing.get("status") == "accepted" and str(existing.get("assigned_to")) == str(employee_id):
+                return jsonify({"success": True, "message": "Already accepted by you"})
+            if existing.get("status") == "accepted":
+                return jsonify({"success": False, "message": "Already accepted by someone else"}), 409
+            deliveries_col.update_one(
+                {"_id": existing["_id"]},
+                {"$set": {"status": "accepted", "assigned_to": employee_id}}
+            )
+        else:
+            deliveries_col.insert_one({
+                "customer_id":    customer["_id"],
+                "team_id":        customer.get("team_id"),
+                "date":           today_str,
+                "status":         "accepted",
+                "assigned_to":    employee_id,
+                "preferred_time": customer.get("preferred_time"),
+            })
+        return jsonify({"success": True, "message": f"Accepted delivery for {customer.get('name', '')}"})
+ 
+    # Real delivery ID
+    try:
+        delivery = deliveries_col.find_one({"_id": ObjectId(delivery_id)})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid delivery ID"}), 400
+    if not delivery:
+        return jsonify({"success": False, "message": "Delivery not found"}), 404
+    if delivery.get("status") == "accepted" and str(delivery.get("assigned_to")) == str(employee_id):
+        return jsonify({"success": True, "message": "Already accepted by you"})
+    if delivery.get("status") == "accepted":
+        return jsonify({"success": False, "message": "Already accepted by someone else"}), 409
+ 
+    result = deliveries_col.update_one(
+        {"_id": ObjectId(delivery_id), "status": "pending"},
+        {"$set": {"status": "accepted", "assigned_to": employee_id}}
+    )
+    if result.matched_count == 0:
+        return jsonify({"success": False, "message": "Could not accept — status may have changed"}), 409
+ 
+    return jsonify({"success": True, "message": "Delivery accepted"})
+ 
+ 
+@app.route("/api/employee/complete_delivery/<delivery_id>", methods=["POST"])
+@login_required
+@role_required("employee")
+def api_complete_delivery(delivery_id):
+    """AJAX complete — no page redirect, returns JSON."""
+    employee_id = ObjectId(session["user_id"])
+    today_str   = datetime.now().strftime("%Y-%m-%d")
+    now         = datetime.now()
+ 
+    if delivery_id.startswith("virtual_"):
+        customer_id_str = delivery_id.replace("virtual_", "")
+        try:
+            customer = users_col.find_one({"_id": ObjectId(customer_id_str)})
+        except Exception:
+            return jsonify({"success": False, "message": "Invalid customer ID"}), 400
+        if not customer:
+            return jsonify({"success": False, "message": "Customer not found"}), 404
+ 
+        existing = deliveries_col.find_one({"customer_id": customer["_id"], "date": today_str})
+        if existing:
+            deliveries_col.update_one(
+                {"_id": existing["_id"]},
+                {"$set": {"status": "delivered", "assigned_to": employee_id, "delivered_at": now}}
+            )
+        else:
+            deliveries_col.insert_one({
+                "customer_id":    customer["_id"],
+                "team_id":        customer.get("team_id"),
+                "date":           today_str,
+                "status":         "delivered",
+                "assigned_to":    employee_id,
+                "preferred_time": customer.get("preferred_time"),
+                "delivered_at":   now,
+            })
+        return jsonify({"success": True, "message": f"Delivered to {customer.get('name', '')}"})
+ 
+    # Real delivery ID
+    try:
+        delivery = deliveries_col.find_one({"_id": ObjectId(delivery_id)})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid delivery ID"}), 400
+    if not delivery:
+        return jsonify({"success": False, "message": "Delivery not found"}), 404
+    if delivery.get("status") == "delivered":
+        return jsonify({"success": True, "message": "Already marked delivered"})
+ 
+    # Allow completing even if not assigned to this employee
+    # (covers edge case of virtual→real transition)
+    result = deliveries_col.update_one(
+        {"_id": ObjectId(delivery_id)},
+        {"$set": {"status": "delivered", "assigned_to": employee_id, "delivered_at": now}}
+    )
+    if result.matched_count == 0:
+        return jsonify({"success": False, "message": "Delivery not found"}), 404
+ 
+    return jsonify({"success": True, "message": "Delivery completed"})
+ 
 
 # ---------------------------------------------------------------------------
 # CUSTOMER ROUTES
@@ -2436,6 +2553,85 @@ def save_proof_photo():
         }
     )
     return jsonify({"success": True, "message": "Photo saved.", "photo_url": photo_url})
+
+#my plan status
+
+@app.route("/api/customer/my_plan_status")
+@login_required
+@role_required("customer")
+def customer_my_plan_status():
+    customer = users_col.find_one({"_id": ObjectId(session["user_id"])})
+    if not customer:
+        return jsonify({"success": False, "message": "Customer not found"}), 404
+
+    plan = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
+    if not plan:
+        return jsonify({"success": False, "has_plan": False})
+
+    duration_days = int(plan.get("duration_days", 0))
+    start_date = _parse_start_date(customer)
+    if not start_date or duration_days <= 0:
+        return jsonify({"success": False, "has_plan": False, "message": "No valid start date or duration"})
+
+    period_start = start_date
+    period_end = start_date + timedelta(days=duration_days - 1)
+    today = date.today()
+
+    # Get all deliveries in period with their statuses
+    deliveries_in_period = list(deliveries_col.find({
+        "customer_id": customer["_id"],
+        "date": {
+            "$gte": period_start.strftime("%Y-%m-%d"),
+            "$lte": period_end.strftime("%Y-%m-%d")
+        }
+    }))
+    delivery_status_map = {d["date"]: d["status"] for d in deliveries_in_period}
+
+    off_days = customer.get("off_days", [])
+    holidays = set(customer.get("holidays", []))
+
+    boxes = []
+    current = period_start
+    while current <= period_end:
+        date_str = current.strftime("%Y-%m-%d")
+        day_name = current.strftime("%A")
+        d_status = delivery_status_map.get(date_str)
+
+        if d_status == "delivered":
+            box_status = "delivered"
+        elif d_status == "cancelled_holiday" or date_str in holidays or day_name in off_days:
+            box_status = "holiday"
+        elif current < today:
+            box_status = "missed"
+        elif current == today:
+            box_status = "today"
+        else:
+            box_status = "upcoming"
+
+        boxes.append({"date": date_str, "day": day_name[:3], "status": box_status})
+        current += timedelta(days=1)
+
+    delivered_count = sum(1 for b in boxes if b["status"] == "delivered")
+    remaining_days = max(0, duration_days - delivered_count)
+    completion_pct = round((delivered_count / duration_days) * 100) if duration_days else 0
+
+    return jsonify({
+        "success": True,
+        "has_plan": True,
+        "plan_name": plan.get("name", ""),
+        "period_start": period_start.strftime("%Y-%m-%d"),
+        "period_end": period_end.strftime("%Y-%m-%d"),
+        "duration_days": duration_days,
+        "delivered": delivered_count,
+        "remaining_days": remaining_days,
+        "completion_pct": completion_pct,
+        "today": today.strftime("%Y-%m-%d"),
+        "plan_price": float(plan.get("price_per_month") or plan.get("price_per_day") or 0),
+        "is_alternate_plan": bool(plan.get("alternate_items") and len(plan.get("alternate_items", [])) >= 2),
+        "alternate_items": plan.get("alternate_items", []),
+        "today_item": _get_alternate_item_for_date(plan, today),
+        "boxes": boxes,
+    })
 
 
 if __name__ == "__main__":
