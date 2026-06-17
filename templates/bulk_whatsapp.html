@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Bulk WhatsApp – FruiteDelight</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f9fafb;--bg-2:#fff;--bg-3:#f3f4f6;--border:#e5e7eb;--accent:#4f46e5;--accent-soft:#eef2ff;--green:#10b981;--green-soft:#d1fae5;--wa:#25d366;--wa-soft:#dcfce7;--text:#111827;--text-2:#6b7280;--text-3:#9ca3af;--radius:12px;--radius-sm:8px;--shadow-sm:0 1px 2px rgba(0,0,0,.05);--shadow-md:0 4px 6px -1px rgba(0,0,0,.1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.6;padding:0}
+.topbar{background:var(--bg-2);border-bottom:1px solid var(--border);padding:0 28px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.topbar-title{font-size:18px;font-weight:700}
+.content{max-width:1100px;margin:0 auto;padding:28px 20px}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);font-weight:600;font-size:13px;cursor:pointer;border:none;transition:opacity .15s}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-ghost{background:var(--bg-3);color:var(--text);border:1px solid var(--border)}
+.btn-wa{background:var(--wa);color:#fff}
+.btn-sm{padding:5px 10px;font-size:12px}
+.btn-danger{background:#fee2e2;color:#ef4444}
+.card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm)}
+.card-title{font-size:15px;font-weight:600;margin-bottom:16px}
+.form-label{display:block;font-size:12px;font-weight:600;color:var(--text-2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.3px}
+.form-control{width:100%;background:var(--bg-3);border:1.5px solid var(--border);border-radius:var(--radius-sm);padding:9px 12px;color:var(--text);outline:none}
+.form-control:focus{border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-blue{background:#dbeafe;color:#1d4ed8}
+.badge-green{background:var(--green-soft);color:var(--green)}
+.table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-sm)}
+table{width:100%;border-collapse:collapse}
+thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-2);background:var(--bg-3);border-bottom:1px solid var(--border)}
+tbody td{padding:10px 14px;border-bottom:1px solid var(--border)}
+tbody tr:last-child td{border-bottom:none}
+tbody tr:hover td{background:var(--bg-3)}
+.checkbox-col{width:36px;text-align:center}
+.selected-bar{background:var(--accent-soft);border:1.5px solid #c7d2fe;border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.progress-log{background:#1e1e1e;color:#a6e22e;border-radius:var(--radius-sm);padding:16px;font-family:monospace;font-size:12px;min-height:80px;max-height:200px;overflow-y:auto;white-space:pre-wrap;margin-top:16px}
+.tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;width:fit-content;margin-bottom:20px}
+.tab-btn{padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:var(--bg-3);color:var(--text-2)}
+.tab-btn.active{background:var(--accent);color:#fff}
+.tab-btn:not(:last-child){border-right:1px solid var(--border)}
+.search-wrap{position:relative;max-width:260px}
+.search-wrap input{padding-left:34px}
+.search-wrap::before{content:'🔍';position:absolute;left:10px;top:50%;transform:translateY(-50%);font-size:12px}
+.toast-bar{position:fixed;bottom:24px;right:24px;z-index:9999;display:flex;flex-direction:column;gap:8px}
+.toast{padding:12px 18px;border-radius:12px;font-weight:600;font-size:13px;color:#fff;animation:slideIn .3s;box-shadow:var(--shadow-md)}
+.toast-success{background:linear-gradient(135deg,#10b981,#059669)}
+.toast-danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
+@keyframes slideIn{from{opacity:0;transform:translateX(40px)}}
+@media(max-width:768px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:14px;">
+    <a href="/admin" class="btn btn-ghost btn-sm">← Back</a>
+    <div class="topbar-title">📣 Bulk WhatsApp</div>
+  </div>
+  <div style="font-size:12px;color:var(--text-2);">Messages sent in batches with random gaps to avoid blocking</div>
+</div>
+
+<div class="content">
+  <div class="grid">
+
+    <!-- LEFT: Recipient Picker -->
+    <div>
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">1. Choose Recipients</div>
+        <div class="tabs">
+          <button class="tab-btn active" id="tab-cust" onclick="switchTab('customers')">👥 Customers</button>
+          <button class="tab-btn" id="tab-emp" onclick="switchTab('employees')">🚴 Employees</button>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+          <div class="search-wrap">
+            <input class="form-control" id="recipient-search" placeholder="Search…" oninput="filterRecipients()" style="max-width:220px;">
+          </div>
+          <select class="form-control" id="team-filter" onchange="filterRecipients()" style="max-width:180px;">
+            <option value="">All Teams</option>
+            {% for team in teams %}
+            <option value="{{ team._id }}">{{ team.name }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-ghost btn-sm" onclick="selectAllVisible()">☑ Select Visible</button>
+          <button class="btn btn-ghost btn-sm" onclick="clearSelection()">✕ Clear</button>
+        </div>
+
+        <!-- Send to whole team button -->
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;background:var(--wa-soft);border-radius:var(--radius-sm);border:1px solid #bbf7d0;">
+          <span style="font-size:13px;font-weight:600;color:#15803d;">📣 Send to entire team:</span>
+          <select id="bulk-team-select" class="form-control" style="max-width:200px;">
+            <option value="">— Select team —</option>
+            {% for team in teams %}
+            <option value="{{ team._id }}">{{ team.name }}</option>
+            {% endfor %}
+          </select>
+          <button class="btn btn-wa btn-sm" onclick="sendToWholeTeam()">Send All</button>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th class="checkbox-col"><input type="checkbox" id="select-all-cb" onchange="toggleSelectAll()"></th>
+                <th>Name</th><th>Phone</th><th>Team</th>
+              </tr>
+            </thead>
+            <tbody id="recipients-tbody"></tbody>
+          </table>
+        </div>
+
+        <div id="selection-bar" class="selected-bar" style="display:none;margin-top:14px;">
+          <span style="font-weight:700;color:var(--accent);" id="selection-count">0 selected</span>
+          <button class="btn btn-danger btn-sm" onclick="clearSelection()">✕ Clear</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT: Message Composer -->
+    <div>
+      <div class="card">
+        <div class="card-title">2. Compose Message</div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label class="form-label">Message <span style="color:var(--text-3);text-transform:none;font-weight:400;">(use {name} for personalisation)</span></label>
+          <textarea class="form-control" id="wa-message" rows="8"
+            placeholder="Hello {name},&#10;&#10;Your delivery is scheduled for today. 🍓&#10;&#10;Thank you,&#10;Fruit Delights"></textarea>
+          <div style="font-size:11px;color:var(--text-3);margin-top:4px;"><strong>{name}</strong> will be replaced with each recipient's name.</div>
+        </div>
+
+        <div style="display:flex;gap:14px;margin-bottom:16px;">
+          <div style="flex:1;">
+            <label class="form-label">Batch Size</label>
+            <select class="form-control" id="batch-size">
+              <option value="5">5 per batch</option>
+              <option value="10" selected>10 per batch</option>
+              <option value="15">15 per batch</option>
+              <option value="20">20 per batch</option>
+            </select>
+          </div>
+          <div style="flex:1;background:var(--bg-3);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:var(--text-2);">
+            <strong>Gap between batches:</strong><br>
+            Random 2–7 min gaps<br>
+            (avoids WA blocking 🛡️)
+          </div>
+        </div>
+
+        <button class="btn btn-wa" style="width:100%;justify-content:center;font-size:15px;padding:13px;" onclick="sendBulkMessages()">
+          💬 Send WhatsApp Messages
+        </button>
+
+        <div id="send-log" class="progress-log" style="display:none;"></div>
+      </div>
+
+      <!-- Quick Templates -->
+      <div class="card" style="margin-top:16px;">
+        <div class="card-title">Quick Templates</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;" onclick="setTemplate('delivery')">
+            📦 Delivery Today Reminder
+          </button>
+          <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;" onclick="setTemplate('invoice')">
+            🧾 Invoice Due
+          </button>
+          <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;" onclick="setTemplate('holiday')">
+            🏖️ Holiday Notice
+          </button>
+          <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;" onclick="setTemplate('welcome')">
+            🎉 Welcome Message
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-bar" id="toast-bar"></div>
+
+<script>
+const CUSTOMERS = {{ customers | tojson }};
+const EMPLOYEES = {{ employees | tojson }};
+let _activeTab = 'customers';
+let _selected  = new Set();
+
+function showToast(msg, type) {
+  const c  = document.getElementById('toast-bar');
+  const el = document.createElement('div');
+  el.className   = `toast toast-${type || 'success'}`;
+  el.textContent = msg;
+  c.appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transition='.4s'; setTimeout(()=>el.remove(),400); }, 4000);
+}
+
+function getCurrentList() {
+  return _activeTab === 'customers' ? CUSTOMERS : EMPLOYEES;
+}
+
+function switchTab(tab) {
+  _activeTab = tab;
+  _selected.clear();
+  document.getElementById('tab-cust').classList.toggle('active', tab==='customers');
+  document.getElementById('tab-emp').classList.toggle('active',  tab==='employees');
+  renderRecipients();
+}
+
+function renderRecipients() {
+  const q      = (document.getElementById('recipient-search').value || '').toLowerCase();
+  const teamId = document.getElementById('team-filter').value;
+  const list   = getCurrentList().filter(r =>
+    (!q || (r.name||'').toLowerCase().includes(q) || (r.phone||'').includes(q)) &&
+    (!teamId || r.team_id === teamId)
+  );
+  const tbody = document.getElementById('recipients-tbody');
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-3);">No recipients found.</td></tr>`;
+    return;
+  }
+  tbody.innerHTML = list.map(r => `
+    <tr data-id="${r._id}" data-name="${(r.name||'').toLowerCase()}" data-team="${r.team_id||''}">
+      <td class="checkbox-col">
+        <input type="checkbox" class="row-cb" value="${r._id}"
+          ${_selected.has(r._id)?'checked':''}
+          onchange="toggleRow('${r._id}',this.checked)">
+      </td>
+      <td><strong>${escHtml(r.name||'—')}</strong></td>
+      <td style="color:var(--text-2);">${escHtml(r.phone||'—')}</td>
+      <td><span class="badge badge-blue" style="font-size:10px;">${escHtml(r.team_id||'—')}</span></td>
+    </tr>`).join('');
+  updateSelectionBar();
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+
+function toggleRow(id, checked) {
+  if (checked) _selected.add(id); else _selected.delete(id);
+  updateSelectionBar();
+}
+
+function toggleSelectAll() {
+  const checked = document.getElementById('select-all-cb').checked;
+  document.querySelectorAll('.row-cb').forEach(cb => {
+    cb.checked = checked;
+    if (checked) _selected.add(cb.value); else _selected.delete(cb.value);
+  });
+  updateSelectionBar();
+}
+
+function selectAllVisible() {
+  document.querySelectorAll('.row-cb').forEach(cb => {
+    cb.checked = true; _selected.add(cb.value);
+  });
+  updateSelectionBar();
+}
+
+function clearSelection() {
+  _selected.clear();
+  document.querySelectorAll('.row-cb').forEach(cb => cb.checked = false);
+  document.getElementById('select-all-cb').checked = false;
+  updateSelectionBar();
+}
+
+function updateSelectionBar() {
+  const bar = document.getElementById('selection-bar');
+  const cnt = document.getElementById('selection-count');
+  bar.style.display = _selected.size > 0 ? 'flex' : 'none';
+  cnt.textContent   = `${_selected.size} selected`;
+}
+
+function filterRecipients() { renderRecipients(); }
+
+async function sendToWholeTeam() {
+  const teamId  = document.getElementById('bulk-team-select').value;
+  const message = (document.getElementById('wa-message').value || '').trim();
+  const batchSz = parseInt(document.getElementById('batch-size').value, 10);
+  if (!teamId)   { showToast('Please select a team.', 'danger');  return; }
+  if (!message)  { showToast('Please write a message.', 'danger'); return; }
+  if (!confirm(`Send to ALL ${_activeTab} in this team?`)) return;
+  await doSend({ send_all_team: true, team_id: teamId, message, batch_size: batchSz });
+}
+
+async function sendBulkMessages() {
+  const message = (document.getElementById('wa-message').value || '').trim();
+  const batchSz = parseInt(document.getElementById('batch-size').value, 10);
+  if (!message)       { showToast('Please write a message.', 'danger'); return; }
+  if (!_selected.size){ showToast('Please select at least one recipient.', 'danger'); return; }
+  await doSend({ ids: [..._selected], message, batch_size: batchSz });
+}
+
+async function doSend(payload) {
+  const logEl = document.getElementById('send-log');
+  logEl.style.display = 'block';
+  logEl.textContent   = '⏳ Initiating send…\n';
+  try {
+    const res  = await fetch('/api/admin/bulk_whatsapp/send', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.success) {
+      logEl.textContent += `✅ ${data.message}\n`;
+      logEl.textContent += `📬 Total recipients: ${data.count}\n`;
+      logEl.textContent += `⏱ Sending in batches of ${payload.batch_size} with random 2–7 min gaps.\n`;
+      logEl.textContent += `🔄 Runs in background — you can close this page.\n`;
+      showToast('✅ Bulk send started!', 'success');
+    } else {
+      logEl.textContent += `❌ Error: ${data.message}\n`;
+      showToast('❌ '+(data.message||'Failed'), 'danger');
+    }
+  } catch (e) {
+    logEl.textContent += `❌ Network error: ${e}\n`;
+    showToast('❌ Network error.', 'danger');
+  }
+}
+
+const TEMPLATES = {
+  delivery: `Hello {name},\n\n📦 Your fruit box delivery is scheduled for today!\n\nOur delivery partner will reach you at your preferred time.\n\nThank you for choosing Fruit Delights! 🍓`,
+  invoice:  `Hello {name},\n\n🧾 Your Fruit Delights invoice is ready.\n\nPlease check your customer dashboard for details.\n\n👉 https://fruitedelights.com/login\n\nThank you! 🍉`,
+  holiday:  `Hello {name},\n\n🏖️ We'd like to inform you that there will be no delivery tomorrow due to a public holiday.\n\nDeliveries will resume the next working day.\n\nThank you for your understanding! 🌸`,
+  welcome:  `Hello {name},\n\n🎉 Welcome to Fruit Delights!\n\nWe're excited to start delivering fresh fruits and sprouts to you.\n\nYour login: https://fruitedelights.com/login\n\nHappy eating! 🍎🥦`,
+};
+function setTemplate(key) {
+  document.getElementById('wa-message').value = TEMPLATES[key] || '';
+}
+
+// Boot
+renderRecipients();
+</script>
+</body>
+</html>

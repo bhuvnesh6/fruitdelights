@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify
+from flask import Flask, render_template, request, redirect, session, url_for, flash, jsonify, send_from_directory
 from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
@@ -12,6 +12,7 @@ from wp import send_whatsapp
 from outwpmsg import send_whatsapp_msg
 import cloudinary
 import cloudinary.uploader
+import threading, time, random
 
 
 load_dotenv()
@@ -24,6 +25,7 @@ cloudinary.config(
 )
 
 app = Flask(__name__)
+app.permanent_session_lifetime = timedelta(days=60) 
 app.secret_key = os.getenv("SECRET_KEY", "super-secret-key-change-in-production")
 
 app.config["CLOUDINARY_CLOUD_NAME"]    = os.getenv("CLOUDINARY_CLOUD_NAME", "")
@@ -170,28 +172,38 @@ def _manager_team_filter():
         return {"team_id": None}
     return {}
 
-
 def _enrich_delivery_plan(delivery_dict: dict, cust: dict, today_date) -> dict:
-    """Adds plan_name, is_alternate_plan, today_item to a delivery dict."""
+    """Adds plan_name, is_alternate_plan, today_item to a delivery dict.
+    Per-customer alt_options takes priority over plan-level alternate_items."""
     plan = None
     if cust.get("plan_id"):
         plan = plans_col.find_one({"_id": ObjectId(cust["plan_id"])})
 
-    if plan:
-        alt_items = plan.get("alternate_items", [])
-        is_alt    = bool(alt_items and len(alt_items) >= 2)
-        if isinstance(today_date, str):
-            today_date = date.fromisoformat(today_date)
-        today_item = _get_alternate_item_for_date(plan, today_date) if is_alt else None
+    if isinstance(today_date, str):
+        today_date = date.fromisoformat(today_date)
 
+    # Per-customer sequence overrides plan sequence
+    cust_alt = cust.get("alt_options", [])
+    if cust_alt:
+        today_item = _get_customer_item_for_date(cust, today_date)
+        is_alt     = True
+    elif plan:
+        alt_items  = plan.get("alternate_items", [])
+        is_alt     = bool(alt_items and len(alt_items) >= 2)
+        today_item = _get_alternate_item_for_date(plan, today_date) if is_alt else None
+    else:
+        is_alt     = False
+        today_item = None
+
+    if plan:
         delivery_dict["plan_name"]         = plan.get("name", "")
         delivery_dict["is_alternate_plan"] = is_alt
         delivery_dict["today_item"]        = today_item
         delivery_dict["plan_id_str"]       = str(plan["_id"])
     else:
         delivery_dict["plan_name"]         = cust.get("sample", "")
-        delivery_dict["is_alternate_plan"] = False
-        delivery_dict["today_item"]        = None
+        delivery_dict["is_alternate_plan"] = is_alt
+        delivery_dict["today_item"]        = today_item
 
     return delivery_dict
 
@@ -408,6 +420,47 @@ def _wa_append_message(enquiry_id: str, direction: str, body: str,
 
 
 # ---------------------------------------------------------------------------
+# BULK WHATSAPP
+# ---------------------------------------------------------------------------
+
+def _send_bulk_wa_worker(targets, message, batch_size=10):
+    """
+    Sends WhatsApp messages in batches with random gaps.
+    targets = list of {"phone": "...", "name": "..."}
+    """
+    total   = len(targets)
+    sent    = 0
+    failed  = 0
+    batches = [targets[i:i+batch_size] for i in range(0, total, batch_size)]
+    gaps    = [5*60, 7*60, 2*60, 4*60, 3*60]   # seconds between batches
+
+    for b_idx, batch in enumerate(batches):
+        for t in batch:
+            phone = "".join(filter(str.isdigit, str(t.get("phone", ""))))
+            if len(phone) == 10:
+                phone = "91" + phone
+            if not phone:
+                failed += 1
+                continue
+            try:
+                personalised = message.replace("{name}", t.get("name", "there"))
+                send_whatsapp(phone, personalised)
+                sent += 1
+            except Exception as e:
+                failed += 1
+                print(f"[BulkWA] Failed {phone}: {e}")
+        if b_idx < len(batches) - 1:
+            gap = gaps[b_idx % len(gaps)] + random.randint(-30, 30)
+            gap = max(60, gap)
+            print(f"[BulkWA] Batch {b_idx+1} done ({sent} sent, {failed} fail). Sleeping {gap}s…")
+            time.sleep(gap)
+
+    print(f"[BulkWA] All done. Sent={sent} Failed={failed}")
+
+
+
+
+# ---------------------------------------------------------------------------
 # PLAN ALTERNATE ITEM HELPER
 # ---------------------------------------------------------------------------
 def _get_alternate_item_for_date(plan, target_date):
@@ -428,6 +481,34 @@ def _get_alternate_item_for_date(plan, target_date):
     idx   = delta % len(alt_items)
     return alt_items[idx]
 
+# ---------------------------------------------------------------------------
+# PER-CUSTOMER ALTERNATE ITEM HELPER
+# ---------------------------------------------------------------------------
+def _get_customer_item_for_date(customer, target_date):
+    """
+    Returns today's item for a customer based on their personal alt_options sequence.
+    alt_options is a list like ["Fruits","Fruits","Sprouts"] — meaning day1=Fruits,
+    day2=Fruits, day3=Sprouts, day4=Fruits, day5=Fruits, day6=Sprouts, ...
+    Falls back to plan-level alternate_items if customer has none set.
+    Returns None if neither is set.
+    """
+    if isinstance(target_date, str):
+        target_date = date.fromisoformat(target_date)
+
+    alt_options = customer.get("alt_options", [])
+
+    if not alt_options:
+        # Fall back to plan-level
+        if customer.get("plan_id"):
+            plan = plans_col.find_one({"_id": ObjectId(customer["plan_id"])})
+            if plan:
+                return _get_alternate_item_for_date(plan, target_date)
+        return None
+
+    epoch = date(2024, 1, 1)
+    delta = (target_date - epoch).days
+    idx   = delta % len(alt_options)
+    return alt_options[idx]
 
 # ---------------------------------------------------------------------------
 # ROUTES – core
@@ -443,6 +524,11 @@ def home():
         elif role == "customer":
             return redirect(url_for("dashboard_customer"))
     return render_template("index.html")
+
+
+@app.route("/sw.js")
+def sw():
+    return send_from_directory("static", "sw.js")
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -958,16 +1044,28 @@ def edit_user(user_id):
                 start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
             except Exception:
                 pass
+
+        # Parse per-customer alt options  e.g. "Fruits, Fruits, Sprouts"
+        alt_raw  = request.form.get("alt_options", "").strip()
+        alt_list = [x.strip() for x in alt_raw.split(",") if x.strip()] if alt_raw else []
+
+        # Total delivered boxes override
+        tdb = request.form.get("total_delivered_boxes", "").strip()
+        total_delivered_boxes = int(tdb) if tdb.isdigit() else None
+
         update.update({
-            "plan_id":          plan["_id"] if plan else None,
-            "address":          request.form.get("address"),
-            "preferred_time":   request.form.get("preferred_time"),
-            "off_days":         request.form.getlist("off_days"),
-            "start_date":       start_date,
-            "discount_percent": float(request.form.get("discount_percent", 0) or 0),
-            "discount_amount":  float(request.form.get("discount_amount",  0) or 0),
-            "status":           request.form.get("customer_status", "active"),
+            "plan_id":               plan["_id"] if plan else None,
+            "address":               request.form.get("address"),
+            "preferred_time":        request.form.get("preferred_time"),
+            "off_days":              request.form.getlist("off_days"),
+            "start_date":            start_date,
+            "discount_percent":      float(request.form.get("discount_percent", 0) or 0),
+            "discount_amount":       float(request.form.get("discount_amount",  0) or 0),
+            "status":                request.form.get("customer_status", "active"),
+            "alt_options":           alt_list,
         })
+        if total_delivered_boxes is not None:
+            update["total_delivered_boxes"] = total_delivered_boxes
     users_col.update_one({"_id": ObjectId(user_id)}, {"$set": update})
     flash("User updated.", "success")
     next_page = request.form.get("next", "dashboard_admin")
@@ -1008,23 +1106,24 @@ def api_get_user(user_id):
         start_date = start_date.strftime("%Y-%m-%d")
 
     return jsonify({
-        "success":          True,
-        "id":               str(user["_id"]),
-        "name":             user.get("name", ""),
-        "email":            user.get("email", ""),   # ← login ID to show in form
-        "phone":            user.get("phone", ""),
-        "role":             user.get("role", ""),
-        "team_id":          str(user.get("team_id", "")),
-        "plan_id":          str(user.get("plan_id", "")),
-        "address":          user.get("address", ""),
-        "preferred_time":   user.get("preferred_time", ""),
-        "off_days":         user.get("off_days", []),
-        "start_date":       start_date or "",
-        "discount_percent": float(user.get("discount_percent", 0) or 0),
-        "discount_amount":  float(user.get("discount_amount",  0) or 0),
-        "status":           user.get("status", "active"),
+        "success":               True,
+        "id":                    str(user["_id"]),
+        "name":                  user.get("name", ""),
+        "email":                 user.get("email", ""),
+        "phone":                 user.get("phone", ""),
+        "role":                  user.get("role", ""),
+        "team_id":               str(user.get("team_id", "")),
+        "plan_id":               str(user.get("plan_id", "")),
+        "address":               user.get("address", ""),
+        "preferred_time":        user.get("preferred_time", ""),
+        "off_days":              user.get("off_days", []),
+        "start_date":            start_date or "",
+        "discount_percent":      float(user.get("discount_percent", 0) or 0),
+        "discount_amount":       float(user.get("discount_amount",  0) or 0),
+        "status":                user.get("status", "active"),
+        "alt_options":           user.get("alt_options", []),
+        "total_delivered_boxes": user.get("total_delivered_boxes", ""),
     })
-
 
 # ---------------------------------------------------------------------------
 # ADMIN – customers list
@@ -1990,6 +2089,10 @@ def api_boxes_needed():
             if not _day_schedulable_for_plan(plan, target_date, c.get("off_days", []), set(c.get("holidays", []))):
                 continue
             active_count += 1
+
+            # Per-customer item (overrides plan-level if set)
+            cust_item = _get_customer_item_for_date(c, target_date)
+
             tid = str(c.get("team_id", ""))
             if tid not in team_breakdown:
                 team_obj = team_map.get(tid, {})
@@ -1998,6 +2101,7 @@ def api_boxes_needed():
                     "team_name": team_obj.get("name", "—"),
                     "team_area": team_obj.get("area", ""),
                     "count":     0,
+                    "today_item": cust_item,
                 }
             team_breakdown[tid]["count"] += 1
 
@@ -2633,6 +2737,221 @@ def customer_my_plan_status():
         "boxes": boxes,
     })
 
+
+#Bulk sending api
+
+
+@app.route("/admin/bulk-whatsapp")
+@login_required
+@role_required("admin", "manager")
+def bulk_whatsapp_page():
+    tf        = _manager_team_filter()
+    cust_q    = {"role": "customer", "status": "active", **tf}
+    customers = list(users_col.find(cust_q, {"name":1,"phone":1,"team_id":1}))
+    emp_q     = {"role": "employee", **tf}
+    employees = list(users_col.find(emp_q, {"name":1,"phone":1,"team_id":1}))
+    teams     = list(teams_col.find())
+    for t in teams: t["_id"] = str(t["_id"])
+    for c in customers: c["_id"] = str(c["_id"]); c["team_id"] = str(c.get("team_id",""))
+    for e in employees: e["_id"] = str(e["_id"]); e["team_id"] = str(e.get("team_id",""))
+    return render_template("bulk_whatsapp.html",
+        customers=customers, employees=employees, teams=teams,
+        active_page="bulk_wa")
+
+
+@app.route("/api/admin/bulk_whatsapp/send", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def api_bulk_whatsapp_send():
+    data      = request.get_json(silent=True) or {}
+    target_ids = data.get("ids", [])       # list of user _id strings
+    message    = (data.get("message") or "").strip()
+    batch_size = int(data.get("batch_size", 10))
+    send_all_team = data.get("send_all_team", False)
+    team_id       = data.get("team_id", "")
+
+    if not message:
+        return jsonify({"success": False, "message": "Message is required."}), 400
+
+    if send_all_team and team_id:
+        tf    = _manager_team_filter()
+        query = {"team_id": ObjectId(team_id), **tf}
+        users = list(users_col.find(query, {"name":1,"phone":1}))
+    elif target_ids:
+        oids  = [ObjectId(i) for i in target_ids if i]
+        users = list(users_col.find({"_id": {"$in": oids}}, {"name":1,"phone":1}))
+    else:
+        return jsonify({"success": False, "message": "No recipients selected."}), 400
+
+    if not users:
+        return jsonify({"success": False, "message": "No valid recipients found."}), 400
+
+    targets = [{"phone": u.get("phone",""), "name": u.get("name","there")} for u in users]
+    t = threading.Thread(target=_send_bulk_wa_worker, args=(targets, message, batch_size), daemon=True)
+    t.start()
+
+    return jsonify({
+        "success": True,
+        "message": f"✅ Sending to {len(targets)} recipients in batches of {batch_size}. Runs in background.",
+        "count":   len(targets),
+    })
+
+# ---------------------------------------------------------------------------
+# BACKGROUND SCHEDULER
+# ---------------------------------------------------------------------------
+def _run_daily_jobs():
+    """
+    Runs in a background daemon thread.
+    Checks every 60 seconds if a scheduled job needs to run.
+    Calls functions directly — no HTTP requests needed.
+    """
+    _ran_today = {}   # tracks which jobs already ran today
+
+    print("[Scheduler] ✅ Background scheduler started.")
+
+    while True:
+        try:
+            now       = datetime.now()
+            today_key = now.strftime("%Y-%m-%d")
+
+            # ── 6:00 AM — Generate daily deliveries ──────────────────────
+            if now.hour == 6 and now.minute < 2:
+                job_key = f"daily_deliveries_{today_key}"
+                if job_key not in _ran_today:
+                    print(f"[Scheduler] ⏰ Running generate_daily_deliveries for {today_key}…")
+                    try:
+                        _scheduler_generate_daily()
+                        _ran_today[job_key] = True
+                        print(f"[Scheduler] ✅ generate_daily_deliveries done.")
+                    except Exception as e:
+                        print(f"[Scheduler] ❌ generate_daily_deliveries failed: {e}")
+
+            # ── 8:00 PM — Check & send invoices due today ────────────────
+            if now.hour == 20 and now.minute < 2:
+                job_key = f"check_invoices_{today_key}"
+                if job_key not in _ran_today:
+                    print(f"[Scheduler] ⏰ Running check_invoice_due for {today_key}…")
+                    try:
+                        _scheduler_check_invoice_due()
+                        _ran_today[job_key] = True
+                        print(f"[Scheduler] ✅ check_invoice_due done.")
+                    except Exception as e:
+                        print(f"[Scheduler] ❌ check_invoice_due failed: {e}")
+
+            # ── Cleanup old keys (only keep today's) ─────────────────────
+            _ran_today = {k: v for k, v in _ran_today.items() if today_key in k}
+
+        except Exception as e:
+            print(f"[Scheduler] ⚠️ Scheduler loop error: {e}")
+
+        _time.sleep(60)   # check every minute
+
+
+def _scheduler_generate_daily():
+    """Direct function version of the generate_daily_deliveries route."""
+    today    = datetime.now().date()
+    date_str = today.strftime("%Y-%m-%d")
+    customers = list(users_col.find({"role": "customer", "status": "active"}))
+    count = 0
+    for cust in customers:
+        try:
+            plan = plans_col.find_one({"_id": ObjectId(cust["plan_id"])}) if cust.get("plan_id") else None
+            if plan:
+                if not _day_schedulable_for_plan(plan, today, cust.get("off_days", []), set(cust.get("holidays", []))):
+                    continue
+            else:
+                day_name = today.strftime("%A")
+                if day_name in cust.get("off_days", []):
+                    continue
+                if date_str in cust.get("holidays", []):
+                    continue
+            exists = deliveries_col.find_one({"customer_id": cust["_id"], "date": date_str})
+            if not exists:
+                deliveries_col.insert_one({
+                    "customer_id":    cust["_id"],
+                    "team_id":        cust.get("team_id"),
+                    "date":           date_str,
+                    "status":         "pending",
+                    "assigned_to":    None,
+                    "preferred_time": cust.get("preferred_time")
+                })
+                count += 1
+        except Exception as e:
+            print(f"[Scheduler] Customer {cust.get('name')} delivery error: {e}")
+    print(f"[Scheduler] Generated {count} delivery records for {date_str}")
+
+
+def _scheduler_check_invoice_due():
+    """Direct function version of the check_invoice_due route."""
+    today     = date.today()
+    customers = list(users_col.find({"role": "customer", "status": "active"}))
+    generated = skipped = failed = 0
+
+    for customer in customers:
+        try:
+            plan = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
+            if not plan or int(plan.get("duration_days", 0)) <= 0:
+                skipped += 1
+                continue
+
+            period_start, period_end = _calculate_invoice_period(customer, plan)
+            if period_end != today:
+                skipped += 1
+                continue
+
+            existing = invoices_col.find_one({
+                "customer_id":  customer["_id"],
+                "period_start": period_start.strftime("%Y-%m-%d"),
+                "period_end":   period_end.strftime("%Y-%m-%d"),
+            })
+            if existing:
+                skipped += 1
+                continue
+
+            schedulable, delivered = _billable_days_in_period(customer, period_start, period_end)
+            price_total = float(plan.get("price_per_month", plan.get("price_per_day", 0)))
+            tax_pct     = float(plan.get("tax_percent", 0))
+
+            subtotal = round((delivered / schedulable) * price_total, 2) if schedulable > 0 else 0.0
+            tax      = round(subtotal * tax_pct / 100, 2)
+            gross    = subtotal + tax
+            disc_pct = float(customer.get("discount_percent", 0) or 0)
+            disc_amt = float(customer.get("discount_amount",  0) or 0)
+            discount, total = _apply_discount(gross, disc_pct, disc_amt)
+
+            invoice = {
+                "customer_id":      customer["_id"],
+                "period_start":     period_start.strftime("%Y-%m-%d"),
+                "period_end":       period_end.strftime("%Y-%m-%d"),
+                "month":            period_end.month,
+                "year":             period_end.year,
+                "plan_name":        plan.get("name", ""),
+                "duration_days":    int(plan.get("duration_days", 0)),
+                "schedulable_days": schedulable,
+                "billable_days":    delivered,
+                "subtotal":         subtotal,
+                "tax":              tax,
+                "discount":         discount,
+                "total":            total,
+                "status":           "sent",
+                "generated_at":     datetime.now(),
+            }
+            invoices_col.insert_one(invoice)
+            _send_invoice_whatsapp(customer, invoice)
+            generated += 1
+
+        except Exception as e:
+            failed += 1
+            print(f"[Scheduler] Invoice error for {customer.get('name')}: {e}")
+
+    print(f"[Scheduler] Invoices — generated={generated} skipped={skipped} failed={failed}")
+
+
+# ── Start the scheduler thread ─────────────────────────────────────────────
+# Guard prevents double-start when Flask debug reloader spawns a child process
+if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+    _sched_thread = threading.Thread(target=_run_daily_jobs, daemon=True)
+    _sched_thread.start()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5757)
