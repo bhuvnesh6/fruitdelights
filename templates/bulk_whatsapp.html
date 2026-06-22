@@ -13,6 +13,7 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .topbar-title{font-size:18px;font-weight:700}
 .content{max-width:1100px;margin:0 auto;padding:28px 20px}
 .btn{display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:var(--radius-sm);font-weight:600;font-size:13px;cursor:pointer;border:none;transition:opacity .15s}
+.btn:hover{opacity:.88}
 .btn-primary{background:var(--accent);color:#fff}
 .btn-ghost{background:var(--bg-3);color:var(--text);border:1px solid var(--border)}
 .btn-wa{background:var(--wa);color:#fff}
@@ -27,6 +28,8 @@ body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);fon
 .badge{display:inline-flex;align-items:center;padding:3px 9px;border-radius:99px;font-size:11px;font-weight:600}
 .badge-blue{background:#dbeafe;color:#1d4ed8}
 .badge-green{background:var(--green-soft);color:var(--green)}
+.badge-yellow{background:#fef9c3;color:#ca8a04}
+.badge-purple{background:#ede9fe;color:#7c3aed}
 .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius-sm)}
 table{width:100%;border-collapse:collapse}
 thead th{padding:10px 14px;text-align:left;font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-2);background:var(--bg-3);border-bottom:1px solid var(--border)}
@@ -37,7 +40,7 @@ tbody tr:hover td{background:var(--bg-3)}
 .selected-bar{background:var(--accent-soft);border:1.5px solid #c7d2fe;border-radius:var(--radius-sm);padding:12px 16px;display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
 .progress-log{background:#1e1e1e;color:#a6e22e;border-radius:var(--radius-sm);padding:16px;font-family:monospace;font-size:12px;min-height:80px;max-height:200px;overflow-y:auto;white-space:pre-wrap;margin-top:16px}
 .tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;width:fit-content;margin-bottom:20px}
-.tab-btn{padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:var(--bg-3);color:var(--text-2)}
+.tab-btn{padding:8px 18px;font-size:13px;font-weight:600;cursor:pointer;border:none;background:var(--bg-3);color:var(--text-2);transition:background .15s,color .15s}
 .tab-btn.active{background:var(--accent);color:#fff}
 .tab-btn:not(:last-child){border-right:1px solid var(--border)}
 .search-wrap{position:relative;max-width:260px}
@@ -48,6 +51,14 @@ tbody tr:hover td{background:var(--bg-3)}
 .toast-success{background:linear-gradient(135deg,#10b981,#059669)}
 .toast-danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
 @keyframes slideIn{from{opacity:0;transform:translateX(40px)}}
+
+/* Team filter hidden for enquiries tab */
+.hide-for-enq{transition:opacity .2s}
+.enq-active .hide-for-enq{opacity:.35;pointer-events:none}
+
+/* Enquiry plan badge */
+.plan-pill{background:#f3e8ff;color:#7c3aed;border-radius:99px;padding:2px 8px;font-size:11px;font-weight:600}
+
 @media(max-width:768px){.grid{grid-template-columns:1fr}}
 </style>
 </head>
@@ -68,27 +79,41 @@ tbody tr:hover td{background:var(--bg-3)}
     <div>
       <div class="card" style="margin-bottom:16px;">
         <div class="card-title">1. Choose Recipients</div>
-        <div class="tabs">
+
+        <div class="tabs" id="tabs-row">
           <button class="tab-btn active" id="tab-cust" onclick="switchTab('customers')">👥 Customers</button>
-          <button class="tab-btn" id="tab-emp" onclick="switchTab('employees')">🚴 Employees</button>
+          <button class="tab-btn"        id="tab-emp"  onclick="switchTab('employees')">🚴 Employees</button>
+          <button class="tab-btn"        id="tab-enq"  onclick="switchTab('enquiries')">📋 Enquiries</button>
         </div>
 
-        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;" id="filter-bar">
           <div class="search-wrap">
             <input class="form-control" id="recipient-search" placeholder="Search…" oninput="filterRecipients()" style="max-width:220px;">
           </div>
-          <select class="form-control" id="team-filter" onchange="filterRecipients()" style="max-width:180px;">
+          <!-- Team filter – hidden for enquiries -->
+          <select class="form-control hide-for-enq" id="team-filter" onchange="filterRecipients()" style="max-width:180px;">
             <option value="">All Teams</option>
             {% for team in teams %}
             <option value="{{ team._id }}">{{ team.name }}</option>
             {% endfor %}
           </select>
+          <!-- Plan filter for enquiries only -->
+          <select class="form-control" id="plan-filter" onchange="filterRecipients()" style="max-width:180px;display:none;">
+            <option value="">All Plans</option>
+          </select>
+          <!-- Status filter for enquiries only -->
+          <select class="form-control" id="status-filter" onchange="filterRecipients()" style="max-width:160px;display:none;">
+            <option value="">All Statuses</option>
+            <option value="pending">Pending</option>
+            <option value="approved">Approved</option>
+            <option value="converted">Converted</option>
+          </select>
           <button class="btn btn-ghost btn-sm" onclick="selectAllVisible()">☑ Select Visible</button>
           <button class="btn btn-ghost btn-sm" onclick="clearSelection()">✕ Clear</button>
         </div>
 
-        <!-- Send to whole team button -->
-        <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;background:var(--wa-soft);border-radius:var(--radius-sm);border:1px solid #bbf7d0;">
+        <!-- Send to whole team (hidden for enquiries) -->
+        <div id="team-bulk-row" style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;background:var(--wa-soft);border-radius:var(--radius-sm);border:1px solid #bbf7d0;">
           <span style="font-size:13px;font-weight:600;color:#15803d;">📣 Send to entire team:</span>
           <select id="bulk-team-select" class="form-control" style="max-width:200px;">
             <option value="">— Select team —</option>
@@ -99,12 +124,19 @@ tbody tr:hover td{background:var(--bg-3)}
           <button class="btn btn-wa btn-sm" onclick="sendToWholeTeam()">Send All</button>
         </div>
 
+        <!-- Send all enquiries button (hidden by default) -->
+        <div id="enq-bulk-row" style="display:none;align-items:center;gap:8px;margin-bottom:12px;padding:10px 12px;background:#f3e8ff;border-radius:var(--radius-sm);border:1px solid #d8b4fe;">
+          <span style="font-size:13px;font-weight:600;color:#7c3aed;">📋 Send to all visible enquiries</span>
+          <button class="btn btn-sm" style="background:#7c3aed;color:#fff;" onclick="selectAllVisible()">Select All Visible</button>
+          <span style="font-size:12px;color:var(--text-2);">then hit Send below</span>
+        </div>
+
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th class="checkbox-col"><input type="checkbox" id="select-all-cb" onchange="toggleSelectAll()"></th>
-                <th>Name</th><th>Phone</th><th>Team</th>
+                <th>Name</th><th>Phone</th><th id="col3-head">Team / Info</th>
               </tr>
             </thead>
             <tbody id="recipients-tbody"></tbody>
@@ -113,6 +145,7 @@ tbody tr:hover td{background:var(--bg-3)}
 
         <div id="selection-bar" class="selected-bar" style="display:none;margin-top:14px;">
           <span style="font-weight:700;color:var(--accent);" id="selection-count">0 selected</span>
+          <span style="font-size:12px;color:var(--text-2);" id="selection-type-hint"></span>
           <button class="btn btn-danger btn-sm" onclick="clearSelection()">✕ Clear</button>
         </div>
       </div>
@@ -169,6 +202,12 @@ tbody tr:hover td{background:var(--bg-3)}
           <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;" onclick="setTemplate('welcome')">
             🎉 Welcome Message
           </button>
+          <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;" onclick="setTemplate('followup')">
+            📞 Enquiry Follow-up
+          </button>
+          <button class="btn btn-ghost btn-sm" style="justify-content:flex-start;text-align:left;" onclick="setTemplate('offer')">
+            🎁 Special Offer
+          </button>
         </div>
       </div>
     </div>
@@ -178,11 +217,21 @@ tbody tr:hover td{background:var(--bg-3)}
 <div class="toast-bar" id="toast-bar"></div>
 
 <script>
-const CUSTOMERS = {{ customers | tojson }};
-const EMPLOYEES = {{ employees | tojson }};
-let _activeTab = 'customers';
-let _selected  = new Set();
+// ─── Data from Jinja ─────────────────────────────────────────────────────────
+const CUSTOMERS  = {{ customers  | tojson }};
+const EMPLOYEES  = {{ employees  | tojson }};
+const ENQUIRIES  = {{ enquiries  | tojson }};   // [{_id, name, phone, plan, status}]
 
+// ─── State ───────────────────────────────────────────────────────────────────
+let _activeTab = 'customers';
+let _selected  = new Set();          // stores _id strings (mixed users + enquiries)
+let _selType   = 'user';             // 'user' | 'enquiry'  — set when tab switches
+
+// Build unique plan list for enquiry plan-filter dropdown
+const _enquiryPlans = [...new Set(ENQUIRIES.map(e => (e.plan||'').trim()).filter(Boolean))].sort();
+
+
+// ─── Toast ───────────────────────────────────────────────────────────────────
 function showToast(msg, type) {
   const c  = document.getElementById('toast-bar');
   const el = document.createElement('div');
@@ -192,48 +241,104 @@ function showToast(msg, type) {
   setTimeout(() => { el.style.opacity='0'; el.style.transition='.4s'; setTimeout(()=>el.remove(),400); }, 4000);
 }
 
-function getCurrentList() {
-  return _activeTab === 'customers' ? CUSTOMERS : EMPLOYEES;
-}
 
+// ─── Tab switching ────────────────────────────────────────────────────────────
 function switchTab(tab) {
   _activeTab = tab;
   _selected.clear();
-  document.getElementById('tab-cust').classList.toggle('active', tab==='customers');
-  document.getElementById('tab-emp').classList.toggle('active',  tab==='employees');
+  _selType   = tab === 'enquiries' ? 'enquiry' : 'user';
+
+  ['cust','emp','enq'].forEach(id => document.getElementById('tab-'+id).classList.remove('active'));
+  const tabMap = {customers:'cust', employees:'emp', enquiries:'enq'};
+  document.getElementById('tab-'+tabMap[tab]).classList.add('active');
+
+  const isEnq = tab === 'enquiries';
+
+  // Team filter vs plan/status filter
+  document.getElementById('team-filter').style.display  = isEnq ? 'none' : '';
+  document.getElementById('plan-filter').style.display  = isEnq ? ''     : 'none';
+  document.getElementById('status-filter').style.display= isEnq ? ''     : 'none';
+
+  // Whole-team send row
+  document.getElementById('team-bulk-row').style.display = isEnq ? 'none' : 'flex';
+  document.getElementById('enq-bulk-row').style.display  = isEnq ? 'flex' : 'none';
+
+  // Column header
+  document.getElementById('col3-head').textContent = isEnq ? 'Plan / Status' : 'Team';
+
+  // Populate plan filter
+  if (isEnq) {
+    const sel = document.getElementById('plan-filter');
+    sel.innerHTML = '<option value="">All Plans</option>' +
+      _enquiryPlans.map(p => `<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
+  }
+
+  document.getElementById('recipient-search').value = '';
   renderRecipients();
 }
 
+
+// ─── Current list ─────────────────────────────────────────────────────────────
+function getCurrentList() {
+  if (_activeTab === 'customers')  return CUSTOMERS;
+  if (_activeTab === 'employees')  return EMPLOYEES;
+  return ENQUIRIES;
+}
+
+
+// ─── Render ───────────────────────────────────────────────────────────────────
 function renderRecipients() {
-  const q      = (document.getElementById('recipient-search').value || '').toLowerCase();
+  const q      = (document.getElementById('recipient-search').value || '').toLowerCase().trim();
   const teamId = document.getElementById('team-filter').value;
-  const list   = getCurrentList().filter(r =>
-    (!q || (r.name||'').toLowerCase().includes(q) || (r.phone||'').includes(q)) &&
-    (!teamId || r.team_id === teamId)
-  );
+  const plan   = document.getElementById('plan-filter').value;
+  const status = document.getElementById('status-filter').value;
+  const isEnq  = _activeTab === 'enquiries';
+  const list   = getCurrentList().filter(r => {
+    const nameMatch  = !q || (r.name||'').toLowerCase().includes(q) || (r.phone||'').includes(q);
+    if (isEnq) {
+      const planMatch   = !plan   || (r.plan||'').trim()   === plan;
+      const statusMatch = !status || (r.status||'pending') === status;
+      return nameMatch && planMatch && statusMatch;
+    }
+    const teamMatch = !teamId || r.team_id === teamId;
+    return nameMatch && teamMatch;
+  });
+
   const tbody = document.getElementById('recipients-tbody');
   if (!list.length) {
     tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;padding:24px;color:var(--text-3);">No recipients found.</td></tr>`;
+    updateSelectionBar();
     return;
   }
-  tbody.innerHTML = list.map(r => `
-    <tr data-id="${r._id}" data-name="${(r.name||'').toLowerCase()}" data-team="${r.team_id||''}">
+
+  tbody.innerHTML = list.map(r => {
+    const checked = _selected.has(r._id) ? 'checked' : '';
+    let col3 = '';
+    if (isEnq) {
+      const planBadge   = r.plan   ? `<span class="plan-pill">${escHtml(r.plan)}</span>` : '<span style="color:var(--text-3);">—</span>';
+      const statusColor = (r.status==='converted') ? 'badge-green' : (r.status==='approved') ? 'badge-blue' : 'badge-yellow';
+      const statusLabel = r.status || 'pending';
+      col3 = `<div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">${planBadge}<span class="badge ${statusColor}">${escHtml(statusLabel)}</span></div>`;
+    } else {
+      col3 = `<span class="badge badge-blue" style="font-size:10px;">${escHtml(r.team_id||'—')}</span>`;
+    }
+    return `
+    <tr data-id="${r._id}">
       <td class="checkbox-col">
-        <input type="checkbox" class="row-cb" value="${r._id}"
-          ${_selected.has(r._id)?'checked':''}
+        <input type="checkbox" class="row-cb" value="${r._id}" ${checked}
           onchange="toggleRow('${r._id}',this.checked)">
       </td>
       <td><strong>${escHtml(r.name||'—')}</strong></td>
       <td style="color:var(--text-2);">${escHtml(r.phone||'—')}</td>
-      <td><span class="badge badge-blue" style="font-size:10px;">${escHtml(r.team_id||'—')}</span></td>
-    </tr>`).join('');
+      <td>${col3}</td>
+    </tr>`;
+  }).join('');
+
   updateSelectionBar();
 }
 
-function escHtml(s) {
-  return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-}
 
+// ─── Selection helpers ────────────────────────────────────────────────────────
 function toggleRow(id, checked) {
   if (checked) _selected.add(id); else _selected.delete(id);
   updateSelectionBar();
@@ -252,6 +357,7 @@ function selectAllVisible() {
   document.querySelectorAll('.row-cb').forEach(cb => {
     cb.checked = true; _selected.add(cb.value);
   });
+  document.getElementById('select-all-cb').checked = true;
   updateSelectionBar();
 }
 
@@ -263,14 +369,18 @@ function clearSelection() {
 }
 
 function updateSelectionBar() {
-  const bar = document.getElementById('selection-bar');
-  const cnt = document.getElementById('selection-count');
-  bar.style.display = _selected.size > 0 ? 'flex' : 'none';
-  cnt.textContent   = `${_selected.size} selected`;
+  const bar  = document.getElementById('selection-bar');
+  const cnt  = document.getElementById('selection-count');
+  const hint = document.getElementById('selection-type-hint');
+  bar.style.display  = _selected.size > 0 ? 'flex' : 'none';
+  cnt.textContent    = `${_selected.size} selected`;
+  hint.textContent   = _activeTab === 'enquiries' ? '(enquiries)' : '';
 }
 
 function filterRecipients() { renderRecipients(); }
 
+
+// ─── Send to whole team ───────────────────────────────────────────────────────
 async function sendToWholeTeam() {
   const teamId  = document.getElementById('bulk-team-select').value;
   const message = (document.getElementById('wa-message').value || '').trim();
@@ -281,20 +391,46 @@ async function sendToWholeTeam() {
   await doSend({ send_all_team: true, team_id: teamId, message, batch_size: batchSz });
 }
 
+
+// ─── Send selected ────────────────────────────────────────────────────────────
 async function sendBulkMessages() {
   const message = (document.getElementById('wa-message').value || '').trim();
   const batchSz = parseInt(document.getElementById('batch-size').value, 10);
   if (!message)       { showToast('Please write a message.', 'danger'); return; }
   if (!_selected.size){ showToast('Please select at least one recipient.', 'danger'); return; }
-  await doSend({ ids: [..._selected], message, batch_size: batchSz });
+
+  if (_activeTab === 'enquiries') {
+    // Build targets directly from ENQUIRIES data — no server user lookup needed
+    const selectedIds = [..._selected];
+    const targets = ENQUIRIES
+      .filter(e => selectedIds.includes(e._id))
+      .map(e => ({ phone: e.phone, name: e.name || 'there' }));
+
+    if (!targets.length) {
+      showToast('No valid enquiries found in selection.', 'danger');
+      return;
+    }
+    // Use the dedicated enquiry-aware endpoint
+    await doSend({ targets, message, batch_size: batchSz, source: 'enquiries' });
+  } else {
+    await doSend({ ids: [..._selected], message, batch_size: batchSz });
+  }
 }
 
+
+// ─── HTTP send ────────────────────────────────────────────────────────────────
 async function doSend(payload) {
   const logEl = document.getElementById('send-log');
   logEl.style.display = 'block';
   logEl.textContent   = '⏳ Initiating send…\n';
+
+  // Choose endpoint based on whether we have raw targets (enquiries) or user ids
+  const endpoint = payload.targets
+    ? '/api/admin/bulk_whatsapp/send_targets'
+    : '/api/admin/bulk_whatsapp/send';
+
   try {
-    const res  = await fetch('/api/admin/bulk_whatsapp/send', {
+    const res  = await fetch(endpoint, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -308,7 +444,7 @@ async function doSend(payload) {
       showToast('✅ Bulk send started!', 'success');
     } else {
       logEl.textContent += `❌ Error: ${data.message}\n`;
-      showToast('❌ '+(data.message||'Failed'), 'danger');
+      showToast('❌ ' + (data.message || 'Failed'), 'danger');
     }
   } catch (e) {
     logEl.textContent += `❌ Network error: ${e}\n`;
@@ -316,17 +452,28 @@ async function doSend(payload) {
   }
 }
 
+
+// ─── Templates ────────────────────────────────────────────────────────────────
 const TEMPLATES = {
   delivery: `Hello {name},\n\n📦 Your fruit box delivery is scheduled for today!\n\nOur delivery partner will reach you at your preferred time.\n\nThank you for choosing Fruit Delights! 🍓`,
   invoice:  `Hello {name},\n\n🧾 Your Fruit Delights invoice is ready.\n\nPlease check your customer dashboard for details.\n\n👉 https://fruitedelights.com/login\n\nThank you! 🍉`,
   holiday:  `Hello {name},\n\n🏖️ We'd like to inform you that there will be no delivery tomorrow due to a public holiday.\n\nDeliveries will resume the next working day.\n\nThank you for your understanding! 🌸`,
   welcome:  `Hello {name},\n\n🎉 Welcome to Fruit Delights!\n\nWe're excited to start delivering fresh fruits and sprouts to you.\n\nYour login: https://fruitedelights.com/login\n\nHappy eating! 🍎🥦`,
+  followup: `Hello {name},\n\n📞 We noticed you recently enquired about our fruit delivery plans.\n\nWe'd love to get you started! 🍓\n\nJust reply to this message and we'll set everything up for you.\n\nTeam Fruit Delights`,
+  offer:    `Hello {name},\n\n🎁 Special offer just for you!\n\nSign up this week and get your first box at a discount.\n\nReply YES to claim your offer or call us directly.\n\nTeam Fruit Delights 🍉`,
 };
 function setTemplate(key) {
   document.getElementById('wa-message').value = TEMPLATES[key] || '';
 }
 
-// Boot
+// ─── Utilities ────────────────────────────────────────────────────────────────
+function escHtml(s) {
+  return String(s||'').replace(/[&<>"']/g, m => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[m]));
+}
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
 renderRecipients();
 </script>
 </body>

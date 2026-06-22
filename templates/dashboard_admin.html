@@ -75,7 +75,6 @@ img{display:block;max-width:100%}
 .btn-wa:hover{background:#bbf7d0}
 .btn-warning{background:var(--yellow-soft);color:var(--yellow)}
 .btn-sm{padding:5px 10px;font-size:12px}
-/* Excel download button style */
 .btn-excel{background:linear-gradient(135deg,#16a34a,#15803d);color:white;border:none}
 .btn-excel:hover{background:linear-gradient(135deg,#15803d,#166534)}
 .card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm)}
@@ -111,7 +110,6 @@ select.form-control option{background:#fff;color:var(--text)}
 textarea.form-control{resize:vertical}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-.form-row-4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px}
 .range-pills{display:flex;gap:6px;flex-wrap:wrap}
 .range-pill{padding:5px 12px;border-radius:99px;font-size:12px;font-weight:600;cursor:pointer;border:1.5px solid var(--border);background:var(--bg-3);color:var(--text-2);transition:all .15s}
 .range-pill.active,.range-pill:hover{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
@@ -162,33 +160,37 @@ tbody tr:hover td{background:var(--bg-3)}
 .section-title-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
 .section-title-bar h2{font-family:var(--font-disp);font-size:22px;}
 .email-hint{font-size:11px;color:var(--text-3);margin-top:4px;font-weight:400;}
-
-/* ── Boxes table ── */
+/* Boxes */
 .boxes-table td .bar-wrap{height:6px;background:var(--bg-3);border-radius:99px;overflow:hidden;margin-top:4px;min-width:80px}
 .boxes-table td .bar-fill{height:100%;border-radius:99px;transition:width .4s}
 .next-day-banner{display:flex;align-items:center;gap:10px;padding:10px 14px;background:linear-gradient(135deg,#ede9fe,#ddd6fe);border:1.5px solid #c4b5fd;border-radius:var(--radius-sm);margin-bottom:14px;font-size:13px;font-weight:600;color:#5b21b6}
 .next-day-banner .nd-icon{font-size:18px}
 .alt-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:700;background:linear-gradient(135deg,#fef3c7,#fed7aa);color:#92400e;border:1px solid #fcd34d;white-space:nowrap}
-
-/* ── Box view tabs ── */
+.alt-count-pill{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:700;margin:1px;white-space:nowrap}
+.alt-count-fruit{background:#d1fae5;color:#065f46;border:1px solid #6ee7b7}
+.alt-count-sprout{background:#fef3c7;color:#78350f;border:1px solid #fcd34d}
+.alt-count-default{background:var(--blue-soft);color:#1d4ed8;border:1px solid #93c5fd}
 .box-tabs{display:flex;gap:0;border:1px solid var(--border);border-radius:var(--radius-sm);overflow:hidden;width:fit-content}
 .box-tab{padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer;border:none;background:var(--bg-3);color:var(--text-2);transition:background .15s,color .15s}
 .box-tab.active{background:var(--accent);color:#fff}
 .box-tab:not(:last-child){border-right:1px solid var(--border)}
-
-/* ── Per-team mini rows inside boxes ── */
+/* Team breakdown in boxes */
 .team-breakdown{margin-top:6px}
 .team-row{display:flex;align-items:center;gap:8px;font-size:11px;color:var(--text-2);padding:2px 0}
 .team-row .t-name{min-width:90px;font-weight:500;color:var(--text)}
 .team-row .t-bar{flex:1;height:4px;background:var(--bg-3);border-radius:99px;overflow:hidden}
 .team-row .t-bar-fill{height:100%;border-radius:99px;background:var(--accent);transition:width .4s}
 .team-row .t-count{min-width:24px;text-align:right;font-weight:700;color:var(--accent)}
-
-/* Active filter indicator */
+.team-alt-pills{display:flex;gap:3px;flex-wrap:wrap;margin-top:3px;margin-left:98px}
+/* TEAM VIEW: richer per-team plan breakdown */
+.team-plan-block{background:var(--bg-3);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;}
+.team-plan-block:last-child{margin-bottom:0}
+.team-plan-block-name{font-weight:700;font-size:12px;color:var(--text);margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.team-plan-alt-grid{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+/* Filter indicator */
 .filter-active-indicator{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:var(--accent-soft);color:var(--accent);border-radius:99px;font-size:11px;font-weight:600;margin-left:4px;}
 .filter-active-indicator button{background:none;border:none;cursor:pointer;color:var(--accent);font-size:13px;line-height:1;padding:0 0 0 2px;}
-
-/* ── Detail View Modal ── */
+/* Detail */
 .detail-hero{display:flex;align-items:center;gap:18px;padding:20px 22px;background:linear-gradient(135deg,var(--accent-soft),#f5f3ff);border-radius:var(--radius);margin-bottom:22px;border:1px solid #e0e7ff;}
 .detail-hero-avatar{width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#7c3aed);display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;color:white;flex-shrink:0;box-shadow:0 4px 12px rgba(79,70,229,.3);}
 .detail-hero-info{flex:1;min-width:0;}
@@ -204,8 +206,7 @@ tbody tr:hover td{background:var(--bg-3)}
 .detail-section-label::after{content:'';flex:1;height:1px;background:var(--border);}
 .team-assign-select{display:flex;gap:10px;align-items:flex-end;margin-top:6px;}
 .team-assign-select select{flex:1;}
-
-/* ── Sample Customers Modal ── */
+/* Sample modal */
 .sample-modal-backdrop{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.5);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
 .sample-modal-backdrop.open{display:flex}
 .sample-modal{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:900px;max-height:90vh;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
@@ -242,12 +243,9 @@ tbody tr:hover td{background:var(--bg-3)}
 .toast{padding:12px 18px;border-radius:12px;font-weight:600;font-size:13px;color:white;animation:slideIn .3s ease;box-shadow:var(--shadow-md);min-width:240px}
 .toast-success{background:linear-gradient(135deg,#10b981,#059669)}
 .toast-danger{background:linear-gradient(135deg,#ef4444,#dc2626)}
-
-/* view btn in boxes table */
 .btn-view-sample{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;font-size:11px;font-weight:700;background:linear-gradient(135deg,#fff7ed,#fef3c7);color:#c2410c;border:1.5px solid #fed7aa;border-radius:99px;cursor:pointer;transition:all .15s;white-space:nowrap}
 .btn-view-sample:hover{background:linear-gradient(135deg,#fed7aa,#fdba74);border-color:#fb923c;color:#7c2d12}
-
-/* ── WhatsApp Inbox Modal ── */
+/* WA Modal */
 .wa-modal-backdrop{display:none;position:fixed;inset:0;z-index:400;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
 .wa-modal-backdrop.open{display:flex}
 .wa-modal{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:540px;max-height:90vh;height:600px;display:flex;flex-direction:column;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
@@ -274,9 +272,38 @@ tbody tr:hover td{background:var(--bg-3)}
 .wa-send-btn:disabled{background:#ccc;cursor:not-allowed}
 .inbox-dot{width:8px;height:8px;border-radius:50%;background:var(--wa);display:inline-block;margin-right:4px;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
-/* ── Manager table ── */
+/* Manager */
 .manager-avatar{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#7c3aed,#4f46e5);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;color:white;flex-shrink:0}
+/* Holiday chips */
+.holiday-chip{display:inline-flex;align-items:center;gap:5px;padding:3px 8px;background:var(--yellow-soft);border:1px solid #fcd34d;border-radius:99px;font-size:11px;font-weight:600;color:#78350f;margin:2px}
+.holiday-chip button{background:none;border:none;cursor:pointer;color:#92400e;font-size:12px;line-height:1;padding:0;margin-left:2px}
+.holiday-chip button:hover{color:var(--red)}
+/* Plan progress boxes */
+.plan-progress-wrap{background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px}
+.progress-bar-outer{height:10px;background:var(--border);border-radius:99px;overflow:hidden;margin:10px 0}
+.progress-bar-inner{height:100%;border-radius:99px;transition:width .5s}
+.progress-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.progress-stat{text-align:center;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px}
+.progress-stat-val{font-size:20px;font-weight:700;color:var(--text)}
+.progress-stat-lbl{font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-3);margin-top:2px}
+/* Box timeline for plan progress */
+.box-timeline{display:flex;flex-wrap:wrap;gap:4px;margin-top:12px;}
+.box-day{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;cursor:default;position:relative;}
+.box-day.delivered{background:var(--green-soft);color:var(--green);border:1.5px solid #6ee7b7;}
+.box-day.holiday{background:var(--yellow-soft);color:var(--yellow);border:1.5px solid #fcd34d;}
+.box-day.missed{background:var(--red-soft);color:var(--red);border:1.5px solid #fca5a5;}
+.box-day.today{background:var(--accent-soft);color:var(--accent);border:2px solid var(--accent);}
+.box-day.upcoming{background:var(--bg-3);color:var(--text-3);border:1.5px solid var(--border);}
+.box-day[title]:hover::after{content:attr(title);position:absolute;bottom:32px;left:50%;transform:translateX(-50%);background:#1f2937;color:white;padding:4px 8px;border-radius:6px;font-size:10px;white-space:nowrap;z-index:10;pointer-events:none;}
+.box-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
+.box-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-2);}
+.box-legend-dot{width:10px;height:10px;border-radius:3px;}
+/* Bulk WA tabs */
+.tab-bar{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px;gap:0;}
+.tab-btn{padding:8px 18px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--text-2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;}
+.tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
 
 @media(max-width:1024px){.charts-grid{grid-template-columns:1fr}}
 @media(max-width:768px){
@@ -286,7 +313,7 @@ tbody tr:hover td{background:var(--bg-3)}
   .main{margin-left:0}
   .hamburger{display:flex}
   .stat-cards{grid-template-columns:repeat(2,1fr)}
-  .form-row,.form-row-3,.form-row-4{grid-template-columns:1fr}
+  .form-row,.form-row-3{grid-template-columns:1fr}
   .page-content{padding:16px}
   .topbar{padding:0 16px}
   .bottom-nav{display:flex;position:fixed;bottom:0;left:0;right:0;z-index:80;background:var(--bg-2);border-top:1px solid var(--border);box-shadow:0 -4px 12px rgba(0,0,0,.08);padding:8px 0 12px}
@@ -300,6 +327,7 @@ tbody tr:hover td{background:var(--bg-3)}
   .sample-customer-grid{grid-template-columns:1fr}
   .sample-modal{max-height:95vh}
   .wa-modal{max-height:95vh}
+  .progress-stats-grid{grid-template-columns:repeat(3,1fr)}
 }
 @media(min-width:769px){.bottom-nav{display:none}}
 @media(max-width:480px){.stat-cards{grid-template-columns:1fr 1fr}.modal{padding:20px}}
@@ -311,7 +339,7 @@ tbody tr:hover td{background:var(--bg-3)}
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
     <div class="sidebar-logo">
-      <div class="sidebar-logo-icon"> <img src="{{ url_for('static', filename='img/logo.png') }}" > </div>
+      <div class="sidebar-logo-icon"><img src="{{ url_for('static', filename='img/logo.png') }}"></div>
       <div class="sidebar-logo-name">Fruite<span>Delight</span></div>
     </div>
     <div class="sidebar-section">
@@ -331,7 +359,7 @@ tbody tr:hover td{background:var(--bg-3)}
       {% if session.role == 'admin' %}
       <div class="nav-item" data-page="managers" onclick="navigate('managers',this)">
         <span class="nav-icon">🧑‍💼</span> Managers
-        <span class="nav-badge badge-purple" id="mgr-badge" style="background:#7c3aed;display:none;"></span>
+        <span class="nav-badge" id="mgr-badge" style="background:#7c3aed;display:none;"></span>
       </div>
       {% endif %}
       <div class="nav-item" data-page="employees" onclick="navigate('employees',this)">
@@ -347,15 +375,12 @@ tbody tr:hover td{background:var(--bg-3)}
         <span class="nav-badge" id="enq-badge" style="background:#f97316;display:none;">0</span>
       </div>
       {% endif %}
-
-      <!-- Quick Add -->
-
-      <div class="sidebar-section">
+    </div>
+    <div class="sidebar-section">
       <div class="sidebar-section-label">Tools</div>
       <a class="nav-item" href="/admin/bulk-whatsapp">
         <span class="nav-icon">📣</span> Bulk WhatsApp
       </a>
-    </div>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Quick Add</div>
@@ -417,11 +442,11 @@ tbody tr:hover td{background:var(--bg-3)}
         {% if session.role == 'manager' %}
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:12px 16px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:var(--radius-sm);border:1px solid #c4b5fd;">
           <span style="font-size:20px;">🧑‍💼</span>
-          <div><div style="font-weight:700;color:#5b21b6;">Manager View</div><div style="font-size:12px;color:#7c3aed;">You are viewing data scoped to your assigned team only.</div></div>
+          <div><div style="font-weight:700;color:#5b21b6;">Manager View</div><div style="font-size:12px;color:#7c3aed;">Viewing data scoped to your assigned team. You can create Plans and Teams.</div></div>
         </div>
         {% endif %}
         <div class="stat-cards">
-          <div class="stat-card c-orange"><div class="stat-icon">👥</div><div class="stat-value">{{ stats.total_customers }}</div><div class="stat-label">{% if session.role == 'manager' %}Team {% endif %}Customers</div></div>
+          <div class="stat-card c-orange"><div class="stat-icon">👥</div><div class="stat-value">{{ stats.total_customers }}</div><div class="stat-label">Customers</div></div>
           <div class="stat-card c-blue"><div class="stat-icon">🚴</div><div class="stat-value">{{ stats.total_employees }}</div><div class="stat-label">Delivery Partners</div></div>
           <div class="stat-card c-green"><div class="stat-icon">✅</div><div class="stat-value">{{ stats.delivered_today }}</div><div class="stat-label">Delivered Today</div></div>
           <div class="stat-card c-yellow"><div class="stat-icon">⏳</div><div class="stat-value">{{ stats.pending_deliveries }}</div><div class="stat-label">Pending Today</div></div>
@@ -429,7 +454,7 @@ tbody tr:hover td{background:var(--bg-3)}
           <div class="stat-card c-blue"><div class="stat-icon">🏘️</div><div class="stat-value">{{ stats.active_teams }}</div><div class="stat-label">Active Teams</div></div>
         </div>
 
-        <!-- BOXES NEEDED TODAY / NEXT DAY -->
+        <!-- BOXES NEEDED -->
         <div class="card" style="margin-top:22px;">
           <div class="card-header" style="flex-wrap:wrap;gap:10px;">
             <div class="card-title" id="boxes-card-title">📦 Boxes to Prepare Today</div>
@@ -450,44 +475,43 @@ tbody tr:hover td{background:var(--bg-3)}
             <span class="nd-icon">🌙</span>
             <div>
               <strong>Showing tomorrow's boxes</strong>
-              <span style="font-weight:400;color:#7c3aed;margin-left:6px;font-size:12px;">It's past 1 pm — prepare ahead for the next delivery day.</span>
+              <span style="font-weight:400;color:#7c3aed;margin-left:6px;font-size:12px;">It's past 1 pm — prepare ahead.</span>
             </div>
             <span id="next-day-date-label" style="margin-left:auto;font-size:12px;color:#5b21b6;font-weight:600;"></span>
           </div>
           <p style="font-size:12px;color:var(--text-2);margin-bottom:16px;margin-top:-4px;">
-            <strong style="color:var(--green);">Active</strong> = scheduled active-status customers •
-            <strong style="color:#f97316;">Sample</strong> = approved-today enquiries •
-            <strong style="color:#92400e;">🔄 Alt</strong> = alternating plan item for that day
+            <strong style="color:var(--green);">Active</strong> = scheduled customers &nbsp;•&nbsp;
+            <strong style="color:#f97316;">Sample</strong> = trial boxes &nbsp;•&nbsp;
+            <strong style="color:#92400e;">🔄 Alt</strong> = alternating item count breakdown
           </p>
+
+          <!-- Plan view -->
           <div id="boxes-plan-view">
             <div class="table-wrap">
               <table class="boxes-table">
                 <thead>
                   <tr>
                     <th>Plan</th><th>Duration</th>
-                    <th style="color:var(--green);">🟢 Active Boxes</th>
-                    <th style="color:#f97316;">🟠 Sample Boxes</th>
-                    <th>📦 Total</th><th>Teams</th><th>Actions</th>
+                    <th style="color:var(--green);">🟢 Active</th>
+                    <th style="color:#f97316;">🟠 Sample</th>
+                    <th>📦 Total</th>
+                    <th>Alt Breakdown</th>
+                    <th>Teams</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody id="boxes-tbody">
-                  <tr><td colspan="7" style="text-align:center;padding:28px;color:var(--text-3);">Loading…</td></tr>
+                  <tr><td colspan="8" style="text-align:center;padding:28px;color:var(--text-3);">Loading…</td></tr>
                 </tbody>
               </table>
             </div>
           </div>
+
+          <!-- ── TEAM VIEW (FIX #1: full plan + alt breakdown per team) ── -->
           <div id="boxes-team-view" style="display:none;">
-            <div class="table-wrap">
-              <table class="boxes-table">
-                <thead>
-                  <tr><th>Team</th><th>🟢 Active Boxes</th><th>🟠 Sample Boxes</th><th>📦 Total</th><th>Plan Breakdown</th></tr>
-                </thead>
-                <tbody id="boxes-team-tbody">
-                  <tr><td colspan="5" style="text-align:center;padding:28px;color:var(--text-3);">Loading…</td></tr>
-                </tbody>
-              </table>
-            </div>
+            <div id="boxes-team-cards"></div>
           </div>
+
           <div id="boxes-total-row" style="display:none;margin-top:14px;padding:12px 16px;background:var(--accent-soft);border-radius:var(--radius-sm);align-items:center;justify-content:space-between;">
             <span style="font-weight:600;color:var(--accent);">🎯 Grand Total Boxes</span>
             <span id="boxes-grand-total" style="font-size:22px;font-weight:700;color:var(--accent);">—</span>
@@ -519,6 +543,11 @@ tbody tr:hover td{background:var(--bg-3)}
           <h2>Subscription Plans</h2>
           <button class="btn btn-primary" onclick="openModal('modal-add-plan')">＋ New Plan</button>
         </div>
+        {% if session.role == 'manager' %}
+        <div style="padding:10px 14px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:var(--radius-sm);border:1px solid #c4b5fd;margin-bottom:16px;font-size:13px;color:#5b21b6;font-weight:600;">
+          🧑‍💼 As a Manager you can create and edit plans — they will be visible to all teams.
+        </div>
+        {% endif %}
         {% if plans %}
         <div class="table-wrap">
           <table>
@@ -563,6 +592,11 @@ tbody tr:hover td{background:var(--bg-3)}
           <h2>Teams</h2>
           <button class="btn btn-primary" onclick="openModal('modal-add-team')">＋ New Team</button>
         </div>
+        {% if session.role == 'manager' %}
+        <div style="padding:10px 14px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:var(--radius-sm);border:1px solid #c4b5fd;margin-bottom:16px;font-size:13px;color:#5b21b6;font-weight:600;">
+          🧑‍💼 As a Manager you can create and manage teams.
+        </div>
+        {% endif %}
         <div class="filter-bar">
           <div class="search-wrap"><input class="form-control" id="team-search" placeholder="Search teams…" oninput="filterTeams()" style="max-width:220px;"></div>
           <select class="form-control" id="team-city-filter" onchange="filterTeams()" style="max-width:180px;">
@@ -603,18 +637,10 @@ tbody tr:hover td{background:var(--bg-3)}
           <h2>Managers</h2>
           <button class="btn btn-primary" onclick="openAddUserModal('manager')">＋ Add Manager</button>
         </div>
-        <p style="font-size:13px;color:var(--text-2);margin-bottom:20px;margin-top:-8px;">Managers can log in and see the same dashboard, but scoped only to their assigned team's customers and data.</p>
+        <p style="font-size:13px;color:var(--text-2);margin-bottom:20px;margin-top:-8px;">Managers are sub-admins — they can create plans &amp; teams, and fully manage customers scoped to their assigned team.</p>
         <div class="table-wrap">
           <table id="managers-table">
-            <thead>
-              <tr>
-                <th>Manager</th>
-                <th>User ID / Login</th>
-                <th>Phone</th>
-                <th>Team</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
+            <thead><tr><th>Manager</th><th>User ID / Login</th><th>Phone</th><th>Team</th><th>Actions</th></tr></thead>
             <tbody id="managers-grid">
               <tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">Loading managers…</td></tr>
             </tbody>
@@ -655,9 +681,7 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="section-title-bar">
           <h2>Customers</h2>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <button class="btn btn-excel btn-sm" onclick="downloadCustomersExcel()" title="Download filtered customers as Excel">
-              📥 Export Excel
-            </button>
+            <button class="btn btn-excel btn-sm" onclick="downloadCustomersExcel()">📥 Export Excel</button>
             <button class="btn btn-primary" onclick="openAddUserModal('customer')">＋ Add Customer</button>
           </div>
         </div>
@@ -681,7 +705,7 @@ tbody tr:hover td{background:var(--bg-3)}
             <option value="paused">Paused</option>
             <option value="inactive">Inactive</option>
           </select>
-          <button class="btn btn-ghost btn-sm" id="cust-clear-filters" onclick="clearCustomerFilters()" style="display:none;">✕ Clear Filters</button>
+          <button class="btn btn-ghost btn-sm" id="cust-clear-filters" onclick="clearCustomerFilters()" style="display:none;">✕ Clear</button>
         </div>
         <div id="cust-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;margin-top:-8px;"></div>
         <div class="table-wrap">
@@ -699,16 +723,14 @@ tbody tr:hover td{background:var(--bg-3)}
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
           <h2 style="font-family:var(--font-disp);font-size:22px;">Web Form Enquiries</h2>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-            <button class="btn btn-excel btn-sm" onclick="downloadEnquiriesExcel()" title="Download filtered enquiries as Excel">
-              📥 Export Excel
-            </button>
+            <button class="btn btn-excel btn-sm" onclick="downloadEnquiriesExcel()">📥 Export Excel</button>
             <button class="btn btn-primary btn-sm" onclick="openBulkEnquiriesModal()">📥 Bulk Import</button>
             <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">🔄 Refresh</button>
           </div>
         </div>
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:22px;">
           <div class="stat-card c-yellow"><div class="stat-icon">📩</div><div class="stat-value" id="enq-stat-total">—</div><div class="stat-label">Total Enquiries</div></div>
-          <div class="stat-card c-orange"><div class="stat-icon">⏳</div><div class="stat-value" id="enq-stat-pending">—</div><div class="stat-label">Pending Approval</div></div>
+          <div class="stat-card c-orange"><div class="stat-icon">⏳</div><div class="stat-value" id="enq-stat-pending">—</div><div class="stat-label">Pending</div></div>
           <div class="stat-card c-green"><div class="stat-icon">✅</div><div class="stat-value" id="enq-stat-approved">—</div><div class="stat-label">Converted</div></div>
         </div>
         <div class="filter-bar">
@@ -721,12 +743,8 @@ tbody tr:hover td{background:var(--bg-3)}
         </div>
         <div class="table-wrap">
           <table id="enq-table">
-            <thead>
-              <tr><th>Name</th><th>Phone</th><th>Plan</th><th>Time Pref.</th><th>Start Date</th><th>Payment</th><th>Received</th><th>Status</th><th>Actions</th></tr>
-            </thead>
-            <tbody id="enq-tbody">
-              <tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading enquiries…</td></tr>
-            </tbody>
+            <thead><tr><th>Name</th><th>Phone</th><th>Plan</th><th>Time Pref.</th><th>Start Date</th><th>Payment</th><th>Received</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="enq-tbody"><tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -756,13 +774,13 @@ tbody tr:hover td{background:var(--bg-3)}
       <div class="form-group"><label class="form-label">Description</label><textarea name="description" class="form-control" rows="2"></textarea></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Monthly Price (₹) *</label><input type="number" name="price_per_month" class="form-control" required min="0" step="0.01"></div>
-        <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" class="form-control" required min="1" max="31"></div>
+        <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" class="form-control" required min="1" max="365"></div>
       </div>
       <div class="form-group"><label class="form-label">Tax (%)</label><input type="number" name="tax_percent" class="form-control" min="0" step="0.01" value="0"></div>
       <div class="form-group">
-        <label class="form-label">Alternate Items <span class="opt">(optional — comma-separated, e.g. Fruits, Sprouts)</span></label>
-        <input type="text" name="alternate_items" class="form-control" placeholder="e.g. Fruits, Sprouts — leave blank for standard plan">
-        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">If filled, boxes will alternate each day between these items (Day 1 = Fruits, Day 2 = Sprouts, etc.)</div>
+        <label class="form-label">Alternate Items <span class="opt">(comma-separated e.g. Fruits, Sprouts)</span></label>
+        <input type="text" name="alternate_items" class="form-control" placeholder="e.g. Fruits, Sprouts — leave blank for standard">
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">If filled, boxes alternate each day: Day 1 = Fruits, Day 2 = Sprouts, etc.</div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-add-plan')">Cancel</button>
@@ -781,13 +799,12 @@ tbody tr:hover td{background:var(--bg-3)}
       <div class="form-group"><label class="form-label">Description</label><textarea name="description" id="ep-desc" class="form-control" rows="2"></textarea></div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Monthly Price (₹) *</label><input type="number" name="price_per_month" id="ep-price" class="form-control" required step="0.01"></div>
-        <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" id="ep-duration" class="form-control" required min="1" max="31"></div>
+        <div class="form-group"><label class="form-label">Duration (Days) *</label><input type="number" name="duration_days" id="ep-duration" class="form-control" required min="1" max="365"></div>
       </div>
       <div class="form-group"><label class="form-label">Tax (%)</label><input type="number" name="tax_percent" id="ep-tax" class="form-control" step="0.01"></div>
       <div class="form-group">
         <label class="form-label">Alternate Items <span class="opt">(comma-separated)</span></label>
         <input type="text" name="alternate_items" id="ep-alt" class="form-control" placeholder="e.g. Fruits, Sprouts">
-        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Leave blank for a standard (non-alternating) plan.</div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-plan')">Cancel</button>
@@ -842,7 +859,7 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="detail-hero-avatar" style="background:linear-gradient(135deg,#7c3aed,#4f46e5);" id="mgr-edit-avatar">M</div>
         <div class="detail-hero-info">
           <div class="detail-hero-name" id="mgr-edit-name">—</div>
-          <div class="detail-hero-sub"><span class="badge badge-purple">🧑‍💼 Manager</span></div>
+          <div class="detail-hero-sub"><span class="badge badge-purple">🧑‍💼 Manager / Sub-Admin</span></div>
         </div>
       </div>
       <div class="detail-grid" style="margin-bottom:16px;">
@@ -857,7 +874,7 @@ tbody tr:hover td{background:var(--bg-3)}
           <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
           {% endfor %}
         </select>
-        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">The manager will only see data for this team when logged in.</div>
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Manager sees only their team's data. They can also create plans and teams.</div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-edit-manager')">Cancel</button>
@@ -888,7 +905,7 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="form-group"><label class="form-label">Phone *</label><input type="text" name="phone" id="uf-phone" class="form-control" required></div>
       </div>
       <div class="form-group">
-        <label class="form-label" id="email-label">User ID <span class="opt">(email used as login ID)</span></label>
+        <label class="form-label" id="email-label">User ID</label>
         <input type="text" name="email" id="uf-email" class="form-control">
         <div class="email-hint" id="email-hint" style="display:none;">Optional for customers — auto-generated from phone if blank.</div>
       </div>
@@ -943,13 +960,13 @@ tbody tr:hover td{background:var(--bg-3)}
         </div>
         <div class="divider-label">Discount</div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Discount % (off final bill)</label><input type="number" name="discount_percent" id="uf-discpct" class="form-control" min="0" max="100" step="0.01" value="0"></div>
+          <div class="form-group"><label class="form-label">Discount %</label><input type="number" name="discount_percent" id="uf-discpct" class="form-control" min="0" max="100" step="0.01" value="0"></div>
           <div class="form-group"><label class="form-label">Flat Discount ₹</label><input type="number" name="discount_amount" id="uf-discamt" class="form-control" min="0" step="0.01" value="0"></div>
         </div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
         <button type="button" class="btn btn-ghost" onclick="closeModal('modal-add-user')">Cancel</button>
-        <button type="submit" class="btn btn-primary" id="user-submit-btn">Add & Send Credentials</button>
+        <button type="submit" class="btn btn-primary" id="user-submit-btn">Add &amp; Send Credentials</button>
       </div>
     </form>
   </div>
@@ -982,13 +999,14 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- Edit Customer -->
+<!-- Edit Customer — FIX #3: full holiday management -->
 <div class="modal-backdrop" id="modal-edit-customer">
-  <div class="modal" style="max-width:660px;">
+  <div class="modal" style="max-width:700px;">
     <div class="modal-header"><div class="modal-title">Edit Customer</div><button class="modal-close" onclick="closeModal('modal-edit-customer')">✕</button></div>
     <form method="POST" id="edit-cust-form">
       <input type="hidden" name="role" value="customer">
       <input type="hidden" name="next" value="dashboard_admin">
+      <input type="hidden" id="ec-customer-id" value="">
       <div class="form-row">
         <div class="form-group"><label class="form-label">Full Name *</label><input type="text" name="name" id="ec-name" class="form-control" required></div>
         <div class="form-group"><label class="form-label">Phone *</label><input type="text" name="phone" id="ec-phone" class="form-control" required></div>
@@ -1041,27 +1059,42 @@ tbody tr:hover td{background:var(--bg-3)}
             <option value="Sunday">Sunday</option>
           </select>
         </div>
-      
       </div>
 
-      <div class="divider-label">Alternate Options</div>
-      <div class="form-group">
-        <label class="form-label">Daily Item Sequence <span class="opt">(comma-separated, e.g. Fruits, Fruits, Sprouts)</span></label>
-        <input type="text" name="alt_options" id="ec-alt-options" class="form-control"
-               placeholder="e.g. Fruits, Fruits, Sprouts — leave blank to use plan default">
-        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">
-          Defines what this customer gets each day in repeating order.
-          Example: <strong>Fruits, Fruits, Sprouts</strong> = day1 Fruits, day2 Fruits, day3 Sprouts, day4 Fruits…
+      <!-- ── HOLIDAYS MANAGER (FIX #3) ── -->
+      <div class="divider-label">📅 Customer Holidays</div>
+      <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;">
+        <div id="ec-holidays-chips" style="display:flex;flex-wrap:wrap;gap:4px;min-height:28px;margin-bottom:10px;"></div>
+
+        <!-- Single date add -->
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:8px;">
+          <input type="date" id="ec-holiday-date" class="form-control" style="max-width:180px;">
+          <button type="button" class="btn btn-warning btn-sm" onclick="addHolidayToCustomer()">＋ Add Date</button>
         </div>
+
+        <!-- Bulk date add -->
+        <div>
+          <label class="form-label" style="margin-bottom:4px;">Bulk add <span class="opt">(comma-separated YYYY-MM-DD dates)</span></label>
+          <div style="display:flex;gap:8px;">
+            <input type="text" id="ec-holiday-bulk" class="form-control" placeholder="2025-08-15, 2025-10-02, 2025-12-25">
+            <button type="button" class="btn btn-warning btn-sm" onclick="addBulkHolidays()" style="white-space:nowrap;">＋ Add All</button>
+          </div>
+        </div>
+        <div style="margin-top:8px;font-size:11px;color:var(--text-3);">Adding a holiday cancels any pending delivery on that date. Removing it restores it to pending.</div>
+      </div>
+
+      <div class="divider-label">🔄 Alternate Options</div>
+      <div class="form-group">
+        <label class="form-label">Daily Item Sequence <span class="opt">(comma-separated)</span></label>
+        <input type="text" name="alt_options" id="ec-alt-options" class="form-control" placeholder="e.g. Fruits, Fruits, Sprouts">
+        <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Example: <strong>Fruits, Fruits, Sprouts</strong> = Day1 Fruits, Day2 Fruits, Day3 Sprouts, repeating…</div>
       </div>
       <div class="form-group">
-        <label class="form-label">Total Delivered Boxes <span class="opt">(override count)</span></label>
-        <input type="number" name="total_delivered_boxes" id="ec-total-delivered" class="form-control"
-               min="0" placeholder="Leave blank to use auto-count from deliveries">
+        <label class="form-label">Total Delivered Boxes Override <span class="opt">(leave blank for auto)</span></label>
+        <input type="number" name="total_delivered_boxes" id="ec-total-delivered" class="form-control" min="0">
       </div>
 
-
-      <div class="divider-label">Discount</div>
+      <div class="divider-label">💰 Discount</div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Discount %</label><input type="number" name="discount_percent" id="ec-discpct" class="form-control" min="0" max="100" step="0.01" value="0"></div>
         <div class="form-group"><label class="form-label">Flat Discount ₹</label><input type="number" name="discount_amount" id="ec-discamt" class="form-control" min="0" step="0.01" value="0"></div>
@@ -1074,9 +1107,9 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- View User Detail Modal -->
+<!-- View User Detail Modal — FIX #4: plan progress with box timeline -->
 <div class="modal-backdrop" id="modal-view-user">
-  <div class="modal" style="max-width:680px;">
+  <div class="modal" style="max-width:720px;">
     <div class="modal-header"><div class="modal-title" id="view-modal-title">Details</div><button class="modal-close" onclick="closeModal('modal-view-user')">✕</button></div>
     <div class="detail-hero">
       <div class="detail-hero-avatar" id="view-avatar">?</div>
@@ -1096,7 +1129,7 @@ tbody tr:hover td{background:var(--bg-3)}
       <div class="detail-field full-width"><div class="detail-field-label">Delivery Address</div><div class="detail-field-value" id="view-address">—</div></div>
     </div>
     <div id="view-customer-section">
-      <div class="detail-section-label">📋 Plan & Schedule</div>
+      <div class="detail-section-label">📋 Plan &amp; Schedule</div>
       <div class="detail-grid">
         <div class="detail-field"><div class="detail-field-label">Delivery Plan</div><div class="detail-field-value" id="view-plan-name">—</div></div>
         <div class="detail-field"><div class="detail-field-label">Start Date</div><div class="detail-field-value" id="view-start-date">—</div></div>
@@ -1106,12 +1139,17 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="detail-field"><div class="detail-field-label">Source</div><div class="detail-field-value" id="view-source">—</div></div>
         <div class="detail-field"><div class="detail-field-label">Member Since</div><div class="detail-field-value" id="view-created">—</div></div>
         <div class="detail-field"><div class="detail-field-label">Account Status</div><div class="detail-field-value" id="view-acct-status">—</div></div>
-        <div class="detail-section-label">📦 Plan Progress</div>
-<div id="view-plan-status-wrap">
-  <div style="display:flex;align-items:center;gap:10px;padding:20px;color:var(--text-3);">
-    <div class="spinner-sm"></div> <span style="font-size:13px;">Loading plan status…</span>
-  </div>
-</div>
+        <div class="detail-field full-width">
+          <div class="detail-field-label">Holidays</div>
+          <div class="detail-field-value" id="view-holidays">—</div>
+        </div>
+      </div>
+      <!-- FIX #4: Plan Progress with box timeline -->
+      <div class="detail-section-label">📦 Plan Progress</div>
+      <div id="view-plan-status-wrap">
+        <div style="display:flex;align-items:center;gap:10px;padding:20px;color:var(--text-3);">
+          <div class="spinner-sm"></div><span style="font-size:13px;">Loading plan status…</span>
+        </div>
       </div>
     </div>
     <div class="detail-section-label">🏘️ Team Assignment</div>
@@ -1151,15 +1189,15 @@ tbody tr:hover td{background:var(--bg-3)}
     <div class="sample-modal-header">
       <div>
         <div class="sample-modal-title">🧪 Sample Customers</div>
-        <div style="font-size:12px;color:var(--text-2);margin-top:3px;">Plan: <strong id="sm-plan-label">—</strong> &nbsp;·&nbsp; <span id="sm-count-label" style="color:#c2410c;font-weight:700;">0 customers</span> scheduled today</div>
+        <div style="font-size:12px;color:var(--text-2);margin-top:3px;">Plan: <strong id="sm-plan-label">—</strong> &nbsp;·&nbsp; <span id="sm-count-label" style="color:#c2410c;font-weight:700;">0 customers</span></div>
       </div>
       <button onclick="closeSampleModal()" style="background:none;border:none;font-size:22px;cursor:pointer;color:var(--text-2);line-height:1;">✕</button>
     </div>
     <div class="sample-modal-body">
-      <div id="sm-loader" class="sample-modal-loader"><div class="spinner"></div><span>Loading sample customers…</span></div>
-      <div id="sm-empty" style="display:none;" class="sample-modal-loader"><div style="font-size:36px;margin-bottom:10px;">📭</div><span style="color:var(--text-3);">No sample customers scheduled today.</span></div>
+      <div id="sm-loader" class="sample-modal-loader"><div class="spinner"></div><span>Loading…</span></div>
+      <div id="sm-empty" style="display:none;" class="sample-modal-loader"><div style="font-size:36px;margin-bottom:10px;">📭</div><span style="color:var(--text-3);">No sample customers today.</span></div>
       <div id="sm-content" style="display:none;">
-        <div class="sample-modal-summary"><span style="font-size:13px;color:var(--text-2);">🟠 <strong id="sm-summary-count">0</strong> sample boxes need to be packed today for this plan.</span></div>
+        <div class="sample-modal-summary"><span style="font-size:13px;color:var(--text-2);">🟠 <strong id="sm-summary-count">0</strong> sample boxes need packing today.</span></div>
         <div class="sample-customer-grid" id="sm-cards"></div>
       </div>
     </div>
@@ -1180,12 +1218,12 @@ tbody tr:hover td{background:var(--bg-3)}
       <button class="wa-modal-close-btn" onclick="closeWaModal()">✕</button>
     </div>
     <div class="wa-chat-area" id="wa-chat-area">
-      <div class="wa-modal-loader"><div class="spinner"></div><span>Loading messages…</span></div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:10px;color:var(--text-3);"><div class="spinner"></div></div>
     </div>
     <div class="wa-send-area">
       <textarea class="wa-send-input" id="wa-send-input" placeholder="Type a message…" rows="1"
         onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();waSend();}"></textarea>
-      <button class="wa-send-btn" id="wa-send-btn" onclick="waSend()" title="Send">➤</button>
+      <button class="wa-send-btn" id="wa-send-btn" onclick="waSend()">➤</button>
     </div>
   </div>
 </div>
@@ -1224,9 +1262,8 @@ tbody tr:hover td{background:var(--bg-3)}
           <tbody id="bulk-tbody"></tbody>
         </table>
       </div>
-      <div style="margin-top:14px;padding:12px;background:var(--bg-3);border-radius:var(--radius-sm);display:flex;align-items:center;gap:12px;font-size:12px;color:var(--text-2);">
+      <div style="margin-top:14px;padding:12px;background:var(--bg-3);border-radius:var(--radius-sm);font-size:12px;color:var(--text-2);">
         <span id="bulk-status-text">Ready to add enquiries.</span>
-        <div id="bulk-validation-errors" style="color:var(--red);display:none;margin-left:auto;"></div>
       </div>
     </div>
     <div style="padding:16px 24px;border-top:1px solid var(--border);background:var(--bg-2);display:flex;gap:10px;justify-content:flex-end;flex-shrink:0;">
@@ -1283,645 +1320,619 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<!-- Toast container -->
+<!-- FIX #5: Bulk WhatsApp to Enquiries modal -->
+<div class="modal-backdrop" id="modal-bulk-wa-enq">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <div class="modal-title">📣 Send WhatsApp to Enquiries</div>
+      <button class="modal-close" onclick="closeModal('modal-bulk-wa-enq')">✕</button>
+    </div>
+    <div>
+      <div style="margin-bottom:14px;padding:10px 14px;background:var(--yellow-soft);border:1px solid #fcd34d;border-radius:var(--radius-sm);font-size:12px;color:#78350f;">
+        📩 <strong id="bwe-count">0</strong> pending enquiries selected. Use <code>{name}</code> to personalise.
+      </div>
+      <div class="form-group">
+        <label class="form-label">Message *</label>
+        <textarea id="bwe-message" class="form-control" rows="5" placeholder="Hi {name}, we saw your enquiry about our fruit boxes..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+        <button class="btn btn-ghost" onclick="closeModal('modal-bulk-wa-enq')">Cancel</button>
+        <button class="btn btn-wa" onclick="sendBulkWaToEnquiries()">💬 Send to All Enquiries</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toast-container"></div>
 
 <!-- ============================================================ JAVASCRIPT ============================================================ -->
 <script>
 const IS_ADMIN = {{ 'true' if session.role == 'admin' else 'false' }};
-const pageTitles = {
-  home:'Dashboard', plans:'Subscription Plans', teams:'Teams',
-  managers:'Managers', employees:'Delivery Partners', customers:'Customers', enquiries:'Web Enquiries'
-};
-const _loaded = { employees:false, customers:false, managers:false };
+const pageTitles = {home:'Dashboard',plans:'Subscription Plans',teams:'Teams',managers:'Managers',employees:'Delivery Partners',customers:'Customers',enquiries:'Web Enquiries'};
+const _loaded = {employees:false,customers:false,managers:false};
+let _custData = [];
+let _enqData  = [];
 
-/* ─── in-memory caches for Excel export ─── */
-let _custData = [];   // full customer objects
-let _enqData  = [];   // full enquiry objects
+/* ── Holiday state for edit modal ── */
+let _ecCurrentId = '';
+let _ecHolidays  = [];
 
 function navigate(page, el) {
-  document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
   const sec = document.getElementById('page-'+page);
   if (sec) sec.classList.add('active');
-  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('[data-page="'+page+'"]').forEach(n => n.classList.add('active'));
-  document.querySelectorAll('.bottom-nav-item').forEach(n => n.classList.remove('active'));
-  document.querySelectorAll('.bottom-nav-item[data-page="'+page+'"]').forEach(n => n.classList.add('active'));
-  document.getElementById('page-title').textContent = pageTitles[page] || 'Dashboard';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('[data-page="'+page+'"]').forEach(n=>n.classList.add('active'));
+  document.querySelectorAll('.bottom-nav-item').forEach(n=>n.classList.remove('active'));
+  document.querySelectorAll('.bottom-nav-item[data-page="'+page+'"]').forEach(n=>n.classList.add('active'));
+  document.getElementById('page-title').textContent = pageTitles[page]||'Dashboard';
   closeSidebar();
-  if (page === 'employees' && !_loaded.employees) loadEmployees();
-  if (page === 'customers' && !_loaded.customers) loadCustomers();
-  if (page === 'managers'  && !_loaded.managers)  loadManagers();
-  if (page === 'enquiries') loadEnquiries(false);
+  if (page==='employees'&&!_loaded.employees) loadEmployees();
+  if (page==='customers'&&!_loaded.customers) loadCustomers();
+  if (page==='managers'&&!_loaded.managers)   loadManagers();
+  if (page==='enquiries') loadEnquiries(false);
 }
 
-function escHtml(s) {
-  return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function escHtml(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+
+/* ── Toast ── */
+function showToast(msg,type){
+  const c=document.getElementById('toast-container');
+  const el=document.createElement('div');el.className=`toast toast-${type||'success'}`;el.textContent=msg;c.appendChild(el);
+  setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(40px)';el.style.transition='.4s';setTimeout(()=>el.remove(),400);},3000);
 }
 
-/* ===== TOAST ===== */
-function showToast(msg, type) {
-  const c = document.getElementById('toast-container');
-  const el = document.createElement('div');
-  el.className   = `toast toast-${type || 'success'}`;
-  el.textContent = msg;
-  c.appendChild(el);
-  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(40px)'; el.style.transition='.4s'; setTimeout(()=>el.remove(),400); }, 3000);
+/* ── Excel helpers ── */
+function exportToExcel(rows,headers,filename,sheetName){
+  if(!rows||!rows.length){showToast('No data to export.','danger');return;}
+  const aoaHeaders=headers.map(h=>h.label);
+  const aoaRows=rows.map(r=>headers.map(h=>{const v=r[h.key];if(v===null||v===undefined)return '';if(Array.isArray(v))return v.join(', ');return v;}));
+  const aoa=[aoaHeaders,...aoaRows];
+  const wb=XLSX.utils.book_new();const ws=XLSX.utils.aoa_to_sheet(aoa);
+  ws['!cols']=headers.map((h,ci)=>({wch:Math.min(Math.max(h.label.length,...aoaRows.map(r=>String(r[ci]||'').length))+4,50)}));
+  XLSX.utils.book_append_sheet(wb,ws,sheetName||'Sheet1');XLSX.writeFile(wb,filename);
+  showToast(`✅ Exported ${rows.length} rows to Excel`,'success');
+}
+function downloadCustomersExcel(){
+  const visibleIds=new Set();
+  document.querySelectorAll('#customers-table tbody tr[data-name]').forEach(tr=>{if(tr.style.display!=='none'){visibleIds.add((tr.getAttribute('data-name')||'')+'||'+(tr.getAttribute('data-team')||'')+'||'+(tr.getAttribute('data-status')||'')); }});
+  const rows=_custData.filter(c=>visibleIds.has((c.name||'').toLowerCase()+'||'+(c.team_id||'')+'||'+(c.status||'active')));
+  const exportRows=rows.map(c=>({name:c.name||'',phone:c.phone||'',email:(c.email||'').endsWith('@fd')?c.email:(c.email||''),plan_name:c.plan_name!=='—'?(c.plan_name||''):'',start_date:c.start_date||'',status:c.status||'',preferred_time:c.preferred_time||'',address:c.address||'',team_name:c.team_name||'',team_area:c.team_area||'',team_city:c.team_city||'',discount_percent:c.discount_percent||0,discount_amount:c.discount_amount||0,off_days:(c.off_days||[]).join(', '),source:c.source||'',created_at:c.created_at||''}));
+  const headers=[{key:'name',label:'Name'},{key:'phone',label:'Phone'},{key:'email',label:'User ID'},{key:'plan_name',label:'Plan'},{key:'start_date',label:'Start Date'},{key:'status',label:'Status'},{key:'preferred_time',label:'Preferred Time'},{key:'address',label:'Address'},{key:'team_name',label:'Team'},{key:'team_area',label:'Area'},{key:'team_city',label:'City'},{key:'discount_percent',label:'Discount %'},{key:'discount_amount',label:'Flat Discount ₹'},{key:'off_days',label:'Off Days'},{key:'source',label:'Source'},{key:'created_at',label:'Created At'}];
+  exportToExcel(exportRows,headers,`customers_${new Date().toISOString().slice(0,10)}.xlsx`,'Customers');
+}
+function downloadEnquiriesExcel(){
+  const visibleKeys=new Set();
+  document.querySelectorAll('#enq-table tbody tr[data-name]').forEach(tr=>{if(tr.style.display!=='none')visibleKeys.add((tr.getAttribute('data-name')||'')+'||'+(tr.getAttribute('data-phone')||'')+'||'+(tr.getAttribute('data-status')||''));});
+  const rows=_enqData.filter(e=>visibleKeys.has((e.name||'').toLowerCase()+'||'+(e.phone||'').toLowerCase()+'||'+(e.status||'')));
+  const exportRows=rows.map(e=>({name:e.name||'',phone:e.phone||'',plan:e.plan||'',delivery_time:e.delivery_time||'',start_date:e.start_date||'',payment_method:e.payment_method||'',address:e.address||'',status:e.status||'',created_at:e.created_at?new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'}):''}));
+  const headers=[{key:'name',label:'Name'},{key:'phone',label:'Phone'},{key:'plan',label:'Plan'},{key:'delivery_time',label:'Delivery Time'},{key:'start_date',label:'Start Date'},{key:'payment_method',label:'Payment'},{key:'address',label:'Address'},{key:'status',label:'Status'},{key:'created_at',label:'Received On'}];
+  exportToExcel(exportRows,headers,`enquiries_${new Date().toISOString().slice(0,10)}.xlsx`,'Enquiries');
 }
 
-/* ===== EXCEL EXPORT HELPERS ===== */
-
-/**
- * Generic function: builds an XLSX from array-of-objects, applies header styling, triggers download.
- * @param {Array}  rows      - array of plain objects
- * @param {Array}  headers   - [{key, label}, …] — defines column order and friendly names
- * @param {string} filename  - e.g. "customers_2025-06-08.xlsx"
- * @param {string} sheetName - worksheet tab name
- */
-function exportToExcel(rows, headers, filename, sheetName) {
-  if (!rows || !rows.length) { showToast('No data to export.', 'danger'); return; }
-
-  // Build array-of-arrays: header row first, then data rows
-  const aoaHeaders = headers.map(h => h.label);
-  const aoaRows    = rows.map(r => headers.map(h => {
-    const v = r[h.key];
-    // Clean up nulls, arrays, objects
-    if (v === null || v === undefined) return '';
-    if (Array.isArray(v)) return v.join(', ');
-    return v;
-  }));
-  const aoa = [aoaHeaders, ...aoaRows];
-
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(aoa);
-
-  // Auto column widths
-  const colWidths = headers.map((h, ci) => {
-    const maxLen = Math.max(
-      h.label.length,
-      ...aoaRows.map(r => String(r[ci] || '').length)
-    );
-    return { wch: Math.min(maxLen + 4, 50) };
-  });
-  ws['!cols'] = colWidths;
-
-  // Freeze header row
-  ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
-
-  XLSX.utils.book_append_sheet(wb, ws, sheetName || 'Sheet1');
-  XLSX.writeFile(wb, filename);
-  showToast(`✅ Exported ${rows.length} rows to Excel`, 'success');
+/* ── FIX #5: Send bulk WA to enquiries ── */
+function openBulkWaEnquiries(){
+  const pendingCount = _enqData.filter(e=>e.status==='pending').length;
+  document.getElementById('bwe-count').textContent = pendingCount;
+  document.getElementById('bwe-message').value = '';
+  openModal('modal-bulk-wa-enq');
+}
+async function sendBulkWaToEnquiries(){
+  const msg = document.getElementById('bwe-message').value.trim();
+  if(!msg){showToast('Message is required.','danger');return;}
+  const ids = _enqData.filter(e=>e.status==='pending').map(e=>e.id);
+  if(!ids.length){showToast('No pending enquiries.','danger');return;}
+  // Build targets and call bulk send API
+  // We send via /api/admin/bulk_whatsapp/send with ids from enquiry users
+  // Since enquiries aren't users, we post directly with phone list:
+  const targets = _enqData.filter(e=>e.status==='pending').map(e=>({phone:e.phone,name:e.name||'there'}));
+  const btn = document.querySelector('#modal-bulk-wa-enq .btn-wa');
+  btn.disabled=true; btn.textContent='Sending…';
+  try{
+    // Use a custom thin endpoint or reuse the existing one with a special flag
+    const res = await fetch('/api/admin/bulk_whatsapp/send_to_enquiries',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message: msg, batch_size:10})
+    });
+    const data = await res.json();
+    btn.disabled=false; btn.textContent='💬 Send to All Enquiries';
+    if(data.success){showToast('✅ '+data.message,'success');closeModal('modal-bulk-wa-enq');}
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{btn.disabled=false; btn.textContent='💬 Send to All Enquiries'; showToast('❌ Network error.','danger');}
 }
 
-/* ── Customers Excel Download ── */
-function downloadCustomersExcel() {
-  // Gather only visible (non-filtered) rows
-  const visibleIds = new Set();
-  document.querySelectorAll('#customers-table tbody tr[data-name]').forEach(tr => {
-    if (tr.style.display !== 'none') {
-      // id is embedded in the edit button's onclick
-      const editBtn = tr.querySelector('button.btn-ghost:last-of-type') || tr.querySelector('[onclick*="openEditCustomer"]');
-      // More reliable: we stored full objects in _custData, match by name+phone
-      const name  = tr.getAttribute('data-name');
-      const team  = tr.getAttribute('data-team');
-      const status= tr.getAttribute('data-status');
-      // We'll store a composite key
-      visibleIds.add(name + '||' + team + '||' + status);
-    }
-  });
-
-  // Filter _custData to only visible rows
-  const rows = _custData.filter(c =>
-    visibleIds.has((c.name||'').toLowerCase() + '||' + (c.team_id||'') + '||' + (c.status||'active'))
-  );
-
-  // Build export rows with clean fields
-  const exportRows = rows.map(c => ({
-    name:            c.name       || '',
-    phone:           c.phone      || '',
-    email:           (c.email||'').endsWith('@fruitedelights.local') ? '' : (c.email||''),
-    plan_name:       c.plan_name !== '—' ? (c.plan_name||'') : '',
-    start_date:      c.start_date || '',
-    status:          c.status     || '',
-    preferred_time:  c.preferred_time || '',
-    address:         c.address    || '',
-    team_name:       c.team_name  || '',
-    team_area:       c.team_area  || '',
-    team_city:       c.team_city  || '',
-    discount_percent:c.discount_percent || 0,
-    discount_amount: c.discount_amount  || 0,
-    off_days:        (c.off_days||[]).join(', '),
-    source:          c.source     || '',
-    created_at:      c.created_at || '',
-  }));
-
-  const headers = [
-    { key:'name',             label:'Name'             },
-    { key:'phone',            label:'Phone'            },
-    { key:'email',            label:'User ID / Email'  },
-    { key:'plan_name',        label:'Plan'             },
-    { key:'start_date',       label:'Start Date'       },
-    { key:'status',           label:'Status'           },
-    { key:'preferred_time',   label:'Preferred Time'   },
-    { key:'address',          label:'Address'          },
-    { key:'team_name',        label:'Team'             },
-    { key:'team_area',        label:'Area'             },
-    { key:'team_city',        label:'City'             },
-    { key:'discount_percent', label:'Discount %'       },
-    { key:'discount_amount',  label:'Flat Discount ₹'  },
-    { key:'off_days',         label:'Off Days'         },
-    { key:'source',           label:'Source'           },
-    { key:'created_at',       label:'Created At'       },
-  ];
-
-  const today    = new Date().toISOString().slice(0,10);
-  const hasFilter = document.getElementById('cust-clear-filters').style.display !== 'none';
-  const label    = hasFilter ? '_filtered' : '_all';
-  exportToExcel(exportRows, headers, `customers${label}_${today}.xlsx`, 'Customers');
-}
-
-/* ── Enquiries Excel Download ── */
-function downloadEnquiriesExcel() {
-  // Gather only visible rows
-  const visibleKeys = new Set();
-  document.querySelectorAll('#enq-table tbody tr[data-name]').forEach(tr => {
-    if (tr.style.display !== 'none') {
-      visibleKeys.add((tr.getAttribute('data-name')||'') + '||' + (tr.getAttribute('data-phone')||'') + '||' + (tr.getAttribute('data-status')||''));
-    }
-  });
-
-  const rows = _enqData.filter(e =>
-    visibleKeys.has((e.name||'').toLowerCase() + '||' + (e.phone||'').toLowerCase() + '||' + (e.status||''))
-  );
-
-  const exportRows = rows.map(e => ({
-    name:           e.name            || '',
-    phone:          e.phone           || '',
-    plan:           e.plan            || '',
-    delivery_time:  e.delivery_time   || '',
-    start_date:     e.start_date      || '',
-    payment_method: e.payment_method  || '',
-    address:        e.address         || '',
-    status:         e.status          || '',
-    created_at:     e.created_at
-      ? new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})
-      : '',
-  }));
-
-  const headers = [
-    { key:'name',           label:'Name'           },
-    { key:'phone',          label:'Phone'          },
-    { key:'plan',           label:'Plan'           },
-    { key:'delivery_time',  label:'Delivery Time'  },
-    { key:'start_date',     label:'Start Date'     },
-    { key:'payment_method', label:'Payment'        },
-    { key:'address',        label:'Address'        },
-    { key:'status',         label:'Status'         },
-    { key:'created_at',     label:'Received On'    },
-  ];
-
-  const today    = new Date().toISOString().slice(0,10);
-  const q        = document.getElementById('enq-search').value.trim();
-  const st       = document.getElementById('enq-status-filter').value;
-  const hasFilter= q || st;
-  const label    = hasFilter ? '_filtered' : '_all';
-  exportToExcel(exportRows, headers, `enquiries${label}_${today}.xlsx`, 'Enquiries');
-}
-
-/* ===== MANAGERS ===== */
-let _mgrCurrentId = '';
-
-async function loadManagers() {
-  const tbody = document.getElementById('managers-grid');
-  if (!tbody) return;
-  tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);"><div class="spinner" style="margin:0 auto 12px;"></div>Loading managers…</td></tr>`;
-  try {
-    const data = await fetch('/api/admin/managers').then(r=>r.json());
-    _loaded.managers = true;
-    const badge = document.getElementById('mgr-badge');
-    if (badge) { badge.textContent = data.length; badge.style.display = data.length ? 'inline-flex' : 'none'; }
-    if (!data.length) {
-      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No managers yet. Add one with the button above.</td></tr>`;
-      return;
-    }
-    tbody.innerHTML = data.map(m => {
-      const initials = (m.name||'M').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
-      const rawPhone = (m.phone||'').replace(/\D/g,'');
-      const waPhone  = rawPhone.length===10 ? '91'+rawPhone : rawPhone;
-      const teamLabel = (m.team_name && m.team_name !== '—')
-        ? `<span class="badge badge-blue">🏘️ ${escHtml(m.team_name)}${m.team_area ? ' – '+escHtml(m.team_area) : ''}</span>`
-        : `<span class="badge badge-gray">No team assigned</span>`;
-      return `<tr>
-        <td><div style="display:flex;align-items:center;gap:10px;">
-          <div class="manager-avatar">${initials}</div>
-          <div><div style="font-weight:600;">${escHtml(m.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(m.phone||'—')}</div></div>
-        </div></td>
-        <td><div style="font-size:12px;color:var(--text-2);">${escHtml(m.email||'—')}</div></td>
-        <td>${escHtml(m.phone||'—')}</td>
-        <td>${teamLabel}</td>
-        <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
-          ${waPhone.length >= 10 ? `<a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-success btn-sm">💬</a>` : ''}
-          <button class="btn btn-primary btn-sm" onclick='openEditManager(${JSON.stringify(m)})'>🏘️ Assign Team</button>
-          <button class="btn btn-warning btn-sm" onclick="resetManagerCredentials('${m.id}','${escHtml(m.name)}')">🔑 Reset</button>
-          <form method="POST" action="/admin/users/delete/${m.id}" onsubmit="return confirm('Remove ${escHtml(m.name)} as manager?');" style="display:inline;">
-            <input type="hidden" name="next" value="dashboard_admin">
-            <button class="btn btn-danger btn-sm">🗑️</button>
-          </form>
-        </div></td>
-      </tr>`;
+/* ── Managers ── */
+let _mgrCurrentId='';
+async function loadManagers(){
+  const tbody=document.getElementById('managers-grid');if(!tbody)return;
+  tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);"><div class="spinner" style="margin:0 auto 12px;"></div>Loading…</td></tr>`;
+  try{
+    const data=await fetch('/api/admin/managers').then(r=>r.json());
+    _loaded.managers=true;
+    const badge=document.getElementById('mgr-badge');
+    if(badge){badge.textContent=data.length;badge.style.display=data.length?'inline-flex':'none';}
+    if(!data.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No managers yet.</td></tr>`;return;}
+    tbody.innerHTML=data.map(m=>{
+      const initials=(m.name||'M').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+      const rawPhone=(m.phone||'').replace(/\D/g,'');const waPhone=rawPhone.length===10?'91'+rawPhone:rawPhone;
+      const teamLabel=(m.team_name&&m.team_name!=='—')?`<span class="badge badge-blue">🏘️ ${escHtml(m.team_name)}${m.team_area?' – '+escHtml(m.team_area):''}</span>`:`<span class="badge badge-gray">No team</span>`;
+      return `<tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="manager-avatar">${initials}</div><div><div style="font-weight:600;">${escHtml(m.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(m.phone||'—')}</div></div></div></td><td><div style="font-size:12px;color:var(--text-2);">${escHtml(m.email||'—')}</div></td><td>${escHtml(m.phone||'—')}</td><td>${teamLabel}</td><td><div style="display:flex;gap:5px;flex-wrap:wrap;">${waPhone.length>=10?`<a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-success btn-sm">💬</a>`:''}<button class="btn btn-primary btn-sm" onclick='openEditManager(${JSON.stringify(m)})'>🏘️ Team</button><button class="btn btn-warning btn-sm" onclick="resetManagerCredentials('${m.id}','${escHtml(m.name)}')">🔑 Reset</button><form method="POST" action="/admin/users/delete/${m.id}" onsubmit="return confirm('Remove ${escHtml(m.name)}?');" style="display:inline;"><input type="hidden" name="next" value="dashboard_admin"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
     }).join('');
-  } catch(e) {
-    tbody.innerHTML = `<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load managers.</td></tr>`;
-  }
+  }catch{tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`;}
 }
-
-function openEditManager(m) {
-  _mgrCurrentId = m.id;
-  document.getElementById('mgr-edit-avatar').textContent = (m.name||'M').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
-  document.getElementById('mgr-edit-name').textContent  = m.name  || '—';
-  document.getElementById('mgr-edit-email').textContent = m.email || '—';
-  document.getElementById('mgr-edit-phone').textContent = m.phone || '—';
-  document.getElementById('mgr-team-select').value      = m.team_id || '';
+function openEditManager(m){
+  _mgrCurrentId=m.id;
+  document.getElementById('mgr-edit-avatar').textContent=(m.name||'M').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+  document.getElementById('mgr-edit-name').textContent=m.name||'—';
+  document.getElementById('mgr-edit-email').textContent=m.email||'—';
+  document.getElementById('mgr-edit-phone').textContent=m.phone||'—';
+  document.getElementById('mgr-team-select').value=m.team_id||'';
   openModal('modal-edit-manager');
 }
-
-async function saveManagerTeam() {
-  const teamId = document.getElementById('mgr-team-select').value;
-  const btn    = document.getElementById('mgr-save-btn');
-  btn.disabled = true; btn.textContent = '…';
-  try {
-    const res  = await fetch('/admin/managers/assign-team', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({ manager_id: _mgrCurrentId, team_id: teamId })
-    });
-    const data = await res.json();
-    btn.disabled = false; btn.textContent = '💾 Save Assignment';
-    if (data.success) {
-      showToast('✅ Team assigned!', 'success');
-      closeModal('modal-edit-manager');
-      _loaded.managers = false;
-      loadManagers();
-    } else { showToast('❌ '+(data.message||'Failed'), 'danger'); }
-  } catch { btn.disabled=false; btn.textContent='💾 Save Assignment'; showToast('❌ Network error.', 'danger'); }
+async function saveManagerTeam(){
+  const teamId=document.getElementById('mgr-team-select').value;const btn=document.getElementById('mgr-save-btn');
+  btn.disabled=true;btn.textContent='…';
+  try{
+    const res=await fetch('/admin/managers/assign-team',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({manager_id:_mgrCurrentId,team_id:teamId})});
+    const data=await res.json();btn.disabled=false;btn.textContent='💾 Save Assignment';
+    if(data.success){showToast('✅ Team assigned!','success');closeModal('modal-edit-manager');_loaded.managers=false;loadManagers();}
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{btn.disabled=false;btn.textContent='💾 Save Assignment';showToast('❌ Network error.','danger');}
+}
+async function resetManagerCredentials(id,name){
+  if(!confirm(`Reset credentials for ${name}?`))return;
+  const res=await fetch(`/admin/employees/reset-credentials/${id}`,{method:'POST'});
+  const data=await res.json();showToast(data.success?'✅ '+data.message:'❌ '+(data.message||'Failed'),data.success?'success':'danger');
+}
+async function resetEmployeeCredentials(employeeId,employeeName){
+  if(!confirm(`Reset login credentials for ${employeeName}?`))return;
+  const btn=document.getElementById(`reset-btn-${employeeId}`);if(btn){btn.disabled=true;btn.textContent='…';}
+  try{
+    const res=await fetch(`/admin/employees/reset-credentials/${employeeId}`,{method:'POST'});
+    const data=await res.json();if(btn){btn.disabled=false;btn.textContent='🔑 Reset';}
+    showToast(data.success?'✅ '+data.message:'❌ '+(data.message||'Reset failed'),data.success?'success':'danger');
+  }catch{if(btn){btn.disabled=false;btn.textContent='🔑 Reset';}showToast('❌ Network error.','danger');}
 }
 
-async function resetManagerCredentials(managerId, managerName) {
-  if (!confirm(`Reset credentials for ${managerName}? New password will be sent via WhatsApp.`)) return;
-  try {
-    const res  = await fetch(`/admin/employees/reset-credentials/${managerId}`, { method:'POST' });
-    const data = await res.json();
-    showToast(data.success ? '✅ '+data.message : '❌ '+(data.message||'Failed'), data.success ? 'success' : 'danger');
-  } catch { showToast('❌ Network error.', 'danger'); }
-}
-
-/* ===== EMPLOYEE RESET ===== */
-async function resetEmployeeCredentials(employeeId, employeeName) {
-  if (!confirm(`Reset login credentials for ${employeeName}?\nNew password will be sent via WhatsApp.`)) return;
-  const btn = document.getElementById(`reset-btn-${employeeId}`);
-  if (btn) { btn.disabled=true; btn.textContent='…'; }
-  try {
-    const res  = await fetch(`/admin/employees/reset-credentials/${employeeId}`, { method:'POST' });
-    const data = await res.json();
-    if (btn) { btn.disabled=false; btn.textContent='🔑 Reset'; }
-    showToast(data.success ? '✅ '+data.message : '❌ '+(data.message||'Reset failed'), data.success ? 'success' : 'danger');
-  } catch { if(btn){btn.disabled=false;btn.textContent='🔑 Reset';} showToast('❌ Network error.','danger'); }
-}
-
-/* ===== WHATSAPP INBOX ===== */
-let _waEnquiryId = '', _waEnquiryName = '';
-
-function openWaInbox(enquiryId, name, phone, whatsappId) {
-  _waEnquiryId = enquiryId; _waEnquiryName = name;
-  const initials = name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('') || '?';
-  document.getElementById('wa-head-avatar').textContent = initials;
-  document.getElementById('wa-head-name').textContent   = name;
-  document.getElementById('wa-head-sub').textContent    = whatsappId || phone || 'WhatsApp Chat';
-  document.getElementById('wa-chat-area').innerHTML = `<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-3);gap:10px;"><div class="spinner"></div><span>Loading…</span></div>`;
-  document.getElementById('wa-send-input').value = '';
-  document.getElementById('modal-wa-inbox').classList.add('open');
-  document.body.style.overflow = 'hidden';
+/* ── WA Inbox ── */
+let _waEnquiryId='',_waEnquiryName='';
+function openWaInbox(enquiryId,name,phone,whatsappId){
+  _waEnquiryId=enquiryId;_waEnquiryName=name;
+  const initials=name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('')||'?';
+  document.getElementById('wa-head-avatar').textContent=initials;
+  document.getElementById('wa-head-name').textContent=name;
+  document.getElementById('wa-head-sub').textContent=whatsappId||phone||'WhatsApp Chat';
+  document.getElementById('wa-chat-area').innerHTML=`<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--text-3);gap:10px;"><div class="spinner"></div></div>`;
+  document.getElementById('wa-send-input').value='';
+  document.getElementById('modal-wa-inbox').classList.add('open');document.body.style.overflow='hidden';
   loadWaThread(enquiryId);
 }
-
-function closeWaModal() {
-  document.getElementById('modal-wa-inbox').classList.remove('open');
-  document.body.style.overflow = '';
+function closeWaModal(){document.getElementById('modal-wa-inbox').classList.remove('open');document.body.style.overflow='';}
+document.getElementById('modal-wa-inbox').addEventListener('click',function(e){if(e.target===this)closeWaModal();});
+async function loadWaThread(enquiryId){
+  try{const data=await fetch(`/api/admin/wa_thread/${enquiryId}`).then(r=>r.json());renderWaMessages(data.messages||[]);}
+  catch{document.getElementById('wa-chat-area').innerHTML=`<div class="wa-chat-empty"><span class="emoji">⚠️</span><span>Failed to load.</span></div>`;}
 }
-document.getElementById('modal-wa-inbox').addEventListener('click', function(e) { if(e.target===this) closeWaModal(); });
-
-async function loadWaThread(enquiryId) {
-  try {
-    const data = await fetch(`/api/admin/wa_thread/${enquiryId}`).then(r=>r.json());
-    renderWaMessages(data.messages || []);
-  } catch {
-    document.getElementById('wa-chat-area').innerHTML = `<div class="wa-chat-empty"><span class="emoji">⚠️</span><span>Failed to load messages.</span></div>`;
-  }
+function renderWaMessages(messages){
+  const area=document.getElementById('wa-chat-area');
+  if(!messages.length){area.innerHTML=`<div class="wa-chat-empty"><span class="emoji">💬</span><span>No messages yet.</span></div>`;return;}
+  area.innerHTML=messages.map(m=>{const dir=m.direction==='out'?'out':'in';const time=m.ts?new Date(m.ts).toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'}):'';return `<div class="wa-bubble ${dir}">${escHtml(m.body)}<div class="wa-bubble-time">${time}${dir==='out'?' ✓✓':''}</div></div>`;}).join('');
+  area.scrollTop=area.scrollHeight;
+}
+async function waSend(){
+  const input=document.getElementById('wa-send-input');const btn=document.getElementById('wa-send-btn');const msg=input.value.trim();
+  if(!msg||!_waEnquiryId)return;btn.disabled=true;btn.textContent='…';
+  try{
+    const res=await fetch('/api/admin/wa_send',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enquiry_id:_waEnquiryId,message:msg})});
+    const data=await res.json();btn.disabled=false;btn.textContent='➤';
+    if(data.success){input.value='';const area=document.getElementById('wa-chat-area');area.querySelector('.wa-chat-empty')?.remove();const time=new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});const div=document.createElement('div');div.className='wa-bubble out';div.innerHTML=`${escHtml(msg)}<div class="wa-bubble-time">${time} ✓✓</div>`;area.appendChild(div);area.scrollTop=area.scrollHeight;}
+    else showToast('❌ '+(data.message||'Send failed'),'danger');
+  }catch{btn.disabled=false;btn.textContent='➤';showToast('❌ Network error.','danger');}
 }
 
-function renderWaMessages(messages) {
-  const area = document.getElementById('wa-chat-area');
-  if (!messages.length) {
-    area.innerHTML = `<div class="wa-chat-empty"><span class="emoji">💬</span><span>No messages yet. Start the conversation!</span></div>`;
+/* ── FIX #3: Holiday management in Edit Customer modal ── */
+function renderHolidayChips(){
+  const wrap=document.getElementById('ec-holidays-chips');if(!wrap)return;
+  if(!_ecHolidays.length){wrap.innerHTML='<span style="font-size:12px;color:var(--text-3);">No holidays set. Use the date picker or bulk field below to add some.</span>';return;}
+  const sorted=[..._ecHolidays].sort();
+  wrap.innerHTML=sorted.map(d=>`<span class="holiday-chip">${d}<button type="button" onclick="removeHoliday('${d}')" title="Remove">✕</button></span>`).join('');
+}
+async function addHolidayToCustomer(){
+  const d=document.getElementById('ec-holiday-date').value;
+  if(!d){showToast('Select a date first.','danger');return;}
+  if(!_ecCurrentId){
+    // Pre-save: just add locally
+    if(!_ecHolidays.includes(d))_ecHolidays.push(d);
+    renderHolidayChips();
+    document.getElementById('ec-holiday-date').value='';
     return;
   }
-  area.innerHTML = messages.map(m => {
-    const dir  = m.direction === 'out' ? 'out' : 'in';
-    const time = m.ts ? new Date(m.ts).toLocaleTimeString('en-IN', {hour:'2-digit',minute:'2-digit'}) : '';
-    return `<div class="wa-bubble ${dir}">${escHtml(m.body)}<div class="wa-bubble-time">${time}${dir==='out'?' ✓✓':''}</div></div>`;
-  }).join('');
-  area.scrollTop = area.scrollHeight;
+  await _pushHolidays([d]);
+  document.getElementById('ec-holiday-date').value='';
 }
-
-async function waSend() {
-  const input = document.getElementById('wa-send-input');
-  const btn   = document.getElementById('wa-send-btn');
-  const msg   = input.value.trim();
-  if (!msg || !_waEnquiryId) return;
-  btn.disabled=true; btn.textContent='…';
-  try {
-    const res  = await fetch('/api/admin/wa_send', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({enquiry_id:_waEnquiryId, message:msg})
-    });
-    const data = await res.json();
-    btn.disabled=false; btn.textContent='➤';
-    if (data.success) {
-      input.value = '';
-      const area = document.getElementById('wa-chat-area');
-      area.querySelector('.wa-chat-empty')?.remove();
-      const time = new Date().toLocaleTimeString('en-IN',{hour:'2-digit',minute:'2-digit'});
-      const div  = document.createElement('div');
-      div.className = 'wa-bubble out';
-      div.innerHTML = `${escHtml(msg)}<div class="wa-bubble-time">${time} ✓✓</div>`;
-      area.appendChild(div); area.scrollTop = area.scrollHeight;
-    } else { showToast('❌ '+(data.message||'Send failed'),'danger'); }
-  } catch { btn.disabled=false; btn.textContent='➤'; showToast('❌ Network error.','danger'); }
+async function addBulkHolidays(){
+  const raw=document.getElementById('ec-holiday-bulk').value;
+  const dates=raw.split(',').map(d=>d.trim()).filter(Boolean);
+  if(!dates.length){showToast('Enter at least one date.','danger');return;}
+  if(!_ecCurrentId){
+    // Pre-save: add locally
+    dates.forEach(d=>{if(!_ecHolidays.includes(d))_ecHolidays.push(d);});
+    renderHolidayChips();
+    document.getElementById('ec-holiday-bulk').value='';
+    return;
+  }
+  await _pushHolidays(dates);
+  document.getElementById('ec-holiday-bulk').value='';
 }
-
-/* ===== VIEW USER DETAIL MODAL ===== */
-function openViewModal(userData, role) {
-  const name = userData.name || '—';
-  const initials = name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
-  document.getElementById('view-avatar').textContent      = initials || '?';
-  document.getElementById('view-name').textContent        = name;
-  document.getElementById('view-modal-title').textContent = role === 'employee' ? 'Delivery Partner Details' : 'Customer Details';
-  document.getElementById('view-role-badge').innerHTML    = role === 'employee'
-    ? `<span class="badge badge-blue">🚴 Delivery Partner</span>`
-    : `<span class="badge badge-orange">👤 Customer</span>`;
-  document.getElementById('view-status-badge').innerHTML  = userData.status ? statusBadge(userData.status) : '';
-  const planEl = document.getElementById('view-plan-badge');
-  planEl.innerHTML = (userData.plan_name && userData.plan_name !== '—')
-    ? `<span class="badge badge-green">📋 ${escHtml(userData.plan_name)}</span>` : '';
-  const rawPhone = (userData.phone||'').replace(/\D/g,'');
-  const waPhone  = rawPhone.length===10 ? '91'+rawPhone : rawPhone;
-  const waLink   = document.getElementById('view-whatsapp-link');
-  if (waPhone.length >= 10) { waLink.href=`https://wa.me/${waPhone}`; waLink.style.display='inline-flex'; }
-  else { waLink.style.display='none'; }
-  const detailLink = document.getElementById('view-detail-link');
-  if (role === 'customer' && userData.id) { detailLink.href=`/admin/customers/${userData.id}`; detailLink.style.display='inline-flex'; }
-  else { detailLink.style.display='none'; }
-  document.getElementById('view-phone').textContent   = userData.phone || '—';
-  document.getElementById('view-phone').href          = userData.phone ? `tel:${userData.phone}` : '#';
-  document.getElementById('view-email').textContent   = userData.email   || '—';
-  document.getElementById('view-address').textContent = userData.address || '—';
-  const custSection = document.getElementById('view-customer-section');
-  if (role === 'customer') {
-    custSection.style.display = 'block';
-    document.getElementById('view-plan-name').textContent  = userData.plan_name      || '—';
-    document.getElementById('view-start-date').textContent = userData.start_date     || '—';
-    document.getElementById('view-pref-time').textContent  = userData.preferred_time || '—';
-    const offDays = userData.off_days || [];
-    document.getElementById('view-off-days').textContent   = offDays.length ? offDays.join(', ') : 'None';
-    const discParts = [];
-    if (parseFloat(userData.discount_percent||0)>0) discParts.push(`${userData.discount_percent}%`);
-    if (parseFloat(userData.discount_amount||0)>0)  discParts.push(`₹${userData.discount_amount}`);
-    document.getElementById('view-discount').textContent   = discParts.length ? discParts.join(' + ') : 'None';
-    document.getElementById('view-source').textContent     = userData.source     || '—';
-    document.getElementById('view-created').textContent    = userData.created_at || '—';
-    document.getElementById('view-acct-status').innerHTML  = statusBadge(userData.status || 'active');
-  } else { custSection.style.display='none'; }
-  const teamName = (userData.team_name && userData.team_name !== '—') ? userData.team_name : 'Unassigned';
-  document.getElementById('view-current-team').textContent = teamName + (userData.team_area?`, ${userData.team_area}`:'') + (userData.team_city?` — ${userData.team_city}`:'');
-  const form = document.getElementById('view-assign-team-form');
-  form.action = `/admin/users/edit/${userData.id}`;
-  document.getElementById('view-assign-role').value = role;
-  document.getElementById('va-name').value          = userData.name          || '';
-  document.getElementById('va-phone').value         = userData.phone         || '';
-  document.getElementById('va-email').value         = userData.email         || '';
-  document.getElementById('va-status').value        = userData.status        || 'active';
-  document.getElementById('va-plan').value          = (userData.plan_name && userData.plan_name !== '—') ? userData.plan_name : '';
-  document.getElementById('va-startdate').value     = userData.start_date    || '';
-  document.getElementById('va-address').value       = userData.address       || '';
-  document.getElementById('va-ptime').value         = userData.preferred_time|| '';
-  document.getElementById('view-team-select').value = userData.team_id       || '';
-  document.getElementById('view-edit-btn').onclick  = () => {
-    closeModal('modal-view-user');
-    if (role === 'customer') openEditCustomer(userData);
-    else openEditEmployee(userData.id, userData.name, userData.email, userData.phone, userData.team_id);
-  };
-  openModal('modal-view-user');
-  if (role === 'customer') loadCustomerPlanStatus(userData.id);
-
-}
-
-/* ===== SAMPLE CUSTOMERS MODAL ===== */
-let _smAllTeams = [];
-function openSampleModal(planLabel, count) {
-  document.getElementById('sm-plan-label').textContent    = planLabel;
-  document.getElementById('sm-count-label').textContent   = count + ' customer'+(count!==1?'s':'');
-  document.getElementById('sm-summary-count').textContent = count;
-  document.getElementById('sm-loader').style.display  = 'flex';
-  document.getElementById('sm-empty').style.display   = 'none';
-  document.getElementById('sm-content').style.display = 'none';
-  document.getElementById('sm-cards').innerHTML       = '';
-  document.getElementById('modal-sample-customers').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  fetch('/api/admin/sample_customers?label='+encodeURIComponent(planLabel))
-    .then(r=>r.json())
-    .then(data => {
-      _smAllTeams = data.teams || [];
-      const customers = data.customers || [];
-      document.getElementById('sm-loader').style.display  = 'none';
-      document.getElementById('sm-summary-count').textContent = customers.length;
-      document.getElementById('sm-count-label').textContent   = customers.length+' customer'+(customers.length!==1?'s':'');
-      if (!customers.length) { document.getElementById('sm-empty').style.display='flex'; return; }
-      document.getElementById('sm-content').style.display = 'block';
-      const container = document.getElementById('sm-cards');
-      customers.forEach(c => container.insertAdjacentHTML('beforeend', buildSampleCard(c)));
-    }).catch(() => {
-      document.getElementById('sm-loader').style.display = 'none';
-      document.getElementById('sm-empty').style.display  = 'flex';
-    });
-}
-function closeSampleModal() { document.getElementById('modal-sample-customers').classList.remove('open'); document.body.style.overflow=''; }
-document.getElementById('modal-sample-customers').addEventListener('click', function(e){ if(e.target===this) closeSampleModal(); });
-
-function buildSampleCard(c) {
-  const initials = (c.name||'?').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
-  const rawPhone = (c.phone||'').replace(/\D/g,'');
-  const waPhone  = rawPhone.length===10?'91'+rawPhone:rawPhone;
-  const teamOpts = _smAllTeams.map(t=>`<option value="${escHtml(t.id)}" ${t.id===c.team_id?'selected':''}>${escHtml(t.name)}${t.area?' – '+escHtml(t.area):''}</option>`).join('');
-  const teamBadge = (c.team_name&&c.team_name!=='—')?`<span class="badge badge-blue" id="sm-team-badge-${escHtml(c.id)}">${escHtml(c.team_name)}</span>`:`<span class="badge badge-gray" id="sm-team-badge-${escHtml(c.id)}">Unassigned</span>`;
-  return `<div class="sample-cust-card"><div class="sample-cust-card-header">
-    <div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;">
-      <div class="sample-cust-avatar">${initials}</div>
-      <div><div class="sample-cust-name">${escHtml(c.name)}</div><div class="sample-cust-label">🧪 ${escHtml(c.sample_label)}</div></div>
-    </div>
-    <div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">
-      ${waPhone.length>=10?`<a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-success btn-sm">💬</a>`:''}
-      <a href="/admin/customers/${escHtml(c.id)}" target="_blank" class="btn btn-ghost btn-sm">↗</a>
-    </div></div>
-    <div class="sample-cust-fields">
-      <div class="sample-cust-field"><span class="sf-icon">📞</span><span class="sf-val"><a href="tel:${escHtml(c.phone)}">${escHtml(c.phone)}</a></span></div>
-      <div class="sample-cust-field"><span class="sf-icon">📍</span><span class="sf-val">${escHtml(c.address||'—')}</span></div>
-      <div class="sample-cust-field"><span class="sf-icon">🕐</span><span class="sf-val">${escHtml(c.preferred_time||'—')}</span></div>
-    </div>
-    <div class="sample-cust-team-current"><span class="sct-label">Team&nbsp;&nbsp;</span>${teamBadge}</div>
-    <div class="sample-assign-row">
-      <select id="sm-team-sel-${escHtml(c.id)}"><option value="">— Assign a team —</option>${teamOpts}</select>
-      <button class="sample-assign-btn" id="sm-assign-btn-${escHtml(c.id)}" onclick="assignSampleTeam('${escHtml(c.id)}')">✓ Assign</button>
-    </div></div>`;
-}
-
-async function assignSampleTeam(customerId) {
-  const sel=document.getElementById('sm-team-sel-'+customerId);
-  const btn=document.getElementById('sm-assign-btn-'+customerId);
-  const teamId=sel?sel.value:'';
-  if(!teamId){showToast('Please select a team.','danger');return;}
-  btn.disabled=true; btn.textContent='…';
-  try {
-    const res=await fetch('/api/admin/assign_team',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({customer_id:customerId,team_id:teamId})});
+async function _pushHolidays(dates){
+  try{
+    const res=await fetch(`/api/admin/customer/${_ecCurrentId}/holidays/add`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({dates})});
     const data=await res.json();
-    btn.disabled=false; btn.textContent='✓ Assign';
-    if(data.success){const badge=document.getElementById('sm-team-badge-'+customerId);if(badge){badge.className='badge badge-blue';badge.textContent=data.team_name||'Assigned';}showToast('✅ Team assigned!','success');}
+    if(data.success){_ecHolidays=data.holidays;renderHolidayChips();showToast(`✅ ${data.message}`,'success');}
     else showToast('❌ '+(data.message||'Failed'),'danger');
-  } catch{btn.disabled=false;btn.textContent='✓ Assign';showToast('❌ Network error.','danger');}
+  }catch{showToast('❌ Network error.','danger');}
+}
+async function removeHoliday(dateStr){
+  if(!_ecCurrentId){
+    _ecHolidays=_ecHolidays.filter(d=>d!==dateStr);renderHolidayChips();return;}
+  try{
+    const res=await fetch(`/api/admin/customer/${_ecCurrentId}/holidays/remove`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({date:dateStr})});
+    const data=await res.json();
+    if(data.success){_ecHolidays=data.holidays;renderHolidayChips();showToast('🗓️ Holiday removed.','success');}
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{showToast('❌ Network error.','danger');}
 }
 
-/* ===== BOXES NEEDED ===== */
-let _boxesData = [];
-let _boxView   = 'plan';
+/* ── View modal ── */
+function openViewModal(userData,role){
+  const name=userData.name||'—';
+  const initials=name.split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+  document.getElementById('view-avatar').textContent=initials||'?';
+  document.getElementById('view-name').textContent=name;
+  document.getElementById('view-modal-title').textContent=role==='employee'?'Delivery Partner Details':'Customer Details';
+  document.getElementById('view-role-badge').innerHTML=role==='employee'?`<span class="badge badge-blue">🚴 Delivery Partner</span>`:`<span class="badge badge-orange">👤 Customer</span>`;
+  document.getElementById('view-status-badge').innerHTML=userData.status?statusBadge(userData.status):'';
+  const planEl=document.getElementById('view-plan-badge');
+  planEl.innerHTML=(userData.plan_name&&userData.plan_name!=='—')?`<span class="badge badge-green">📋 ${escHtml(userData.plan_name)}</span>`:'';
+  const rawPhone=(userData.phone||'').replace(/\D/g,'');const waPhone=rawPhone.length===10?'91'+rawPhone:rawPhone;
+  const waLink=document.getElementById('view-whatsapp-link');
+  if(waPhone.length>=10){waLink.href=`https://wa.me/${waPhone}`;waLink.style.display='inline-flex';}else{waLink.style.display='none';}
+  const detailLink=document.getElementById('view-detail-link');
+  if(role==='customer'&&userData.id){detailLink.href=`/admin/customers/${userData.id}`;detailLink.style.display='inline-flex';}else{detailLink.style.display='none';}
+  document.getElementById('view-phone').textContent=userData.phone||'—';
+  document.getElementById('view-phone').href=userData.phone?`tel:${userData.phone}`:'#';
+  document.getElementById('view-email').textContent=userData.email||'—';
+  document.getElementById('view-address').textContent=userData.address||'—';
+  const custSection=document.getElementById('view-customer-section');
+  if(role==='customer'){
+    custSection.style.display='block';
+    document.getElementById('view-plan-name').textContent=userData.plan_name||'—';
+    document.getElementById('view-start-date').textContent=userData.start_date||'—';
+    document.getElementById('view-pref-time').textContent=userData.preferred_time||'—';
+    const offDays=userData.off_days||[];
+    document.getElementById('view-off-days').textContent=offDays.length?offDays.join(', '):'None';
+    const discParts=[];
+    if(parseFloat(userData.discount_percent||0)>0)discParts.push(`${userData.discount_percent}%`);
+    if(parseFloat(userData.discount_amount||0)>0)discParts.push(`₹${userData.discount_amount}`);
+    document.getElementById('view-discount').textContent=discParts.length?discParts.join(' + '):'None';
+    document.getElementById('view-source').textContent=userData.source||'—';
+    document.getElementById('view-created').textContent=userData.created_at||'—';
+    document.getElementById('view-acct-status').innerHTML=statusBadge(userData.status||'active');
+    // Holidays
+    const holidaysEl=document.getElementById('view-holidays');
+    if(userData.holidays&&userData.holidays.length){
+      const sorted=[...userData.holidays].sort();
+      holidaysEl.innerHTML=sorted.map(d=>`<span class="holiday-chip" style="cursor:default;">${d}</span>`).join('');
+    }else{holidaysEl.textContent='None';}
+  }else{custSection.style.display='none';}
+  const teamName=(userData.team_name&&userData.team_name!=='—')?userData.team_name:'Unassigned';
+  document.getElementById('view-current-team').textContent=teamName+(userData.team_area?`, ${userData.team_area}`:'')+(userData.team_city?` — ${userData.team_city}`:'');
+  const form=document.getElementById('view-assign-team-form');
+  form.action=`/admin/users/edit/${userData.id}`;
+  document.getElementById('view-assign-role').value=role;
+  document.getElementById('va-name').value=userData.name||'';
+  document.getElementById('va-phone').value=userData.phone||'';
+  document.getElementById('va-email').value=userData.email||'';
+  document.getElementById('va-status').value=userData.status||'active';
+  document.getElementById('va-plan').value=(userData.plan_name&&userData.plan_name!=='—')?userData.plan_name:'';
+  document.getElementById('va-startdate').value=userData.start_date||'';
+  document.getElementById('va-address').value=userData.address||'';
+  document.getElementById('va-ptime').value=userData.preferred_time||'';
+  document.getElementById('view-team-select').value=userData.team_id||'';
+  document.getElementById('view-edit-btn').onclick=()=>{closeModal('modal-view-user');if(role==='customer')openEditCustomer(userData);else openEditEmployee(userData.id,userData.name,userData.email,userData.phone,userData.team_id);};
+  openModal('modal-view-user');
+  if(role==='customer')loadCustomerPlanStatus(userData.id);
+}
 
-function switchBoxView(view) {
-  _boxView = view;
-  document.getElementById('tab-plan').classList.toggle('active', view==='plan');
-  document.getElementById('tab-team').classList.toggle('active', view==='team');
-  document.getElementById('boxes-plan-view').style.display = view==='plan' ? '' : 'none';
-  document.getElementById('boxes-team-view').style.display = view==='team' ? '' : 'none';
+/* ── FIX #4: Plan Progress with full box-by-box timeline ── */
+async function loadCustomerPlanStatus(customerId){
+  const wrap=document.getElementById('view-plan-status-wrap');if(!wrap)return;
+  wrap.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:16px;color:var(--text-3);"><div class="spinner-sm"></div><span style="font-size:13px;">Loading plan status…</span></div>`;
+  try{
+    const d=await fetch(`/api/customer/my_plan_status`).then(r=>r.json()).catch(()=>null);
+    // Try admin endpoint first, fall back to customer one
+    const data=await fetch(`/api/admin/customer_plan_status/${customerId}`).then(r=>r.json());
+    // For box-by-box timeline, we need the boxes array. Try the customer endpoint via admin lookup.
+    if(!data.success||!data.has_plan){wrap.innerHTML=`<div style="padding:12px 0;color:var(--text-3);font-size:13px;">No active plan assigned.</div>`;return;}
+    const barColor=data.completion_pct>=80?'var(--green)':data.completion_pct>=40?'#f59e0b':'var(--accent)';
+    const altInfo=data.is_alternate_plan?`<div style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:11px;color:var(--text-3);">Today's item:</span><span class="alt-pill">🔄 ${escHtml(data.today_item||'—')}</span></div>`:'';
+    // Box timeline — build from admin endpoint data (which has delivered count, period)
+    const boxHtml = await buildBoxTimeline(customerId, data);
+    wrap.innerHTML=`<div class="plan-progress-wrap">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
+        <div><span style="font-weight:700;font-size:14px;">${escHtml(data.plan_name)}</span><span style="font-size:11px;color:var(--text-3);margin-left:8px;">${data.period_start} → ${data.period_end}</span></div>
+        <span style="font-size:22px;font-weight:700;color:${barColor};">${data.completion_pct}%</span>
+      </div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${data.completion_pct}%;background:${barColor};"></div></div>
+      ${altInfo}
+      <div class="progress-stats-grid">
+        <div class="progress-stat"><div class="progress-stat-val">${data.duration_days}</div><div class="progress-stat-lbl">Total Days</div></div>
+        <div class="progress-stat" style="background:var(--green-soft);"><div class="progress-stat-val" style="color:var(--green);">${data.delivered}</div><div class="progress-stat-lbl" style="color:var(--green);">Delivered</div></div>
+        <div class="progress-stat" style="background:var(--blue-soft);"><div class="progress-stat-val" style="color:var(--blue);">${data.remaining_days}</div><div class="progress-stat-lbl" style="color:var(--blue);">Remaining</div></div>
+      </div>
+      ${boxHtml}
+      <div style="margin-top:10px;font-size:11px;color:var(--text-3);">
+        Period: ${data.period_start} to ${data.period_end} &nbsp;·&nbsp; ₹${data.plan_price}/cycle
+      </div>
+    </div>`;
+  }catch(err){wrap.innerHTML=`<div style="padding:12px 0;color:var(--red);font-size:13px;">Failed to load. ${err}</div>`;}
+}
+
+async function buildBoxTimeline(customerId, planData){
+  // Fetch detailed box data from admin plan status endpoint (has period info)
+  // Build calendar grid from period_start → period_end
+  try{
+    const start = new Date(planData.period_start);
+    const end   = new Date(planData.period_end);
+    const today = new Date().toISOString().slice(0,10);
+
+    // Fetch deliveries for this customer in range (we use the customer plan status API which has boxes array)
+    // Since admin endpoint doesn't return boxes[], fetch the customer-facing one via admin override
+    const res = await fetch(`/api/admin/customer_box_timeline/${customerId}`).catch(()=>null);
+    let boxes = null;
+    if(res && res.ok) boxes = await res.json().catch(()=>null);
+
+    if(!boxes || !boxes.boxes){
+      // Fallback: just show simple count stats without timeline
+      return '';
+    }
+
+    const statusColors={delivered:'delivered',holiday:'holiday',missed:'missed',today:'today',upcoming:'upcoming'};
+    const statusEmoji={delivered:'✓',holiday:'🏖',missed:'✗',today:'•',upcoming:'○'};
+    const statusLabel={delivered:'Delivered',holiday:'Holiday / Off',missed:'Missed',today:'Today',upcoming:'Upcoming'};
+
+    const tileHtml = boxes.boxes.map(b=>{
+      const cls=statusColors[b.status]||'upcoming';
+      return `<div class="box-day ${cls}" title="${b.date} (${b.day}) — ${statusLabel[b.status]||b.status}">${statusEmoji[b.status]||''}</div>`;
+    }).join('');
+
+    return `
+      <div style="margin-top:14px;">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-3);margin-bottom:8px;">Day-by-Day Breakdown</div>
+        <div class="box-timeline">${tileHtml}</div>
+        <div class="box-legend">
+          <div class="box-legend-item"><div class="box-legend-dot" style="background:var(--green);"></div>Delivered</div>
+          <div class="box-legend-item"><div class="box-legend-dot" style="background:var(--yellow);"></div>Holiday/Off</div>
+          <div class="box-legend-item"><div class="box-legend-dot" style="background:var(--red);"></div>Missed</div>
+          <div class="box-legend-item"><div class="box-legend-dot" style="background:var(--accent);"></div>Today</div>
+          <div class="box-legend-item"><div class="box-legend-dot" style="background:var(--border);"></div>Upcoming</div>
+        </div>
+      </div>`;
+  }catch{return '';}
+}
+
+/* ── Sample modal ── */
+let _smAllTeams=[];
+function openSampleModal(planLabel,count){
+  document.getElementById('sm-plan-label').textContent=planLabel;
+  document.getElementById('sm-count-label').textContent=count+' customer'+(count!==1?'s':'');
+  document.getElementById('sm-summary-count').textContent=count;
+  document.getElementById('sm-loader').style.display='flex';
+  document.getElementById('sm-empty').style.display='none';
+  document.getElementById('sm-content').style.display='none';
+  document.getElementById('sm-cards').innerHTML='';
+  document.getElementById('modal-sample-customers').classList.add('open');document.body.style.overflow='hidden';
+  fetch('/api/admin/sample_customers?label='+encodeURIComponent(planLabel)).then(r=>r.json()).then(data=>{
+    _smAllTeams=data.teams||[];const customers=data.customers||[];
+    document.getElementById('sm-loader').style.display='none';
+    document.getElementById('sm-summary-count').textContent=customers.length;
+    document.getElementById('sm-count-label').textContent=customers.length+' customer'+(customers.length!==1?'s':'');
+    if(!customers.length){document.getElementById('sm-empty').style.display='flex';return;}
+    document.getElementById('sm-content').style.display='block';
+    const container=document.getElementById('sm-cards');
+    customers.forEach(c=>container.insertAdjacentHTML('beforeend',buildSampleCard(c)));
+  }).catch(()=>{document.getElementById('sm-loader').style.display='none';document.getElementById('sm-empty').style.display='flex';});
+}
+function closeSampleModal(){document.getElementById('modal-sample-customers').classList.remove('open');document.body.style.overflow='';}
+document.getElementById('modal-sample-customers').addEventListener('click',function(e){if(e.target===this)closeSampleModal();});
+function buildSampleCard(c){
+  const initials=(c.name||'?').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
+  const rawPhone=(c.phone||'').replace(/\D/g,'');const waPhone=rawPhone.length===10?'91'+rawPhone:rawPhone;
+  const teamOpts=_smAllTeams.map(t=>`<option value="${escHtml(t.id)}" ${t.id===c.team_id?'selected':''}>${escHtml(t.name)}${t.area?' – '+escHtml(t.area):''}</option>`).join('');
+  const teamBadge=(c.team_name&&c.team_name!=='—')?`<span class="badge badge-blue" id="sm-team-badge-${escHtml(c.id)}">${escHtml(c.team_name)}</span>`:`<span class="badge badge-gray" id="sm-team-badge-${escHtml(c.id)}">Unassigned</span>`;
+  return `<div class="sample-cust-card"><div class="sample-cust-card-header"><div style="display:flex;align-items:center;gap:10px;flex:1;min-width:0;"><div class="sample-cust-avatar">${initials}</div><div><div class="sample-cust-name">${escHtml(c.name)}</div><div class="sample-cust-label">🧪 ${escHtml(c.sample_label)}</div></div></div><div style="display:flex;flex-direction:column;gap:4px;align-items:flex-end;flex-shrink:0;">${waPhone.length>=10?`<a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-success btn-sm">💬</a>`:''}<a href="/admin/customers/${escHtml(c.id)}" target="_blank" class="btn btn-ghost btn-sm">↗</a></div></div><div class="sample-cust-fields"><div class="sample-cust-field"><span class="sf-icon">📞</span><span class="sf-val"><a href="tel:${escHtml(c.phone)}">${escHtml(c.phone)}</a></span></div><div class="sample-cust-field"><span class="sf-icon">📍</span><span class="sf-val">${escHtml(c.address||'—')}</span></div><div class="sample-cust-field"><span class="sf-icon">🕐</span><span class="sf-val">${escHtml(c.preferred_time||'—')}</span></div></div><div class="sample-cust-team-current">${teamBadge}</div><div class="sample-assign-row"><select id="sm-team-sel-${escHtml(c.id)}"><option value="">— Assign —</option>${teamOpts}</select><button class="sample-assign-btn" id="sm-assign-btn-${escHtml(c.id)}" onclick="assignSampleTeam('${escHtml(c.id)}')">✓ Assign</button></div></div>`;
+}
+async function assignSampleTeam(customerId){
+  const sel=document.getElementById('sm-team-sel-'+customerId);const btn=document.getElementById('sm-assign-btn-'+customerId);
+  const teamId=sel?sel.value:'';if(!teamId){showToast('Select a team.','danger');return;}
+  btn.disabled=true;btn.textContent='…';
+  try{const res=await fetch('/api/admin/assign_team',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({customer_id:customerId,team_id:teamId})});const data=await res.json();btn.disabled=false;btn.textContent='✓ Assign';if(data.success){const badge=document.getElementById('sm-team-badge-'+customerId);if(badge){badge.className='badge badge-blue';badge.textContent=data.team_name||'Assigned';}showToast('✅ Team assigned!','success');}else showToast('❌ '+(data.message||'Failed'),'danger');}
+  catch{btn.disabled=false;btn.textContent='✓ Assign';showToast('❌ Network error.','danger');}
+}
+
+/* ── FIX #1 & #2: Boxes ── */
+let _boxesData=[];let _boxView='plan';
+
+function switchBoxView(view){
+  _boxView=view;
+  document.getElementById('tab-plan').classList.toggle('active',view==='plan');
+  document.getElementById('tab-team').classList.toggle('active',view==='team');
+  document.getElementById('boxes-plan-view').style.display=view==='plan'?'':'none';
+  document.getElementById('boxes-team-view').style.display=view==='team'?'':'none';
   renderBoxes();
 }
-
-async function loadBoxes(force) {
-  if (_boxesData.length && !force) { renderBoxes(); return; }
-  document.getElementById('boxes-tbody').innerHTML      = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--text-3);">Loading…</td></tr>`;
-  document.getElementById('boxes-team-tbody').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--text-3);">Loading…</td></tr>`;
-  try {
-    _boxesData = await fetch('/api/admin/boxes_needed').then(r=>r.json());
-    renderBoxes();
-  } catch {
-    document.getElementById('boxes-tbody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:20px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">Retry</button></td></tr>`;
-  }
+async function loadBoxes(force){
+  if(_boxesData.length&&!force){renderBoxes();return;}
+  document.getElementById('boxes-tbody').innerHTML=`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-3);">Loading…</td></tr>`;
+  document.getElementById('boxes-team-cards').innerHTML=`<div style="text-align:center;padding:24px;color:var(--text-3);">Loading…</div>`;
+  try{_boxesData=await fetch('/api/admin/boxes_needed').then(r=>r.json());renderBoxes();}
+  catch{document.getElementById('boxes-tbody').innerHTML=`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">Retry</button></td></tr>`;}
 }
 
-function renderBoxes() {
-  const sf   = document.getElementById('boxes-status-filter').value;
-  const data = _boxesData.filter(p => {
-    if (sf==='active') return p.active_customers>0;
-    if (sf==='sample') return p.sample_boxes>0;
-    return (p.active_customers+p.sample_boxes)>0;
+function _altCountBadges(altCounts){
+  if(!altCounts||!Object.keys(altCounts).length)return '';
+  return Object.entries(altCounts).map(([item,cnt])=>{
+    const lower=item.toLowerCase();
+    const cls=lower.includes('fruit')?'alt-count-fruit':lower.includes('sprout')?'alt-count-sprout':'alt-count-default';
+    return `<span class="alt-count-pill ${cls}">🔄 ${escHtml(item)}: ${cnt}</span>`;
+  }).join('');
+}
+
+function renderBoxes(){
+  const sf=document.getElementById('boxes-status-filter').value;
+
+  // FIX #2: include ALL plans regardless of active count — filter only hides truly zero rows
+  const data=_boxesData.filter(p=>{
+    const tot=(p.active_customers||0)+(p.sample_boxes||0);
+    if(sf==='active') return (p.active_customers||0)>0;
+    if(sf==='sample') return (p.sample_boxes||0)>0;
+    return tot>0;
   });
 
-  const isNextDay = _boxesData.length && _boxesData[0].is_next_day;
-  const banner    = document.getElementById('next-day-banner');
-  const cardTitle = document.getElementById('boxes-card-title');
-  if (isNextDay) {
-    banner.style.display = 'flex';
-    const targetDate     = _boxesData[0].target_date || '';
-    document.getElementById('next-day-date-label').textContent = targetDate
-      ? new Date(targetDate+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'})
-      : '';
-    cardTitle.textContent = '📦 Boxes for Tomorrow';
-  } else {
-    banner.style.display = 'none';
-    cardTitle.textContent = '📦 Boxes to Prepare Today';
-  }
+  const isNextDay=_boxesData.length&&_boxesData[0].is_next_day;
+  const banner=document.getElementById('next-day-banner');
+  document.getElementById('boxes-card-title').textContent=isNextDay?'📦 Boxes for Tomorrow':'📦 Boxes to Prepare Today';
+  if(isNextDay){banner.style.display='flex';const td=_boxesData[0].target_date||'';document.getElementById('next-day-date-label').textContent=td?new Date(td+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'}):'';} else{banner.style.display='none';}
 
-  let grandActive=0, grandSample=0;
-  data.forEach(p=>{ grandActive+=p.active_customers; grandSample+=p.sample_boxes; });
-  const grandTotal = grandActive + grandSample;
+  let grandActive=0,grandSample=0;
+  data.forEach(p=>{grandActive+=(p.active_customers||0);grandSample+=(p.sample_boxes||0);});
+  const grandTotal=grandActive+grandSample;
 
-  const tbody  = document.getElementById('boxes-tbody');
-  if (!data.length) {
-    tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--text-3);">No boxes ${isNextDay?'for tomorrow':'today'}.</td></tr>`;
-  } else {
-    const maxActive = Math.max(...data.map(d=>d.active_customers), 1);
-    tbody.innerHTML = data.map(p => {
-      const isSample   = p.is_sample_plan === true;
-      const hasSamples = p.sample_boxes > 0;
-      const isAlt      = p.is_alternate_plan;
-      const altLabel   = p.today_item;
-      const nextDayTag = p.is_next_day
-        ? `<span class="badge badge-purple" style="font-size:10px;margin-left:6px;">Next Day</span>` : '';
+  /* ── PLAN VIEW ── */
+  const tbody=document.getElementById('boxes-tbody');
+  if(!data.length){tbody.innerHTML=`<tr><td colspan="8" style="text-align:center;padding:24px;color:var(--text-3);">No boxes ${isNextDay?'for tomorrow':'today'}.</td></tr>`;}
+  else{
+    const maxActive=Math.max(...data.map(d=>d.active_customers||0),1);
+    tbody.innerHTML=data.map(p=>{
+      const isSample=p.is_sample_plan===true;
+      const hasSamples=(p.sample_boxes||0)>0;
+      const isAlt=p.is_alternate_plan;
+      const altLabel=p.today_item;
+      const globalAlt=p.global_alt_counts||{};
+      const ndTag=p.is_next_day?`<span class="badge badge-purple" style="font-size:10px;margin-left:6px;">Next Day</span>`:'';
 
-      let planCell;
-      if (isSample) {
-        planCell = `<td><span class="badge badge-orange" style="font-size:12px;">🧪 ${escHtml(p.plan_name)}</span><div style="font-size:10px;color:var(--text-3);margin-top:3px;">unmatched sample</div></td>`;
-      } else {
-        planCell = `<td>
-          <div style="font-weight:600;">${escHtml(p.plan_name)}${nextDayTag}</div>
-          <div style="font-size:11px;color:var(--text-3);">₹${p.plan_price}</div>
-          ${isAlt && altLabel ? `<div style="margin-top:5px;"><span class="alt-pill">🔄 Today: ${escHtml(altLabel)}</span></div>` : ''}
-          ${!isAlt && !isSample ? `<div style="margin-top:5px;font-size:10px;color:var(--text-3);">Standard — per-customer sequence if set</div>` : ''}
-        </td>`;
-      }
+      const planCell=isSample
+        ?`<td><span class="badge badge-orange" style="font-size:12px;">🧪 ${escHtml(p.plan_name)}</span><div style="font-size:10px;color:var(--text-3);margin-top:3px;">unmatched sample</div></td>`
+        :`<td><div style="font-weight:600;">${escHtml(p.plan_name)}${ndTag}</div><div style="font-size:11px;color:var(--text-3);">₹${p.plan_price||0}${p.duration_days?' · '+p.duration_days+' days':''}</div>${isAlt&&altLabel?`<div style="margin-top:5px;"><span class="alt-pill">🔄 Today: ${escHtml(altLabel)}</span></div>`:''}</td>`;
 
-      const durCell    = isSample ? `<td><span style="color:var(--text-3);">—</span></td>` : `<td><span class="badge badge-blue">${p.duration_days||'—'} days</span></td>`;
-      const activeW    = Math.round((p.active_customers/maxActive)*100);
-      const activeCell = isSample ? `<td><span style="color:var(--text-3);">—</span></td>`
-        : `<td><div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers}</div>
-             <div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div></td>`;
+      const durCell=isSample?`<td>—</td>`:`<td><span class="badge badge-blue">${p.duration_days||'—'} days</span></td>`;
+      const activeW=Math.round(((p.active_customers||0)/maxActive)*100);
+      const activeCell=isSample?`<td>—</td>`:`<td><div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers||0}</div><div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div></td>`;
+      const sampleCell=hasSamples?`<td><div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;color:#f97316;font-size:16px;">${p.sample_boxes||0}</span><button class="btn-view-sample" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes||0})">👁 View</button></div></td>`:`<td style="color:var(--text-3);">0</td>`;
+      const totalBig=`<span style="font-size:20px;font-weight:700;color:var(--text);">${(p.active_customers||0)+(p.sample_boxes||0)}</span>`;
+      const altBreakdownCell=isAlt&&Object.keys(globalAlt).length
+        ?`<td><div style="display:flex;flex-wrap:wrap;gap:3px;">${_altCountBadges(globalAlt)}</div></td>`
+        :`<td style="color:var(--text-3);font-size:11px;">${isSample?'—':'Standard'}</td>`;
 
-      const sampleCell = hasSamples
-        ? `<td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-             <span style="font-weight:700;color:#f97316;font-size:16px;">${p.sample_boxes}</span>
-             <button class="btn-view-sample" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes})">👁 View</button>
-           </div></td>`
-        : `<td><span style="color:var(--text-3);">0</span></td>`;
+      // Teams with per-team alt counts in plan view
+      const teamsHtml=(!isSample&&(p.teams||[]).length)
+        ?`<div class="team-breakdown">${p.teams.map(t=>{const tw=Math.round((t.count/Math.max(p.active_customers||1,1))*100);const teamAltBadges=isAlt&&t.alt_counts&&Object.keys(t.alt_counts).length?`<div class="team-alt-pills">${_altCountBadges(t.alt_counts)}</div>`:'';return `<div class="team-row"><span class="t-name" title="${escHtml(t.team_name)}">${escHtml((t.team_name||'').substring(0,14))}</span><span class="t-bar"><span class="t-bar-fill" style="width:${tw}%;"></span></span><span class="t-count">${t.count}</span></div>${teamAltBadges}`;}).join('')}</div>`
+        :`<span style="color:var(--text-3);font-size:11px;">—</span>`;
 
-      const totalBig   = (p.active_customers+p.sample_boxes)>0
-        ? `<span style="font-size:20px;font-weight:700;color:var(--text);">${p.active_customers+p.sample_boxes}</span>`
-        : `<span style="color:var(--text-3);">0</span>`;
-
-      const teamsHtml  = (!isSample && (p.teams||[]).length)
-        ? `<div class="team-breakdown">${p.teams.map(t=>{const tw=Math.round((t.count/Math.max(p.active_customers,1))*100);return `<div class="team-row"><span class="t-name">${escHtml(t.team_name)}</span><span class="t-bar"><span class="t-bar-fill" style="width:${tw}%;"></span></span><span class="t-count">${t.count}</span></div>`;}).join('')}</div>`
-        : `<span style="color:var(--text-3);font-size:11px;">—</span>`;
-
-      const actCell    = hasSamples
-        ? `<td><button class="btn btn-ghost btn-sm" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes})">👁 View Customers</button></td>`
-        : `<td><span style="color:var(--text-3);font-size:11px;">—</span></td>`;
-
-      const rowStyle   = isSample ? 'background:rgba(249,115,22,.04);' : '';
-      return `<tr style="${rowStyle}">${planCell}${durCell}${activeCell}${sampleCell}<td>${totalBig}</td><td>${teamsHtml}</td>${actCell}</tr>`;
+      const actCell=hasSamples?`<td><button class="btn btn-ghost btn-sm" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes||0})">👁 Customers</button></td>`:`<td style="color:var(--text-3);font-size:11px;">—</td>`;
+      const rowStyle=isSample?'background:rgba(249,115,22,.04);':'';
+      return `<tr style="${rowStyle}">${planCell}${durCell}${activeCell}${sampleCell}<td>${totalBig}</td>${altBreakdownCell}<td>${teamsHtml}</td>${actCell}</tr>`;
     }).join('');
   }
 
+  /* ── FIX #1: TEAM VIEW — full plan + alt breakdown per team ── */
+  // Build team map: team_id -> {name, area, plans: {planId: {...}}, totalActive, totalSample}
   const teamMap={};
-  _boxesData.forEach(p=>{ (p.teams||[]).forEach(t=>{
-    if(!teamMap[t.team_id]) teamMap[t.team_id]={name:t.team_name,active:0,sample:0,plans:{}};
-    teamMap[t.team_id].active+=t.count;
-    if(!teamMap[t.team_id].plans[p.plan_name]) teamMap[t.team_id].plans[p.plan_name]={active:0};
-    teamMap[t.team_id].plans[p.plan_name].active+=t.count;
-  });});
-  const teamRows=Object.values(teamMap).sort((a,b)=>(b.active+b.sample)-(a.active+a.sample));
-  const teamTbody=document.getElementById('boxes-team-tbody');
-  const fRows=teamRows.filter(t=>{ if(sf==='active')return t.active>0; if(sf==='sample')return t.sample>0; return(t.active+t.sample)>0; });
-  if(!fRows.length){ teamTbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-3);">No team data.</td></tr>`; }
-  else {
-    const mx=Math.max(...fRows.map(t=>t.active),1);
-    teamTbody.innerHTML=fRows.map(t=>{
-      const pb=Object.entries(t.plans).sort((a,b)=>b[1].active-a[1].active).map(([pn,pd])=>`<span class="badge badge-blue" style="margin:1px;">${escHtml(pn.substring(0,18))}… ×${pd.active}</span>`).join('');
-      const tw=Math.round((t.active/mx)*100);
-      return `<tr><td><div style="font-weight:600;">${escHtml(t.name)}</div></td><td><div style="font-weight:700;color:var(--green);font-size:16px;">${t.active}</div><div class="bar-wrap"><div class="bar-fill" style="width:${tw}%;background:var(--green);"></div></div></td><td><span style="color:var(--text-3);">—</span></td><td><span style="font-size:20px;font-weight:700;">${t.active+t.sample}</span></td><td><div style="display:flex;flex-wrap:wrap;gap:2px;">${pb||'—'}</div></td></tr>`;
+  _boxesData.forEach(p=>{
+    (p.teams||[]).forEach(t=>{
+      if(!teamMap[t.team_id]){
+        teamMap[t.team_id]={
+          id:t.team_id, name:t.team_name, area:t.team_area||'',
+          totalActive:0, totalSample:0, plans:[]
+        };
+      }
+      teamMap[t.team_id].totalActive+=t.count;
+      teamMap[t.team_id].plans.push({
+        planId:     p.plan_id,
+        planName:   p.plan_name,
+        duration:   p.duration_days,
+        price:      p.plan_price,
+        count:      t.count,
+        isAlt:      p.is_alternate_plan,
+        altLabel:   p.today_item,
+        altCounts:  t.alt_counts||{},
+        isSample:   p.is_sample_plan||false,
+      });
+    });
+    // Sample: plan-level sample count (no team assignment available easily, but if plan has teams use those)
+  });
+
+  // Also aggregate sample boxes per team if plan has team info
+  _boxesData.forEach(p=>{
+    if(p.is_sample_plan) return; // unmatched samples have no team data
+    (p.teams||[]).forEach(t=>{
+      // sample_boxes are at plan level not team level from API; skip
+    });
+  });
+
+  const teamRows=Object.values(teamMap).sort((a,b)=>(b.totalActive+b.totalSample)-(a.totalActive+a.totalSample));
+  const fTeams=teamRows.filter(t=>{
+    if(sf==='active') return t.totalActive>0;
+    if(sf==='sample') return t.totalSample>0;
+    return (t.totalActive+t.totalSample)>0;
+  });
+
+  const teamCardsEl=document.getElementById('boxes-team-cards');
+  if(!fTeams.length){
+    teamCardsEl.innerHTML=`<div style="text-align:center;padding:24px;color:var(--text-3);">No team data.</div>`;
+  } else {
+    teamCardsEl.innerHTML=fTeams.map(t=>{
+      const planBlocks=t.plans.sort((a,b)=>b.count-a.count).map(p=>{
+        const altPills=p.isAlt&&Object.keys(p.altCounts).length
+          ?`<div class="team-plan-alt-grid">${_altCountBadges(p.altCounts)}</div>`
+          :(p.isAlt&&p.altLabel?`<div class="team-plan-alt-grid"><span class="alt-pill">🔄 Today: ${escHtml(p.altLabel)}</span></div>`:'');
+        const planTypeBadge=p.isAlt?`<span class="badge badge-yellow" style="font-size:10px;">🔄 Alt</span>`:`<span class="badge badge-blue" style="font-size:10px;">Standard</span>`;
+        return `<div class="team-plan-block">
+          <div class="team-plan-block-name">
+            <span style="font-weight:700;">${escHtml(p.planName)}</span>
+            ${planTypeBadge}
+            ${p.duration?`<span class="badge badge-gray" style="font-size:10px;">${p.duration}d</span>`:''}
+            <span style="margin-left:auto;font-size:16px;font-weight:700;color:var(--green);">${p.count}</span>
+          </div>
+          ${altPills}
+        </div>`;
+      }).join('');
+
+      return `<div class="card" style="margin-bottom:14px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px;">
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="avatar" style="background:linear-gradient(135deg,#60a5fa,#818cf8);font-size:16px;">${(t.name||'T')[0]}</div>
+            <div>
+              <div style="font-weight:700;font-size:15px;">${escHtml(t.name)}</div>
+              ${t.area?`<div style="font-size:11px;color:var(--text-3);">${escHtml(t.area)}</div>`:''}
+            </div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;">
+            <div style="text-align:center;">
+              <div style="font-size:26px;font-weight:700;color:var(--green);">${t.totalActive}</div>
+              <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-3);">Active</div>
+            </div>
+            <div style="width:1px;height:36px;background:var(--border);"></div>
+            <div style="text-align:center;">
+              <div style="font-size:26px;font-weight:700;color:var(--accent);">${t.totalActive+t.totalSample}</div>
+              <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-3);">Total</div>
+            </div>
+          </div>
+        </div>
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-3);margin-bottom:8px;">Plan Breakdown</div>
+        ${planBlocks||'<div style="color:var(--text-3);font-size:12px;">No plan data.</div>'}
+      </div>`;
     }).join('');
   }
 
@@ -1930,76 +1941,42 @@ function renderBoxes() {
   row.style.display=grandTotal>0?'flex':'none';
 }
 
-/* ===== LOAD EMPLOYEES ===== */
-async function loadEmployees() {
+/* ── Load Employees ── */
+async function loadEmployees(){
   const tbody=document.querySelector('#employees-table tbody');
   tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
-  try {
+  try{
     const data=await fetch('/api/admin/employees').then(r=>r.json());
     _loaded.employees=true;
     if(!data.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No employees found.</td></tr>`;return;}
-    tbody.innerHTML=data.map(e=>`
-      <tr data-name="${e.name.toLowerCase()}" data-city="${(e.team_city||'').toLowerCase()}" data-team="${e.team_id}">
-        <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm">${e.name.charAt(0).toUpperCase()}</div>
-          <div><div style="font-weight:600;">${escHtml(e.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(e.phone)}</div></div></div></td>
-        <td><div style="font-size:12px;color:var(--text-2);">${escHtml(e.email)}</div></td>
-        <td>${escHtml(e.phone)}</td>
-        <td><span class="badge badge-blue">${escHtml(e.team_name)}</span></td>
-        <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(e)},"employee")'>👁 View</button>
-          <button class="btn btn-ghost btn-sm" onclick="openEditEmployee('${e.id}','${escHtml(e.name)}','${escHtml(e.email)}','${escHtml(e.phone)}','${e.team_id}')">✏️ Edit</button>
-          <button class="btn btn-warning btn-sm" id="reset-btn-${e.id}" onclick="resetEmployeeCredentials('${e.id}','${escHtml(e.name)}')">🔑 Reset</button>
-          <form method="POST" action="/admin/users/delete/${e.id}" onsubmit="return confirm('Remove ${escHtml(e.name)}?');" style="display:inline;">
-            <input type="hidden" name="next" value="dashboard_admin">
-            <button class="btn btn-danger btn-sm">🗑️</button>
-          </form>
-        </div></td>
-      </tr>`).join('');
-  } catch { tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`; }
+    tbody.innerHTML=data.map(e=>`<tr data-name="${e.name.toLowerCase()}" data-city="${(e.team_city||'').toLowerCase()}" data-team="${e.team_id}"><td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm">${e.name.charAt(0).toUpperCase()}</div><div><div style="font-weight:600;">${escHtml(e.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(e.phone)}</div></div></div></td><td><div style="font-size:12px;color:var(--text-2);">${escHtml(e.email)}</div></td><td>${escHtml(e.phone)}</td><td><span class="badge badge-blue">${escHtml(e.team_name)}</span></td><td><div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(e)},"employee")'>👁 View</button><button class="btn btn-ghost btn-sm" onclick="openEditEmployee('${e.id}','${escHtml(e.name)}','${escHtml(e.email)}','${escHtml(e.phone)}','${e.team_id}')">✏️ Edit</button><button class="btn btn-warning btn-sm" id="reset-btn-${e.id}" onclick="resetEmployeeCredentials('${e.id}','${escHtml(e.name)}')">🔑 Reset</button><form method="POST" action="/admin/users/delete/${e.id}" onsubmit="return confirm('Remove ${escHtml(e.name)}?');" style="display:inline;"><input type="hidden" name="next" value="dashboard_admin"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`).join('');
+  }catch{tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`;}
 }
 
-function statusBadge(status) {
-  const map={'active':'<span class="badge badge-green">✅ Active</span>','paused':'<span class="badge badge-yellow">⏸️ Paused</span>','inactive':'<span class="badge badge-red">❌ Inactive</span>'};
-  return map[status] || `<span class="badge badge-gray">${escHtml(status||'—')}</span>`;
-}
+function statusBadge(status){const map={active:'<span class="badge badge-green">✅ Active</span>',paused:'<span class="badge badge-yellow">⏸️ Paused</span>',inactive:'<span class="badge badge-red">❌ Inactive</span>'};return map[status]||`<span class="badge badge-gray">${escHtml(status||'—')}</span>`;}
 
-/* ===== LOAD CUSTOMERS ===== */
-async function loadCustomers() {
+/* ── FIX #2: Load Customers — use plan_name for data-plan-name attr too ── */
+async function loadCustomers(){
   const tbody=document.querySelector('#customers-table tbody');
   tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
-  try {
+  try{
     const data=await fetch('/api/admin/customers').then(r=>r.json());
-    _custData = data;  // ← cache for Excel export
-    _loaded.customers=true;
-    const badge=document.getElementById('cust-badge'); if(badge) badge.textContent=data.length;
+    _custData=data;_loaded.customers=true;
+    const badge=document.getElementById('cust-badge');if(badge)badge.textContent=data.length;
     if(!data.length){tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--text-3);">No customers found.</td></tr>`;return;}
     tbody.innerHTML=data.map(c=>{
-      const discParts=[];
-      if(c.discount_percent>0) discParts.push(`${c.discount_percent}%`);
-      if(c.discount_amount>0)  discParts.push(`₹${c.discount_amount}`);
+      const discParts=[];if(c.discount_percent>0)discParts.push(`${c.discount_percent}%`);if(c.discount_amount>0)discParts.push(`₹${c.discount_amount}`);
       const discStr=discParts.length?`<span class="badge badge-green">${discParts.join(' + ')}</span>`:`<span style="color:var(--text-3);">—</span>`;
       const startStr=c.start_date?`<span style="font-size:12px;color:var(--text-2);">${c.start_date}</span>`:`<span style="color:var(--text-3);">—</span>`;
-      return `<tr data-name="${c.name.toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id}" data-plan="${c.plan_id||''}" data-status="${c.status||'active'}">
-        <td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${c.name.charAt(0).toUpperCase()}</div>
-          <div><div style="font-weight:600;">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div></div></div></td>
-        <td>${c.plan_name!=='—'?`<span class="badge badge-orange">${escHtml(c.plan_name)}</span>`:`<span class="badge badge-gray">No plan</span>`}</td>
-        <td>${startStr}</td>
-        <td>${discStr}</td>
-        <td>${statusBadge(c.status)}</td>
-        <td><span class="badge badge-blue">${escHtml(c.team_name)}</span></td>
-        <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
-          <button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(c)},"customer")'>👁 View</button>
-          <button class="btn btn-ghost btn-sm" onclick='openEditCustomer(${JSON.stringify(c)})'>✏️ Edit</button>
-          <form method="POST" action="/admin/users/delete/${c.id}" onsubmit="return confirm('Remove ${escHtml(c.name)}?');" style="display:inline;"><input type="hidden" name="next" value="dashboard_admin"><button class="btn btn-danger btn-sm">🗑️</button></form>
-        </div></td>
-      </tr>`;
+      // FIX #2: store plan_id in data-plan for filtering by plan
+      return `<tr data-name="${(c.name||'').toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id||''}" data-plan="${c.plan_id||''}" data-status="${c.status||'active'}"><td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${(c.name||'?').charAt(0).toUpperCase()}</div><div><div style="font-weight:600;">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div></div></div></td><td>${c.plan_name&&c.plan_name!=='—'?`<span class="badge badge-orange">${escHtml(c.plan_name)}</span>`:`<span class="badge badge-gray">No plan</span>`}</td><td>${startStr}</td><td>${discStr}</td><td>${statusBadge(c.status)}</td><td><span class="badge badge-blue">${escHtml(c.team_name||'—')}</span></td><td><div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(c)},"customer")'>👁 View</button><button class="btn btn-ghost btn-sm" onclick='openEditCustomer(${JSON.stringify(c)})'>✏️ Edit</button><form method="POST" action="/admin/users/delete/${c.id}" onsubmit="return confirm('Remove ${escHtml(c.name)}?');" style="display:inline;"><input type="hidden" name="next" value="dashboard_admin"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
     }).join('');
     filterCustomers();
-  } catch { tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`; }
+  }catch{tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`;}
 }
 
-/* ===== CUSTOMER FILTERS ===== */
-function filterCustomers() {
+/* ── Customer filters ── */
+function filterCustomers(){
   const q=(document.getElementById('cust-search').value||'').toLowerCase().trim();
   const city=(document.getElementById('cust-city-filter').value||'').toLowerCase();
   const team=document.getElementById('cust-team-filter').value||'';
@@ -2007,54 +1984,40 @@ function filterCustomers() {
   const status=(document.getElementById('cust-status-filter').value||'').toLowerCase();
   let visible=0;
   const rows=document.querySelectorAll('#customers-table tbody tr[data-name]');
-  const total=rows.length;
   rows.forEach(r=>{
-    const show=(!q||(r.getAttribute('data-name')||'').toLowerCase().includes(q))
-            &&(!city||(r.getAttribute('data-city')||'').toLowerCase()===city)
-            &&(!team||r.getAttribute('data-team')===team)
-            &&(!plan||r.getAttribute('data-plan')===plan)
-            &&(!status||(r.getAttribute('data-status')||'').toLowerCase()===status);
-    r.style.display=show?'':'none'; if(show)visible++;
+    const nameMatch=!q||(r.getAttribute('data-name')||'').includes(q);
+    const cityMatch=!city||(r.getAttribute('data-city')||'').toLowerCase()===city;
+    const teamMatch=!team||r.getAttribute('data-team')===team;
+    // FIX #2: plan filter uses data-plan which holds plan_id
+    const planMatch=!plan||r.getAttribute('data-plan')===plan;
+    const statusMatch=!status||(r.getAttribute('data-status')||'').toLowerCase()===status;
+    const show=nameMatch&&cityMatch&&teamMatch&&planMatch&&statusMatch;
+    r.style.display=show?'':'none';if(show)visible++;
   });
   const hasFilter=q||city||team||plan||status;
-  const cb=document.getElementById('cust-clear-filters'); if(cb) cb.style.display=hasFilter?'inline-flex':'none';
+  const cb=document.getElementById('cust-clear-filters');if(cb)cb.style.display=hasFilter?'inline-flex':'none';
   updateCustFilterChips({q,city,team,plan,status});
-  const ce=document.getElementById('cust-result-count'); if(ce) ce.textContent=hasFilter?`Showing ${visible} of ${total} customers`:'';
+  const ce=document.getElementById('cust-result-count');if(ce)ce.textContent=hasFilter?`Showing ${visible} of ${rows.length} customers`:'';
 }
-function updateCustFilterChips({q,city,team,plan,status}) {
-  const wrap=document.getElementById('cust-filter-chips'); if(!wrap) return;
-  wrap.innerHTML='';
+function updateCustFilterChips({q,city,team,plan,status}){
+  const wrap=document.getElementById('cust-filter-chips');if(!wrap)return;wrap.innerHTML='';
   const tl=(document.querySelector(`#cust-team-filter option[value="${team}"]`)||{}).textContent||team;
   const pl=(document.querySelector(`#cust-plan-filter option[value="${plan}"]`)||{}).textContent||plan;
   const sl={active:'✅ Active',paused:'⏸️ Paused',inactive:'❌ Inactive'}[status]||status;
   const cl=city?city.charAt(0).toUpperCase()+city.slice(1):'';
-  [{label:q&&`"${q}"`,clear:()=>{document.getElementById('cust-search').value='';filterCustomers();}},
-   {label:cl&&`🏙️ ${cl}`,clear:()=>{document.getElementById('cust-city-filter').value='';filterCustomers();}},
-   {label:tl&&`🏘️ ${tl.split('–')[0].trim()}`,clear:()=>{document.getElementById('cust-team-filter').value='';filterCustomers();}},
-   {label:pl&&`📋 ${pl.substring(0,20)}`,clear:()=>{document.getElementById('cust-plan-filter').value='';filterCustomers();}},
-   {label:sl&&sl,clear:()=>{document.getElementById('cust-status-filter').value='';filterCustomers();}},
-  ].filter(c=>c.label).forEach(chip=>{
-    const el=document.createElement('span'); el.className='filter-active-indicator';
-    el.innerHTML=escHtml(chip.label)+`<button title="Remove filter">✕</button>`;
-    el.querySelector('button').addEventListener('click',chip.clear); wrap.appendChild(el);
-  });
+  [{label:q&&`"${q}"`,clear:()=>{document.getElementById('cust-search').value='';filterCustomers();}},{label:cl&&`🏙️ ${cl}`,clear:()=>{document.getElementById('cust-city-filter').value='';filterCustomers();}},{label:tl&&`🏘️ ${tl.split('–')[0].trim()}`,clear:()=>{document.getElementById('cust-team-filter').value='';filterCustomers();}},{label:pl&&`📋 ${pl.substring(0,20)}`,clear:()=>{document.getElementById('cust-plan-filter').value='';filterCustomers();}},{label:sl&&sl,clear:()=>{document.getElementById('cust-status-filter').value='';filterCustomers();}},].filter(c=>c.label).forEach(chip=>{const el=document.createElement('span');el.className='filter-active-indicator';el.innerHTML=escHtml(chip.label)+`<button title="Remove">✕</button>`;el.querySelector('button').addEventListener('click',chip.clear);wrap.appendChild(el);});
 }
-function clearCustomerFilters() {
-  ['cust-search','cust-city-filter','cust-team-filter','cust-plan-filter','cust-status-filter'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  filterCustomers();
-}
+function clearCustomerFilters(){['cust-search','cust-city-filter','cust-team-filter','cust-plan-filter','cust-status-filter'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});filterCustomers();}
 
-/* ===== LOAD ENQUIRIES ===== */
-let _enqLoaded = false;
-async function loadEnquiries(force) {
-  if (_enqLoaded && !force) return;
-  const tbody=document.getElementById('enq-tbody');
-  if(!tbody) return;
+/* ── Load Enquiries ── */
+let _enqLoaded=false;
+async function loadEnquiries(force){
+  if(_enqLoaded&&!force)return;
+  const tbody=document.getElementById('enq-tbody');if(!tbody)return;
   tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
-  try {
+  try{
     const data=await fetch('/api/admin/enquiries_data').then(r=>r.json());
-    _enqData  = data;  // ← cache for Excel export
-    _enqLoaded=true;
+    _enqData=data;_enqLoaded=true;
     const total=data.length,pending=data.filter(e=>e.status==='pending').length,approved=data.filter(e=>e.status==='approved').length;
     document.getElementById('enq-stat-total').textContent=total;
     document.getElementById('enq-stat-pending').textContent=pending;
@@ -2066,62 +2029,47 @@ async function loadEnquiries(force) {
       const date=e.created_at?new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}):'—';
       const sb=e.status==='pending'?`<span class="badge badge-yellow">⏳ Pending</span>`:`<span class="badge badge-green">✅ Converted</span>`;
       const approveBtn=e.status==='pending'?`<form method="POST" action="/admin/enquiries/approve/${e.id}" onsubmit="return confirm('Convert to customer?');" style="display:inline;"><button class="btn btn-success btn-sm">✅ Approve</button></form>`:'';
-      const editBtn=`<button class="btn btn-ghost btn-sm" onclick='openEditEnquiry(${JSON.stringify(e)})'>✏️ Edit</button>`;
       const inboxDot=e.has_inbox?`<span class="inbox-dot"></span>`:'';
-      const waBtn=`<button class="btn btn-wa btn-sm" onclick="openWaInbox('${e.id}','${escHtml(e.name)}','${escHtml(e.phone||'')}','${escHtml(e.whatsapp_id||'')}')">${inboxDot}💬 Inbox</button>`;
-      return `<tr data-name="${e.name.toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}">
-        <td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${e.name.charAt(0).toUpperCase()}</div>
-          <div><div style="font-weight:600;">${escHtml(e.name)}</div></div></div></td>
-        <td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td>
-        <td>${e.plan?`<span class="badge badge-orange">${escHtml(e.plan.substring(0,22))}</span>`:`<span class="badge badge-gray">—</span>`}</td>
-        <td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td>
-        <td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td>
-        <td>${e.payment_method==='cod'?`<span class="badge badge-yellow">💵 COD</span>`:`<span class="badge badge-blue">📱 UPI</span>`}</td>
-        <td style="font-size:12px;color:var(--text-3);">${date}</td>
-        <td>${sb}</td>
-        <td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">
-          ${approveBtn}${editBtn}${waBtn}
-          <form method="POST" action="/admin/enquiries/delete/${e.id}" onsubmit="return confirm('Delete?');" style="display:inline;"><button class="btn btn-danger btn-sm">🗑️</button></form>
-        </div></td>
-      </tr>`;
+      return `<tr data-name="${(e.name||'').toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}"><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${(e.name||'?').charAt(0).toUpperCase()}</div><div style="font-weight:600;">${escHtml(e.name)}</div></div></td><td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td><td>${e.plan?`<span class="badge badge-orange">${escHtml(e.plan.substring(0,22))}</span>`:`<span class="badge badge-gray">—</span>`}</td><td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td><td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td><td>${e.payment_method==='cod'?`<span class="badge badge-yellow">💵 COD</span>`:`<span class="badge badge-blue">📱 UPI</span>`}</td><td style="font-size:12px;color:var(--text-3);">${date}</td><td>${sb}</td><td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">${approveBtn}<button class="btn btn-ghost btn-sm" onclick='openEditEnquiry(${JSON.stringify(e)})'>✏️ Edit</button><button class="btn btn-wa btn-sm" onclick="openWaInbox('${e.id}','${escHtml(e.name)}','${escHtml(e.phone||'')}','${escHtml(e.whatsapp_id||'')}')">${inboxDot}💬 Inbox</button><form method="POST" action="/admin/enquiries/delete/${e.id}" onsubmit="return confirm('Delete?');" style="display:inline;"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
     }).join('');
-  } catch { tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`; }
+    // Update FIX #5 button count
+    const bweCountEl=document.getElementById('bwe-count');if(bweCountEl)bweCountEl.textContent=pending;
+  }catch{tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;}
 }
-
-function filterEnqTable() {
+function filterEnqTable(){
   const q=document.getElementById('enq-search').value.toLowerCase();
   const st=document.getElementById('enq-status-filter').value;
-  document.querySelectorAll('#enq-table tbody tr').forEach(r=>{
-    const name=(r.getAttribute('data-name')||'').toLowerCase();
-    const phone=(r.getAttribute('data-phone')||'').toLowerCase();
-    r.style.display=((!q||(name+phone).includes(q))&&(!st||r.getAttribute('data-status')===st))?'':'none';
-  });
+  document.querySelectorAll('#enq-table tbody tr').forEach(r=>{const name=(r.getAttribute('data-name')||'').toLowerCase();const phone=(r.getAttribute('data-phone')||'').toLowerCase();r.style.display=((!q||(name+phone).includes(q))&&(!st||r.getAttribute('data-status')===st))?'':'none';});
 }
 
-/* ===== EDIT MODALS ===== */
+/* ── Edit modals ── */
 function openEditEmployee(id,name,email,phone,teamId){
   document.getElementById('ee-name').value=name;document.getElementById('ee-email').value=email;
-  document.getElementById('ee-phone').value=phone;document.getElementById('ee-team').value=teamId;
-  document.getElementById('edit-emp-form').action='/admin/users/edit/'+id;
-  openModal('modal-edit-employee');
+  document.getElementById('ee-phone').value=phone;document.getElementById('ee-team').value=teamId||'';
+  document.getElementById('edit-emp-form').action='/admin/users/edit/'+id;openModal('modal-edit-employee');
 }
 function openEditCustomer(c){
+  _ecCurrentId=c.id||'';
+  _ecHolidays=[...(c.holidays||[])];
+  document.getElementById('ec-customer-id').value=c.id||'';
   document.getElementById('ec-name').value=c.name||'';
-  document.getElementById('ec-email').value=(c.email||'').endsWith('@fruitedelights.local')?'':(c.email||'');
+  document.getElementById('ec-email').value=c.email||'';
   document.getElementById('ec-phone').value=c.phone||'';
   document.getElementById('ec-team').value=c.team_id||'';
-  document.getElementById('ec-plan').value=c.plan_name!=='—'?c.plan_name:'';
+  // FIX: use plan_name properly even for plans with complex names
+  document.getElementById('ec-plan').value=c.plan_name&&c.plan_name!=='—'?c.plan_name:'';
   document.getElementById('ec-address').value=c.address||'';
   document.getElementById('ec-ptime').value=c.preferred_time||'';
   document.getElementById('ec-startdate').value=c.start_date||'';
   document.getElementById('ec-status').value=c.status||'active';
   document.getElementById('ec-discpct').value=c.discount_percent||0;
   document.getElementById('ec-discamt').value=c.discount_amount||0;
-  document.getElementById('ec-alt-options').value = (c.alt_options||[]).join(', ');
-  document.getElementById('ec-total-delivered').value = c.total_delivered_boxes != null ? c.total_delivered_boxes : '';
+  document.getElementById('ec-alt-options').value=(c.alt_options||[]).join(', ');
+  document.getElementById('ec-total-delivered').value=c.total_delivered_boxes!=null?c.total_delivered_boxes:'';
   const sel=document.getElementById('ec-offdays');
   for(let opt of sel.options){opt.selected=(c.off_days||[]).includes(opt.value);}
   document.getElementById('edit-cust-form').action='/admin/users/edit/'+c.id;
+  renderHolidayChips();
   openModal('modal-edit-customer');
 }
 function openAddUserModal(role){
@@ -2131,14 +2079,9 @@ function openAddUserModal(role){
   document.getElementById('rf-role-group').style.display='block';
   document.getElementById('roleSelect').value=role||'';
   document.getElementById('hiddenRole').value=role||'';
-  applyRoleFields(role||'');
-  openModal('modal-add-user');
+  applyRoleFields(role||'');openModal('modal-add-user');
 }
-function onRoleChange(){
-  const r=document.getElementById('roleSelect').value;
-  document.getElementById('hiddenRole').value=r;
-  applyRoleFields(r);
-}
+function onRoleChange(){const r=document.getElementById('roleSelect').value;document.getElementById('hiddenRole').value=r;applyRoleFields(r);}
 function applyRoleFields(role){
   document.getElementById('rf-team').style.display=(role==='employee'||role==='customer'||role==='manager')?'block':'none';
   document.getElementById('rf-customer').style.display=role==='customer'?'block':'none';
@@ -2152,75 +2095,52 @@ function openEditPlan(plan){
   document.getElementById('ep-price').value=plan.price_per_month||plan.price_per_day||'';
   document.getElementById('ep-duration').value=plan.duration_days||'';
   document.getElementById('ep-tax').value=plan.tax_percent||0;
-  const altItems=plan.alternate_items||[];
-  document.getElementById('ep-alt').value=altItems.join(', ');
+  document.getElementById('ep-alt').value=(plan.alternate_items||[]).join(', ');
   const id=typeof plan._id==='object'?plan._id.$oid:plan._id;
-  document.getElementById('edit-plan-form').action='/admin/plans/edit/'+id;
-  openModal('modal-edit-plan');
+  document.getElementById('edit-plan-form').action='/admin/plans/edit/'+id;openModal('modal-edit-plan');
 }
 function openEditTeam(team){
   document.getElementById('et-name').value=team.name||'';
   document.getElementById('et-area').value=team.area||'';
   document.getElementById('et-city').value=team.city||'';
   const id=typeof team._id==='object'?team._id.$oid:team._id;
-  document.getElementById('edit-team-form').action='/admin/teams/edit/'+id;
-  openModal('modal-edit-team');
+  document.getElementById('edit-team-form').action='/admin/teams/edit/'+id;openModal('modal-edit-team');
 }
 
-/* ===== SIDEBAR / MODALS ===== */
+/* ── Sidebar / Modals ── */
 function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('overlay').classList.toggle('open');}
 function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('overlay').classList.remove('open');}
-function openModal(id){document.getElementById(id).classList.add('open');}
-function closeModal(id){document.getElementById(id).classList.remove('open');}
-document.querySelectorAll('.modal-backdrop').forEach(m=>{m.addEventListener('click',function(e){if(e.target===this)this.classList.remove('open');});});
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.modal-backdrop').forEach(m=>{m.addEventListener('click',function(e){if(e.target===this){this.classList.remove('open');document.body.style.overflow='';}});});
 
-/* ===== GENERIC TABLE FILTERS ===== */
+/* ── Table filters ── */
 function filterTable(inputId,tableId,attr){const q=document.getElementById(inputId).value.toLowerCase();document.querySelectorAll('#'+tableId+' tbody tr').forEach(r=>{r.style.display=(r.getAttribute(attr)||'').toLowerCase().includes(q)?'':'none';});}
 function filterTeams(){const q=document.getElementById('team-search').value.toLowerCase();const city=document.getElementById('team-city-filter').value.toLowerCase();document.querySelectorAll('#teams-table tbody tr').forEach(r=>{const name=(r.getAttribute('data-name')||'').toLowerCase();const rc=(r.getAttribute('data-city')||'').toLowerCase();r.style.display=name.includes(q)&&(!city||rc===city)?'':'none';});}
 function filterByCity(selectId,tableId){const city=document.getElementById(selectId).value.toLowerCase();document.querySelectorAll('#'+tableId+' tbody tr').forEach(r=>{r.style.display=(!city||(r.getAttribute('data-city')||'').toLowerCase()===city)?'':'none';});}
 function filterByTeam(selectId,tableId){const team=document.getElementById(selectId).value;document.querySelectorAll('#'+tableId+' tbody tr').forEach(r=>{r.style.display=(!team||r.getAttribute('data-team')===team)?'':'none';});}
 
-/* ===== CHARTS ===== */
-let deliveryChart, areaChart;
-Chart.defaults.color='#6b7280';
-Chart.defaults.font={family:'DM Sans, sans-serif',size:12};
+/* ── Charts ── */
+let deliveryChart,areaChart;
+Chart.defaults.color='#6b7280';Chart.defaults.font={family:'DM Sans, sans-serif',size:12};
+function initAreaChart(data){const ctx=document.getElementById('areaChart').getContext('2d');if(areaChart)areaChart.destroy();const palette=['rgba(79,70,229,.85)','rgba(124,58,237,.85)','rgba(37,99,235,.85)','rgba(8,145,178,.85)','rgba(5,150,105,.85)','rgba(217,119,6,.85)'];areaChart=new Chart(ctx,{type:'bar',data:{labels:data.map(d=>d.area),datasets:[{label:'Pending',data:data.map(d=>d.pending),backgroundColor:data.map((_,i)=>palette[i%palette.length]),borderRadius:{topLeft:8,topRight:8},borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}});}
+function initDeliveryChart(ts){const ctx=document.getElementById('deliveryChart').getContext('2d');if(deliveryChart)deliveryChart.destroy();const grad=c=>{const g=ctx.createLinearGradient(0,0,0,250);g.addColorStop(0,c);g.addColorStop(1,'rgba(255,255,255,0)');return g;};deliveryChart=new Chart(ctx,{type:'line',data:{labels:ts.map(d=>new Date(d.date).toLocaleDateString('en-IN',{month:'short',day:'numeric'})),datasets:[{label:'Delivered',data:ts.map(d=>d.delivered),borderColor:'#10b981',backgroundColor:grad('rgba(16,185,129,.15)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#10b981',pointBorderColor:'#fff',pointBorderWidth:2},{label:'Pending',data:ts.map(d=>d.pending),borderColor:'#f59e0b',backgroundColor:grad('rgba(245,158,11,.12)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#f59e0b',pointBorderColor:'#fff',pointBorderWidth:2},{label:'Holiday',data:ts.map(d=>d.holiday),borderColor:'#ef4444',backgroundColor:grad('rgba(239,68,68,.10)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#ef4444',pointBorderColor:'#fff',pointBorderWidth:2}]},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{boxWidth:10,padding:18,usePointStyle:true}}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}});}
+async function loadChart(days,pill){document.querySelectorAll('.range-pill').forEach(p=>p.classList.remove('active'));if(pill)pill.classList.add('active');try{const data=await fetch(`/api/admin/analytics?range=${days}`).then(r=>r.json());initDeliveryChart(data.timeseries);initAreaChart(data.area_pending);}catch{initDeliveryChart([]);initAreaChart([]);}}
 
-function initAreaChart(data){
-  const ctx=document.getElementById('areaChart').getContext('2d');
-  if(areaChart) areaChart.destroy();
-  const palette=['rgba(79,70,229,.85)','rgba(124,58,237,.85)','rgba(37,99,235,.85)','rgba(8,145,178,.85)','rgba(5,150,105,.85)','rgba(217,119,6,.85)'];
-  areaChart=new Chart(ctx,{type:'bar',data:{labels:data.map(d=>d.area),datasets:[{label:'Pending',data:data.map(d=>d.pending),backgroundColor:data.map((_,i)=>palette[i%palette.length]),borderRadius:{topLeft:8,topRight:8},borderSkipped:false}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}});
-}
-function initDeliveryChart(ts){
-  const ctx=document.getElementById('deliveryChart').getContext('2d');
-  if(deliveryChart) deliveryChart.destroy();
-  const grad=c=>{const g=ctx.createLinearGradient(0,0,0,250);g.addColorStop(0,c);g.addColorStop(1,'rgba(255,255,255,0)');return g;};
-  deliveryChart=new Chart(ctx,{type:'line',data:{labels:ts.map(d=>new Date(d.date).toLocaleDateString('en-IN',{month:'short',day:'numeric'})),datasets:[{label:'Delivered',data:ts.map(d=>d.delivered),borderColor:'#10b981',backgroundColor:grad('rgba(16,185,129,.15)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#10b981',pointBorderColor:'#fff',pointBorderWidth:2},{label:'Pending',data:ts.map(d=>d.pending),borderColor:'#f59e0b',backgroundColor:grad('rgba(245,158,11,.12)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#f59e0b',pointBorderColor:'#fff',pointBorderWidth:2},{label:'Holiday',data:ts.map(d=>d.holiday),borderColor:'#ef4444',backgroundColor:grad('rgba(239,68,68,.10)'),fill:true,tension:.4,pointRadius:4,pointBackgroundColor:'#ef4444',pointBorderColor:'#fff',pointBorderWidth:2}]},options:{responsive:true,interaction:{mode:'index',intersect:false},plugins:{legend:{labels:{boxWidth:10,padding:18,usePointStyle:true}}},scales:{x:{grid:{display:false},border:{display:false}},y:{grid:{color:'#f3f4f6'},border:{display:false},beginAtZero:true}}}});
-}
-async function loadChart(days,pill){
-  document.querySelectorAll('.range-pill').forEach(p=>p.classList.remove('active'));
-  if(pill) pill.classList.add('active');
-  try{const data=await fetch(`/api/admin/analytics?range=${days}`).then(r=>r.json());initDeliveryChart(data.timeseries);initAreaChart(data.area_pending);}
-  catch{initDeliveryChart([]);initAreaChart([]);}
-}
-
-/* ===== AVATAR INITIALS ===== */
+/* ── Avatar initials ── */
 (function(){const name=document.getElementById('session-name');const av=document.getElementById('user-avatar-init');if(name&&av){const w=(name.textContent||'').trim().split(' ');av.textContent=w.length>=2?w[0][0].toUpperCase()+w[1][0].toUpperCase():(w[0]||'A')[0].toUpperCase();}})();
 
-/* ===== FLASH AUTO-DISMISS ===== */
+/* ── Flash auto-dismiss ── */
 setTimeout(()=>{document.querySelectorAll('.flash').forEach(f=>{f.style.transition='.4s';f.style.opacity='0';f.style.transform='translateX(40px)';setTimeout(()=>f.remove(),400);});},4000);
 
-/* ===== ENQUIRY BADGE ON BOOT ===== */
-(async function(){
-  if(!IS_ADMIN) return;
-  try{const d=await fetch('/api/admin/enquiry_count').then(r=>r.json());if(d.pending>0){const b=document.getElementById('enq-badge');if(b){b.textContent=d.pending;b.style.display='inline-flex';}}}catch{}
-})();
+/* ── Enquiry badge on boot ── */
+(async function(){if(!IS_ADMIN)return;try{const d=await fetch('/api/admin/enquiry_count').then(r=>r.json());if(d.pending>0){const b=document.getElementById('enq-badge');if(b){b.textContent=d.pending;b.style.display='inline-flex';}}}catch{}})();
 
-/* ===== BULK IMPORT ===== */
-let _bulkEnquiries = [];
+/* ── Bulk Import ── */
+let _bulkEnquiries=[];
 const _bulkTimeSlots=['7:00 AM – 9:00 AM','9:00 AM – 11:00 AM','11:00 AM – 1:00 PM','Anytime'];
 function openBulkEnquiriesModal(){_bulkEnquiries=[{}];renderBulkTable();document.getElementById('modal-bulk-enquiries').classList.add('open');document.body.style.overflow='hidden';}
-function closeBulkModal(){document.getElementById('modal-bulk-enquiries').classList.remove('open');document.body.style.overflow='';_bulkEnquiries=[];}
+function closeBulkModal(){document.getElementById('modal-bulk-enquiries').classList.remove('open');document.body.style.overflow='';}
 document.getElementById('modal-bulk-enquiries')?.addEventListener('click',function(e){if(e.target===this)closeBulkModal();});
 function updateRowCount(){document.getElementById('bulk-row-count').textContent=`Rows: ${_bulkEnquiries.length}`;}
 function addBulkRow(){_bulkEnquiries.push({});renderBulkTable();}
@@ -2231,111 +2151,32 @@ function toggleBulkSelectAll(){const checked=document.getElementById('bulk-selec
 function updateBulkRow(rowIdx,field,value){if(_bulkEnquiries[rowIdx])_bulkEnquiries[rowIdx][field]=value;}
 function renderBulkTable(){
   const tbody=document.getElementById('bulk-tbody');
-  const cellStyle='padding:4px 8px;border-right:1px solid var(--border);vertical-align:middle;';
-  const inputStyle='width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;outline:none;';
-  tbody.innerHTML=_bulkEnquiries.map((row,idx)=>`<tr style="height:44px;border-bottom:1px solid var(--border);">
-    <td style="width:30px;padding:6px 4px;text-align:center;border-right:1px solid var(--border);"><input type="checkbox" class="bulk-row-checkbox"></td>
-    <td style="${cellStyle}"><input type="text" value="${escHtml(row.name||'')}" placeholder="Name" style="${inputStyle}" onchange="updateBulkRow(${idx},'name',this.value)"></td>
-    <td style="${cellStyle}"><input type="tel" value="${escHtml(row.phone||'')}" placeholder="Phone" style="${inputStyle}" onchange="updateBulkRow(${idx},'phone',this.value)"></td>
-    <td style="${cellStyle}"><input type="text" value="${escHtml(row.plan||'')}" placeholder="Plan" style="${inputStyle}" onchange="updateBulkRow(${idx},'plan',this.value)"></td>
-    <td style="${cellStyle}"><select style="${inputStyle}background:white;" onchange="updateBulkRow(${idx},'delivery_time',this.value)">
-      <option value="">— Select —</option>${_bulkTimeSlots.map(t=>`<option value="${t}" ${row.delivery_time===t?'selected':''}>${t}</option>`).join('')}</select></td>
-    <td style="${cellStyle}"><input type="date" value="${escHtml(row.start_date||'')}" style="${inputStyle}" onchange="updateBulkRow(${idx},'start_date',this.value)"></td>
-    <td style="${cellStyle}"><select style="${inputStyle}background:white;" onchange="updateBulkRow(${idx},'payment_method',this.value)">
-      <option value="upi" ${row.payment_method==='upi'||!row.payment_method?'selected':''}>📱 UPI</option><option value="cod" ${row.payment_method==='cod'?'selected':''}>💵 COD</option></select></td>
-    <td style="${cellStyle}"><select style="${inputStyle}background:white;" onchange="updateBulkRow(${idx},'status',this.value)">
-      <option value="pending" ${row.status==='pending'||!row.status?'selected':''}>⏳ Pending</option><option value="approved" ${row.status==='approved'?'selected':''}>✅ Approved</option></select></td>
-    <td style="padding:4px 8px;vertical-align:middle;"><input type="text" value="${escHtml(row.address||'')}" placeholder="Address" style="${inputStyle}" onchange="updateBulkRow(${idx},'address',this.value)"></td>
-  </tr>`).join('');
+  const cs='padding:4px 8px;border-right:1px solid var(--border);vertical-align:middle;';
+  const is='width:100%;padding:6px 8px;border:1px solid var(--border);border-radius:4px;font-size:13px;outline:none;';
+  tbody.innerHTML=_bulkEnquiries.map((row,idx)=>`<tr style="height:44px;border-bottom:1px solid var(--border);"><td style="width:30px;padding:6px 4px;text-align:center;border-right:1px solid var(--border);"><input type="checkbox" class="bulk-row-checkbox"></td><td style="${cs}"><input type="text" value="${escHtml(row.name||'')}" placeholder="Name" style="${is}" onchange="updateBulkRow(${idx},'name',this.value)"></td><td style="${cs}"><input type="tel" value="${escHtml(row.phone||'')}" placeholder="Phone" style="${is}" onchange="updateBulkRow(${idx},'phone',this.value)"></td><td style="${cs}"><input type="text" value="${escHtml(row.plan||'')}" placeholder="Plan" style="${is}" onchange="updateBulkRow(${idx},'plan',this.value)"></td><td style="${cs}"><select style="${is}background:white;" onchange="updateBulkRow(${idx},'delivery_time',this.value)"><option value="">— Select —</option>${_bulkTimeSlots.map(t=>`<option value="${t}" ${row.delivery_time===t?'selected':''}>${t}</option>`).join('')}</select></td><td style="${cs}"><input type="date" value="${escHtml(row.start_date||'')}" style="${is}" onchange="updateBulkRow(${idx},'start_date',this.value)"></td><td style="${cs}"><select style="${is}background:white;" onchange="updateBulkRow(${idx},'payment_method',this.value)"><option value="upi" ${row.payment_method==='upi'||!row.payment_method?'selected':''}>📱 UPI</option><option value="cod" ${row.payment_method==='cod'?'selected':''}>💵 COD</option></select></td><td style="${cs}"><select style="${is}background:white;" onchange="updateBulkRow(${idx},'status',this.value)"><option value="pending" ${row.status==='pending'||!row.status?'selected':''}>⏳ Pending</option><option value="approved" ${row.status==='approved'?'selected':''}>✅ Approved</option></select></td><td style="padding:4px 8px;vertical-align:middle;"><input type="text" value="${escHtml(row.address||'')}" placeholder="Address" style="${is}" onchange="updateBulkRow(${idx},'address',this.value)"></td></tr>`).join('');
   updateRowCount();
 }
 async function submitBulkEnquiries(){
   const validRows=_bulkEnquiries.filter(r=>(r.name||'').trim()||(r.phone||'').trim());
-  if(!validRows.length){showToast('❌ Please add at least one enquiry.','danger');return;}
+  if(!validRows.length){showToast('❌ Add at least one enquiry.','danger');return;}
   const btn=document.getElementById('bulk-import-btn');btn.disabled=true;btn.textContent='⏳ Importing…';
-  try{
-    const res=await fetch('/api/admin/bulk_enquiries_import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enquiries:validRows})});
-    const result=await res.json();btn.disabled=false;btn.textContent='✅ Import Enquiries';
-    if(result.success){showToast(`✅ ${result.message}`,'success');setTimeout(()=>{closeBulkModal();if(_enqLoaded)loadEnquiries(true);},2000);}
-    else showToast('❌ '+(result.message||'Import failed'),'danger');
-  }catch{btn.disabled=false;btn.textContent='✅ Import Enquiries';showToast('❌ Network error.','danger');}
+  try{const res=await fetch('/api/admin/bulk_enquiries_import',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enquiries:validRows})});const result=await res.json();btn.disabled=false;btn.textContent='✅ Import Enquiries';if(result.success){showToast(`✅ ${result.message}`,'success');setTimeout(()=>{closeBulkModal();if(_enqLoaded)loadEnquiries(true);},2000);}else showToast('❌ '+(result.message||'Import failed'),'danger');}
+  catch{btn.disabled=false;btn.textContent='✅ Import Enquiries';showToast('❌ Network error.','danger');}
 }
 
-/* ===== EDIT ENQUIRY ===== */
+/* ── Edit Enquiry ── */
 function openEditEnquiry(e){
-  document.getElementById('enq-edit-id').value=e.id;
-  document.getElementById('enq-edit-name').value=e.name||'';document.getElementById('enq-edit-phone').value=e.phone||'';
-  document.getElementById('enq-edit-plan').value=e.plan||'';document.getElementById('enq-edit-time').value=e.delivery_time||'';
-  document.getElementById('enq-edit-startdate').value=e.start_date||'';document.getElementById('enq-edit-payment').value=e.payment_method||'upi';
-  document.getElementById('enq-edit-address').value=e.address||'';document.getElementById('enq-edit-status').value=e.status||'pending';
-  openModal('modal-edit-enquiry');
+  document.getElementById('enq-edit-id').value=e.id;document.getElementById('enq-edit-name').value=e.name||'';document.getElementById('enq-edit-phone').value=e.phone||'';document.getElementById('enq-edit-plan').value=e.plan||'';document.getElementById('enq-edit-time').value=e.delivery_time||'';document.getElementById('enq-edit-startdate').value=e.start_date||'';document.getElementById('enq-edit-payment').value=e.payment_method||'upi';document.getElementById('enq-edit-address').value=e.address||'';document.getElementById('enq-edit-status').value=e.status||'pending';openModal('modal-edit-enquiry');
 }
 async function submitEnquiryEdit(){
   const id=document.getElementById('enq-edit-id').value;
-  const payload={name:document.getElementById('enq-edit-name').value.trim(),phone:document.getElementById('enq-edit-phone').value.trim(),
-    plan:document.getElementById('enq-edit-plan').value.trim(),delivery_time:document.getElementById('enq-edit-time').value,
-    start_date:document.getElementById('enq-edit-startdate').value,payment_method:document.getElementById('enq-edit-payment').value,
-    address:document.getElementById('enq-edit-address').value.trim(),status:document.getElementById('enq-edit-status').value};
-  if(!payload.name||!payload.phone){showToast('❌ Name and phone are required.','danger');return;}
-  try{
-    const res=await fetch(`/api/admin/enquiries/edit/${id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
-    const data=await res.json();
-    if(data.success){showToast('✅ Enquiry updated.','success');closeModal('modal-edit-enquiry');loadEnquiries(true);}
-    else showToast('❌ '+(data.message||'Update failed'),'danger');
-  }catch{showToast('❌ Network error.','danger');}
+  const payload={name:document.getElementById('enq-edit-name').value.trim(),phone:document.getElementById('enq-edit-phone').value.trim(),plan:document.getElementById('enq-edit-plan').value.trim(),delivery_time:document.getElementById('enq-edit-time').value,start_date:document.getElementById('enq-edit-startdate').value,payment_method:document.getElementById('enq-edit-payment').value,address:document.getElementById('enq-edit-address').value.trim(),status:document.getElementById('enq-edit-status').value};
+  if(!payload.name||!payload.phone){showToast('❌ Name and phone required.','danger');return;}
+  try{const res=await fetch(`/api/admin/enquiries/edit/${id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const data=await res.json();if(data.success){showToast('✅ Enquiry updated.','success');closeModal('modal-edit-enquiry');loadEnquiries(true);}else showToast('❌ '+(data.message||'Failed'),'danger');}
+  catch{showToast('❌ Network error.','danger');}
 }
 
-
-/*customer plan staus*/
-
-async function loadCustomerPlanStatus(customerId) {
-  const wrap = document.getElementById('view-plan-status-wrap');
-  if (!wrap) return;
-  wrap.innerHTML = `<div style="display:flex;align-items:center;gap:10px;padding:16px;color:var(--text-3);"><div class="spinner-sm"></div><span style="font-size:13px;">Loading…</span></div>`;
-  try {
-    const d = await fetch(`/api/admin/customer_plan_status/${customerId}`).then(r => r.json());
-    if (!d.success || !d.has_plan) {
-      wrap.innerHTML = `<div style="padding:12px 0;color:var(--text-3);font-size:13px;">No active plan assigned.</div>`;
-      return;
-    }
-    const barColor = d.completion_pct >= 80 ? 'var(--green)' : d.completion_pct >= 40 ? '#f59e0b' : 'var(--accent)';
-    wrap.innerHTML = `
-      <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px 18px;">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:6px;">
-          <div>
-            <span style="font-weight:700;font-size:14px;">${escHtml(d.plan_name)}</span>
-            <span style="font-size:11px;color:var(--text-3);margin-left:8px;">${d.period_start} → ${d.period_end}</span>
-          </div>
-          <span style="font-size:20px;font-weight:700;color:${barColor};">${d.completion_pct}%</span>
-        </div>
-        <div style="height:8px;background:var(--border);border-radius:99px;overflow:hidden;margin-bottom:14px;">
-          <div style="height:100%;width:${d.completion_pct}%;background:${barColor};border-radius:99px;transition:width .5s;"></div>
-        </div>
-        <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;">
-          <div style="text-align:center;background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;">
-            <div style="font-size:20px;font-weight:700;color:var(--text);">${d.duration_days}</div>
-            <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--text-3);margin-top:2px;">Total Days</div>
-          </div>
-          <div style="text-align:center;background:var(--green-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;">
-            <div style="font-size:20px;font-weight:700;color:var(--green);">${d.delivered}</div>
-            <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--green);margin-top:2px;">Delivered</div>
-          </div>
-          
-          <div style="text-align:center;background:var(--blue-soft);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 6px;">
-            <div style="font-size:20px;font-weight:700;color:var(--blue);">${d.remaining_days}</div>
-            <div style="font-size:10px;font-weight:600;text-transform:uppercase;color:var(--blue);margin-top:2px;">Remaining</div>
-          </div>
-        </div>
-        <div style="margin-top:10px;font-size:11px;color:var(--text-3);">
-          Delivered count from all records in DB • Off-days and holidays excluded from total • Missed = past scheduled days with no delivery
-        </div>
-      </div>`;
-  } catch {
-    wrap.innerHTML = `<div style="padding:12px 0;color:var(--red);font-size:13px;">Failed to load plan status.</div>`;
-  }
-}
-
-/* ===== BOOT ===== */
+/* ── Boot ── */
 window.addEventListener('DOMContentLoaded',()=>{
   loadChart(1,document.querySelector('.range-pill.active'));
   loadEmployees();

@@ -107,11 +107,16 @@ def login_required(f):
     return decorated_function
 
 
+# In app.py — replace role_required decorator
 def role_required(*roles):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            if session.get("role") not in roles:
+            user_role = session.get("role")
+            # Managers behave as sub-admins: they get all admin+manager permissions
+            if user_role == "manager" and "admin" in roles:
+                return f(*args, **kwargs)
+            if user_role not in roles:
                 flash("Unauthorized access.", "danger")
                 return redirect(url_for("home"))
             return f(*args, **kwargs)
@@ -2048,20 +2053,17 @@ def api_boxes_needed():
     plans  = list(plans_col.find())
     teams  = list(teams_col.find())
 
+    # ── Active customers with a plan ──────────────────────────────────────
     base_cust_q = {
         "role":    "customer",
         "status":  "active",
-        "plan_id": {"$ne": None},
-        "$or": [
-            {"sample": {"$exists": False}},
-            {"sample": None},
-            {"sample": ""},
-        ]
+        "plan_id": {"$exists": True, "$ne": None},
     }
     if tf:
         base_cust_q.update(tf)
     active_customers = list(users_col.find(base_cust_q))
 
+    # ── Sample customers (sample field set, non-empty) ────────────────────
     sample_q = {
         "role":   "customer",
         "status": "active",
@@ -2078,33 +2080,47 @@ def api_boxes_needed():
         plan_id   = str(plan["_id"])
         plan_name = plan.get("name", "")
         alt_items = plan.get("alternate_items", [])
-        alt_label = _get_alternate_item_for_date(plan, target_date)
+        is_alt    = bool(alt_items and len(alt_items) >= 2)
+        alt_label = _get_alternate_item_for_date(plan, target_date) if is_alt else None
 
+        # team_breakdown: team_id -> {name, area, count, alt_counts: {item: count}, cust_items: []}
         team_breakdown = {}
         active_count   = 0
+        global_alt_counts = {}  # item -> count across all teams
 
         for c in active_customers:
+            # Must have this plan_id
             if str(c.get("plan_id", "")) != plan_id:
                 continue
+            # Skip if not schedulable today
             if not _day_schedulable_for_plan(plan, target_date, c.get("off_days", []), set(c.get("holidays", []))):
                 continue
+
             active_count += 1
 
-            # Per-customer item (overrides plan-level if set)
+            # Per-customer item
             cust_item = _get_customer_item_for_date(c, target_date)
 
-            tid = str(c.get("team_id", ""))
+            # Global alt count
+            if is_alt and cust_item:
+                global_alt_counts[cust_item] = global_alt_counts.get(cust_item, 0) + 1
+
+            tid = str(c.get("team_id", "unassigned"))
             if tid not in team_breakdown:
                 team_obj = team_map.get(tid, {})
                 team_breakdown[tid] = {
-                    "team_id":   tid,
-                    "team_name": team_obj.get("name", "—"),
-                    "team_area": team_obj.get("area", ""),
-                    "count":     0,
-                    "today_item": cust_item,
+                    "team_id":    tid,
+                    "team_name":  team_obj.get("name", "Unassigned"),
+                    "team_area":  team_obj.get("area", ""),
+                    "count":      0,
+                    "alt_counts": {},   # item -> count for this team
                 }
             team_breakdown[tid]["count"] += 1
+            if is_alt and cust_item:
+                tc = team_breakdown[tid]["alt_counts"]
+                tc[cust_item] = tc.get(cust_item, 0) + 1
 
+        # Sample customers that match this plan
         matched_sample_count = 0
         for c in sample_customers:
             if str(c.get("plan_id", "")) == plan_id:
@@ -2120,6 +2136,7 @@ def api_boxes_needed():
                 "plan":   {"$regex": re.escape(plan_name[:20]), "$options": "i"}
             }) if plan_name else 0
 
+        # Include plan even if 0 active — only skip if truly nothing
         if active_count == 0 and matched_sample_count == 0 and pending_enq_count == 0:
             continue
 
@@ -2134,14 +2151,15 @@ def api_boxes_needed():
             "total_boxes":       active_count + matched_sample_count,
             "teams":             sorted(team_breakdown.values(), key=lambda x: -x["count"]),
             "is_sample_plan":    False,
-            "is_alternate_plan": bool(alt_items and len(alt_items) >= 2),
+            "is_alternate_plan": is_alt,
             "alternate_items":   alt_items,
             "today_item":        alt_label,
+            "global_alt_counts": global_alt_counts,   # NEW
             "is_next_day":       is_next_day,
             "target_date":       target_str,
         })
 
-    # Unmatched sample customers (no plan_id)
+    # ── Unmatched sample customers (no plan_id) ───────────────────────────
     unmatched_samples: dict = {}
     for c in sample_customers:
         if c.get("plan_id"):
@@ -2169,12 +2187,99 @@ def api_boxes_needed():
             "is_alternate_plan": False,
             "alternate_items":   [],
             "today_item":        None,
+            "global_alt_counts": {},
             "is_next_day":       is_next_day,
             "target_date":       target_str,
         })
 
     return jsonify(result)
 
+
+# ---------------------------------------------------------------------------
+# ADMIN – Customer Holiday Management
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/customer/<customer_id>/holidays", methods=["GET"])
+@login_required
+@role_required("admin", "manager")
+def api_get_customer_holidays(customer_id):
+    try:
+        customer = users_col.find_one({"_id": ObjectId(customer_id)}, {"holidays": 1, "name": 1})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid ID"}), 400
+    if not customer:
+        return jsonify({"success": False, "message": "Not found"}), 404
+    return jsonify({
+        "success":  True,
+        "holidays": sorted(customer.get("holidays", [])),
+        "name":     customer.get("name", ""),
+    })
+
+
+@app.route("/api/admin/customer/<customer_id>/holidays/add", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def api_add_customer_holiday(customer_id):
+    data  = request.get_json(silent=True) or {}
+    dates = data.get("dates", [])
+    if isinstance(dates, str):
+        dates = [dates]
+    dates = [d.strip() for d in dates if d.strip()]
+    if not dates:
+        return jsonify({"success": False, "message": "No dates provided"}), 400
+    # Validate date format
+    valid, invalid = [], []
+    for d in dates:
+        try:
+            datetime.strptime(d, "%Y-%m-%d")
+            valid.append(d)
+        except Exception:
+            invalid.append(d)
+    if not valid:
+        return jsonify({"success": False, "message": f"Invalid dates: {invalid}"}), 400
+    users_col.update_one(
+        {"_id": ObjectId(customer_id)},
+        {"$addToSet": {"holidays": {"$each": valid}}}
+    )
+    # Cancel any pending deliveries on those days
+    for d in valid:
+        deliveries_col.update_many(
+            {"customer_id": ObjectId(customer_id), "date": d, "status": {"$in": ["pending", "accepted"]}},
+            {"$set": {"status": "cancelled_holiday"}}
+        )
+    updated = users_col.find_one({"_id": ObjectId(customer_id)}, {"holidays": 1})
+    return jsonify({
+        "success":  True,
+        "added":    valid,
+        "invalid":  invalid,
+        "holidays": sorted(updated.get("holidays", [])),
+        "message":  f"Added {len(valid)} holiday(s).",
+    })
+
+
+@app.route("/api/admin/customer/<customer_id>/holidays/remove", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def api_remove_customer_holiday(customer_id):
+    data     = request.get_json(silent=True) or {}
+    date_str = data.get("date", "").strip()
+    if not date_str:
+        return jsonify({"success": False, "message": "date required"}), 400
+    users_col.update_one(
+        {"_id": ObjectId(customer_id)},
+        {"$pull": {"holidays": date_str}}
+    )
+    # Restore delivery to pending if it was cancelled for holiday
+    deliveries_col.update_many(
+        {"customer_id": ObjectId(customer_id), "date": date_str, "status": "cancelled_holiday"},
+        {"$set": {"status": "pending"}}
+    )
+    updated = users_col.find_one({"_id": ObjectId(customer_id)}, {"holidays": 1})
+    return jsonify({
+        "success":  True,
+        "removed":  date_str,
+        "holidays": sorted(updated.get("holidays", [])),
+        "message":  f"Removed holiday {date_str}.",
+    })
 
 # ---------------------------------------------------------------------------
 # ADMIN – Customer plan progress (FIXED for 22/26-day plans)
@@ -2750,12 +2855,16 @@ def bulk_whatsapp_page():
     customers = list(users_col.find(cust_q, {"name":1,"phone":1,"team_id":1}))
     emp_q     = {"role": "employee", **tf}
     employees = list(users_col.find(emp_q, {"name":1,"phone":1,"team_id":1}))
+    # Include enquiries
+    enq_q     = {"tag": "form_enquiry", "status": "pending"}
+    enquiries = list(enquiries_col.find(enq_q, {"name":1,"phone":1,"plan":1}).limit(500))
     teams     = list(teams_col.find())
-    for t in teams: t["_id"] = str(t["_id"])
+    for t in teams:    t["_id"] = str(t["_id"])
     for c in customers: c["_id"] = str(c["_id"]); c["team_id"] = str(c.get("team_id",""))
     for e in employees: e["_id"] = str(e["_id"]); e["team_id"] = str(e.get("team_id",""))
+    for enq in enquiries: enq["_id"] = str(enq["_id"])
     return render_template("bulk_whatsapp.html",
-        customers=customers, employees=employees, teams=teams,
+        customers=customers, employees=employees, enquiries=enquiries, teams=teams,
         active_page="bulk_wa")
 
 
@@ -2794,6 +2903,39 @@ def api_bulk_whatsapp_send():
         "success": True,
         "message": f"✅ Sending to {len(targets)} recipients in batches of {batch_size}. Runs in background.",
         "count":   len(targets),
+    })
+
+@app.route("/api/admin/bulk_whatsapp/send_targets", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def api_bulk_whatsapp_send_targets():
+    """Send to raw phone+name targets (e.g. enquiries not yet in users_col)."""
+    data      = request.get_json(silent=True) or {}
+    targets   = data.get("targets", [])   # [{"phone": "...", "name": "..."}]
+    message   = (data.get("message") or "").strip()
+    batch_size = int(data.get("batch_size", 10))
+
+    if not message:
+        return jsonify({"success": False, "message": "Message is required."}), 400
+    if not targets or not isinstance(targets, list):
+        return jsonify({"success": False, "message": "No targets provided."}), 400
+
+    # Filter out entries with no phone
+    valid_targets = [t for t in targets if (t.get("phone") or "").strip()]
+    if not valid_targets:
+        return jsonify({"success": False, "message": "No valid phone numbers found."}), 400
+
+    t = threading.Thread(
+        target=_send_bulk_wa_worker,
+        args=(valid_targets, message, batch_size),
+        daemon=True
+    )
+    t.start()
+
+    return jsonify({
+        "success": True,
+        "message": f"✅ Sending to {len(valid_targets)} enquiries in batches of {batch_size}.",
+        "count":   len(valid_targets),
     })
 
 # ---------------------------------------------------------------------------
