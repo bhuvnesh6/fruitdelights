@@ -626,8 +626,9 @@ html, body {
     {% set photo_url    = _del_photo if _del_photo else _cust_photo %}
     {% set has_photo    = photo_url|length > 0 %}
     {% set plan_name    = delivery.plan_name if delivery.plan_name is defined else '' %}
-    {% set is_alt       = delivery.is_alternate_plan if delivery.is_alternate_plan is defined else false %}
-    {% set box_item     = delivery.today_item if (delivery.today_item is defined and delivery.today_item) else plan_name %}
+    {% set is_alt          = delivery.is_alternate_plan if delivery.is_alternate_plan is defined else false %}
+    {% set has_personal_alt = delivery.has_personal_alt if delivery.has_personal_alt is defined else false %}
+    {% set box_item        = delivery.today_item if (delivery.today_item is defined and delivery.today_item) else plan_name %}
 
     <div class="d-card {% if is_mine %}is-mine{% elif is_delivered %}is-done{% endif %}"
          id="card-{{ loop.index }}"
@@ -681,10 +682,14 @@ html, body {
       {% if box_item %}
       <div class="box-type-row">
         <span class="box-label-sm">Box:</span>
-        <span class="box-chip {% if is_alt %}box-chip-alt{% else %}box-chip-std{% endif %}">
-          <span>{% if is_alt %}🔄{% else %}📦{% endif %} {{ box_item }}</span>
+        <span class="box-chip {% if has_personal_alt %}box-chip-alt{% elif is_alt %}box-chip-alt{% else %}box-chip-std{% endif %}">
+          <span>{% if has_personal_alt or is_alt %}🔄{% else %}📦{% endif %} {{ box_item }}</span>
         </span>
-        {% if is_alt %}<span class="today-marker"><span class="today-dot"></span> Alternate</span>{% endif %}
+        {% if has_personal_alt %}
+          <span class="today-marker"><span class="today-dot"></span> Personal</span>
+        {% elif is_alt %}
+          <span class="today-marker"><span class="today-dot"></span> Alternate</span>
+        {% endif %}
       </div>
       {% endif %}
 
@@ -853,7 +858,8 @@ const STOPS = [
     lng:        {{ cust.delivery_lng if cust.delivery_lng else 'null' }},
     photoUrl:   {{ photo_url|tojson }},
     boxItem:    {{ box_item|tojson }},
-    isAlt:      {{ 'true' if (delivery.is_alternate_plan is defined and delivery.is_alternate_plan) else 'false' }},
+    isAlt:          {{ 'true' if (delivery.is_alternate_plan is defined and delivery.is_alternate_plan) else 'false' }},
+    hasPersonalAlt: {{ 'true' if (delivery.has_personal_alt is defined and delivery.has_personal_alt) else 'false' }},
     geocodedLat:null, geocodedLng:null, dist:null,
   },
   {% endfor %}
@@ -1226,7 +1232,7 @@ function renderMap(sorted){
   sorted.forEach((s,i)=>{
     const sL=eLat(s),sO=eLng(s); if(sL===null) return;
     const isActive=activeCardIdx===s.index;
-    const boxHtml=s.boxItem?`<div class="popup-box">${s.isAlt?'🔄':'📦'} ${s.boxItem}</div>`:'';
+    const boxHtml=s.boxItem?`<div class="popup-box">${(s.isAlt||s.hasPersonalAlt)?'🔄':'📦'} ${s.boxItem}${s.hasPersonalAlt?' <span style="font-size:.65rem;color:#c084fc;font-weight:700;">personal</span>':''}</div>`:'';
     const distHtml=s.dist!==null?`<div class="popup-dist">📏 ${fmtDist(s.dist)}</div>`:'';
     const popup=`<div class="popup-name">${i+1}. ${s.name}</div><div class="popup-sub">${s.address}</div>${boxHtml}${distHtml}`;
     const mk=L.marker([sL,sO],{icon:makeStopIcon(i+1,s.isDone,s.isMine,isActive),zIndexOffset:isActive?500:0})

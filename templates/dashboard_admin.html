@@ -1680,32 +1680,48 @@ async function loadCustomerPlanStatus(customerId){
 }
 
 async function buildBoxTimeline(customerId, planData){
-  // Fetch detailed box data from admin plan status endpoint (has period info)
-  // Build calendar grid from period_start → period_end
   try{
-    const start = new Date(planData.period_start);
-    const end   = new Date(planData.period_end);
-    const today = new Date().toISOString().slice(0,10);
-
-    // Fetch deliveries for this customer in range (we use the customer plan status API which has boxes array)
-    // Since admin endpoint doesn't return boxes[], fetch the customer-facing one via admin override
     const res = await fetch(`/api/admin/customer_box_timeline/${customerId}`).catch(()=>null);
-    let boxes = null;
-    if(res && res.ok) boxes = await res.json().catch(()=>null);
+    if(!res || !res.ok) return '';
+    const data = await res.json().catch(()=>null);
+    if(!data || !data.boxes || !data.boxes.length) return '';
 
-    if(!boxes || !boxes.boxes){
-      // Fallback: just show simple count stats without timeline
-      return '';
-    }
+    const statusEmoji  = {delivered:'✓', holiday:'🏖', missed:'✗', today:'•', upcoming:'○'};
+    const statusTitle  = {delivered:'Delivered', holiday:'Holiday / Off', missed:'Missed', today:'Today', upcoming:'Upcoming'};
 
-    const statusColors={delivered:'delivered',holiday:'holiday',missed:'missed',today:'today',upcoming:'upcoming'};
-    const statusEmoji={delivered:'✓',holiday:'🏖',missed:'✗',today:'•',upcoming:'○'};
-    const statusLabel={delivered:'Delivered',holiday:'Holiday / Off',missed:'Missed',today:'Today',upcoming:'Upcoming'};
-
-    const tileHtml = boxes.boxes.map(b=>{
-      const cls=statusColors[b.status]||'upcoming';
-      return `<div class="box-day ${cls}" title="${b.date} (${b.day}) — ${statusLabel[b.status]||b.status}">${statusEmoji[b.status]||''}</div>`;
+    // Build tiles
+    const tileHtml = data.boxes.map(b => {
+      const cls = b.status;
+      const extra = b.is_holiday ? ' title="Custom holiday"' : (b.is_off_day ? ' title="Regular off day"' : '');
+      const holidayDot = b.is_holiday
+        ? `<span style="position:absolute;top:-3px;right:-3px;width:7px;height:7px;border-radius:50%;background:#f59e0b;border:1.5px solid #fff;display:block;"></span>`
+        : '';
+      return `<div class="box-day ${cls}" title="${b.date} (${b.day}) — ${statusTitle[b.status]||b.status}"${extra} style="position:relative;">
+        ${statusEmoji[b.status]||''}${holidayDot}
+      </div>`;
     }).join('');
+
+    // Holiday chips (only non-empty)
+    let holidaySection = '';
+    if(data.holidays && data.holidays.length){
+      const chips = data.holidays.map(d => {
+        const dt = new Date(d+'T00:00:00');
+        const lbl = dt.toLocaleDateString('en-IN',{day:'2-digit',month:'short'});
+        const box = data.boxes.find(b=>b.date===d);
+        const isDelivered = box && box.status==='delivered';
+        return `<span class="holiday-chip" style="${isDelivered?'opacity:.5;text-decoration:line-through;':''}" title="${d}">🏖 ${lbl}</span>`;
+      }).join('');
+      holidaySection = `
+        <div style="margin-top:12px;">
+          <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-3);margin-bottom:6px;">
+            📅 Customer Holidays (${data.holidays.length})
+          </div>
+          <div style="display:flex;flex-wrap:wrap;gap:4px;">${chips}</div>
+          <div style="font-size:10px;color:var(--text-3);margin-top:4px;">
+            🟡 = holiday dot on box tile above
+          </div>
+        </div>`;
+    }
 
     return `
       <div style="margin-top:14px;">
@@ -1717,11 +1733,18 @@ async function buildBoxTimeline(customerId, planData){
           <div class="box-legend-item"><div class="box-legend-dot" style="background:var(--red);"></div>Missed</div>
           <div class="box-legend-item"><div class="box-legend-dot" style="background:var(--accent);"></div>Today</div>
           <div class="box-legend-item"><div class="box-legend-dot" style="background:var(--border);"></div>Upcoming</div>
+          <div class="box-legend-item">
+            <div style="width:10px;height:10px;border-radius:50%;background:#f59e0b;border:1.5px solid #fff;box-shadow:0 0 0 1px #f59e0b;display:inline-block;"></div>
+            Custom holiday
+          </div>
         </div>
+        ${holidaySection}
       </div>`;
-  }catch{return '';}
+  }catch(e){
+    console.error('buildBoxTimeline error',e);
+    return '';
+  }
 }
-
 /* ── Sample modal ── */
 let _smAllTeams=[];
 function openSampleModal(planLabel,count){
@@ -1831,9 +1854,13 @@ function renderBoxes(){
       const activeCell=isSample?`<td>—</td>`:`<td><div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers||0}</div><div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div></td>`;
       const sampleCell=hasSamples?`<td><div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;color:#f97316;font-size:16px;">${p.sample_boxes||0}</span><button class="btn-view-sample" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes||0})">👁 View</button></div></td>`:`<td style="color:var(--text-3);">0</td>`;
       const totalBig=`<span style="font-size:20px;font-weight:700;color:var(--text);">${(p.active_customers||0)+(p.sample_boxes||0)}</span>`;
-      const altBreakdownCell=isAlt&&Object.keys(globalAlt).length
-        ?`<td><div style="display:flex;flex-wrap:wrap;gap:3px;">${_altCountBadges(globalAlt)}</div></td>`
-        :`<td style="color:var(--text-3);font-size:11px;">${isSample?'—':'Standard'}</td>`;
+      const hasPersonalAlt = Object.keys(globalAlt).length > 0;
+      const altBreakdownCell = hasPersonalAlt
+        ? `<td>
+             <div style="display:flex;flex-wrap:wrap;gap:3px;">${_altCountBadges(globalAlt)}</div>
+             <div style="font-size:10px;color:var(--text-3);margin-top:3px;">customers with custom sequence</div>
+           </td>`
+        : `<td style="color:var(--text-3);font-size:11px;">${isSample ? '—' : isAlt ? '<span class="alt-pill" style="opacity:.6;">🔄 Alt plan</span>' : 'Standard'}</td>`;
 
       // Teams with per-team alt counts in plan view
       const teamsHtml=(!isSample&&(p.teams||[]).length)

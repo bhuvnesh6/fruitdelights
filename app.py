@@ -200,15 +200,19 @@ def _enrich_delivery_plan(delivery_dict: dict, cust: dict, today_date) -> dict:
         is_alt     = False
         today_item = None
 
+    has_personal_alt = bool(cust.get("alt_options", []))
+
     if plan:
-        delivery_dict["plan_name"]         = plan.get("name", "")
-        delivery_dict["is_alternate_plan"] = is_alt
-        delivery_dict["today_item"]        = today_item
-        delivery_dict["plan_id_str"]       = str(plan["_id"])
+        delivery_dict["plan_name"]          = plan.get("name", "")
+        delivery_dict["is_alternate_plan"]  = is_alt
+        delivery_dict["has_personal_alt"]   = has_personal_alt
+        delivery_dict["today_item"]         = today_item
+        delivery_dict["plan_id_str"]        = str(plan["_id"])
     else:
-        delivery_dict["plan_name"]         = cust.get("sample", "")
-        delivery_dict["is_alternate_plan"] = is_alt
-        delivery_dict["today_item"]        = today_item
+        delivery_dict["plan_name"]          = cust.get("sample", "")
+        delivery_dict["is_alternate_plan"]  = is_alt
+        delivery_dict["has_personal_alt"]   = has_personal_alt
+        delivery_dict["today_item"]         = today_item
 
     return delivery_dict
 
@@ -2098,12 +2102,22 @@ def api_boxes_needed():
 
             active_count += 1
 
-            # Per-customer item
-            cust_item = _get_customer_item_for_date(c, target_date)
+            # Per-customer alt_options takes priority over plan-level alternate_items.
+            # Only customers that actually HAVE alt_options set contribute to alt counts.
+            cust_alt_options = c.get("alt_options", [])
+            if cust_alt_options:
+                cust_item = _get_customer_item_for_date(c, target_date)
+            else:
+                # No personal sequence — use plan-level item label (for display only)
+                cust_item = _get_alternate_item_for_date(plan, target_date) if is_alt else None
+                # But DON'T count this customer in alt_counts — they have no alt_options
+                cust_item_for_count = None
 
-            # Global alt count
-            if is_alt and cust_item:
-                global_alt_counts[cust_item] = global_alt_counts.get(cust_item, 0) + 1
+            # Only count in alt breakdown if the customer has their own alt_options
+            cust_item_for_count = _get_customer_item_for_date(c, target_date) if cust_alt_options else None
+
+            if cust_item_for_count:
+                global_alt_counts[cust_item_for_count] = global_alt_counts.get(cust_item_for_count, 0) + 1
 
             tid = str(c.get("team_id", "unassigned"))
             if tid not in team_breakdown:
@@ -2113,12 +2127,12 @@ def api_boxes_needed():
                     "team_name":  team_obj.get("name", "Unassigned"),
                     "team_area":  team_obj.get("area", ""),
                     "count":      0,
-                    "alt_counts": {},   # item -> count for this team
+                    "alt_counts": {},
                 }
             team_breakdown[tid]["count"] += 1
-            if is_alt and cust_item:
+            if cust_item_for_count:
                 tc = team_breakdown[tid]["alt_counts"]
-                tc[cust_item] = tc.get(cust_item, 0) + 1
+                tc[cust_item_for_count] = tc.get(cust_item_for_count, 0) + 1
 
         # Sample customers that match this plan
         matched_sample_count = 0
@@ -2318,6 +2332,14 @@ def customer_plan_status(customer_id):
         "customer_id": customer["_id"],
         "status": "delivered"
     })
+
+    # If admin has set a manual override on the customer document, add it
+    extra = customer.get("total_delivered_boxes")
+    if extra is not None:
+        try:
+            delivered_count += int(extra)
+        except (TypeError, ValueError):
+            pass
 
     remaining_days = max(0, duration_days - delivered_count)
 
@@ -2817,7 +2839,12 @@ def customer_my_plan_status():
         else:
             box_status = "upcoming"
 
-        boxes.append({"date": date_str, "day": day_name[:3], "status": box_status})
+        boxes.append({
+            "date":     date_str,
+            "day":      day_name[:3],
+            "status":   box_status,
+            "is_holiday": date_str in holidays,  # explicit flag for UI
+        })
         current += timedelta(days=1)
 
     delivered_count = sum(1 for b in boxes if b["status"] == "delivered")
@@ -2839,6 +2866,7 @@ def customer_my_plan_status():
         "is_alternate_plan": bool(plan.get("alternate_items") and len(plan.get("alternate_items", [])) >= 2),
         "alternate_items": plan.get("alternate_items", []),
         "today_item": _get_alternate_item_for_date(plan, today),
+        "holidays": sorted(list(holidays)),
         "boxes": boxes,
     })
 
@@ -2986,7 +3014,7 @@ def _run_daily_jobs():
         except Exception as e:
             print(f"[Scheduler] ⚠️ Scheduler loop error: {e}")
 
-        _time.sleep(60)   # check every minute
+        time.sleep(60)   # check every minute
 
 
 def _scheduler_generate_daily():
@@ -3088,6 +3116,90 @@ def _scheduler_check_invoice_due():
 
     print(f"[Scheduler] Invoices — generated={generated} skipped={skipped} failed={failed}")
 
+
+#new route 
+
+@app.route("/api/admin/customer_box_timeline/<customer_id>")
+@login_required
+@role_required("admin", "manager")
+def customer_box_timeline(customer_id):
+    """
+    Returns a day-by-day box timeline for the customer's current plan period,
+    including holiday markers from the customer's holidays[] array.
+    """
+    try:
+        customer = users_col.find_one({"_id": ObjectId(customer_id)})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid ID"}), 400
+    if not customer:
+        return jsonify({"success": False, "message": "Not found"}), 404
+
+    plan = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
+    if not plan:
+        return jsonify({"success": False, "has_plan": False})
+
+    duration_days = int(plan.get("duration_days", 0))
+    start_date    = _parse_start_date(customer)
+    if not start_date or duration_days <= 0:
+        return jsonify({"success": False, "has_plan": False})
+
+    period_start = start_date
+    period_end   = start_date + timedelta(days=duration_days - 1)
+    today        = date.today()
+    off_days     = customer.get("off_days", [])
+    holidays     = set(customer.get("holidays", []))
+
+    # Fetch all deliveries in range
+    deliveries_in_period = list(deliveries_col.find({
+        "customer_id": customer["_id"],
+        "date": {
+            "$gte": period_start.strftime("%Y-%m-%d"),
+            "$lte": period_end.strftime("%Y-%m-%d")
+        }
+    }))
+    delivery_status_map = {d["date"]: d["status"] for d in deliveries_in_period}
+
+    boxes = []
+    current = period_start
+    while current <= period_end:
+        date_str = current.strftime("%Y-%m-%d")
+        day_name = current.strftime("%A")
+        d_status = delivery_status_map.get(date_str)
+        is_holiday_date = date_str in holidays
+        is_off_day      = day_name in off_days
+
+        if d_status == "delivered":
+            box_status = "delivered"
+        elif d_status == "cancelled_holiday" or is_holiday_date or is_off_day:
+            box_status = "holiday"
+        elif current < today:
+            box_status = "missed"
+        elif current == today:
+            box_status = "today"
+        else:
+            box_status = "upcoming"
+
+        boxes.append({
+            "date":       date_str,
+            "day":        day_name[:3],
+            "status":     box_status,
+            "is_holiday": is_holiday_date,
+            "is_off_day": is_off_day,
+        })
+        current += timedelta(days=1)
+
+    delivered_count = sum(1 for b in boxes if b["status"] == "delivered")
+
+    return jsonify({
+        "success":    True,
+        "has_plan":   True,
+        "boxes":      boxes,
+        "holidays":   sorted(list(holidays)),
+        "off_days":   off_days,
+        "delivered":  delivered_count,
+        "period_start": period_start.strftime("%Y-%m-%d"),
+        "period_end":   period_end.strftime("%Y-%m-%d"),
+    })
 
 # ── Start the scheduler thread ─────────────────────────────────────────────
 # Guard prevents double-start when Flask debug reloader spawns a child process
