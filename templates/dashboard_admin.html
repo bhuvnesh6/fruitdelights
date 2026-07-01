@@ -1814,17 +1814,28 @@ function mbRebuildCalendar(){
   const cal = document.getElementById('mb-calendar');
   if(!startVal || !_mbPlan || !_mbPlan.duration){ cal.innerHTML='<span style="font-size:12px;color:var(--text-3);">Select a start date (plan required).</span>'; return; }
   const start = new Date(startVal+'T00:00:00');
+
+  // FIX: show the FULL calendar month that the start date falls in,
+  // instead of just `duration` days counted forward from the start date.
+  // e.g. start date 01/06/2026 -> month = 06 (June) -> calendar shows
+  // all 30 boxes of June. July would show 31, Feb would show 28/29, etc.
+  const year  = start.getFullYear();
+  const month = start.getMonth(); // 0-indexed (0 = Jan)
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+
   _mbDays = [];
-  for(let i=0;i<_mbPlan.duration;i++){
-    const d = new Date(start); d.setDate(d.getDate()+i);
-    // FIX: use local-safe formatter, NOT toISOString() — avoids the
-    // IST/UTC day-shift bug that made Sunday's off-tag appear under Monday.
+  for(let i=0;i<daysInMonth;i++){
+    const d = new Date(year, month, i+1);
+    // local-safe formatter, NOT toISOString() — avoids the IST/UTC
+    // day-shift bug that made Sunday's off-tag land under Monday.
     _mbDays.push(_fmtLocalDate(d));
   }
+
   const hdrs = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   let html = hdrs.map(h=>`<div class="mb-weekday-hdr">${h}</div>`).join('');
 
-  const firstDow = start.getDay(); // align first day under correct weekday column
+  // align the 1st of the month under its correct weekday column
+  const firstDow = new Date(year, month, 1).getDay();
   for(let i=0;i<firstDow;i++) html += `<div class="mb-day blank"></div>`;
 
   _mbDays.forEach(d=>{
