@@ -2464,7 +2464,8 @@ def api_sample_customers():
             pass
     elif label:
         query["sample"] = label
-
+        
+        
 @app.route("/api/admin/assign_team", methods=["POST"])
 @login_required
 @role_required("admin", "manager")
