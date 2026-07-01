@@ -38,13 +38,14 @@ client    = MongoClient(MONGO_URI)
 db        = client[DB_NAME]
 
 # Collections
-users_col      = db.users
-teams_col      = db.teams
-plans_col      = db.plans
-deliveries_col = db.deliveries
-invoices_col   = db.invoices
-enquiries_col  = db.enquiries
-wa_inbox_col   = db.wa_inbox
+users_col        = db.users
+teams_col        = db.teams
+plans_col        = db.plans
+deliveries_col    = db.deliveries
+invoices_col      = db.invoices
+enquiries_col     = db.enquiries
+wa_inbox_col      = db.wa_inbox
+manual_bills_col  = db.manual_bills   # NEW: manual billing records
 
 
 # ---------------------------------------------------------------------------
@@ -519,6 +520,19 @@ def _get_customer_item_for_date(customer, target_date):
     idx   = delta % len(alt_options)
     return alt_options[idx]
 
+
+# ---------------------------------------------------------------------------
+# MANUAL BILLING HELPER (NEW)
+# ---------------------------------------------------------------------------
+def _send_manual_bill_whatsapp(phone, message_text):
+    phone = "".join(filter(str.isdigit, str(phone or "")))
+    if len(phone) == 10:
+        phone = "91" + phone
+    if not phone:
+        return False
+    return send_whatsapp(phone, message_text)
+
+
 # ---------------------------------------------------------------------------
 # ROUTES – core
 # ---------------------------------------------------------------------------
@@ -703,6 +717,9 @@ def api_customers():
             "discount_amount":  float(c.get("discount_amount",  0) or 0),
             "status":           c.get("status", "active"),
             "source":           c.get("source", ""),
+            # NEW: payment status fields
+            "payment_status":          c.get("payment_status", "pending"),
+            "payment_partial_amount":  float(c.get("payment_partial_amount", 0) or 0),
             "created_at":       (
                 c["created_at"].strftime("%Y-%m-%d")
                 if isinstance(c.get("created_at"), datetime) else ""
@@ -959,6 +976,37 @@ def reset_employee_credentials(employee_id):
 
 
 # ---------------------------------------------------------------------------
+# ADMIN – reset customer credentials (NEW: password reset button)
+# ---------------------------------------------------------------------------
+@app.route("/admin/customers/reset-credentials/<customer_id>", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def reset_customer_credentials(customer_id):
+    customer = users_col.find_one({"_id": ObjectId(customer_id), "role": "customer"})
+    if not customer:
+        return jsonify({"success": False, "message": "Customer not found."}), 404
+    new_password = secrets.token_urlsafe(8)
+    users_col.update_one({"_id": ObjectId(customer_id)},
+                         {"$set": {"password": generate_password_hash(new_password)}})
+    phone = "".join(filter(str.isdigit, str(customer.get("phone", ""))))
+    if len(phone) == 10:
+        phone = "91" + phone
+    name, login_id = customer.get("name", ""), customer.get("email", "")
+    msg = (
+        f"🍓 Fruit Delights – Password Reset\n\n"
+        f"Hello {name},\n\nYour password has been reset.\n\n"
+        f"Login ID: {login_id}\nNew Password: {new_password}\n\n"
+        f"Login:\nhttps://fruitedelights.com/login\n\n"
+        f"If you did not request this, contact support."
+    )
+    wa_sent = send_whatsapp(phone, msg) if phone else False
+    return jsonify({
+        "success": True, "wa_sent": wa_sent, "name": name,
+        "message": f"Password reset for {name}." + (" Sent on WhatsApp." if wa_sent else " WhatsApp delivery failed."),
+    })
+
+
+# ---------------------------------------------------------------------------
 # ADMIN – add / edit / delete users
 # ---------------------------------------------------------------------------
 @app.route("/admin/users/add", methods=["POST"])
@@ -1014,6 +1062,9 @@ def add_user():
             "discount_percent": float(request.form.get("discount_percent", 0) or 0),
             "discount_amount":  float(request.form.get("discount_amount",  0) or 0),
             "status":           request.form.get("customer_status", "active"),
+            # NEW: payment status defaults
+            "payment_status":          "pending",
+            "payment_partial_amount":  0,
         })
     users_col.insert_one(user_data)
     send_credentials_whatsapp(email, raw_password, name, phone)
@@ -1062,6 +1113,11 @@ def edit_user(user_id):
         tdb = request.form.get("total_delivered_boxes", "").strip()
         total_delivered_boxes = int(tdb) if tdb.isdigit() else None
 
+        # NEW: payment status
+        payment_status   = request.form.get("payment_status", "pending")
+        partial_amt_raw  = request.form.get("payment_partial_amount", "").strip()
+        payment_partial_amount = float(partial_amt_raw) if (payment_status == "partial" and partial_amt_raw) else 0
+
         update.update({
             "plan_id":               plan["_id"] if plan else None,
             "address":               request.form.get("address"),
@@ -1072,6 +1128,8 @@ def edit_user(user_id):
             "discount_amount":       float(request.form.get("discount_amount",  0) or 0),
             "status":                request.form.get("customer_status", "active"),
             "alt_options":           alt_list,
+            "payment_status":            payment_status,
+            "payment_partial_amount":    payment_partial_amount,
         })
         if total_delivered_boxes is not None:
             update["total_delivered_boxes"] = total_delivered_boxes
@@ -1132,6 +1190,9 @@ def api_get_user(user_id):
         "status":                user.get("status", "active"),
         "alt_options":           user.get("alt_options", []),
         "total_delivered_boxes": user.get("total_delivered_boxes", ""),
+        # NEW: payment status fields
+        "payment_status":         user.get("payment_status", "pending"),
+        "payment_partial_amount": float(user.get("payment_partial_amount", 0) or 0),
     })
 
 # ---------------------------------------------------------------------------
@@ -1348,6 +1409,9 @@ def approve_enquiry(enquiry_id):
         "status":           "active",
         "created_at":       datetime.now(),
         "source":           "web_enquiry",
+        # NEW: payment status defaults
+        "payment_status":          "pending",
+        "payment_partial_amount":  0,
     }
     if sample_val:
         user_data["sample"] = sample_val
@@ -1955,6 +2019,8 @@ def check_invoice_due():
             }
             invoices_col.insert_one(invoice)
             _send_invoice_whatsapp(customer, invoice)
+            # NEW: reset payment status for the new billing cycle
+            users_col.update_one({"_id": customer["_id"]}, {"$set": {"payment_status": "pending", "payment_partial_amount": 0}})
             generated += 1
         except Exception as e:
             failed += 1
@@ -2012,6 +2078,8 @@ def generate_monthly_bills():
             }
             invoices_col.insert_one(invoice)
             _send_invoice_whatsapp(customer, invoice)
+            # NEW: reset payment status for the new billing cycle
+            users_col.update_one({"_id": customer["_id"]}, {"$set": {"payment_status": "pending", "payment_partial_amount": 0}})
             generated += 1
         except Exception as e:
             failed += 1
@@ -2381,6 +2449,7 @@ def customer_plan_status(customer_id):
 @role_required("admin", "manager")
 def api_sample_customers():
     label     = request.args.get("label", "").strip()
+    plan_id   = request.args.get("plan_id", "").strip()
     today     = datetime.now().date()
     today_str = today.strftime("%Y-%m-%d")
     query = {
@@ -2388,40 +2457,13 @@ def api_sample_customers():
         "status": "active",
         "sample": {"$exists": True, "$nin": [None, ""]},
     }
-    if label:
+    if plan_id:
+        try:
+            query["plan_id"] = ObjectId(plan_id)
+        except Exception:
+            pass
+    elif label:
         query["sample"] = label
-    customers = list(users_col.find(query))
-    teams     = list(teams_col.find())
-    team_map  = {str(t["_id"]): t for t in teams}
-    result = []
-    for c in customers:
-        day_name = today.strftime("%A")
-        if day_name in c.get("off_days", []):
-            continue
-        if today_str in c.get("holidays", []):
-            continue
-        team = team_map.get(str(c.get("team_id", "")), {})
-        start_date = c.get("start_date")
-        if isinstance(start_date, datetime):
-            start_date = start_date.strftime("%Y-%m-%d")
-        result.append({
-            "id":             str(c["_id"]),
-            "name":           c.get("name", ""),
-            "phone":          c.get("phone", "—"),
-            "address":        c.get("address", "—"),
-            "preferred_time": c.get("preferred_time", "—"),
-            "start_date":     start_date or "—",
-            "sample_label":   c.get("sample", ""),
-            "team_id":        str(c.get("team_id", "")),
-            "team_name":      team.get("name", "—"),
-            "team_area":      team.get("area", ""),
-            "team_city":      team.get("city", ""),
-            "off_days":       c.get("off_days", []),
-            "status":         c.get("status", "active"),
-        })
-    all_teams = [{"id": str(t["_id"]), "name": t.get("name",""), "area": t.get("area",""), "city": t.get("city","")} for t in teams]
-    return jsonify({"customers": result, "teams": all_teams})
-
 
 @app.route("/api/admin/assign_team", methods=["POST"])
 @login_required
@@ -2966,6 +3008,30 @@ def api_bulk_whatsapp_send_targets():
         "count":   len(valid_targets),
     })
 
+
+@app.route("/api/admin/bulk_whatsapp/send_to_enquiries", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def api_bulk_whatsapp_send_to_enquiries():
+    """Send bulk WhatsApp to all pending form_enquiry records."""
+    data       = request.get_json(silent=True) or {}
+    message    = (data.get("message") or "").strip()
+    batch_size = int(data.get("batch_size", 10))
+    if not message:
+        return jsonify({"success": False, "message": "Message is required."}), 400
+    enquiries = list(enquiries_col.find({"tag": "form_enquiry", "status": "pending"}, {"name": 1, "phone": 1}))
+    targets   = [{"phone": e.get("phone", ""), "name": e.get("name", "there")} for e in enquiries if e.get("phone")]
+    if not targets:
+        return jsonify({"success": False, "message": "No pending enquiries with phone numbers found."}), 400
+    t = threading.Thread(target=_send_bulk_wa_worker, args=(targets, message, batch_size), daemon=True)
+    t.start()
+    return jsonify({
+        "success": True,
+        "message": f"✅ Sending to {len(targets)} pending enquiries in batches of {batch_size}.",
+        "count":   len(targets),
+    })
+
+
 # ---------------------------------------------------------------------------
 # BACKGROUND SCHEDULER
 # ---------------------------------------------------------------------------
@@ -3108,6 +3174,8 @@ def _scheduler_check_invoice_due():
             }
             invoices_col.insert_one(invoice)
             _send_invoice_whatsapp(customer, invoice)
+            # NEW: reset payment status for the new billing cycle
+            users_col.update_one({"_id": customer["_id"]}, {"$set": {"payment_status": "pending", "payment_partial_amount": 0}})
             generated += 1
 
         except Exception as e:
@@ -3200,6 +3268,162 @@ def customer_box_timeline(customer_id):
         "period_start": period_start.strftime("%Y-%m-%d"),
         "period_end":   period_end.strftime("%Y-%m-%d"),
     })
+
+
+# ---------------------------------------------------------------------------
+# ADMIN – MANUAL BILLING (NEW)
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/customer/<customer_id>/manual_bill", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def create_manual_bill(customer_id):
+    """
+    Creates a manual bill based on admin-marked delivered/holiday dates on a calendar,
+    priced against the customer's plan monthly price / plan duration = rate per day.
+    Does NOT consider weekends/holidays automatically — purely counts marked boxes.
+    """
+    data = request.get_json(silent=True) or {}
+    period_start_str = data.get("period_start", "").strip()
+    period_end_str   = data.get("period_end", "").strip()
+    delivered_dates  = list(set(data.get("delivered_dates", [])))
+    holiday_dates    = list(set(data.get("holiday_dates", [])))
+    bill_month_label = data.get("bill_month_label", "").strip() or "Current Cycle"
+
+    try:
+        customer = users_col.find_one({"_id": ObjectId(customer_id), "role": "customer"})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid customer ID"}), 400
+    if not customer:
+        return jsonify({"success": False, "message": "Customer not found"}), 404
+
+    plan = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
+    if not plan:
+        return jsonify({"success": False, "message": "Customer has no plan assigned"}), 400
+
+    duration_days = int(plan.get("duration_days", 0))
+    plan_price    = float(plan.get("price_per_month", plan.get("price_per_day", 0)))
+    if duration_days <= 0 or plan_price <= 0 or not period_start_str or not period_end_str:
+        return jsonify({"success": False, "message": "Invalid plan or period"}), 400
+
+    working_days = len(delivered_dates)
+    leave_days   = len(holiday_dates)
+    total_days   = duration_days
+    rate_per_day = round(plan_price / duration_days, 2)
+    subtotal     = round(working_days * rate_per_day, 2)
+
+    disc_pct = float(customer.get("discount_percent", 0) or 0)
+    disc_amt = float(customer.get("discount_amount",  0) or 0)
+    discount, total = _apply_discount(subtotal, disc_pct, disc_amt)
+
+    try:
+        period_start_disp = datetime.strptime(period_start_str, "%Y-%m-%d").strftime("%d.%m.%y")
+        period_end_disp   = datetime.strptime(period_end_str,   "%Y-%m-%d").strftime("%d.%m.%y")
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid date format"}), 400
+
+    disc_line = f"• Discount: -₹{discount:.2f}\n" if discount > 0 else ""
+
+    msg = (
+        f"🍉 FRUITE DELIGHTS – Monthly Bill ({bill_month_label}) 🍉\n"
+        f"Fresh & Healthy Every Day\n\n"
+        f"👤 Customer Name: {customer.get('name','')}\n"
+        f"📍 Address: {customer.get('address','')}\n\n"
+        f"📅 Billing Duration:\n{period_start_disp} to {period_end_disp}\n\n"
+        f"📊 Billing Summary:\n"
+        f"• Total Days: {total_days}\n"
+        f"• Leave Days: {leave_days}\n"
+        f"• Working Days: {working_days}\n"
+        f"• Rate per Day: ₹{rate_per_day:.2f}\n\n"
+        f"💰 Calculation:\n{working_days} × ₹{rate_per_day:.2f} = ₹{subtotal:.2f}\n"
+        f"{disc_line}"
+        f"✅ Final Payable Amount: ₹{total:.2f}\n\n"
+        f"🙏 Thank you for choosing Fruite Delights\n"
+        f"Healthy Fruits, Healthy Life 🍓🥝"
+    )
+
+    bill_doc = {
+        "customer_id":       customer["_id"],
+        "customer_name":     customer.get("name", ""),
+        "plan_name":         plan.get("name", ""),
+        "period_start":      period_start_str,
+        "period_end":        period_end_str,
+        "bill_month_label":  bill_month_label,
+        "total_days":        total_days,
+        "leave_days":        leave_days,
+        "working_days":      working_days,
+        "rate_per_day":      rate_per_day,
+        "subtotal":          subtotal,
+        "discount":          discount,
+        "total":             total,
+        "message_text":      msg,
+        "delivered_dates":   sorted(delivered_dates),
+        "holiday_dates":     sorted(holiday_dates),
+        "created_by_id":     session.get("user_id"),
+        "created_by_name":   session.get("name"),
+        "created_by_role":   session.get("role"),
+        "created_at":        datetime.now(),
+        "sent":              False,
+    }
+    result = manual_bills_col.insert_one(bill_doc)
+
+    # Reset payment status whenever a new manual bill is created for the customer
+    users_col.update_one({"_id": customer["_id"]}, {"$set": {"payment_status": "pending", "payment_partial_amount": 0}})
+
+    return jsonify({
+        "success":      True,
+        "bill_id":      str(result.inserted_id),
+        "message_text": msg,
+        "message":      "Bill generated. Review and send.",
+    })
+
+
+@app.route("/api/admin/manual_bill/<bill_id>/send", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def send_manual_bill(bill_id):
+    try:
+        bill = manual_bills_col.find_one({"_id": ObjectId(bill_id)})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid bill ID"}), 400
+    if not bill:
+        return jsonify({"success": False, "message": "Bill not found"}), 404
+
+    customer = users_col.find_one({"_id": bill["customer_id"]})
+    phone = "".join(filter(str.isdigit, str((customer or {}).get("phone", ""))))
+    if len(phone) == 10:
+        phone = "91" + phone
+    if not phone:
+        return jsonify({"success": False, "message": "No phone number on file"}), 400
+
+    ok = send_whatsapp(phone, bill["message_text"])
+    if ok:
+        manual_bills_col.update_one({"_id": bill["_id"]}, {"$set": {"sent": True, "sent_at": datetime.now()}})
+
+    return jsonify({"success": ok, "message": "Sent on WhatsApp." if ok else "WhatsApp delivery failed."})
+
+
+@app.route("/api/admin/customer/<customer_id>/manual_bills")
+@login_required
+@role_required("admin", "manager")
+def list_manual_bills(customer_id):
+    try:
+        bills = list(manual_bills_col.find({"customer_id": ObjectId(customer_id)}).sort("created_at", -1).limit(12))
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid customer ID"}), 400
+
+    result = []
+    for b in bills:
+        result.append({
+            "id":               str(b["_id"]),
+            "bill_month_label": b.get("bill_month_label", ""),
+            "period_start":     b.get("period_start", ""),
+            "period_end":       b.get("period_end", ""),
+            "total":            b.get("total", 0),
+            "sent":             b.get("sent", False),
+            "created_by_name":  b.get("created_by_name", ""),
+        })
+    return jsonify({"success": True, "bills": result})
+
 
 # ── Start the scheduler thread ─────────────────────────────────────────────
 # Guard prevents double-start when Flask debug reloader spawns a child process

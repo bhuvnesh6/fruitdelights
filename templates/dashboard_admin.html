@@ -298,6 +298,28 @@ tbody tr:hover td{background:var(--bg-3)}
 .box-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px;}
 .box-legend-item{display:flex;align-items:center;gap:4px;font-size:10px;color:var(--text-2);}
 .box-legend-dot{width:10px;height:10px;border-radius:3px;}
+
+/*manull billing */
+
+.mb-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin:12px 0;}
+.mb-weekday-hdr{font-size:10px;font-weight:700;text-align:center;color:var(--text-3);text-transform:uppercase;padding-bottom:4px;}
+.mb-day{aspect-ratio:1;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--bg-3);color:var(--text-3);user-select:none;transition:all .15s;}
+.mb-day.blank{visibility:hidden;cursor:default;}
+.mb-day:hover{border-color:var(--accent);}
+.mb-day.delivered{background:var(--green-soft);color:var(--green);border-color:#6ee7b7;}
+.mb-day.holiday{background:var(--yellow-soft);color:var(--yellow);border-color:#fcd34d;}
+.mb-day.sunday-off{background:var(--red-soft);color:var(--red);border-color:#fca5a5;}
+.mb-paint-mode-btn{padding:6px 14px;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:var(--bg-3);}
+.mb-paint-mode-btn.active-delivered{background:var(--green-soft);border-color:#6ee7b7;color:var(--green);}
+.mb-paint-mode-btn.active-holiday{background:var(--yellow-soft);border-color:#fcd34d;color:var(--yellow);}
+.mb-summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0;}
+.mb-summary .ms-box{background:var(--bg-2);border:1px solid var(--border);border-radius:8px;padding:8px;text-align:center;}
+.mb-summary .ms-val{font-size:16px;font-weight:700;}
+.mb-summary .ms-lbl{font-size:9px;text-transform:uppercase;color:var(--text-3);margin-top:2px;}
+.mb-msg-preview{background:#f0fdf4;border:1.5px dashed #86efac;border-radius:8px;padding:14px;font-family:monospace;font-size:12px;white-space:pre-wrap;margin-top:12px;max-height:260px;overflow-y:auto;}
+.mb-history-row{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;border-bottom:1px solid var(--border);font-size:12px;}
+
+
 /* Bulk WA tabs */
 .tab-bar{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px;gap:0;}
 .tab-btn{padding:8px 18px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--text-2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;}
@@ -710,7 +732,7 @@ tbody tr:hover td{background:var(--bg-3)}
         <div id="cust-filter-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;margin-top:-8px;"></div>
         <div class="table-wrap">
           <table id="customers-table">
-            <thead><tr><th>Customer</th><th>Plan</th><th>Start Date</th><th>Discount</th><th>Status</th><th>Team</th><th>Actions</th></tr></thead>
+            <thead><tr><th>Customer</th><th>Plan</th><th>Start Date</th><th>Discount</th><th>Payment</th><th>Status</th><th>Team</th><th>Actions</th></tr></thead>
             <tbody><tr id="cust-loading-row"><td colspan="7" style="text-align:center;color:var(--text-3);padding:32px;">Loading customers…</td></tr></tbody>
           </table>
         </div>
@@ -1094,6 +1116,22 @@ tbody tr:hover td{background:var(--bg-3)}
         <input type="number" name="total_delivered_boxes" id="ec-total-delivered" class="form-control" min="0">
       </div>
 
+      <div class="divider-label">💳 Payment Status</div>
+<div class="form-row">
+  <div class="form-group">
+    <label class="form-label">Payment Status</label>
+    <select name="payment_status" id="ec-payment-status" class="form-control" onchange="togglePartialAmount()">
+      <option value="pending">⏳ Pending</option>
+      <option value="paid">✅ Paid (Full)</option>
+      <option value="partial">🟡 Partially Paid</option>
+    </select>
+  </div>
+  <div class="form-group" id="ec-partial-amt-wrap" style="display:none;">
+    <label class="form-label">Amount Paid (₹)</label>
+    <input type="number" name="payment_partial_amount" id="ec-partial-amt" class="form-control" min="0" step="0.01" value="0">
+  </div>
+</div>
+
       <div class="divider-label">💰 Discount</div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Discount %</label><input type="number" name="discount_percent" id="ec-discpct" class="form-control" min="0" max="100" step="0.01" value="0"></div>
@@ -1139,6 +1177,7 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="detail-field"><div class="detail-field-label">Source</div><div class="detail-field-value" id="view-source">—</div></div>
         <div class="detail-field"><div class="detail-field-label">Member Since</div><div class="detail-field-value" id="view-created">—</div></div>
         <div class="detail-field"><div class="detail-field-label">Account Status</div><div class="detail-field-value" id="view-acct-status">—</div></div>
+       <div class="detail-field"><div class="detail-field-label">Payment Status</div><div class="detail-field-value" id="view-payment-status">—</div></div>
         <div class="detail-field full-width">
           <div class="detail-field-label">Holidays</div>
           <div class="detail-field-value" id="view-holidays">—</div>
@@ -1152,6 +1191,50 @@ tbody tr:hover td{background:var(--bg-3)}
         </div>
       </div>
     </div>
+
+    <!--manuall plan-->
+
+    <div class="detail-section-label">🧾 Create Manual Bill</div>
+<div id="mb-wrap" style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:16px;margin-bottom:16px;">
+  <div class="form-row">
+    <div class="form-group">
+      <label class="form-label">Billing Start Date</label>
+      <input type="date" id="mb-start-date" class="form-control" onchange="mbRebuildCalendar()">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Bill Label <span class="opt">(e.g. April 2026)</span></label>
+      <input type="text" id="mb-month-label" class="form-control" placeholder="e.g. April 2026">
+    </div>
+  </div>
+  <div style="font-size:11px;color:var(--text-3);margin-bottom:6px;">
+    Plan: <strong id="mb-plan-info">—</strong>
+</div>
+<div style="display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;">
+  <span style="font-size:11px;font-weight:600;color:var(--text-2);">Paint mode:</span>
+  <button type="button" class="mb-paint-mode-btn active-delivered" id="mb-mode-delivered" onclick="mbSetPaintMode('delivered')">🟢 Delivered</button>
+  <button type="button" class="mb-paint-mode-btn" id="mb-mode-holiday" onclick="mbSetPaintMode('holiday')">🟡 Leave</button>
+  <span style="font-size:10px;color:var(--text-3);margin-left:auto;">Select mode → click days. Sundays auto-marked off (still clickable to override).</span>
+</div>
+<div class="mb-cal" id="mb-calendar"></div>
+  <div class="mb-summary">
+    <div class="ms-box"><div class="ms-val" id="mb-total-days">0</div><div class="ms-lbl">Total Days</div></div>
+    <div class="ms-box"><div class="ms-val" id="mb-leave-days" style="color:var(--yellow);">0</div><div class="ms-lbl">Leave Days</div></div>
+    <div class="ms-box"><div class="ms-val" id="mb-working-days" style="color:var(--green);">0</div><div class="ms-lbl">Working Days</div></div>
+    <div class="ms-box"><div class="ms-val" id="mb-total-amount" style="color:var(--accent);">₹0</div><div class="ms-lbl">Est. Payable</div></div>
+  </div>
+  <div style="display:flex;gap:8px;">
+    <button type="button" class="btn btn-primary btn-sm" onclick="mbGenerateBill()">🧾 Generate Bill</button>
+    <button type="button" class="btn btn-ghost btn-sm" onclick="mbResetCalendar()">↺ Reset Marks</button>
+  </div>
+  <div id="mb-preview-wrap" style="display:none;">
+    <div class="mb-msg-preview" id="mb-msg-preview"></div>
+    <button type="button" class="btn btn-wa btn-sm" style="margin-top:10px;" id="mb-send-btn" onclick="mbSendBill()">💬 Send on WhatsApp</button>
+  </div>
+  <div class="divider" style="margin:16px 0;"></div>
+  <div style="font-size:11px;font-weight:700;text-transform:uppercase;color:var(--text-3);margin-bottom:8px;">Past Manual Bills</div>
+  <div id="mb-history">—</div>
+</div>
+
     <div class="detail-section-label">🏘️ Team Assignment</div>
     <div class="detail-field" style="margin-bottom:12px;"><div class="detail-field-label">Currently Assigned To</div><div class="detail-field-value" id="view-current-team">—</div></div>
     <form id="view-assign-team-form" method="POST">
@@ -1375,6 +1458,17 @@ function navigate(page, el) {
 
 function escHtml(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 
+/* ── Local-safe date formatter ──
+   NEVER use Date.prototype.toISOString() for a *local calendar date* string.
+   toISOString() always converts to UTC. In IST (UTC+5:30), local midnight
+   becomes 18:30 the PREVIOUS day in UTC, so slicing it silently rolls every
+   date back by one day. That's exactly what was causing Sunday's "off" tag
+   to visually land under the Monday column in the manual-billing calendar. */
+function _fmtLocalDate(d){
+  const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
 /* ── Toast ── */
 function showToast(msg,type){
   const c=document.getElementById('toast-container');
@@ -1495,6 +1589,15 @@ async function resetEmployeeCredentials(employeeId,employeeName){
   }catch{if(btn){btn.disabled=false;btn.textContent='🔑 Reset';}showToast('❌ Network error.','danger');}
 }
 
+async function resetCustomerCredentials(id, name){
+  if(!confirm(`Reset password for ${name}? New password goes to WhatsApp on their existing login ID.`))return;
+  try{
+    const res = await fetch(`/admin/customers/reset-credentials/${id}`,{method:'POST'});
+    const data = await res.json();
+    showToast(data.success?'✅ '+data.message:'❌ '+(data.message||'Failed'), data.success?'success':'danger');
+  }catch{ showToast('❌ Network error.','danger'); }
+}
+
 /* ── WA Inbox ── */
 let _waEnquiryId='',_waEnquiryName='';
 function openWaInbox(enquiryId,name,phone,whatsappId){
@@ -1593,6 +1696,7 @@ function openViewModal(userData,role){
   document.getElementById('view-modal-title').textContent=role==='employee'?'Delivery Partner Details':'Customer Details';
   document.getElementById('view-role-badge').innerHTML=role==='employee'?`<span class="badge badge-blue">🚴 Delivery Partner</span>`:`<span class="badge badge-orange">👤 Customer</span>`;
   document.getElementById('view-status-badge').innerHTML=userData.status?statusBadge(userData.status):'';
+  
   const planEl=document.getElementById('view-plan-badge');
   planEl.innerHTML=(userData.plan_name&&userData.plan_name!=='—')?`<span class="badge badge-green">📋 ${escHtml(userData.plan_name)}</span>`:'';
   const rawPhone=(userData.phone||'').replace(/\D/g,'');const waPhone=rawPhone.length===10?'91'+rawPhone:rawPhone;
@@ -1604,6 +1708,8 @@ function openViewModal(userData,role){
   document.getElementById('view-phone').href=userData.phone?`tel:${userData.phone}`:'#';
   document.getElementById('view-email').textContent=userData.email||'—';
   document.getElementById('view-address').textContent=userData.address||'—';
+  document.getElementById('view-payment-status').innerHTML = paymentBadge(userData.payment_status, userData.payment_partial_amount);
+  initManualBilling(userData.id, userData.plan_name, userData.plan_price, userData.plan_duration, userData.start_date);
   const custSection=document.getElementById('view-customer-section');
   if(role==='customer'){
     custSection.style.display='block';
@@ -1679,6 +1785,126 @@ async function loadCustomerPlanStatus(customerId){
   }catch(err){wrap.innerHTML=`<div style="padding:12px 0;color:var(--red);font-size:13px;">Failed to load. ${err}</div>`;}
 }
 
+let _mbCustomerId='', _mbPlan=null, _mbDays=[], _mbMarks={}, _mbLastBillId='';
+
+function initManualBilling(customerId, planName, planPrice, durationDays, custStartDate){
+  _mbCustomerId = customerId;
+  _mbPlan = {name: planName, price: planPrice||0, duration: durationDays||0};
+  document.getElementById('mb-plan-info').textContent = _mbPlan.duration
+    ? `${planName} — ₹${planPrice}/${durationDays} days (₹${(planPrice/durationDays).toFixed(2)}/day)`
+    : 'No active plan — cannot bill.';
+  document.getElementById('mb-start-date').value = custStartDate || _fmtLocalDate(new Date());
+  document.getElementById('mb-month-label').value = '';
+  document.getElementById('mb-preview-wrap').style.display = 'none';
+  _mbMarks = {};
+  mbSetPaintMode('delivered');
+  mbRebuildCalendar();
+  mbLoadHistory();
+}
+let _mbPaintMode = 'delivered';
+
+function mbSetPaintMode(mode){
+  _mbPaintMode = mode;
+  document.getElementById('mb-mode-delivered').classList.toggle('active-delivered', mode==='delivered');
+  document.getElementById('mb-mode-holiday').classList.toggle('active-holiday', mode==='holiday');
+}
+
+function mbRebuildCalendar(){
+  const startVal = document.getElementById('mb-start-date').value;
+  const cal = document.getElementById('mb-calendar');
+  if(!startVal || !_mbPlan || !_mbPlan.duration){ cal.innerHTML='<span style="font-size:12px;color:var(--text-3);">Select a start date (plan required).</span>'; return; }
+  const start = new Date(startVal+'T00:00:00');
+  _mbDays = [];
+  for(let i=0;i<_mbPlan.duration;i++){
+    const d = new Date(start); d.setDate(d.getDate()+i);
+    // FIX: use local-safe formatter, NOT toISOString() — avoids the
+    // IST/UTC day-shift bug that made Sunday's off-tag appear under Monday.
+    _mbDays.push(_fmtLocalDate(d));
+  }
+  const hdrs = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  let html = hdrs.map(h=>`<div class="mb-weekday-hdr">${h}</div>`).join('');
+
+  const firstDow = start.getDay(); // align first day under correct weekday column
+  for(let i=0;i<firstDow;i++) html += `<div class="mb-day blank"></div>`;
+
+  _mbDays.forEach(d=>{
+    const dow = new Date(d+'T00:00:00').getDay();
+    const st  = _mbMarks[d] || '';
+    const cls = st || (dow===0 ? 'sunday-off' : '');
+    html += `<div class="mb-day ${cls}" data-date="${d}" onclick="mbToggleDay('${d}')">${new Date(d+'T00:00:00').getDate()}</div>`;
+  });
+
+  cal.innerHTML = html;
+  mbUpdateSummary();
+}
+
+function mbToggleDay(dateStr){
+  const cur = _mbMarks[dateStr];
+  if(cur === _mbPaintMode){
+    delete _mbMarks[dateStr];           // click again in same mode = unmark
+  } else {
+    _mbMarks[dateStr] = _mbPaintMode;   // set to current paint mode
+  }
+  const dow  = new Date(dateStr+'T00:00:00').getDay();
+  const tile = document.querySelector(`.mb-day[data-date="${dateStr}"]`);
+  if(tile){
+    const st = _mbMarks[dateStr] || '';
+    tile.className = 'mb-day ' + (st || (dow===0 ? 'sunday-off' : ''));
+  }
+  mbUpdateSummary();
+}
+function mbResetCalendar(){ _mbMarks={}; mbRebuildCalendar(); document.getElementById('mb-preview-wrap').style.display='none'; }
+function mbUpdateSummary(){
+  const total = _mbDays.length;
+  const working = Object.values(_mbMarks).filter(v=>v==='delivered').length;
+  const leave = Object.values(_mbMarks).filter(v=>v==='holiday').length;
+  const rate = _mbPlan && _mbPlan.duration ? (_mbPlan.price/_mbPlan.duration) : 0;
+  document.getElementById('mb-total-days').textContent = total;
+  document.getElementById('mb-leave-days').textContent = leave;
+  document.getElementById('mb-working-days').textContent = working;
+  document.getElementById('mb-total-amount').textContent = '₹'+(working*rate).toFixed(2);
+}
+async function mbGenerateBill(){
+  const delivered = Object.keys(_mbMarks).filter(d=>_mbMarks[d]==='delivered');
+  const holidays  = Object.keys(_mbMarks).filter(d=>_mbMarks[d]==='holiday');
+  const label = document.getElementById('mb-month-label').value.trim() || 'Current Cycle';
+  if(!delivered.length && !holidays.length){ showToast('Mark at least one day.','danger'); return; }
+  try{
+    const res = await fetch(`/api/admin/customer/${_mbCustomerId}/manual_bill`,{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({period_start:_mbDays[0], period_end:_mbDays[_mbDays.length-1], delivered_dates:delivered, holiday_dates:holidays, bill_month_label:label})
+    });
+    const data = await res.json();
+    if(data.success){
+      _mbLastBillId = data.bill_id;
+      document.getElementById('mb-msg-preview').textContent = data.message_text;
+      document.getElementById('mb-preview-wrap').style.display='block';
+      showToast('✅ Bill generated. Review & send.','success');
+      mbLoadHistory();
+    } else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{ showToast('❌ Network error.','danger'); }
+}
+async function mbSendBill(){
+  if(!_mbLastBillId){ showToast('Generate the bill first.','danger'); return; }
+  const btn = document.getElementById('mb-send-btn'); btn.disabled=true; btn.textContent='Sending…';
+  try{
+    const res = await fetch(`/api/admin/manual_bill/${_mbLastBillId}/send`,{method:'POST'});
+    const data = await res.json();
+    btn.disabled=false; btn.textContent='💬 Send on WhatsApp';
+    showToast(data.success?'✅ '+data.message:'❌ '+data.message, data.success?'success':'danger');
+    if(data.success) mbLoadHistory();
+  }catch{ btn.disabled=false; btn.textContent='💬 Send on WhatsApp'; showToast('❌ Network error.','danger'); }
+}
+async function mbLoadHistory(){
+  const el = document.getElementById('mb-history');
+  if(!_mbCustomerId){ el.textContent='—'; return; }
+  try{
+    const data = await fetch(`/api/admin/customer/${_mbCustomerId}/manual_bills`).then(r=>r.json());
+    if(!data.success || !data.bills.length){ el.innerHTML='<span style="font-size:12px;color:var(--text-3);">No bills yet.</span>'; return; }
+    el.innerHTML = data.bills.map(b=>`<div class="mb-history-row"><span>${escHtml(b.bill_month_label)} · ${b.period_start}→${b.period_end}</span><span>₹${b.total} ${b.sent?'✅ Sent':'⏳ Draft'}</span></div>`).join('');
+  }catch{ el.innerHTML='<span style="font-size:12px;color:var(--red);">Failed to load.</span>'; }
+}
+
 async function buildBoxTimeline(customerId, planData){
   try{
     const res = await fetch(`/api/admin/customer_box_timeline/${customerId}`).catch(()=>null);
@@ -1747,7 +1973,7 @@ async function buildBoxTimeline(customerId, planData){
 }
 /* ── Sample modal ── */
 let _smAllTeams=[];
-function openSampleModal(planLabel,count){
+function openSampleModal(planLabel,count,planId){
   document.getElementById('sm-plan-label').textContent=planLabel;
   document.getElementById('sm-count-label').textContent=count+' customer'+(count!==1?'s':'');
   document.getElementById('sm-summary-count').textContent=count;
@@ -1756,7 +1982,13 @@ function openSampleModal(planLabel,count){
   document.getElementById('sm-content').style.display='none';
   document.getElementById('sm-cards').innerHTML='';
   document.getElementById('modal-sample-customers').classList.add('open');document.body.style.overflow='hidden';
-  fetch('/api/admin/sample_customers?label='+encodeURIComponent(planLabel)).then(r=>r.json()).then(data=>{
+  // FIX: match by plan_id when available (matched plans) instead of only by
+  // the free-text `sample` label — that's what was showing an empty modal
+  // for plans that actually had assigned sample customers.
+  const _smUrl = planId
+    ? '/api/admin/sample_customers?plan_id='+encodeURIComponent(planId)
+    : '/api/admin/sample_customers?label='+encodeURIComponent(planLabel);
+  fetch(_smUrl).then(r=>r.json()).then(data=>{
     _smAllTeams=data.teams||[];const customers=data.customers||[];
     document.getElementById('sm-loader').style.display='none';
     document.getElementById('sm-summary-count').textContent=customers.length;
@@ -1852,7 +2084,7 @@ function renderBoxes(){
       const durCell=isSample?`<td>—</td>`:`<td><span class="badge badge-blue">${p.duration_days||'—'} days</span></td>`;
       const activeW=Math.round(((p.active_customers||0)/maxActive)*100);
       const activeCell=isSample?`<td>—</td>`:`<td><div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers||0}</div><div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div></td>`;
-      const sampleCell=hasSamples?`<td><div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;color:#f97316;font-size:16px;">${p.sample_boxes||0}</span><button class="btn-view-sample" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes||0})">👁 View</button></div></td>`:`<td style="color:var(--text-3);">0</td>`;
+      const sampleCell=hasSamples?`<td><div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;color:#f97316;font-size:16px;">${p.sample_boxes||0}</span><button class="btn-view-sample" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes||0},'${p.plan_id||''}')">👁 View</button></div></td>`:`<td style="color:var(--text-3);">0</td>`;
       const totalBig=`<span style="font-size:20px;font-weight:700;color:var(--text);">${(p.active_customers||0)+(p.sample_boxes||0)}</span>`;
       const hasPersonalAlt = Object.keys(globalAlt).length > 0;
       const altBreakdownCell = hasPersonalAlt
@@ -1867,7 +2099,7 @@ function renderBoxes(){
         ?`<div class="team-breakdown">${p.teams.map(t=>{const tw=Math.round((t.count/Math.max(p.active_customers||1,1))*100);const teamAltBadges=isAlt&&t.alt_counts&&Object.keys(t.alt_counts).length?`<div class="team-alt-pills">${_altCountBadges(t.alt_counts)}</div>`:'';return `<div class="team-row"><span class="t-name" title="${escHtml(t.team_name)}">${escHtml((t.team_name||'').substring(0,14))}</span><span class="t-bar"><span class="t-bar-fill" style="width:${tw}%;"></span></span><span class="t-count">${t.count}</span></div>${teamAltBadges}`;}).join('')}</div>`
         :`<span style="color:var(--text-3);font-size:11px;">—</span>`;
 
-      const actCell=hasSamples?`<td><button class="btn btn-ghost btn-sm" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes||0})">👁 Customers</button></td>`:`<td style="color:var(--text-3);font-size:11px;">—</td>`;
+      const actCell=hasSamples?`<td><button class="btn btn-ghost btn-sm" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes||0},'${p.plan_id||''}')">👁 Customers</button></td>`:`<td style="color:var(--text-3);font-size:11px;">—</td>`;
       const rowStyle=isSample?'background:rgba(249,115,22,.04);':'';
       return `<tr style="${rowStyle}">${planCell}${durCell}${activeCell}${sampleCell}<td>${totalBig}</td>${altBreakdownCell}<td>${teamsHtml}</td>${actCell}</tr>`;
     }).join('');
@@ -1982,6 +2214,12 @@ async function loadEmployees(){
 
 function statusBadge(status){const map={active:'<span class="badge badge-green">✅ Active</span>',paused:'<span class="badge badge-yellow">⏸️ Paused</span>',inactive:'<span class="badge badge-red">❌ Inactive</span>'};return map[status]||`<span class="badge badge-gray">${escHtml(status||'—')}</span>`;}
 
+function paymentBadge(status, partialAmt){
+  if(status==='paid')    return '<span class="badge badge-green">✅ Paid</span>';
+  if(status==='partial') return `<span class="badge badge-orange">🟡 Partial ₹${partialAmt||0}</span>`;
+  return '<span class="badge badge-yellow">⏳ Pending</span>';
+}
+
 /* ── FIX #2: Load Customers — use plan_name for data-plan-name attr too ── */
 async function loadCustomers(){
   const tbody=document.querySelector('#customers-table tbody');
@@ -1996,7 +2234,7 @@ async function loadCustomers(){
       const discStr=discParts.length?`<span class="badge badge-green">${discParts.join(' + ')}</span>`:`<span style="color:var(--text-3);">—</span>`;
       const startStr=c.start_date?`<span style="font-size:12px;color:var(--text-2);">${c.start_date}</span>`:`<span style="color:var(--text-3);">—</span>`;
       // FIX #2: store plan_id in data-plan for filtering by plan
-      return `<tr data-name="${(c.name||'').toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id||''}" data-plan="${c.plan_id||''}" data-status="${c.status||'active'}"><td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${(c.name||'?').charAt(0).toUpperCase()}</div><div><div style="font-weight:600;">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div></div></div></td><td>${c.plan_name&&c.plan_name!=='—'?`<span class="badge badge-orange">${escHtml(c.plan_name)}</span>`:`<span class="badge badge-gray">No plan</span>`}</td><td>${startStr}</td><td>${discStr}</td><td>${statusBadge(c.status)}</td><td><span class="badge badge-blue">${escHtml(c.team_name||'—')}</span></td><td><div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(c)},"customer")'>👁 View</button><button class="btn btn-ghost btn-sm" onclick='openEditCustomer(${JSON.stringify(c)})'>✏️ Edit</button><form method="POST" action="/admin/users/delete/${c.id}" onsubmit="return confirm('Remove ${escHtml(c.name)}?');" style="display:inline;"><input type="hidden" name="next" value="dashboard_admin"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
+      return `<tr data-name="${(c.name||'').toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id||''}" data-plan="${c.plan_id||''}" data-status="${c.status||'active'}"><td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${(c.name||'?').charAt(0).toUpperCase()}</div><div><div style="font-weight:600;">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div></div></div></td><td>${c.plan_name&&c.plan_name!=='—'?`<span class="badge badge-orange">${escHtml(c.plan_name)}</span>`:`<span class="badge badge-gray">No plan</span>`}</td><td>${startStr}</td><td>${discStr}</td><td>${paymentBadge(c.payment_status, c.payment_partial_amount)}</td><td>${statusBadge(c.status)}</td><td><span class="badge badge-blue">${escHtml(c.team_name||'—')}</span></td><td><div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(c)},"customer")'>👁 View</button><button class="btn btn-ghost btn-sm" onclick='openEditCustomer(${JSON.stringify(c)})'>✏️ Edit</button><button class="btn btn-warning btn-sm" onclick="resetCustomerCredentials('${c.id}','${escHtml(c.name)}')">🔑 Reset</button><form method="POST" action="/admin/users/delete/${c.id}" onsubmit="return confirm('Remove ${escHtml(c.name)}?');" style="display:inline;"><input type="hidden" name="next" value="dashboard_admin"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
     }).join('');
     filterCustomers();
   }catch{tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`;}
@@ -2093,6 +2331,9 @@ function openEditCustomer(c){
   document.getElementById('ec-discamt').value=c.discount_amount||0;
   document.getElementById('ec-alt-options').value=(c.alt_options||[]).join(', ');
   document.getElementById('ec-total-delivered').value=c.total_delivered_boxes!=null?c.total_delivered_boxes:'';
+  document.getElementById('ec-payment-status').value = c.payment_status || 'pending';
+document.getElementById('ec-partial-amt').value = c.payment_partial_amount || 0;
+togglePartialAmount();
   const sel=document.getElementById('ec-offdays');
   for(let opt of sel.options){opt.selected=(c.off_days||[]).includes(opt.value);}
   document.getElementById('edit-cust-form').action='/admin/users/edit/'+c.id;
@@ -2201,6 +2442,11 @@ async function submitEnquiryEdit(){
   if(!payload.name||!payload.phone){showToast('❌ Name and phone required.','danger');return;}
   try{const res=await fetch(`/api/admin/enquiries/edit/${id}`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const data=await res.json();if(data.success){showToast('✅ Enquiry updated.','success');closeModal('modal-edit-enquiry');loadEnquiries(true);}else showToast('❌ '+(data.message||'Failed'),'danger');}
   catch{showToast('❌ Network error.','danger');}
+}
+
+function togglePartialAmount(){
+  document.getElementById('ec-partial-amt-wrap').style.display =
+    document.getElementById('ec-payment-status').value==='partial' ? 'block' : 'none';
 }
 
 /* ── Boot ── */
