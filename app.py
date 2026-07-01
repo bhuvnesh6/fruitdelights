@@ -3203,9 +3203,9 @@ def customer_box_timeline(customer_id):
 
 # ── Start the scheduler thread ─────────────────────────────────────────────
 # Guard prevents double-start when Flask debug reloader spawns a child process
-if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
-    _sched_thread = threading.Thread(target=_run_daily_jobs, daemon=True)
-    _sched_thread.start()
+#if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+#    _sched_thread = threading.Thread(target=_run_daily_jobs, daemon=True)
+#    _sched_thread.start()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5757)
