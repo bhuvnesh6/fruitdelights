@@ -481,14 +481,19 @@ tbody tr:hover td{background:var(--bg-3)}
           <div class="card-header" style="flex-wrap:wrap;gap:10px;">
             <div class="card-title" id="boxes-card-title">📦 Boxes to Prepare Today</div>
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+              
               <div class="box-tabs">
                 <button class="box-tab active" id="tab-plan" onclick="switchBoxView('plan')">By Plan</button>
                 <button class="box-tab" id="tab-team" onclick="switchBoxView('team')">By Team</button>
+                <button class="btn btn-ghost btn-sm" id="new-cust-pill" onclick="openListModal('new')" style="display:none;background:var(--accent-soft);color:var(--accent);border-color:#c7d2fe;">🆕 New: <span id="new-cust-count">0</span></button>
+                <button class="btn btn-ghost btn-sm" id="holiday-cust-pill" onclick="openListModal('holiday')" style="display:none;background:var(--red-soft);color:var(--red);border-color:#fca5a5;">🏖 On Holiday: <span id="holiday-cust-count">0</span></button>
               </div>
               <select class="form-control btn-sm" id="boxes-status-filter" onchange="renderBoxes()" style="max-width:150px;padding:5px 10px;font-size:12px;">
                 <option value="all">All Statuses</option>
                 <option value="active">Active Only</option>
                 <option value="sample">Sample Only</option>
+                <option value="holiday">On Holiday Only</option>
+
               </select>
               <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">🔄 Refresh</button>
             </div>
@@ -520,6 +525,7 @@ tbody tr:hover td{background:var(--bg-3)}
                     <th>Alt Breakdown</th>
                     <th>Teams</th>
                     <th>Actions</th>
+                    <th style="color:var(--red);">🏖 Holiday</th>
                   </tr>
                 </thead>
                 <tbody id="boxes-tbody">
@@ -1287,6 +1293,14 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
+<!-- Generic Customer List Modal (New / Holiday) -->
+<div class="modal-backdrop" id="modal-list-customers">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title" id="lc-title">Customers</div><button class="modal-close" onclick="closeModal('modal-list-customers')">✕</button></div>
+    <div id="lc-body" style="max-height:60vh;overflow-y:auto;"></div>
+  </div>
+</div>
+
 <!-- WhatsApp Inbox Modal -->
 <div class="wa-modal-backdrop" id="modal-wa-inbox">
   <div class="wa-modal">
@@ -1786,10 +1800,16 @@ async function loadCustomerPlanStatus(customerId){
 }
 
 let _mbCustomerId='', _mbPlan=null, _mbDays=[], _mbMarks={}, _mbLastBillId='';
+let _mbOffDays=[], _mbHolidays=new Set();
+const PLAN_SCHEDULE_EXCLUSIONS = {22:['Saturday','Sunday'], 26:['Sunday']};
+const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
-function initManualBilling(customerId, planName, planPrice, durationDays, custStartDate){
+
+function initManualBilling(customerId, planName, planPrice, durationDays, custStartDate, offDays, holidays){
   _mbCustomerId = customerId;
   _mbPlan = {name: planName, price: planPrice||0, duration: durationDays||0};
+  _mbOffDays = offDays || [];
+  _mbHolidays = new Set(holidays || []);
   document.getElementById('mb-plan-info').textContent = _mbPlan.duration
     ? `${planName} — ₹${planPrice}/${durationDays} days (₹${(planPrice/durationDays).toFixed(2)}/day)`
     : 'No active plan — cannot bill.';
@@ -1809,64 +1829,79 @@ function mbSetPaintMode(mode){
   document.getElementById('mb-mode-holiday').classList.toggle('active-holiday', mode==='holiday');
 }
 
+function _mbIsExcludedDay(dateStr){
+  const dt = new Date(dateStr+'T00:00:00');
+  const dowName = DOW_NAMES[dt.getDay()];
+  const excluded = PLAN_SCHEDULE_EXCLUSIONS[_mbPlan.duration] || [];
+  if(excluded.includes(dowName)) return true;
+  if(_mbOffDays.includes(dowName)) return true;
+  if(_mbHolidays.has(dateStr)) return true;
+  return false;
+}
+
 function mbRebuildCalendar(){
   const startVal = document.getElementById('mb-start-date').value;
   const cal = document.getElementById('mb-calendar');
   if(!startVal || !_mbPlan || !_mbPlan.duration){ cal.innerHTML='<span style="font-size:12px;color:var(--text-3);">Select a start date (plan required).</span>'; return; }
   const start = new Date(startVal+'T00:00:00');
 
-  // FIX: show the FULL calendar month that the start date falls in,
-  // instead of just `duration` days counted forward from the start date.
-  // e.g. start date 01/06/2026 -> month = 06 (June) -> calendar shows
-  // all 30 boxes of June. July would show 31, Feb would show 28/29, etc.
-  const year  = start.getFullYear();
-  const month = start.getMonth(); // 0-indexed (0 = Jan)
-  const daysInMonth = new Date(year, month + 1, 0).getDate();
-
+  // Extend forward until we've collected exactly `duration_days` SCHEDULABLE
+  // days (not plan-structural off, not customer off_day, not a holiday).
+  // Mirrors the backend _calculate_invoice_period fix — weekends still show
+  // in the grid but don't count toward the plan's delivery total, so the
+  // calendar naturally spans however many real days that takes.
   _mbDays = [];
-  for(let i=0;i<daysInMonth;i++){
-    const d = new Date(year, month, i+1);
-    // local-safe formatter, NOT toISOString() — avoids the IST/UTC
-    // day-shift bug that made Sunday's off-tag land under Monday.
-    _mbDays.push(_fmtLocalDate(d));
+  let d = new Date(start);
+  let schedulableCount = 0;
+  let safety = 0;
+  while(schedulableCount < _mbPlan.duration && safety < _mbPlan.duration * 6 + 90){
+    const dStr = _fmtLocalDate(d);
+    _mbDays.push(dStr);
+    if(!_mbIsExcludedDay(dStr)) schedulableCount++;
+    d.setDate(d.getDate()+1);
+    safety++;
   }
 
   const hdrs = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
   let html = hdrs.map(h=>`<div class="mb-weekday-hdr">${h}</div>`).join('');
 
-  // align the 1st of the month under its correct weekday column
-  const firstDow = new Date(year, month, 1).getDay();
+  const firstDow = start.getDay();
   for(let i=0;i<firstDow;i++) html += `<div class="mb-day blank"></div>`;
 
-  _mbDays.forEach(d=>{
-    const dow = new Date(d+'T00:00:00').getDay();
-    const st  = _mbMarks[d] || '';
-    const cls = st || (dow===0 ? 'sunday-off' : '');
-    html += `<div class="mb-day ${cls}" data-date="${d}" onclick="mbToggleDay('${d}')">${new Date(d+'T00:00:00').getDate()}</div>`;
+  _mbDays.forEach(dStr=>{
+    const dt = new Date(dStr+'T00:00:00');
+    const isOff = _mbIsExcludedDay(dStr);
+    const st  = _mbMarks[dStr] || '';
+    const cls = st || (isOff ? 'sunday-off' : '');
+    html += `<div class="mb-day ${cls}" data-date="${dStr}" onclick="mbToggleDay('${dStr}')" title="${dStr}${isOff?' (off)':''}">${dt.getDate()}</div>`;
   });
 
   cal.innerHTML = html;
   mbUpdateSummary();
 }
 
+
 function mbToggleDay(dateStr){
   const cur = _mbMarks[dateStr];
   if(cur === _mbPaintMode){
-    delete _mbMarks[dateStr];           // click again in same mode = unmark
+    delete _mbMarks[dateStr];
   } else {
-    _mbMarks[dateStr] = _mbPaintMode;   // set to current paint mode
+    _mbMarks[dateStr] = _mbPaintMode;
   }
-  const dow  = new Date(dateStr+'T00:00:00').getDay();
+  const isOff = _mbIsExcludedDay(dateStr);
   const tile = document.querySelector(`.mb-day[data-date="${dateStr}"]`);
   if(tile){
     const st = _mbMarks[dateStr] || '';
-    tile.className = 'mb-day ' + (st || (dow===0 ? 'sunday-off' : ''));
+    tile.className = 'mb-day ' + (st || (isOff ? 'sunday-off' : ''));
   }
   mbUpdateSummary();
 }
+
+
+
 function mbResetCalendar(){ _mbMarks={}; mbRebuildCalendar(); document.getElementById('mb-preview-wrap').style.display='none'; }
 function mbUpdateSummary(){
-  const total = _mbDays.length;
+  const total = _mbPlan ? _mbPlan.duration : _mbDays.length;
   const working = Object.values(_mbMarks).filter(v=>v==='delivered').length;
   const leave = Object.values(_mbMarks).filter(v=>v==='holiday').length;
   const rate = _mbPlan && _mbPlan.duration ? (_mbPlan.price/_mbPlan.duration) : 0;
@@ -2028,7 +2063,7 @@ async function assignSampleTeam(customerId){
 }
 
 /* ── FIX #1 & #2: Boxes ── */
-let _boxesData=[];let _boxView='plan';
+let _boxesData=[];let _boxesNew=[];let _boxesHoliday=[];let _boxesIsNextDay=false;let _boxesTargetDate='';let _boxView='plan';
 
 function switchBoxView(view){
   _boxView=view;
@@ -2038,12 +2073,55 @@ function switchBoxView(view){
   document.getElementById('boxes-team-view').style.display=view==='team'?'':'none';
   renderBoxes();
 }
+
+function updateListPills(){
+  const newBtn=document.getElementById('new-cust-pill');
+  const newCnt=document.getElementById('new-cust-count');
+  if(newBtn&&newCnt){
+    newCnt.textContent=_boxesNew.length;
+    newBtn.style.display=_boxesNew.length>0?'inline-flex':'none';
+  }
+  const holBtn=document.getElementById('holiday-cust-pill');
+  const holCnt=document.getElementById('holiday-cust-count');
+  if(holBtn&&holCnt){
+    holCnt.textContent=_boxesHoliday.length;
+    holBtn.style.display=_boxesHoliday.length>0?'inline-flex':'none';
+  }
+}
+
+
 async function loadBoxes(force){
   if(_boxesData.length&&!force){renderBoxes();return;}
   document.getElementById('boxes-tbody').innerHTML=`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--text-3);">Loading…</td></tr>`;
   document.getElementById('boxes-team-cards').innerHTML=`<div style="text-align:center;padding:24px;color:var(--text-3);">Loading…</div>`;
-  try{_boxesData=await fetch('/api/admin/boxes_needed').then(r=>r.json());renderBoxes();}
-  catch{document.getElementById('boxes-tbody').innerHTML=`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">Retry</button></td></tr>`;}
+  try{
+    const data=await fetch('/api/admin/boxes_needed').then(r=>r.json());
+    _boxesData=data.plans||[];
+    _boxesNew=data.new_customers||[];
+    _boxesHoliday=data.holiday_customers||[];
+    _boxesIsNextDay=data.is_next_day||false;
+    _boxesTargetDate=data.target_date||'';
+    updateListPills();
+    renderBoxes();
+  }catch{document.getElementById('boxes-tbody').innerHTML=`<tr><td colspan="8" style="text-align:center;padding:20px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadBoxes(true)">Retry</button></td></tr>`;}
+}
+
+function openListModal(kind){
+  const items = kind==='new' ? _boxesNew : _boxesHoliday;
+  document.getElementById('lc-title').textContent = kind==='new' ? '🆕 New Customers' : '🏖 Customers On Holiday';
+  const body=document.getElementById('lc-body');
+  if(!items.length){body.innerHTML='<div style="padding:20px;text-align:center;color:var(--text-3);">None.</div>';}
+  else{
+    body.innerHTML=items.map(c=>{
+      const rawPhone=(c.phone||'').replace(/\D/g,'');const waPhone=rawPhone.length===10?'91'+rawPhone:rawPhone;
+      const sub = kind==='new' ? (c.plan_name||'—') : `${c.plan_name||'—'} · ${c.reason==='holiday'?'Marked holiday':'Weekly off'}`;
+      return `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 4px;border-bottom:1px solid var(--border);">
+        <div><div style="font-weight:600;">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone||'')} · ${escHtml(sub)}</div></div>
+        ${waPhone.length>=10?`<a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-success btn-sm">💬</a>`:''}
+      </div>`;
+    }).join('');
+  }
+  openModal('modal-list-customers');
 }
 
 function _altCountBadges(altCounts){
@@ -2063,13 +2141,14 @@ function renderBoxes(){
     const tot=(p.active_customers||0)+(p.sample_boxes||0);
     if(sf==='active') return (p.active_customers||0)>0;
     if(sf==='sample') return (p.sample_boxes||0)>0;
+    if(sf==='holiday') return (p.holiday_customers||0)>0;
     return tot>0;
   });
 
-  const isNextDay=_boxesData.length&&_boxesData[0].is_next_day;
+ const isNextDay=_boxesIsNextDay;
   const banner=document.getElementById('next-day-banner');
   document.getElementById('boxes-card-title').textContent=isNextDay?'📦 Boxes for Tomorrow':'📦 Boxes to Prepare Today';
-  if(isNextDay){banner.style.display='flex';const td=_boxesData[0].target_date||'';document.getElementById('next-day-date-label').textContent=td?new Date(td+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'}):'';} else{banner.style.display='none';}
+  if(isNextDay){banner.style.display='flex';const td=_boxesTargetDate;document.getElementById('next-day-date-label').textContent=td?new Date(td+'T00:00:00').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'short'}):'';} else{banner.style.display='none';}
 
   let grandActive=0,grandSample=0;
   data.forEach(p=>{grandActive+=(p.active_customers||0);grandSample+=(p.sample_boxes||0);});
@@ -2096,6 +2175,9 @@ function renderBoxes(){
       const activeW=Math.round(((p.active_customers||0)/maxActive)*100);
       const activeCell=isSample?`<td>—</td>`:`<td><div style="font-weight:700;color:var(--green);font-size:16px;">${p.active_customers||0}</div><div class="bar-wrap"><div class="bar-fill" style="width:${activeW}%;background:var(--green);"></div></div></td>`;
       const sampleCell=hasSamples?`<td><div style="display:flex;align-items:center;gap:8px;"><span style="font-weight:700;color:#f97316;font-size:16px;">${p.sample_boxes||0}</span><button class="btn-view-sample" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes||0},'${p.plan_id||''}')">👁 View</button></div></td>`:`<td style="color:var(--text-3);">0</td>`;
+      const holidayCell = (p.holiday_customers||0) > 0
+        ? `<td><span class="badge badge-red">🏖 ${p.holiday_customers}</span></td>`
+        : `<td style="color:var(--text-3);">0</td>`;
       const totalBig=`<span style="font-size:20px;font-weight:700;color:var(--text);">${(p.active_customers||0)+(p.sample_boxes||0)}</span>`;
       const hasPersonalAlt = Object.keys(globalAlt).length > 0;
       const altBreakdownCell = hasPersonalAlt
@@ -2112,7 +2194,7 @@ function renderBoxes(){
 
       const actCell=hasSamples?`<td><button class="btn btn-ghost btn-sm" onclick="openSampleModal('${escHtml(p.plan_name).replace(/'/g,"\\'")}',${p.sample_boxes||0},'${p.plan_id||''}')">👁 Customers</button></td>`:`<td style="color:var(--text-3);font-size:11px;">—</td>`;
       const rowStyle=isSample?'background:rgba(249,115,22,.04);':'';
-      return `<tr style="${rowStyle}">${planCell}${durCell}${activeCell}${sampleCell}<td>${totalBig}</td>${altBreakdownCell}<td>${teamsHtml}</td>${actCell}</tr>`;
+      return `<tr style="${rowStyle}">${planCell}${durCell}${activeCell}${sampleCell}${holidayCell}<td>${totalBig}</td>${altBreakdownCell}<td>${teamsHtml}</td>${actCell}</tr>`;
     }).join('');
   }
 
@@ -2244,8 +2326,9 @@ async function loadCustomers(){
       const discParts=[];if(c.discount_percent>0)discParts.push(`${c.discount_percent}%`);if(c.discount_amount>0)discParts.push(`₹${c.discount_amount}`);
       const discStr=discParts.length?`<span class="badge badge-green">${discParts.join(' + ')}</span>`:`<span style="color:var(--text-3);">—</span>`;
       const startStr=c.start_date?`<span style="font-size:12px;color:var(--text-2);">${c.start_date}</span>`:`<span style="color:var(--text-3);">—</span>`;
-      // FIX #2: store plan_id in data-plan for filtering by plan
-      return `<tr data-name="${(c.name||'').toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id||''}" data-plan="${c.plan_id||''}" data-status="${c.status||'active'}"><td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${(c.name||'?').charAt(0).toUpperCase()}</div><div><div style="font-weight:600;">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div></div></div></td><td>${c.plan_name&&c.plan_name!=='—'?`<span class="badge badge-orange">${escHtml(c.plan_name)}</span>`:`<span class="badge badge-gray">No plan</span>`}</td><td>${startStr}</td><td>${discStr}</td><td>${paymentBadge(c.payment_status, c.payment_partial_amount)}</td><td>${statusBadge(c.status)}</td><td><span class="badge badge-blue">${escHtml(c.team_name||'—')}</span></td><td><div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(c)},"customer")'>👁 View</button><button class="btn btn-ghost btn-sm" onclick='openEditCustomer(${JSON.stringify(c)})'>✏️ Edit</button><button class="btn btn-warning btn-sm" onclick="resetCustomerCredentials('${c.id}','${escHtml(c.name)}')">🔑 Reset</button><form method="POST" action="/admin/users/delete/${c.id}" onsubmit="return confirm('Remove ${escHtml(c.name)}?');" style="display:inline;"><input type="hidden" name="next" value="dashboard_admin"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
+      const newBadge = c.is_new ? `<span class="badge badge-purple" style="margin-left:4px;">🆕 New</span>` : '';
+      const holBadge = c.holiday_today ? `<span class="badge badge-red" style="margin-left:4px;">🏖 Holiday Today</span>` : (c.holiday_tomorrow ? `<span class="badge badge-yellow" style="margin-left:4px;">🏖 Holiday Tmrw</span>` : '');
+      return `<tr data-name="${(c.name||'').toLowerCase()}" data-city="${(c.team_city||'').toLowerCase()}" data-team="${c.team_id||''}" data-plan="${c.plan_id||''}" data-status="${c.status||'active'}"><td><div style="display:flex;align-items:center;gap:10px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${(c.name||'?').charAt(0).toUpperCase()}</div><div><div style="font-weight:600;">${escHtml(c.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div></div></div></td><td>${c.plan_name&&c.plan_name!=='—'?`<span class="badge badge-orange">${escHtml(c.plan_name)}</span>`:`<span class="badge badge-gray">No plan</span>`}</td><td>${startStr}</td><td>${discStr}</td><td>${paymentBadge(c.payment_status, c.payment_partial_amount)}</td><td>${statusBadge(c.status)}${newBadge}${holBadge}</td><td><span class="badge badge-blue">${escHtml(c.team_name||'—')}</span></td><td><div style="display:flex;gap:5px;flex-wrap:wrap;"><button class="btn btn-ghost btn-sm" onclick='openViewModal(${JSON.stringify(c)},"customer")'>👁 View</button><button class="btn btn-ghost btn-sm" onclick='openEditCustomer(${JSON.stringify(c)})'>✏️ Edit</button><button class="btn btn-warning btn-sm" onclick="resetCustomerCredentials('${c.id}','${escHtml(c.name)}')">🔑 Reset</button><form method="POST" action="/admin/users/delete/${c.id}" onsubmit="return confirm('Remove ${escHtml(c.name)}?');" style="display:inline;"><input type="hidden" name="next" value="dashboard_admin"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
     }).join('');
     filterCustomers();
   }catch{tbody.innerHTML=`<tr><td colspan="7" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`;}

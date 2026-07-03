@@ -79,6 +79,13 @@ def _day_schedulable_for_plan(plan, target_date, customer_off_days, customer_hol
       1. Plan structural exclusions (22-day → no Sat/Sun, 26-day → no Sun)
       2. Customer off_days
       3. Customer holidays
+
+    NOTE: This is date-driven, not calendar-month-driven. A 22-day plan
+    starting on the 3rd of a month simply counts 22 valid (non Sat/Sun) days
+    forward from the start date — if that spills into the next calendar
+    month, it spills naturally. No special-casing needed here; this is
+    already handled correctly by _calculate_invoice_period() which just adds
+    (duration_days - 1) days to the start date regardless of month boundary.
     """
     if isinstance(target_date, str):
         target_date = date.fromisoformat(target_date)
@@ -246,7 +253,7 @@ def _calculate_invoice_period(customer, plan):
         period_end   = date(today.year, today.month, last_day)
         return period_start, period_end
     period_start = start
-    period_end   = start + timedelta(days=duration_days - 1)
+    period_end = start + timedelta(days=duration_days - 1)
     return period_start, period_end
 
 
@@ -534,6 +541,120 @@ def _send_manual_bill_whatsapp(phone, message_text):
 
 
 # ---------------------------------------------------------------------------
+# PAYMENT REMINDER HELPERS (NEW)
+# ---------------------------------------------------------------------------
+PAYMENT_REMINDER_OFFSETS = [0, 1, 2]   # same day, next day, 2 days later
+
+def _send_payment_reminder_whatsapp(customer, offset_day):
+    phone = "".join(filter(str.isdigit, str(customer.get("phone", ""))))
+    if len(phone) == 10:
+        phone = "91" + phone
+    if not phone:
+        return False
+    name = customer.get("name", "")
+    plan = plans_col.find_one({"_id": ObjectId(customer["plan_id"])}) if customer.get("plan_id") else None
+    plan_name = plan.get("name", "") if plan else customer.get("sample", "your plan")
+    if offset_day == 0:
+        line = "Your payment for this subscription is still pending."
+    elif offset_day == 1:
+        line = "Just a gentle reminder — your payment is still pending."
+    else:
+        line = "This is a final reminder — your payment has been pending for a couple of days now."
+    msg = (
+        f"🍓 Fruit Delights – Payment Reminder\n\n"
+        f"Hello {name},\n\n"
+        f"{line}\n"
+        f"Plan: {plan_name}\n\n"
+        f"Please complete your payment at the earliest to avoid any interruption in delivery.\n\n"
+        f"If you've already paid, please ignore this message. 🙏"
+    )
+    return send_whatsapp(phone, msg)
+
+
+def _run_payment_reminders_job():
+    """
+    For every customer still tagged 'is_new' with pending payment, send a
+    reminder on the same day they were tagged (offset 0), the next day
+    (offset 1), and two days later (offset 2). Each offset is sent at most
+    once — tracked via payment_reminder_days_sent on the user document.
+    """
+    today = date.today()
+    customers = users_col.find({
+        "role":           "customer",
+        "is_new":         True,
+        "payment_status": "pending",
+        "new_tagged_at":  {"$exists": True},
+    })
+    sent_count = 0
+    for cust in customers:
+        tagged_at = cust.get("new_tagged_at")
+        if not isinstance(tagged_at, datetime):
+            continue
+        days_since = (today - tagged_at.date()).days
+        if days_since not in PAYMENT_REMINDER_OFFSETS:
+            continue
+        if days_since in cust.get("payment_reminder_days_sent", []):
+            continue
+        if _send_payment_reminder_whatsapp(cust, days_since):
+            users_col.update_one(
+                {"_id": cust["_id"]},
+                {"$addToSet": {"payment_reminder_days_sent": days_since}}
+            )
+            sent_count += 1
+    print(f"[PaymentReminders] Sent {sent_count} reminder(s) for {today}")
+    return sent_count
+
+
+# ---------------------------------------------------------------------------
+# ADMIN BOXES SUMMARY (WhatsApp) — NEW
+# ---------------------------------------------------------------------------
+def _build_boxes_summary_text(target_date):
+    target_str = target_date.strftime("%Y-%m-%d")
+    plans = list(plans_col.find())
+    lines = [f"📦 Boxes to Prepare — {target_date.strftime('%d %b %Y (%A)')}\n"]
+    grand_total = 0
+    for plan in plans:
+        active_customers = list(users_col.find({
+            "role": "customer", "status": "active", "plan_id": plan["_id"]
+        }))
+        count = sum(
+            1 for c in active_customers
+            if _day_schedulable_for_plan(plan, target_date, c.get("off_days", []), set(c.get("holidays", [])))
+        )
+        if count == 0:
+            continue
+        grand_total += count
+        lines.append(f"• {plan.get('name','')}: {count} box(es)")
+
+    sample_customers = list(users_col.find({
+        "role": "customer", "status": "active", "sample": {"$exists": True, "$nin": [None, ""]}
+    }))
+    sample_total = 0
+    day_name = target_date.strftime("%A")
+    for c in sample_customers:
+        if day_name in c.get("off_days", []) or target_str in c.get("holidays", []):
+            continue
+        sample_total += 1
+    if sample_total:
+        lines.append(f"• Sample boxes: {sample_total} box(es)")
+        grand_total += sample_total
+
+    lines.append(f"\n🎯 Grand Total: {grand_total} box(es)")
+    return "\n".join(lines)
+
+
+def _send_admin_boxes_tomorrow_summary():
+    admin_phone = "".join(filter(str.isdigit, os.getenv("ADMIN_WHATSAPP_NUMBER", "")))
+    if len(admin_phone) == 10:
+        admin_phone = "91" + admin_phone
+    if not admin_phone:
+        print("[BoxesSummary] ADMIN_WHATSAPP_NUMBER not set — skipping.")
+        return False
+    tomorrow = (datetime.now() + timedelta(days=1)).date()
+    return send_whatsapp(admin_phone, _build_boxes_summary_text(tomorrow))
+
+
+# ---------------------------------------------------------------------------
 # ROUTES – core
 # ---------------------------------------------------------------------------
 @app.route("/")
@@ -687,6 +808,14 @@ def api_customers():
     plans     = list(plans_col.find())
     team_map  = {str(t["_id"]): t for t in teams}
     plan_map  = {str(p["_id"]): p for p in plans}
+
+    today     = date.today()
+    tomorrow  = today + timedelta(days=1)
+    today_str = today.strftime("%Y-%m-%d")
+    tmrw_str  = tomorrow.strftime("%Y-%m-%d")
+    today_dow = today.strftime("%A")
+    tmrw_dow  = tomorrow.strftime("%A")
+
     result = []
     for c in customers:
         team = team_map.get(str(c.get("team_id", "")), {})
@@ -694,6 +823,12 @@ def api_customers():
         start_date = c.get("start_date")
         if isinstance(start_date, datetime):
             start_date = start_date.strftime("%Y-%m-%d")
+
+        holidays = c.get("holidays", [])
+        off_days = c.get("off_days", [])
+        holiday_today    = (today_str in holidays) or (today_dow in off_days)
+        holiday_tomorrow = (tmrw_str in holidays) or (tmrw_dow in off_days)
+
         result.append({
             "id":               str(c["_id"]),
             "name":             c.get("name", ""),
@@ -717,16 +852,17 @@ def api_customers():
             "discount_amount":  float(c.get("discount_amount",  0) or 0),
             "status":           c.get("status", "active"),
             "source":           c.get("source", ""),
-            # NEW: payment status fields
             "payment_status":          c.get("payment_status", "pending"),
             "payment_partial_amount":  float(c.get("payment_partial_amount", 0) or 0),
+            "is_new":           bool(c.get("is_new", False)),
+            "holiday_today":    holiday_today,
+            "holiday_tomorrow": holiday_tomorrow,
             "created_at":       (
                 c["created_at"].strftime("%Y-%m-%d")
                 if isinstance(c.get("created_at"), datetime) else ""
             ),
         })
     return jsonify(result)
-
 
 # ---------------------------------------------------------------------------
 # ADMIN – enquiries DATA API
@@ -1052,7 +1188,7 @@ def add_user():
                 start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
             except Exception:
                 pass
-        user_data.update({
+            user_data.update({
             "plan_id":          plan["_id"] if plan else None,
             "address":          request.form.get("address"),
             "preferred_time":   request.form.get("preferred_time"),
@@ -1062,9 +1198,12 @@ def add_user():
             "discount_percent": float(request.form.get("discount_percent", 0) or 0),
             "discount_amount":  float(request.form.get("discount_amount",  0) or 0),
             "status":           request.form.get("customer_status", "active"),
-            # NEW: payment status defaults
             "payment_status":          "pending",
             "payment_partial_amount":  0,
+            # NEW
+            "is_new":        True,
+            "new_tagged_at": datetime.now(),
+            "payment_reminder_days_sent": [],
         })
     users_col.insert_one(user_data)
     send_credentials_whatsapp(email, raw_password, name, phone)
@@ -1080,8 +1219,9 @@ def edit_user(user_id):
     phone = request.form.get("phone", "").strip()
 
     # Always preserve existing email — never blank it accidentally
-    existing_user  = users_col.find_one({"_id": ObjectId(user_id)}, {"email": 1})
+    existing_user  = users_col.find_one({"_id": ObjectId(user_id)}, {"email": 1, "payment_status": 1})
     existing_email = (existing_user or {}).get("email", "")
+    existing_payment_status = (existing_user or {}).get("payment_status", "pending")
     form_email     = request.form.get("email", "").strip()
     email          = form_email if form_email else existing_email
 
@@ -1090,6 +1230,9 @@ def edit_user(user_id):
         "email": email,
         "phone": phone,
     }
+
+    payment_status_changed = False
+
     if role in ["employee", "customer"]:
         tid = request.form.get("team_id")
         if tid:
@@ -1118,6 +1261,8 @@ def edit_user(user_id):
         partial_amt_raw  = request.form.get("payment_partial_amount", "").strip()
         payment_partial_amount = float(partial_amt_raw) if (payment_status == "partial" and partial_amt_raw) else 0
 
+        payment_status_changed = payment_status != existing_payment_status
+
         update.update({
             "plan_id":               plan["_id"] if plan else None,
             "address":               request.form.get("address"),
@@ -1133,7 +1278,19 @@ def edit_user(user_id):
         })
         if total_delivered_boxes is not None:
             update["total_delivered_boxes"] = total_delivered_boxes
-    users_col.update_one({"_id": ObjectId(user_id)}, {"$set": update})
+
+    # NEW: whenever admin changes a customer's payment status, clear the
+    # "New" tag (stop payment reminders + New badge) and clear the "Sample"
+    # tag (they become an ordinary customer).
+    unset_fields = {}
+    if role == "customer" and payment_status_changed:
+        unset_fields["sample"] = ""
+        update["is_new"] = False
+
+    mongo_update = {"$set": update}
+    if unset_fields:
+        mongo_update["$unset"] = unset_fields
+    users_col.update_one({"_id": ObjectId(user_id)}, mongo_update)
     flash("User updated.", "success")
     next_page = request.form.get("next", "dashboard_admin")
     return redirect(url_for(next_page))
@@ -1409,9 +1566,12 @@ def approve_enquiry(enquiry_id):
         "status":           "active",
         "created_at":       datetime.now(),
         "source":           "web_enquiry",
-        # NEW: payment status defaults
         "payment_status":          "pending",
         "payment_partial_amount":  0,
+        # NEW
+        "is_new":       True,
+        "new_tagged_at": datetime.now(),
+        "payment_reminder_days_sent": [],
     }
     if sample_val:
         user_data["sample"] = sample_val
@@ -1922,6 +2082,73 @@ def mark_holiday():
     flash(f"Marked {date_str} as holiday. No delivery.", "success")
     return redirect(url_for("dashboard_customer"))
 
+#holiday tagging
+
+@app.route("/api/customer/mark_holidays", methods=["POST"])
+@login_required
+@role_required("customer")
+def api_customer_mark_holidays():
+    data  = request.get_json(silent=True) or {}
+    dates = data.get("dates", [])
+    if isinstance(dates, str):
+        dates = [dates]
+    dates = [d.strip() for d in dates if d.strip()]
+    if not dates:
+        return jsonify({"success": False, "message": "No dates provided."}), 400
+    valid, invalid = [], []
+    for d in dates:
+        try:
+            datetime.strptime(d, "%Y-%m-%d")
+            valid.append(d)
+        except Exception:
+            invalid.append(d)
+    if not valid:
+        return jsonify({"success": False, "message": f"Invalid dates: {invalid}"}), 400
+    cust_id = ObjectId(session["user_id"])
+    users_col.update_one({"_id": cust_id}, {"$addToSet": {"holidays": {"$each": valid}}})
+    for d in valid:
+        deliveries_col.update_one(
+            {"customer_id": cust_id, "date": d},
+            {"$set": {"status": "cancelled_holiday"}}
+        )
+    updated = users_col.find_one({"_id": cust_id}, {"holidays": 1})
+    return jsonify({
+        "success": True, "added": valid, "invalid": invalid,
+        "holidays": sorted(updated.get("holidays", [])),
+        "message": f"Marked {len(valid)} day(s) as holiday.",
+    })
+
+
+@app.route("/api/customer/holidays", methods=["GET"])
+@login_required
+@role_required("customer")
+def api_customer_get_holidays():
+    cust = users_col.find_one({"_id": ObjectId(session["user_id"])}, {"holidays": 1})
+    holidays  = sorted((cust or {}).get("holidays", []))
+    today_str = date.today().strftime("%Y-%m-%d")
+    return jsonify({
+        "success": True, "holidays": holidays,
+        "upcoming": [d for d in holidays if d >= today_str],
+        "past":     [d for d in holidays if d < today_str],
+    })
+
+
+@app.route("/api/customer/holidays/remove", methods=["POST"])
+@login_required
+@role_required("customer")
+def api_customer_remove_holiday():
+    data     = request.get_json(silent=True) or {}
+    date_str = (data.get("date") or "").strip()
+    if not date_str:
+        return jsonify({"success": False, "message": "date required"}), 400
+    cust_id = ObjectId(session["user_id"])
+    users_col.update_one({"_id": cust_id}, {"$pull": {"holidays": date_str}})
+    deliveries_col.update_many(
+        {"customer_id": cust_id, "date": date_str, "status": "cancelled_holiday"},
+        {"$set": {"status": "pending"}}
+    )
+    updated = users_col.find_one({"_id": cust_id}, {"holidays": 1})
+    return jsonify({"success": True, "holidays": sorted(updated.get("holidays", []))})
 
 # ---------------------------------------------------------------------------
 # CRON – Daily deliveries
@@ -2125,27 +2352,21 @@ def api_boxes_needed():
     plans  = list(plans_col.find())
     teams  = list(teams_col.find())
 
-    # ── Active customers with a plan ──────────────────────────────────────
-    base_cust_q = {
-        "role":    "customer",
-        "status":  "active",
-        "plan_id": {"$exists": True, "$ne": None},
-    }
-    if tf:
-        base_cust_q.update(tf)
+    base_cust_q = {"role": "customer", "status": "active", "plan_id": {"$exists": True, "$ne": None}}
+    if tf: base_cust_q.update(tf)
     active_customers = list(users_col.find(base_cust_q))
 
-    # ── Sample customers (sample field set, non-empty) ────────────────────
-    sample_q = {
-        "role":   "customer",
-        "status": "active",
-        "sample": {"$exists": True, "$nin": [None, ""]},
-    }
-    if tf:
-        sample_q.update(tf)
+    sample_q = {"role": "customer", "status": "active", "sample": {"$exists": True, "$nin": [None, ""]}}
+    if tf: sample_q.update(tf)
     sample_customers = list(users_col.find(sample_q))
 
+    # NEW: union of all active customers — used for New-customer & Holiday tagging
+    all_active_q = {"role": "customer", "status": "active"}
+    if tf: all_active_q.update(tf)
+    all_active_customers = list(users_col.find(all_active_q))
+
     team_map = {str(t["_id"]): t for t in teams}
+    plan_map = {str(p["_id"]): p for p in plans}
     result   = []
 
     for plan in plans:
@@ -2155,33 +2376,18 @@ def api_boxes_needed():
         is_alt    = bool(alt_items and len(alt_items) >= 2)
         alt_label = _get_alternate_item_for_date(plan, target_date) if is_alt else None
 
-        # team_breakdown: team_id -> {name, area, count, alt_counts: {item: count}, cust_items: []}
         team_breakdown = {}
         active_count   = 0
-        global_alt_counts = {}  # item -> count across all teams
+        global_alt_counts = {}
 
         for c in active_customers:
-            # Must have this plan_id
             if str(c.get("plan_id", "")) != plan_id:
                 continue
-            # Skip if not schedulable today
             if not _day_schedulable_for_plan(plan, target_date, c.get("off_days", []), set(c.get("holidays", []))):
                 continue
 
             active_count += 1
-
-            # Per-customer alt_options takes priority over plan-level alternate_items.
-            # Only customers that actually HAVE alt_options set contribute to alt counts.
             cust_alt_options = c.get("alt_options", [])
-            if cust_alt_options:
-                cust_item = _get_customer_item_for_date(c, target_date)
-            else:
-                # No personal sequence — use plan-level item label (for display only)
-                cust_item = _get_alternate_item_for_date(plan, target_date) if is_alt else None
-                # But DON'T count this customer in alt_counts — they have no alt_options
-                cust_item_for_count = None
-
-            # Only count in alt breakdown if the customer has their own alt_options
             cust_item_for_count = _get_customer_item_for_date(c, target_date) if cust_alt_options else None
 
             if cust_item_for_count:
@@ -2191,18 +2397,14 @@ def api_boxes_needed():
             if tid not in team_breakdown:
                 team_obj = team_map.get(tid, {})
                 team_breakdown[tid] = {
-                    "team_id":    tid,
-                    "team_name":  team_obj.get("name", "Unassigned"),
-                    "team_area":  team_obj.get("area", ""),
-                    "count":      0,
-                    "alt_counts": {},
+                    "team_id": tid, "team_name": team_obj.get("name", "Unassigned"),
+                    "team_area": team_obj.get("area", ""), "count": 0, "alt_counts": {},
                 }
             team_breakdown[tid]["count"] += 1
             if cust_item_for_count:
                 tc = team_breakdown[tid]["alt_counts"]
                 tc[cust_item_for_count] = tc.get(cust_item_for_count, 0) + 1
 
-        # Sample customers that match this plan
         matched_sample_count = 0
         for c in sample_customers:
             if str(c.get("plan_id", "")) == plan_id:
@@ -2213,69 +2415,88 @@ def api_boxes_needed():
         pending_enq_count = 0
         if not tf:
             pending_enq_count = enquiries_col.count_documents({
-                "tag":    "form_enquiry",
-                "status": "pending",
-                "plan":   {"$regex": re.escape(plan_name[:20]), "$options": "i"}
+                "tag": "form_enquiry", "status": "pending",
+                "plan": {"$regex": re.escape(plan_name[:20]), "$options": "i"}
             }) if plan_name else 0
 
-        # Include plan even if 0 active — only skip if truly nothing
-        if active_count == 0 and matched_sample_count == 0 and pending_enq_count == 0:
+        # NEW: customers on this plan who are on holiday for target_date
+        holiday_count = 0
+        for c in active_customers:
+            if str(c.get("plan_id", "")) != plan_id:
+                continue
+            day_name = target_date.strftime("%A")
+            if (target_str in set(c.get("holidays", []))) or (day_name in c.get("off_days", [])):
+                holiday_count += 1
+
+        if active_count == 0 and matched_sample_count == 0 and pending_enq_count == 0 and holiday_count == 0:
             continue
 
         result.append({
-            "plan_id":           plan_id,
-            "plan_name":         plan_name,
-            "plan_price":        plan.get("price_per_month") or plan.get("price_per_day") or 0,
-            "duration_days":     plan.get("duration_days", 0),
-            "active_customers":  active_count,
-            "sample_boxes":      matched_sample_count,
-            "pending_enquiries": pending_enq_count,
-            "total_boxes":       active_count + matched_sample_count,
-            "teams":             sorted(team_breakdown.values(), key=lambda x: -x["count"]),
-            "is_sample_plan":    False,
-            "is_alternate_plan": is_alt,
-            "alternate_items":   alt_items,
-            "today_item":        alt_label,
-            "global_alt_counts": global_alt_counts,   # NEW
-            "is_next_day":       is_next_day,
-            "target_date":       target_str,
+            "plan_id": plan_id, "plan_name": plan_name,
+            "plan_price": plan.get("price_per_month") or plan.get("price_per_day") or 0,
+            "duration_days": plan.get("duration_days", 0),
+            "active_customers": active_count, "sample_boxes": matched_sample_count,
+            "pending_enquiries": pending_enq_count, "total_boxes": active_count + matched_sample_count,
+            "holiday_customers": holiday_count,
+            "teams": sorted(team_breakdown.values(), key=lambda x: -x["count"]),
+            "is_sample_plan": False, "is_alternate_plan": is_alt,
+            "alternate_items": alt_items, "today_item": alt_label,
+            "global_alt_counts": global_alt_counts,
+            "is_next_day": is_next_day, "target_date": target_str,
         })
 
-    # ── Unmatched sample customers (no plan_id) ───────────────────────────
-    unmatched_samples: dict = {}
+    unmatched_samples = {}
     for c in sample_customers:
-        if c.get("plan_id"):
-            continue
+        if c.get("plan_id"): continue
         day_name = target_date.strftime("%A")
-        if day_name in c.get("off_days", []):
-            continue
-        if target_str in c.get("holidays", []):
-            continue
+        if day_name in c.get("off_days", []): continue
+        if target_str in c.get("holidays", []): continue
         label = c.get("sample", "Sample")
         unmatched_samples[label] = unmatched_samples.get(label, 0) + 1
 
     for label, count in unmatched_samples.items():
         result.append({
-            "plan_id":           None,
-            "plan_name":         label,
-            "plan_price":        None,
-            "duration_days":     None,
-            "active_customers":  0,
-            "sample_boxes":      count,
-            "pending_enquiries": 0,
-            "total_boxes":       count,
-            "teams":             [],
-            "is_sample_plan":    True,
-            "is_alternate_plan": False,
-            "alternate_items":   [],
-            "today_item":        None,
-            "global_alt_counts": {},
-            "is_next_day":       is_next_day,
-            "target_date":       target_str,
+            "plan_id": None, "plan_name": label, "plan_price": None, "duration_days": None,
+            "active_customers": 0, "sample_boxes": count, "pending_enquiries": 0,
+            "total_boxes": count, "holiday_customers": 0, "teams": [], "is_sample_plan": True, "is_alternate_plan": False,
+            "alternate_items": [], "today_item": None, "global_alt_counts": {},
+            "is_next_day": is_next_day, "target_date": target_str,
         })
 
-    return jsonify(result)
+    # NEW: newly tagged customers
+    new_customers = []
+    for c in all_active_customers:
+        if not c.get("is_new"):
+            continue
+        plan = plan_map.get(str(c.get("plan_id", "")), {})
+        new_customers.append({
+            "id": str(c["_id"]), "name": c.get("name", ""), "phone": c.get("phone", ""),
+            "address": c.get("address", ""),
+            "plan_name": plan.get("name") or c.get("sample") or "—",
+            "team_id": str(c.get("team_id", "")),
+        })
 
+    # NEW: customers on holiday for target date
+    holiday_customers = []
+    for c in all_active_customers:
+        holidays = set(c.get("holidays", []))
+        off_days = c.get("off_days", [])
+        day_name = target_date.strftime("%A")
+        if target_str in holidays or day_name in off_days:
+            plan = plan_map.get(str(c.get("plan_id", "")), {})
+            holiday_customers.append({
+                "id": str(c["_id"]), "name": c.get("name", ""), "phone": c.get("phone", ""),
+                "plan_name": plan.get("name") or c.get("sample") or "—",
+                "reason": "holiday" if target_str in holidays else "off_day",
+            })
+
+    return jsonify({
+        "plans": result,
+        "new_customers": new_customers,
+        "holiday_customers": holiday_customers,
+        "is_next_day": is_next_day,
+        "target_date": target_str,
+    })
 
 # ---------------------------------------------------------------------------
 # ADMIN – Customer Holiday Management
@@ -2464,8 +2685,32 @@ def api_sample_customers():
             pass
     elif label:
         query["sample"] = label
-        
-        
+
+    customers = list(users_col.find(query))
+    teams     = list(teams_col.find())
+    team_map  = {str(t["_id"]): t for t in teams}
+    result_customers = []
+    for c in customers:
+        day_name = today.strftime("%A")
+        if day_name in c.get("off_days", []):
+            continue
+        if today_str in c.get("holidays", []):
+            continue
+        team = team_map.get(str(c.get("team_id", "")), {})
+        result_customers.append({
+            "id":             str(c["_id"]),
+            "name":           c.get("name", ""),
+            "phone":          c.get("phone", ""),
+            "address":        c.get("address", ""),
+            "preferred_time": c.get("preferred_time", ""),
+            "sample_label":   c.get("sample", label or "Sample"),
+            "team_id":        str(c.get("team_id", "")),
+            "team_name":      team.get("name", "—"),
+        })
+    result_teams = [{"id": str(t["_id"]), "name": t.get("name", ""), "area": t.get("area", "")} for t in teams]
+    return jsonify({"customers": result_customers, "teams": result_teams})
+
+
 @app.route("/api/admin/assign_team", methods=["POST"])
 @login_required
 @role_required("admin", "manager")
@@ -2913,6 +3158,33 @@ def customer_my_plan_status():
         "boxes": boxes,
     })
 
+#manuall plan view
+
+@app.route("/api/customer/manual_bills")
+@login_required
+@role_required("customer")
+def api_customer_manual_bills():
+    bills = list(
+        manual_bills_col.find({"customer_id": ObjectId(session["user_id"])})
+        .sort("created_at", -1).limit(12)
+    )
+    result = []
+    for b in bills:
+        result.append({
+            "id":               str(b["_id"]),
+            "bill_month_label": b.get("bill_month_label", ""),
+            "period_start":     b.get("period_start", ""),
+            "period_end":       b.get("period_end", ""),
+            "working_days":     b.get("working_days", 0),
+            "leave_days":       b.get("leave_days", 0),
+            "rate_per_day":     b.get("rate_per_day", 0),
+            "subtotal":         b.get("subtotal", 0),
+            "discount":         b.get("discount", 0),
+            "total":            b.get("total", 0),
+            "sent":             b.get("sent", False),
+            "created_at":       b["created_at"].strftime("%Y-%m-%d") if isinstance(b.get("created_at"), datetime) else "",
+        })
+    return jsonify({"success": True, "bills": result})
 
 #Bulk sending api
 
@@ -3040,7 +3312,9 @@ def _run_daily_jobs():
     """
     Runs in a background daemon thread.
     Checks every 60 seconds if a scheduled job needs to run.
-    Calls functions directly — no HTTP requests needed.
+    Calls functions directly — no HTTP requests / external cron needed.
+    This is the only scheduling mechanism used (no cron routes are relied on
+    in production — they still exist for manual/debug triggering only).
     """
     _ran_today = {}   # tracks which jobs already ran today
 
@@ -3062,6 +3336,30 @@ def _run_daily_jobs():
                         print(f"[Scheduler] ✅ generate_daily_deliveries done.")
                     except Exception as e:
                         print(f"[Scheduler] ❌ generate_daily_deliveries failed: {e}")
+
+            # ── 11:00 AM — Payment reminders (day 0 / 1 / 2) — NEW ───────
+            if now.hour == 11 and now.minute < 2:
+                job_key = f"payment_reminders_{today_key}"
+                if job_key not in _ran_today:
+                    print(f"[Scheduler] ⏰ Running payment reminders for {today_key}…")
+                    try:
+                        _run_payment_reminders_job()
+                        _ran_today[job_key] = True
+                        print(f"[Scheduler] ✅ payment_reminders done.")
+                    except Exception as e:
+                        print(f"[Scheduler] ❌ payment_reminders failed: {e}")
+
+            # ── 1:10 PM — Send "Boxes for Tomorrow" to admin WhatsApp — NEW
+            if now.hour == 13 and 8 <= now.minute <= 12:
+                job_key = f"boxes_tomorrow_summary_{today_key}"
+                if job_key not in _ran_today:
+                    print(f"[Scheduler] ⏰ Running boxes-tomorrow WhatsApp summary for {today_key}…")
+                    try:
+                        ok = _send_admin_boxes_tomorrow_summary()
+                        _ran_today[job_key] = True
+                        print(f"[Scheduler] ✅ boxes_tomorrow_summary done. sent={ok}")
+                    except Exception as e:
+                        print(f"[Scheduler] ❌ boxes_tomorrow_summary failed: {e}")
 
             # ── 8:00 PM — Check & send invoices due today ────────────────
             if now.hour == 20 and now.minute < 2:
@@ -3282,6 +3580,12 @@ def create_manual_bill(customer_id):
     Creates a manual bill based on admin-marked delivered/holiday dates on a calendar,
     priced against the customer's plan monthly price / plan duration = rate per day.
     Does NOT consider weekends/holidays automatically — purely counts marked boxes.
+
+    Billing duration shown to the customer runs from period_start to the LAST
+    delivered date (not the theoretical full period end). After saving, the
+    customer's start_date is rolled forward to the day after that last
+    delivered date, so the next manual bill / plan cycle picks up correctly
+    (e.g. last delivered = 26th → new start_date = 27th).
     """
     data = request.get_json(silent=True) or {}
     period_start_str = data.get("period_start", "").strip()
@@ -3316,9 +3620,14 @@ def create_manual_bill(customer_id):
     disc_amt = float(customer.get("discount_amount",  0) or 0)
     discount, total = _apply_discount(subtotal, disc_pct, disc_amt)
 
+    # Billing duration shown to the customer = start date → last delivered
+    # date (falls back to period_end if nothing was marked delivered).
+    sorted_delivered = sorted(delivered_dates)
+    display_end_str  = sorted_delivered[-1] if sorted_delivered else period_end_str
+
     try:
         period_start_disp = datetime.strptime(period_start_str, "%Y-%m-%d").strftime("%d.%m.%y")
-        period_end_disp   = datetime.strptime(period_end_str,   "%Y-%m-%d").strftime("%d.%m.%y")
+        period_end_disp   = datetime.strptime(display_end_str,  "%Y-%m-%d").strftime("%d.%m.%y")
     except Exception:
         return jsonify({"success": False, "message": "Invalid date format"}), 400
 
@@ -3348,6 +3657,7 @@ def create_manual_bill(customer_id):
         "plan_name":         plan.get("name", ""),
         "period_start":      period_start_str,
         "period_end":        period_end_str,
+        "display_period_end": display_end_str,
         "bill_month_label":  bill_month_label,
         "total_days":        total_days,
         "leave_days":        leave_days,
@@ -3366,6 +3676,19 @@ def create_manual_bill(customer_id):
         "sent":              False,
     }
     result = manual_bills_col.insert_one(bill_doc)
+
+    # Roll the customer's start_date forward to the day after the last
+    # delivered date (e.g. last delivered = 26th → new start_date = 27th).
+    if sorted_delivered:
+        try:
+            last_delivered_date = datetime.strptime(sorted_delivered[-1], "%Y-%m-%d").date()
+            new_start_date = last_delivered_date + timedelta(days=1)
+            users_col.update_one(
+                {"_id": customer["_id"]},
+                {"$set": {"start_date": datetime.combine(new_start_date, datetime.min.time())}}
+            )
+        except Exception as e:
+            print(f"[ManualBill] Failed to roll start_date for {customer.get('name')}: {e}")
 
     # Reset payment status whenever a new manual bill is created for the customer
     users_col.update_one({"_id": customer["_id"]}, {"$set": {"payment_status": "pending", "payment_partial_amount": 0}})
@@ -3426,11 +3749,34 @@ def list_manual_bills(customer_id):
     return jsonify({"success": True, "bills": result})
 
 
+# ---------------------------------------------------------------------------
+# CRON ROUTES (kept for manual/debug triggering only — production scheduling
+# runs via the background thread started at the bottom of this file, since
+# this app runs on a Docker VPS without external cron access).
+# ---------------------------------------------------------------------------
+@app.route("/api/system/send_payment_reminders")
+def send_payment_reminders():
+    token = request.args.get("token")
+    if token != os.getenv("CRON_SECRET"):
+        return jsonify({"error": "Unauthorized"}), 401
+    sent = _run_payment_reminders_job()
+    return jsonify({"success": True, "sent": sent})
+
+
+@app.route("/api/system/send_boxes_tomorrow_summary")
+def send_boxes_tomorrow_summary():
+    token = request.args.get("token")
+    if token != os.getenv("CRON_SECRET"):
+        return jsonify({"error": "Unauthorized"}), 401
+    ok = _send_admin_boxes_tomorrow_summary()
+    return jsonify({"success": bool(ok)})
+
+
 # ── Start the scheduler thread ─────────────────────────────────────────────
 # Guard prevents double-start when Flask debug reloader spawns a child process
-#if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
-#    _sched_thread = threading.Thread(target=_run_daily_jobs, daemon=True)
-#    _sched_thread.start()
+if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
+    _sched_thread = threading.Thread(target=_run_daily_jobs, daemon=True)
+    _sched_thread.start()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5757)
