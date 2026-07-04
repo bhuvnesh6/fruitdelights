@@ -1804,14 +1804,24 @@ let _mbOffDays=[], _mbHolidays=new Set();
 const PLAN_SCHEDULE_EXCLUSIONS = {22:['Saturday','Sunday'], 26:['Sunday']};
 const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
+// NEW: every plan's manual-billing calendar always spans a fixed 60 boxes,
+// regardless of the plan's real duration_days (22 / 26 / 30 / etc).
+// The real duration_days is kept separately (as _mbPlan.planDurationDays)
+// purely to know whether Sat/Sun structural exclusions apply.
+const MB_FIXED_BOX_COUNT = 60;
 
 function initManualBilling(customerId, planName, planPrice, durationDays, custStartDate, offDays, holidays){
   _mbCustomerId = customerId;
-  _mbPlan = {name: planName, price: planPrice||0, duration: durationDays||0};
+  _mbPlan = {
+    name: planName,
+    price: planPrice || 0,
+    duration: MB_FIXED_BOX_COUNT,          // used for calendar length + rate/day
+    planDurationDays: durationDays || 0,   // used only to detect 22/26-day exclusions & "has plan" check
+  };
   _mbOffDays = offDays || [];
   _mbHolidays = new Set(holidays || []);
-  document.getElementById('mb-plan-info').textContent = _mbPlan.duration
-    ? `${planName} — ₹${planPrice}/${durationDays} days (₹${(planPrice/durationDays).toFixed(2)}/day)`
+  document.getElementById('mb-plan-info').textContent = _mbPlan.planDurationDays
+    ? `${planName} — ₹${planPrice} / ${MB_FIXED_BOX_COUNT} boxes (₹${(planPrice/MB_FIXED_BOX_COUNT).toFixed(2)}/day)`
     : 'No active plan — cannot bill.';
   document.getElementById('mb-start-date').value = custStartDate || _fmtLocalDate(new Date());
   document.getElementById('mb-month-label').value = '';
@@ -1832,7 +1842,8 @@ function mbSetPaintMode(mode){
 function _mbIsExcludedDay(dateStr){
   const dt = new Date(dateStr+'T00:00:00');
   const dowName = DOW_NAMES[dt.getDay()];
-  const excluded = PLAN_SCHEDULE_EXCLUSIONS[_mbPlan.duration] || [];
+  // structural exclusions still keyed off the plan's REAL duration_days
+  const excluded = PLAN_SCHEDULE_EXCLUSIONS[_mbPlan.planDurationDays] || [];
   if(excluded.includes(dowName)) return true;
   if(_mbOffDays.includes(dowName)) return true;
   if(_mbHolidays.has(dateStr)) return true;
@@ -1842,14 +1853,14 @@ function _mbIsExcludedDay(dateStr){
 function mbRebuildCalendar(){
   const startVal = document.getElementById('mb-start-date').value;
   const cal = document.getElementById('mb-calendar');
-  if(!startVal || !_mbPlan || !_mbPlan.duration){ cal.innerHTML='<span style="font-size:12px;color:var(--text-3);">Select a start date (plan required).</span>'; return; }
+  if(!startVal || !_mbPlan || !_mbPlan.planDurationDays){ cal.innerHTML='<span style="font-size:12px;color:var(--text-3);">Select a start date (plan required).</span>'; return; }
   const start = new Date(startVal+'T00:00:00');
 
-  // Extend forward until we've collected exactly `duration_days` SCHEDULABLE
-  // days (not plan-structural off, not customer off_day, not a holiday).
-  // Mirrors the backend _calculate_invoice_period fix — weekends still show
-  // in the grid but don't count toward the plan's delivery total, so the
-  // calendar naturally spans however many real days that takes.
+  // Extend forward until we've collected exactly MB_FIXED_BOX_COUNT (60)
+  // SCHEDULABLE days (not plan-structural off, not customer off_day, not a
+  // holiday). Weekends/off-days still show in the grid but don't count
+  // toward the 60, so the calendar naturally spans however many real days
+  // that takes — same as before, just fixed at 60 instead of plan.duration.
   _mbDays = [];
   let d = new Date(start);
   let schedulableCount = 0;
@@ -1880,7 +1891,6 @@ function mbRebuildCalendar(){
   mbUpdateSummary();
 }
 
-
 function mbToggleDay(dateStr){
   const cur = _mbMarks[dateStr];
   if(cur === _mbPaintMode){
@@ -1897,11 +1907,10 @@ function mbToggleDay(dateStr){
   mbUpdateSummary();
 }
 
-
-
 function mbResetCalendar(){ _mbMarks={}; mbRebuildCalendar(); document.getElementById('mb-preview-wrap').style.display='none'; }
+
 function mbUpdateSummary(){
-  const total = _mbPlan ? _mbPlan.duration : _mbDays.length;
+  const total = _mbPlan ? _mbPlan.duration : _mbDays.length; // always 60 now
   const working = Object.values(_mbMarks).filter(v=>v==='delivered').length;
   const leave = Object.values(_mbMarks).filter(v=>v==='holiday').length;
   const rate = _mbPlan && _mbPlan.duration ? (_mbPlan.price/_mbPlan.duration) : 0;
@@ -1910,6 +1919,7 @@ function mbUpdateSummary(){
   document.getElementById('mb-working-days').textContent = working;
   document.getElementById('mb-total-amount').textContent = '₹'+(working*rate).toFixed(2);
 }
+
 async function mbGenerateBill(){
   const delivered = Object.keys(_mbMarks).filter(d=>_mbMarks[d]==='delivered');
   const holidays  = Object.keys(_mbMarks).filter(d=>_mbMarks[d]==='holiday');
