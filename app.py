@@ -135,6 +135,51 @@ def role_required(*roles):
 # ---------------------------------------------------------------------------
 # HELPERS
 # ---------------------------------------------------------------------------
+
+def _safe_send_whatsapp(phone, message, context=""):
+    """
+    Wrapper around wp.send_whatsapp with actual error visibility.
+    Every system WhatsApp send (credentials, invoices, manual bills,
+    payment reminders, admin summary) goes through this instead of calling
+    send_whatsapp directly — a bare `False` return with zero explanation is
+    exactly why manual bills / invoices silently "don't reach WhatsApp".
+
+    NOTE: this is a DIFFERENT WhatsApp session/number than
+    outwpmsg.send_whatsapp_msg (used only for the enquiry inbox chat).
+    The inbox chat working does NOT mean this session is working — if
+    system messages stop arriving, check the session behind wp.py first.
+    """
+    try:
+        ok = send_whatsapp(phone, message)
+        if not ok:
+            print(f"[WA-FAIL] {context or 'send'} to {phone} — wp.send_whatsapp "
+                  f"returned falsy. Check that Number A's WhatsApp session "
+                  f"(the one wp.py talks to) is still connected/logged in.")
+        return ok
+    except Exception as e:
+        print(f"[WA-ERROR] {context or 'send'} to {phone} raised: {e}")
+        return False
+
+
+def _get_admin_whatsapp_numbers():
+    """
+    Supports ADMIN_WHATSAPP_NUMBERS="9876543210,9123456780" (comma-separated)
+    so admin broadcasts (boxes-tomorrow summary, etc.) can go to BOTH admin
+    phones. Falls back to the old single ADMIN_WHATSAPP_NUMBER if the plural
+    var isn't set.
+    """
+    raw = os.getenv("ADMIN_WHATSAPP_NUMBERS") or os.getenv("ADMIN_WHATSAPP_NUMBER", "")
+    numbers = []
+    for part in raw.split(","):
+        digits = "".join(filter(str.isdigit, part.strip()))
+        if not digits:
+            continue
+        if len(digits) == 10:
+            digits = "91" + digits
+        numbers.append(digits)
+    return numbers
+
+
 def send_credentials_whatsapp(email, password, name, phone):
     phone = "".join(filter(str.isdigit, str(phone)))
     if len(phone) == 10:
@@ -148,7 +193,7 @@ def send_credentials_whatsapp(email, password, name, phone):
         f"Login:\nhttps://fruitedelights.com/login\n\n"
         f"Thank you."
     )
-    send_whatsapp(phone, msg)
+    _safe_send_whatsapp(phone, msg, context="credentials")
 
 
 def _generate_customer_login_id(name: str) -> str:
@@ -385,7 +430,7 @@ def _send_invoice_whatsapp(customer, invoice):
         f"Total Due:    ₹{invoice.get('total', 0):.2f}\n\n"
         f"Thank you for being a valued customer! 🍉"
     )
-    send_whatsapp(phone, msg)
+    _safe_send_whatsapp(phone, msg, context="invoice")
 
 
 # ---------------------------------------------------------------------------
@@ -461,8 +506,11 @@ def _send_bulk_wa_worker(targets, message, batch_size=10):
                 continue
             try:
                 personalised = message.replace("{name}", t.get("name", "there"))
-                send_whatsapp(phone, personalised)
-                sent += 1
+                ok = _safe_send_whatsapp(phone, personalised, context="bulk_wa")
+                if ok:
+                    sent += 1
+                else:
+                    failed += 1
             except Exception as e:
                 failed += 1
                 print(f"[BulkWA] Failed {phone}: {e}")
@@ -537,7 +585,60 @@ def _send_manual_bill_whatsapp(phone, message_text):
         phone = "91" + phone
     if not phone:
         return False
-    return send_whatsapp(phone, message_text)
+    return _safe_send_whatsapp(phone, message_text, context="manual_bill_helper")
+
+
+def _build_bill_boxes(bill):
+    """
+    Replays a SAVED manual bill's own delivered_dates/holiday_dates into a
+    day-by-day box grid — this is what lets a closed billing period show
+    its own frozen history instead of being recalculated against
+    deliveries_col (which has already moved on to the next cycle).
+    """
+    period_start = bill.get("period_start", "")
+    period_end   = bill.get("display_period_end") or bill.get("period_end", "")
+    if not period_start or not period_end:
+        return []
+    delivered = set(bill.get("delivered_dates", []))
+    holidays  = set(bill.get("holiday_dates", []))
+    try:
+        current = datetime.strptime(period_start, "%Y-%m-%d").date()
+        end     = datetime.strptime(period_end,   "%Y-%m-%d").date()
+    except Exception:
+        return []
+    boxes = []
+    while current <= end:
+        d_str = current.strftime("%Y-%m-%d")
+        if d_str in delivered:
+            status = "delivered"
+        elif d_str in holidays:
+            status = "holiday"
+        else:
+            status = "upcoming"   # unmarked day inside a closed bill — neutral
+        boxes.append({"date": d_str, "day": current.strftime("%A")[:3], "status": status})
+        current += timedelta(days=1)
+    return boxes
+
+
+def _serialize_manual_bill(bill):
+    return {
+        "id":                 str(bill["_id"]),
+        "bill_month_label":   bill.get("bill_month_label", ""),
+        "period_start":       bill.get("period_start", ""),
+        "period_end":         bill.get("period_end", ""),
+        "display_period_end": bill.get("display_period_end") or bill.get("period_end", ""),
+        "total_days":         bill.get("total_days", 0),
+        "leave_days":         bill.get("leave_days", 0),
+        "working_days":       bill.get("working_days", 0),
+        "rate_per_day":       bill.get("rate_per_day", 0),
+        "subtotal":           bill.get("subtotal", 0),
+        "discount":           bill.get("discount", 0),
+        "total":              bill.get("total", 0),
+        "sent":               bill.get("sent", False),
+        "created_at":         bill["created_at"].strftime("%Y-%m-%d %H:%M") if isinstance(bill.get("created_at"), datetime) else "",
+        "created_by_name":    bill.get("created_by_name", ""),
+        "boxes":              _build_bill_boxes(bill),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -568,7 +669,7 @@ def _send_payment_reminder_whatsapp(customer, offset_day):
         f"Please complete your payment at the earliest to avoid any interruption in delivery.\n\n"
         f"If you've already paid, please ignore this message. 🙏"
     )
-    return send_whatsapp(phone, msg)
+    return _safe_send_whatsapp(phone, msg, context="payment_reminder")
 
 
 def _run_payment_reminders_job():
@@ -644,14 +745,17 @@ def _build_boxes_summary_text(target_date):
 
 
 def _send_admin_boxes_tomorrow_summary():
-    admin_phone = "".join(filter(str.isdigit, os.getenv("ADMIN_WHATSAPP_NUMBER", "")))
-    if len(admin_phone) == 10:
-        admin_phone = "91" + admin_phone
-    if not admin_phone:
-        print("[BoxesSummary] ADMIN_WHATSAPP_NUMBER not set — skipping.")
+    numbers = _get_admin_whatsapp_numbers()
+    if not numbers:
+        print("[BoxesSummary] No ADMIN_WHATSAPP_NUMBER(S) set — skipping.")
         return False
     tomorrow = (datetime.now() + timedelta(days=1)).date()
-    return send_whatsapp(admin_phone, _build_boxes_summary_text(tomorrow))
+    text = _build_boxes_summary_text(tomorrow)
+    all_ok = True
+    for num in numbers:
+        ok = _safe_send_whatsapp(num, text, context="boxes_tomorrow_summary")
+        all_ok = all_ok and ok
+    return all_ok
 
 
 # ---------------------------------------------------------------------------
@@ -728,7 +832,7 @@ def forgot_password():
         f"Login here:\nhttps://fruitedelights.com/login\n\n"
         f"If you did not request this, please contact support."
     )
-    send_whatsapp(wa_phone, msg)
+    _safe_send_whatsapp(wa_phone, msg, context="forgot_password")
     return jsonify({"success": True, "message": "New credentials sent to your WhatsApp."})
 
 
@@ -1102,7 +1206,7 @@ def reset_employee_credentials(employee_id):
     )
     wa_sent = False
     if phone:
-        wa_sent = send_whatsapp(phone, msg)
+        wa_sent = _safe_send_whatsapp(phone, msg, context="reset_employee")
     return jsonify({
         "success": True,
         "wa_sent": wa_sent,
@@ -1135,7 +1239,7 @@ def reset_customer_credentials(customer_id):
         f"Login:\nhttps://fruitedelights.com/login\n\n"
         f"If you did not request this, contact support."
     )
-    wa_sent = send_whatsapp(phone, msg) if phone else False
+    wa_sent = _safe_send_whatsapp(phone, msg, context="reset_customer") if phone else False
     return jsonify({
         "success": True, "wa_sent": wa_sent, "name": name,
         "message": f"Password reset for {name}." + (" Sent on WhatsApp." if wa_sent else " WhatsApp delivery failed."),
@@ -1590,7 +1694,7 @@ def approve_enquiry(enquiry_id):
         f"👉 Login here:\nhttps://fruitedelights.com/login\n\n"
         f"Thank you for joining us! 🍉"
     )
-    send_whatsapp(wa_phone, msg)
+    _safe_send_whatsapp(wa_phone, msg, context="approve_enquiry")
     sample_note = f" (Sample: {plan_label})" if sample_val else f" (Plan: {plan_label})"
     flash(f"✅ '{name}' approved{sample_note} → Login: {email} sent on WhatsApp.", "success")
     return redirect(url_for("dashboard_admin"))
@@ -3158,6 +3262,22 @@ def customer_my_plan_status():
         "boxes": boxes,
     })
 
+
+@app.route("/api/customer/plan_history")
+@login_required
+@role_required("customer")
+def api_customer_plan_history():
+    """
+    Full manual-billing history for the logged-in customer — each closed
+    period frozen exactly as it was billed. The LIVE current-cycle timeline
+    stays in /api/customer/my_plan_status (always the new start_date, filled
+    in as delivery partners mark today's deliveries).
+    """
+    cust_id = ObjectId(session["user_id"])
+    bills = list(manual_bills_col.find({"customer_id": cust_id}).sort("created_at", -1).limit(24))
+    return jsonify({"success": True, "history": [_serialize_manual_bill(b) for b in bills]})
+
+
 #manuall plan view
 
 @app.route("/api/customer/manual_bills")
@@ -3569,6 +3689,18 @@ def customer_box_timeline(customer_id):
     })
 
 
+@app.route("/api/admin/customer_plan_history/<customer_id>")
+@login_required
+@role_required("admin", "manager")
+def api_admin_customer_plan_history(customer_id):
+    try:
+        cust_oid = ObjectId(customer_id)
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid customer ID"}), 400
+    bills = list(manual_bills_col.find({"customer_id": cust_oid}).sort("created_at", -1).limit(24))
+    return jsonify({"success": True, "history": [_serialize_manual_bill(b) for b in bills]})
+
+
 # ---------------------------------------------------------------------------
 # ADMIN – MANUAL BILLING (NEW)
 # ---------------------------------------------------------------------------
@@ -3719,11 +3851,11 @@ def send_manual_bill(bill_id):
     if not phone:
         return jsonify({"success": False, "message": "No phone number on file"}), 400
 
-    ok = send_whatsapp(phone, bill["message_text"])
+    ok = _safe_send_whatsapp(phone, bill["message_text"], context=f"manual_bill:{bill_id}")
     if ok:
         manual_bills_col.update_one({"_id": bill["_id"]}, {"$set": {"sent": True, "sent_at": datetime.now()}})
 
-    return jsonify({"success": ok, "message": "Sent on WhatsApp." if ok else "WhatsApp delivery failed."})
+    return jsonify({"success": ok, "message": "Sent on WhatsApp." if ok else "WhatsApp delivery failed — check server logs for [WA-FAIL]/[WA-ERROR]."})
 
 
 @app.route("/api/admin/customer/<customer_id>/manual_bills")
@@ -3750,6 +3882,33 @@ def list_manual_bills(customer_id):
 
 
 # ---------------------------------------------------------------------------
+# WHATSAPP CONNECTIVITY DEBUG (NEW)
+# ---------------------------------------------------------------------------
+@app.route("/api/system/wa_test_send", methods=["POST"])
+@login_required
+@role_required("admin")
+def wa_test_send():
+    """
+    Sends a raw test message through the SAME session used for credentials,
+    invoices, manual bills, payment reminders, and the admin summary.
+    If this fails, the problem is that WhatsApp session (wp.py) — not the
+    app code. Check server logs for [WA-FAIL] / [WA-ERROR] right after
+    calling this.
+    """
+    data  = request.get_json(silent=True) or {}
+    phone = "".join(filter(str.isdigit, str(data.get("phone", ""))))
+    if len(phone) == 10:
+        phone = "91" + phone
+    if not phone:
+        return jsonify({"success": False, "message": "phone required"}), 400
+    ok = _safe_send_whatsapp(phone, "✅ Test message from Fruit Delights admin panel.", context="wa_test_send")
+    return jsonify({
+        "success": ok,
+        "message": "Sent." if ok else "Failed — check server logs for [WA-FAIL]/[WA-ERROR] and confirm the WhatsApp session is connected."
+    })
+
+
+# ---------------------------------------------------------------------------
 # CRON ROUTES (kept for manual/debug triggering only — production scheduling
 # runs via the background thread started at the bottom of this file, since
 # this app runs on a Docker VPS without external cron access).
@@ -3771,6 +3930,58 @@ def send_boxes_tomorrow_summary():
     ok = _send_admin_boxes_tomorrow_summary()
     return jsonify({"success": bool(ok)})
 
+
+@app.route("/api/employee/holiday_customers")
+@login_required
+@role_required("employee")
+def employee_holiday_customers():
+    employee = users_col.find_one({"_id": ObjectId(session["user_id"])})
+    if not employee or "team_id" not in employee:
+        return jsonify({"success": False, "message": "Not assigned to a team"}), 400
+
+    today     = datetime.now().date()
+    today_str = today.strftime("%Y-%m-%d")
+    day_name  = today.strftime("%A")
+
+    customers = list(users_col.find({
+        "role":    "customer",
+        "team_id": employee["team_id"],
+        "status":  "active",
+    }))
+
+    result = []
+    for cust in customers:
+        off_days = cust.get("off_days", [])
+        holidays = set(cust.get("holidays", []))
+        plan = plans_col.find_one({"_id": ObjectId(cust["plan_id"])}) if cust.get("plan_id") else None
+
+        if plan:
+            is_holiday_today = not _day_schedulable_for_plan(plan, today, off_days, holidays)
+        else:
+            is_holiday_today = (day_name in off_days) or (today_str in holidays)
+
+        if not is_holiday_today:
+            continue
+
+        plan_name  = plan.get("name", "") if plan else cust.get("sample", "")
+        today_item = None
+        if plan:
+            alt_items = plan.get("alternate_items", [])
+            if alt_items and len(alt_items) >= 2:
+                cust_alt   = cust.get("alt_options", [])
+                today_item = _get_customer_item_for_date(cust, today) if cust_alt else _get_alternate_item_for_date(plan, today)
+
+        result.append({
+            "id":         str(cust["_id"]),
+            "name":       cust.get("name", ""),
+            "phone":      cust.get("phone", ""),
+            "address":    cust.get("address", ""),
+            "plan_name":  plan_name,
+            "today_item": today_item,
+            "reason":     "holiday" if (today_str in holidays) else "off_day",
+        })
+
+    return jsonify({"success": True, "count": len(result), "customers": result, "date": today_str})
 
 # ── Start the scheduler thread ─────────────────────────────────────────────
 # Guard prevents double-start when Flask debug reloader spawns a child process

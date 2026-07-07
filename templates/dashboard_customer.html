@@ -480,6 +480,17 @@
                     {% for i in range(26) %}<div class="skel-box"></div>{% endfor %}
                 </div>
             </div>
+
+            <div class="saas-card" id="plan-history-card" style="display:none;">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;margin-bottom:1rem;">
+    <h2 style="margin:0;">📜 Past Billing Periods</h2>
+    <div style="display:flex;gap:8px;">
+      <button class="saas-btn" style="width:auto;padding:0.5rem 1rem;font-size:0.85rem;" onclick="showPlanHistory('last')">Last Billing</button>
+      <button class="saas-btn" style="width:auto;padding:0.5rem 1rem;font-size:0.85rem;background:var(--text-2);" onclick="showPlanHistory('all')">All Billings</button>
+    </div>
+  </div>
+  <div id="plan-history-body"></div>
+</div>
         </div>
 
         <!-- Tab: Pause Delivery -->
@@ -590,6 +601,7 @@ function switchTab(tabName) {
     if (mm) mm.classList.add('active');
 
     if (tabName === 'plan' && !planLoaded) loadPlanProgress();
+    if (tabName === 'plan') loadPlanHistoryData();
     if (tabName === 'pause' && !holidaysLoaded) loadCustomerHolidays();
     if (tabName === 'billing' && !billHistoryLoaded) loadBillHistory();
 }
@@ -797,5 +809,44 @@ function showPhMsg(msg, isError){
             card.innerHTML = `<p style="color:var(--red);padding:1rem 0;">Failed to load plan data. Please refresh.</p>`;
         }
     }
+
+    let _planHistoryData = [];
+let _planHistoryLoaded = false;
+
+async function loadPlanHistoryData(){
+    if(_planHistoryLoaded) return;
+    try{
+        const data = await fetch('/api/customer/plan_history').then(r=>r.json());
+        _planHistoryData = (data.success && data.history) ? data.history : [];
+        _planHistoryLoaded = true;
+        document.getElementById('plan-history-card').style.display = _planHistoryData.length ? 'block' : 'none';
+    }catch(e){ _planHistoryData = []; }
+}
+function _renderHistoryBoxes(boxes){
+    return boxes.map(b=>`<div class="day-box status-${b.status}" data-tip="${b.date} (${b.day})" title="${b.date} (${b.day})" style="width:20px;height:20px;"></div>`).join('');
+}
+function _renderHistoryBill(b){
+    return `
+      <div style="border:1px solid var(--border);border-radius:var(--radius-sm);padding:1rem;margin-bottom:1rem;">
+        <div style="display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-bottom:8px;">
+          <div>
+            <strong>${b.bill_month_label}</strong>
+            <div style="font-size:0.78rem;color:var(--text-3);">${b.period_start} → ${b.display_period_end}</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-weight:700;color:var(--accent);">₹${b.total}</div>
+            <div style="font-size:0.72rem;color:${b.sent?'var(--green)':'var(--yellow)'};">${b.sent?'✅ Sent':'⏳ Draft'}</div>
+          </div>
+        </div>
+        <div class="box-grid">${_renderHistoryBoxes(b.boxes)}</div>
+      </div>`;
+}
+function showPlanHistory(mode){
+    const body = document.getElementById('plan-history-body');
+    if(!_planHistoryData.length){ body.innerHTML = '<p style="color:var(--text-3);font-size:0.9rem;">No past billing periods yet.</p>'; return; }
+    const list = mode === 'last' ? _planHistoryData.slice(0,1) : _planHistoryData;
+    body.innerHTML = list.map(_renderHistoryBill).join('');
+}
+
 </script>
 {% endblock %}

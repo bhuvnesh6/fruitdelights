@@ -109,6 +109,9 @@ html, body {
   transform: translateX(110%); transition: transform .3s cubic-bezier(.4,0,.2,1);
   display: flex; flex-direction: column; gap: 10px;
   max-height: 92vh; overflow-y: auto;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
 }
 .menu-panel.open { transform: translateX(0); }
 .menu-overlay {
@@ -202,6 +205,14 @@ html, body {
 .boxes-error { padding: 10px 12px; font-size: .68rem; color: var(--red); text-align: center; }
 .btn-boxes-refresh { display: flex; align-items: center; justify-content: center; gap: 4px; background: none; border: none; color: var(--txt3); font-size: .62rem; font-weight: 700; cursor: pointer; padding: 0; font-family: var(--font); }
 .btn-boxes-refresh:hover { color: var(--accent); }
+
+/* Holiday list (menu) */
+.holiday-cust-row { padding:10px 0; border-bottom:1px solid var(--border); }
+.holiday-cust-row:last-child { border-bottom:none; }
+.holiday-cust-name { font-size:.82rem; font-weight:800; color:var(--txt); }
+.holiday-cust-sub  { font-size:.68rem; color:var(--txt3); margin-top:2px; }
+.holiday-cust-plan { font-size:.66rem; color:var(--accent); font-weight:700; margin-top:3px; }
+.holiday-empty     { padding:20px; text-align:center; color:var(--txt3); font-size:.78rem; }
 
 /* ── BOTTOM SHEET ── */
 .bottom-sheet {
@@ -557,6 +568,12 @@ html, body {
     <span class="gps-row-txt" id="gps-label">Acquiring…</span>
   </div>
 
+  <div class="menu-section-label">Team Status</div>
+  <div class="gps-row" id="holiday-row" style="cursor:pointer;" onclick="openHolidayModal()">
+    <span style="font-size:1rem;">🏖️</span>
+    <span class="gps-row-txt" id="holiday-label">On Holiday: <span id="holiday-count">0</span></span>
+  </div>
+
   {% set pending_count   = deliveries | selectattr('status','equalto','pending')   | list | length %}
   {% set accepted_count  = deliveries | selectattr('status','equalto','accepted')  | list | length %}
   {% set delivered_count = deliveries | selectattr('status','equalto','delivered') | list | length %}
@@ -814,6 +831,20 @@ html, body {
   <div class="lb-btns" onclick="event.stopPropagation()">
     <button class="lb-btn lb-close" onclick="closeLightbox()">✕ Close</button>
     <a class="lb-btn lb-open" id="lb-open-link" href="" target="_blank">↗ Full size</a>
+  </div>
+</div>
+
+<!-- HOLIDAY MODAL -->
+<div class="modal-overlay" id="holiday-modal">
+  <div class="modal-sheet-inner">
+    <div class="modal-handle"></div>
+    <div class="modal-title">
+      <span>🏖️ Customers on Holiday Today</span>
+      <button class="modal-close" onclick="closeHolidayModal()">✕</button>
+    </div>
+    <div id="holiday-list-content">
+      <div class="boxes-loading"><div class="spin-sm"></div> Loading…</div>
+    </div>
   </div>
 </div>
 
@@ -1114,6 +1145,32 @@ async function loadMyBoxes(force){
   }
 }
 function escHtml(s){ return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+/* ── HOLIDAY CUSTOMERS ── */
+let _holidayCache=[];
+async function loadHolidayCustomers(){
+  try{
+    const d=await fetch('/api/employee/holiday_customers').then(r=>r.json());
+    if(!d.success) return;
+    _holidayCache=d.customers||[];
+    document.getElementById('holiday-count').textContent=d.count;
+  }catch(e){}
+}
+function renderHolidayList(){
+  const wrap=document.getElementById('holiday-list-content');
+  if(!_holidayCache.length){ wrap.innerHTML='<div class="holiday-empty">No customers on holiday today 🎉</div>'; return; }
+  wrap.innerHTML=_holidayCache.map(c=>{
+    const itemHtml=c.today_item?`<div class="holiday-cust-plan">🔄 ${escHtml(c.today_item)}</div>`:(c.plan_name?`<div class="holiday-cust-plan">📦 ${escHtml(c.plan_name)}</div>`:'');
+    return `<div class="holiday-cust-row">
+      <div class="holiday-cust-name">${escHtml(c.name)}</div>
+      <div class="holiday-cust-sub">${escHtml(c.phone)} · ${escHtml(c.address)}</div>
+      ${itemHtml}
+    </div>`;
+  }).join('');
+}
+function openHolidayModal(){ renderHolidayList(); document.getElementById('holiday-modal').classList.add('open'); }
+function closeHolidayModal(){ document.getElementById('holiday-modal').classList.remove('open'); }
+document.getElementById('holiday-modal').addEventListener('click',function(e){ if(e.target===this) closeHolidayModal(); });
 
 /* ── BOTTOM SHEET ── */
 const sheet=document.getElementById('bottom-sheet');
@@ -1513,6 +1570,7 @@ async function submitPhoto(){
 window.addEventListener('DOMContentLoaded',()=>{
   snapSheet(false);
   loadMyBoxes(false);
+  loadHolidayCustomers();
   // Auto-start distance sort immediately on load
   initRoute();
 });
