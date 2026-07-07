@@ -47,6 +47,16 @@ enquiries_col     = db.enquiries
 wa_inbox_col      = db.wa_inbox
 manual_bills_col  = db.manual_bills   # NEW: manual billing records
 
+# NEW: distributed scheduler lock collection. This is what makes the
+# background scheduler safe to run from MULTIPLE worker processes
+# (Gunicorn/uWSGI workers, PM2 clusters, etc.) and safe across restarts.
+# Only ONE process can ever "win" the lock for a given job+day.
+scheduler_locks_col = db.scheduler_locks
+try:
+    scheduler_locks_col.create_index([("job", 1), ("date", 1)], unique=True)
+except Exception as e:
+    print(f"[Scheduler] Could not ensure unique index on scheduler_locks: {e}")
+
 
 # ---------------------------------------------------------------------------
 # PLAN SCHEDULE HELPERS
@@ -3426,8 +3436,60 @@ def api_bulk_whatsapp_send_to_enquiries():
 
 
 # ---------------------------------------------------------------------------
-# BACKGROUND SCHEDULER
+# BACKGROUND SCHEDULER  (rewritten to use a Mongo-backed distributed lock)
 # ---------------------------------------------------------------------------
+#
+# WHY THIS CHANGED:
+# The previous version tracked "already ran today" in a plain Python dict
+# (_ran_today) that lives ONLY in the memory of a single process. That is
+# unsafe for two very common production situations:
+#   1. Running with more than one worker process (Gunicorn/uWSGI workers,
+#      PM2 cluster mode, etc.) — EVERY worker starts its own copy of this
+#      thread, so a job like "payment reminders" fires once PER WORKER,
+#      which is exactly what caused customers to get multiple WhatsApp
+#      messages instead of one.
+#   2. A process restart/redeploy that happens to land inside the same
+#      job's time window on the same day — the in-memory dict resets to
+#      empty, so the job looks "not yet run" and fires again.
+#
+# THE FIX:
+# Each job attempts to insert a lock document {"job": name, "date": today}
+# into a MongoDB collection that has a UNIQUE index on (job, date). Only
+# the first process to attempt the insert on a given day succeeds; every
+# other process (or every other worker) gets a DuplicateKeyError and simply
+# skips. This makes "run at most once per job per day" a guarantee backed
+# by the database, not by in-process memory — safe across any number of
+# workers and safe across restarts.
+# ---------------------------------------------------------------------------
+
+from pymongo.errors import DuplicateKeyError
+
+
+def _try_acquire_job_lock(job_name: str, today_key: str) -> bool:
+    """
+    Attempts to atomically claim the right to run `job_name` for `today_key`.
+    Returns True if THIS call acquired the lock (i.e. no one else has run
+    this job today yet) — the caller should proceed to run the job.
+    Returns False if the job has already been claimed (by this process in
+    an earlier tick, another worker process, or a previous run before a
+    restart) — the caller should skip.
+    """
+    try:
+        scheduler_locks_col.insert_one({
+            "job":        job_name,
+            "date":       today_key,
+            "claimed_at": datetime.now(),
+        })
+        return True
+    except DuplicateKeyError:
+        return False
+    except Exception as e:
+        # If Mongo is briefly unreachable, fail safe by NOT running the job
+        # rather than risking duplicate sends.
+        print(f"[Scheduler] Lock check failed for {job_name}: {e}")
+        return False
+
+
 def _run_daily_jobs():
     """
     Runs in a background daemon thread.
@@ -3435,9 +3497,11 @@ def _run_daily_jobs():
     Calls functions directly — no HTTP requests / external cron needed.
     This is the only scheduling mechanism used (no cron routes are relied on
     in production — they still exist for manual/debug triggering only).
-    """
-    _ran_today = {}   # tracks which jobs already ran today
 
+    Every job below is guarded by _try_acquire_job_lock(), so it is safe to
+    run this thread from multiple worker processes at once — only one will
+    ever actually execute a given job on a given day.
+    """
     print("[Scheduler] ✅ Background scheduler started.")
 
     while True:
@@ -3445,56 +3509,51 @@ def _run_daily_jobs():
             now       = datetime.now()
             today_key = now.strftime("%Y-%m-%d")
 
-            # ── 6:00 AM — Generate daily deliveries ──────────────────────
+            # ── 6:00 AM – 6:01 AM — Generate daily deliveries ────────────
             if now.hour == 6 and now.minute < 2:
-                job_key = f"daily_deliveries_{today_key}"
-                if job_key not in _ran_today:
+                if _try_acquire_job_lock("daily_deliveries", today_key):
                     print(f"[Scheduler] ⏰ Running generate_daily_deliveries for {today_key}…")
                     try:
                         _scheduler_generate_daily()
-                        _ran_today[job_key] = True
-                        print(f"[Scheduler] ✅ generate_daily_deliveries done.")
+                        print("[Scheduler] ✅ generate_daily_deliveries done.")
                     except Exception as e:
                         print(f"[Scheduler] ❌ generate_daily_deliveries failed: {e}")
 
-            # ── 11:00 AM — Payment reminders (day 0 / 1 / 2) — NEW ───────
+            # ── 11:00 AM – 11:01 AM — Payment reminders (day 0 / 1 / 2) ──
+            # Sends AT MOST one reminder per customer per day: one on the
+            # day they're tagged "new", one the next day, one two days
+            # later — then stops (see PAYMENT_REMINDER_OFFSETS + the
+            # payment_reminder_days_sent guard inside the job itself).
             if now.hour == 11 and now.minute < 2:
-                job_key = f"payment_reminders_{today_key}"
-                if job_key not in _ran_today:
+                if _try_acquire_job_lock("payment_reminders", today_key):
                     print(f"[Scheduler] ⏰ Running payment reminders for {today_key}…")
                     try:
                         _run_payment_reminders_job()
-                        _ran_today[job_key] = True
-                        print(f"[Scheduler] ✅ payment_reminders done.")
+                        print("[Scheduler] ✅ payment_reminders done.")
                     except Exception as e:
                         print(f"[Scheduler] ❌ payment_reminders failed: {e}")
 
-            # ── 1:10 PM — Send "Boxes for Tomorrow" to admin WhatsApp — NEW
-            if now.hour == 13 and 8 <= now.minute <= 12:
-                job_key = f"boxes_tomorrow_summary_{today_key}"
-                if job_key not in _ran_today:
+            # ── 1:11 PM — Send "Boxes for Tomorrow" to admin WhatsApp ────
+            # (Runs during the 13:11–13:12 window so it reliably fires at
+            # 1:11 PM even if the loop's 60s tick drifts by a few seconds.)
+            if now.hour == 13 and 11 <= now.minute <= 12:
+                if _try_acquire_job_lock("boxes_tomorrow_summary", today_key):
                     print(f"[Scheduler] ⏰ Running boxes-tomorrow WhatsApp summary for {today_key}…")
                     try:
                         ok = _send_admin_boxes_tomorrow_summary()
-                        _ran_today[job_key] = True
                         print(f"[Scheduler] ✅ boxes_tomorrow_summary done. sent={ok}")
                     except Exception as e:
                         print(f"[Scheduler] ❌ boxes_tomorrow_summary failed: {e}")
 
-            # ── 8:00 PM — Check & send invoices due today ────────────────
+            # ── 8:00 PM – 8:01 PM — Check & send invoices due today ──────
             if now.hour == 20 and now.minute < 2:
-                job_key = f"check_invoices_{today_key}"
-                if job_key not in _ran_today:
+                if _try_acquire_job_lock("check_invoices", today_key):
                     print(f"[Scheduler] ⏰ Running check_invoice_due for {today_key}…")
                     try:
                         _scheduler_check_invoice_due()
-                        _ran_today[job_key] = True
-                        print(f"[Scheduler] ✅ check_invoice_due done.")
+                        print("[Scheduler] ✅ check_invoice_due done.")
                     except Exception as e:
                         print(f"[Scheduler] ❌ check_invoice_due failed: {e}")
-
-            # ── Cleanup old keys (only keep today's) ─────────────────────
-            _ran_today = {k: v for k, v in _ran_today.items() if today_key in k}
 
         except Exception as e:
             print(f"[Scheduler] ⚠️ Scheduler loop error: {e}")
@@ -3912,6 +3971,9 @@ def wa_test_send():
 # CRON ROUTES (kept for manual/debug triggering only — production scheduling
 # runs via the background thread started at the bottom of this file, since
 # this app runs on a Docker VPS without external cron access).
+# NOTE: these manual routes also go through the same DB lock, so triggering
+# one manually on the same day a scheduled run already happened will report
+# success/failure honestly instead of double-sending.
 # ---------------------------------------------------------------------------
 @app.route("/api/system/send_payment_reminders")
 def send_payment_reminders():
@@ -3984,7 +4046,12 @@ def employee_holiday_customers():
     return jsonify({"success": True, "count": len(result), "customers": result, "date": today_str})
 
 # ── Start the scheduler thread ─────────────────────────────────────────────
-# Guard prevents double-start when Flask debug reloader spawns a child process
+# Guard prevents double-start when Flask debug reloader spawns a child process.
+# NOTE: this guard only helps with Flask's *dev* auto-reloader. It does NOT
+# protect against multiple Gunicorn/uWSGI worker processes in production —
+# that protection now comes from the Mongo-backed job lock above
+# (_try_acquire_job_lock), which is why jobs are safe even if this thread
+# starts in several worker processes at once.
 if os.environ.get("WERKZEUG_RUN_MAIN") != "true":
     _sched_thread = threading.Thread(target=_run_daily_jobs, daemon=True)
     _sched_thread.start()
