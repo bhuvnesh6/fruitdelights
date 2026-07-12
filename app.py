@@ -3009,6 +3009,7 @@ def get_customer_location(customer_id):
     })
 
 
+
 @app.route("/api/employee/my_boxes")
 @login_required
 @role_required("employee")
@@ -3017,7 +3018,7 @@ def employee_my_boxes():
     if not employee or not employee.get("team_id"):
         return jsonify({"success": False, "message": "Not assigned to a team"}), 400
     now = datetime.now()
-    if now.hour >= 15:
+    if now.hour >= 13:
         target_date = (now + timedelta(days=1)).date()
         is_next_day = True
     else:

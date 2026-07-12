@@ -14,8 +14,8 @@ DB_NAME   = os.getenv("DB_NAME", "delivery_platform")
 client = MongoClient(MONGO_URI)
 db     = client[DB_NAME]
 
-ADMIN_EMAIL = "navin@fruitedelight"
-ADMIN_PHONE = "7828317123"
+ADMIN_EMAIL = "Bhuviadmin"
+ADMIN_PHONE = "918920419130"
 
 def create_first_admin():
     if db.users.find_one({"email": ADMIN_EMAIL}):
