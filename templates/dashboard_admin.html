@@ -912,6 +912,34 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
+<!-- Credentials Reveal Modal -->
+<div class="modal-backdrop" id="modal-show-credentials">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <div class="modal-title">🔑 New Login Credentials</div>
+      <button class="modal-close" onclick="closeModal('modal-show-credentials')">✕</button>
+    </div>
+    <div class="form-group">
+      <label class="form-label">User ID</label>
+      <div style="display:flex;gap:8px;">
+        <input class="form-control" id="cred-login-id" readonly>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="copyCredField('cred-login-id')">📋</button>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">New Password</label>
+      <div style="display:flex;gap:8px;">
+        <input class="form-control" id="cred-password" readonly>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="copyCredField('cred-password')">📋</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button type="button" class="btn btn-primary" style="flex:1;" onclick="copyBothCreds()">📋 Copy Both</button>
+      <button type="button" class="btn btn-ghost" onclick="closeModal('modal-show-credentials')">Close</button>
+    </div>
+  </div>
+</div>
+
 <!-- Add / Edit User -->
 <div class="modal-backdrop" id="modal-add-user">
   <div class="modal" style="max-width:660px;">
@@ -1496,6 +1524,28 @@ function showToast(msg,type){
   setTimeout(()=>{el.style.opacity='0';el.style.transform='translateX(40px)';el.style.transition='.4s';setTimeout(()=>el.remove(),400);},3000);
 }
 
+function showCredentialsModal(loginId, password){
+  document.getElementById('cred-login-id').value = loginId || '';
+  document.getElementById('cred-password').value = password || '';
+  openModal('modal-show-credentials');
+}
+function copyCredField(id){
+  const el=document.getElementById(id);
+  el.select(); el.setSelectionRange(0,9999);
+  navigator.clipboard.writeText(el.value).then(()=>showToast('✅ Copied!','success'));
+}
+function copyBothCreds(){
+  const text=`User ID: ${document.getElementById('cred-login-id').value}\nPassword: ${document.getElementById('cred-password').value}`;
+  navigator.clipboard.writeText(text).then(()=>showToast('✅ Copied both!','success'));
+}
+
+
+
+
+
+
+
+
 /* ── Excel helpers ── */
 function exportToExcel(rows,headers,filename,sheetName){
   if(!rows||!rows.length){showToast('No data to export.','danger');return;}
@@ -1594,27 +1644,35 @@ async function saveManagerTeam(){
     else showToast('❌ '+(data.message||'Failed'),'danger');
   }catch{btn.disabled=false;btn.textContent='💾 Save Assignment';showToast('❌ Network error.','danger');}
 }
+
+
 async function resetManagerCredentials(id,name){
   if(!confirm(`Reset credentials for ${name}?`))return;
   const res=await fetch(`/admin/employees/reset-credentials/${id}`,{method:'POST'});
-  const data=await res.json();showToast(data.success?'✅ '+data.message:'❌ '+(data.message||'Failed'),data.success?'success':'danger');
+  const data=await res.json();
+  if(data.success){showCredentialsModal(data.login_id, data.new_password);}
+  else showToast('❌ '+(data.message||'Failed'),'danger');
 }
+
 async function resetEmployeeCredentials(employeeId,employeeName){
   if(!confirm(`Reset login credentials for ${employeeName}?`))return;
   const btn=document.getElementById(`reset-btn-${employeeId}`);if(btn){btn.disabled=true;btn.textContent='…';}
   try{
     const res=await fetch(`/admin/employees/reset-credentials/${employeeId}`,{method:'POST'});
     const data=await res.json();if(btn){btn.disabled=false;btn.textContent='🔑 Reset';}
-    showToast(data.success?'✅ '+data.message:'❌ '+(data.message||'Reset failed'),data.success?'success':'danger');
+    if(data.success){showCredentialsModal(data.login_id, data.new_password);}
+    else showToast('❌ '+(data.message||'Reset failed'),'danger');
   }catch{if(btn){btn.disabled=false;btn.textContent='🔑 Reset';}showToast('❌ Network error.','danger');}
 }
+
 
 async function resetCustomerCredentials(id, name){
   if(!confirm(`Reset password for ${name}? New password goes to WhatsApp on their existing login ID.`))return;
   try{
     const res = await fetch(`/admin/customers/reset-credentials/${id}`,{method:'POST'});
     const data = await res.json();
-    showToast(data.success?'✅ '+data.message:'❌ '+(data.message||'Failed'), data.success?'success':'danger');
+    if(data.success){showCredentialsModal(data.login_id, data.new_password);}
+    else showToast('❌ '+(data.message||'Failed'), 'danger');
   }catch{ showToast('❌ Network error.','danger'); }
 }
 

@@ -1218,9 +1218,11 @@ def reset_employee_credentials(employee_id):
     if phone:
         wa_sent = _safe_send_whatsapp(phone, msg, context="reset_employee")
     return jsonify({
-        "success": True,
-        "wa_sent": wa_sent,
-        "name":    name,
+        "success":     True,
+        "wa_sent":     wa_sent,
+        "name":        name,
+        "login_id":    login_id,
+        "new_password": new_password,
         "message": f"Credentials reset for {name}." + (" Sent on WhatsApp." if wa_sent else " WhatsApp delivery failed."),
     })
 
@@ -1252,6 +1254,7 @@ def reset_customer_credentials(customer_id):
     wa_sent = _safe_send_whatsapp(phone, msg, context="reset_customer") if phone else False
     return jsonify({
         "success": True, "wa_sent": wa_sent, "name": name,
+        "login_id": login_id, "new_password": new_password,
         "message": f"Password reset for {name}." + (" Sent on WhatsApp." if wa_sent else " WhatsApp delivery failed."),
     })
 
