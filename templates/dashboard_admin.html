@@ -370,6 +370,13 @@ tbody tr:hover td{background:var(--bg-3)}
         <span class="nav-icon">📊</span> Dashboard
       </div>
     </div>
+
+    {% if session.role == 'admin' %}
+<div class="nav-item" data-page="franchises" onclick="navigate('franchises',this)">
+  <span class="nav-icon">🏢</span> Franchises
+</div>
+{% endif %}
+
     <div class="sidebar-section">
       <div class="sidebar-section-label">Manage</div>
       <div class="nav-item" data-page="plans" onclick="navigate('plans',this)">
@@ -778,6 +785,36 @@ tbody tr:hover td{background:var(--bg-3)}
       </div>
       {% endif %}
 
+      {% if session.role == 'admin' %}
+<div class="page-section" id="page-franchises">
+  <div class="section-title-bar">
+    <h2>Franchises</h2>
+    <button class="btn btn-primary" onclick="openAddFranchiseModal()">＋ New Franchise</button>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px;margin-bottom:22px;">
+    <div class="stat-card c-purple"><div class="stat-icon">🏢</div><div class="stat-value" id="fr-stat-total">—</div><div class="stat-label">Total Franchises</div></div>
+    <div class="stat-card c-green"><div class="stat-icon">✅</div><div class="stat-value" id="fr-stat-active">—</div><div class="stat-label">Active</div></div>
+    <div class="stat-card c-yellow"><div class="stat-icon">⏳</div><div class="stat-value" id="fr-stat-pending">—</div><div class="stat-label">Pending</div></div>
+  </div>
+  <div class="filter-bar">
+    <div class="search-wrap"><input class="form-control" id="fr-search" placeholder="Search business / owner…" oninput="filterFranchises()" style="max-width:220px;"></div>
+    <select class="form-control" id="fr-city-filter" onchange="filterFranchises()" style="max-width:180px;"><option value="">All Cities</option></select>
+    <select class="form-control" id="fr-status-filter" onchange="filterFranchises()" style="max-width:160px;">
+      <option value="">All Statuses</option>
+      <option value="active">✅ Active</option>
+      <option value="pending">⏳ Pending</option>
+    </select>
+    <button class="btn btn-ghost btn-sm" onclick="loadFranchises(true)">🔄 Refresh</button>
+  </div>
+  <div class="table-wrap">
+    <table id="franchises-table">
+      <thead><tr><th>Business</th><th>Owner</th><th>City</th><th>Address</th><th>Managers</th><th>Employees</th><th>Customers</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody id="franchises-tbody"><tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+{% endif %}
+
     </div><!-- /page-content -->
   </div><!-- /main -->
 
@@ -896,12 +933,12 @@ tbody tr:hover td{background:var(--bg-3)}
       </div>
       <div class="form-group">
         <label class="form-label">Assign Team</label>
-        <select id="mgr-team-select" class="form-control">
-          <option value="">— No team assigned —</option>
-          {% for team in teams %}
-          <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
-          {% endfor %}
-        </select>
+        <select id="mgr-team-select" class="form-control" multiple style="height:120px;">
+  {% for team in teams %}
+  <option value="{{ team._id }}">{{ team.name }} – {{ team.area }}, {{ team.city }}</option>
+  {% endfor %}
+</select>
+<small style="color:var(--text-3);">Ctrl/Cmd-click to select multiple — a manager can run several teams.</small>
         <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Manager sees only their team's data. They can also create plans and teams.</div>
       </div>
       <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
@@ -911,6 +948,29 @@ tbody tr:hover td{background:var(--bg-3)}
     </div>
   </div>
 </div>
+
+<!--Edit franchieses-->
+
+<div class="modal-backdrop" id="modal-add-franchise">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🏢 New Franchise</div><button class="modal-close" onclick="closeModal('modal-add-franchise')">✕</button></div>
+    <div class="form-group"><label class="form-label">Business Name *</label><input type="text" id="fr-business-name" class="form-control"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Owner Name *</label><input type="text" id="fr-owner-name" class="form-control"></div>
+      <div class="form-group"><label class="form-label">Phone *</label><input type="text" id="fr-phone" class="form-control"></div>
+    </div>
+    <div class="form-group"><label class="form-label">Email <span class="opt">(optional — auto-generated if blank)</span></label><input type="text" id="fr-email" class="form-control"></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">City *</label><input type="text" id="fr-city" class="form-control"></div>
+      <div class="form-group"><label class="form-label">Address</label><input type="text" id="fr-address" class="form-control"></div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('modal-add-franchise')">Cancel</button>
+      <button type="button" class="btn btn-primary" id="fr-submit-btn" onclick="submitAddFranchise()">Create &amp; Send Credentials</button>
+    </div>
+  </div>
+</div>
+
 
 <!-- Credentials Reveal Modal -->
 <div class="modal-backdrop" id="modal-show-credentials">
@@ -1275,6 +1335,17 @@ tbody tr:hover td{background:var(--bg-3)}
   <div id="mb-history">—</div>
 </div>
 
+
+<div class="detail-section-label">🧑‍💼 Manager Assignment</div>
+<div class="detail-field" style="margin-bottom:12px;"><div class="detail-field-label">Currently Assigned Manager</div><div class="detail-field-value" id="view-current-manager">—</div></div>
+<div class="team-assign-select">
+  <div style="flex:1;">
+    <label class="form-label">Assign to Manager</label>
+    <select id="view-manager-select" class="form-control"><option value="">— No manager —</option></select>
+  </div>
+  <button type="button" class="btn btn-primary" onclick="saveManagerAssignment()">💾 Save Manager</button>
+</div>
+
     <div class="detail-section-label">🏘️ Team Assignment</div>
     <div class="detail-field" style="margin-bottom:12px;"><div class="detail-field-label">Currently Assigned To</div><div class="detail-field-value" id="view-current-team">—</div></div>
     <form id="view-assign-team-form" method="POST">
@@ -1478,7 +1549,7 @@ tbody tr:hover td{background:var(--bg-3)}
 
 <!-- ============================================================ JAVASCRIPT ============================================================ -->
 <script>
-const IS_ADMIN = {{ 'true' if session.role == 'admin' else 'false' }};
+const IS_ADMIN = {{ 'true' if session.role in ['admin','subadmin'] else 'false' }};
 const pageTitles = {home:'Dashboard',plans:'Subscription Plans',teams:'Teams',managers:'Managers',employees:'Delivery Partners',customers:'Customers',enquiries:'Web Enquiries'};
 const _loaded = {employees:false,customers:false,managers:false};
 let _custData = [];
@@ -1501,6 +1572,7 @@ function navigate(page, el) {
   if (page==='employees'&&!_loaded.employees) loadEmployees();
   if (page==='customers'&&!_loaded.customers) loadCustomers();
   if (page==='managers'&&!_loaded.managers)   loadManagers();
+  if (page==='franchises') loadFranchises(false);
   if (page==='enquiries') loadEnquiries(false);
 }
 
@@ -1620,27 +1692,33 @@ async function loadManagers(){
     tbody.innerHTML=data.map(m=>{
       const initials=(m.name||'M').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
       const rawPhone=(m.phone||'').replace(/\D/g,'');const waPhone=rawPhone.length===10?'91'+rawPhone:rawPhone;
-      const teamLabel=(m.team_name&&m.team_name!=='—')?`<span class="badge badge-blue">🏘️ ${escHtml(m.team_name)}${m.team_area?' – '+escHtml(m.team_area):''}</span>`:`<span class="badge badge-gray">No team</span>`;
-      return `<tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="manager-avatar">${initials}</div><div><div style="font-weight:600;">${escHtml(m.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(m.phone||'—')}</div></div></div></td><td><div style="font-size:12px;color:var(--text-2);">${escHtml(m.email||'—')}</div></td><td>${escHtml(m.phone||'—')}</td><td>${teamLabel}</td><td><div style="display:flex;gap:5px;flex-wrap:wrap;">${waPhone.length>=10?`<a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-success btn-sm">💬</a>`:''}<button class="btn btn-primary btn-sm" onclick='openEditManager(${JSON.stringify(m)})'>🏘️ Team</button><button class="btn btn-warning btn-sm" onclick="resetManagerCredentials('${m.id}','${escHtml(m.name)}')">🔑 Reset</button><form method="POST" action="/admin/users/delete/${m.id}" onsubmit="return confirm('Remove ${escHtml(m.name)}?');" style="display:inline;"><input type="hidden" name="next" value="dashboard_admin"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
+      const teamLabel=(m.team_names&&m.team_names.length)?m.team_names.map(n=>`<span class="badge badge-blue">🏘️ ${escHtml(n)}</span>`).join(' '):`<span class="badge badge-gray">No team</span>`;
+      return `<tr><td><div style="display:flex;align-items:center;gap:10px;"><div class="manager-avatar">${initials}</div><div><div style="font-weight:600;">${escHtml(m.name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(m.phone||'—')}</div></div></div></td><td><div style="font-size:12px;color:var(--text-2);">${escHtml(m.email||'—')}</div></td><td>${escHtml(m.phone||'—')}</td><td>${teamLabel}</td><td><div style="display:flex;gap:5px;flex-wrap:wrap;">${waPhone.length>=10?`<a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-success btn-sm">💬</a>`:''}<button class="btn btn-primary btn-sm" onclick='openEditManager(${JSON.stringify(m)})'>🏘️ Team</button>
+<button class="btn btn-ghost btn-sm" onclick="bulkAssignCustomersToManager('${m.id}','${escHtml(m.name)}')">📋 Assign All Customers</button><button class="btn btn-warning btn-sm" onclick="resetManagerCredentials('${m.id}','${escHtml(m.name)}')">🔑 Reset</button><form method="POST" action="/admin/users/delete/${m.id}" onsubmit="return confirm('Remove ${escHtml(m.name)}?');" style="display:inline;"><input type="hidden" name="next" value="dashboard_admin"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
     }).join('');
   }catch{tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`;}
 }
+
 function openEditManager(m){
   _mgrCurrentId=m.id;
   document.getElementById('mgr-edit-avatar').textContent=(m.name||'M').split(' ').filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('');
   document.getElementById('mgr-edit-name').textContent=m.name||'—';
   document.getElementById('mgr-edit-email').textContent=m.email||'—';
   document.getElementById('mgr-edit-phone').textContent=m.phone||'—';
-  document.getElementById('mgr-team-select').value=m.team_id||'';
+  const sel=document.getElementById('mgr-team-select');
+  const tids=m.team_ids||[];
+  for(let opt of sel.options){opt.selected=tids.includes(opt.value);}
   openModal('modal-edit-manager');
 }
 async function saveManagerTeam(){
-  const teamId=document.getElementById('mgr-team-select').value;const btn=document.getElementById('mgr-save-btn');
+  const sel=document.getElementById('mgr-team-select');
+  const teamIds=Array.from(sel.selectedOptions).map(o=>o.value);
+  const btn=document.getElementById('mgr-save-btn');
   btn.disabled=true;btn.textContent='…';
   try{
-    const res=await fetch('/admin/managers/assign-team',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({manager_id:_mgrCurrentId,team_id:teamId})});
+    const res=await fetch('/admin/managers/assign-team',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({manager_id:_mgrCurrentId,team_ids:teamIds})});
     const data=await res.json();btn.disabled=false;btn.textContent='💾 Save Assignment';
-    if(data.success){showToast('✅ Team assigned!','success');closeModal('modal-edit-manager');_loaded.managers=false;loadManagers();}
+    if(data.success){showToast('✅ Teams assigned!','success');closeModal('modal-edit-manager');_loaded.managers=false;loadManagers();}
     else showToast('❌ '+(data.message||'Failed'),'danger');
   }catch{btn.disabled=false;btn.textContent='💾 Save Assignment';showToast('❌ Network error.','danger');}
 }
@@ -1826,6 +1904,8 @@ function openViewModal(userData,role){
   document.getElementById('view-team-select').value=userData.team_id||'';
   document.getElementById('view-edit-btn').onclick=()=>{closeModal('modal-view-user');if(role==='customer')openEditCustomer(userData);else openEditEmployee(userData.id,userData.name,userData.email,userData.phone,userData.team_id);};
   openModal('modal-view-user');
+  _viewUserTargetId = userData.id || '';
+  populateManagerSelect(userData.assigned_manager_id || '');
   if(role==='customer'){loadCustomerPlanStatus(userData.id); loadAdminPlanHistory(userData.id);}
 }
 
@@ -2647,6 +2727,148 @@ function togglePartialAmount(){
   document.getElementById('ec-partial-amt-wrap').style.display =
     document.getElementById('ec-payment-status').value==='partial' ? 'block' : 'none';
 }
+
+
+/* ── Manager assignment (customers/employees) ── */
+let _allManagersCache=null, _viewUserTargetId='';
+async function ensureManagersLoaded(){
+  if(_allManagersCache) return _allManagersCache;
+  try{ _allManagersCache = await fetch('/api/admin/managers').then(r=>r.json()); }catch{ _allManagersCache=[]; }
+  return _allManagersCache;
+}
+async function populateManagerSelect(currentManagerId){
+  const sel=document.getElementById('view-manager-select');
+  const managers=await ensureManagersLoaded();
+  sel.innerHTML='<option value="">— No manager —</option>'+managers.map(m=>`<option value="${m.id}" ${m.id===currentManagerId?'selected':''}>${escHtml(m.name)}</option>`).join('');
+  const cur=managers.find(m=>m.id===currentManagerId);
+  document.getElementById('view-current-manager').textContent=cur?cur.name:'Unassigned';
+}
+async function saveManagerAssignment(){
+  const managerId=document.getElementById('view-manager-select').value;
+  if(!_viewUserTargetId){showToast('❌ No user selected.','danger');return;}
+  try{
+    const res=await fetch('/api/admin/assign_manager',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({target_id:_viewUserTargetId,manager_id:managerId})});
+    const data=await res.json();
+    if(data.success){showToast('✅ Manager assignment saved.','success');document.getElementById('view-current-manager').textContent=data.manager_name||'Unassigned';}
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{showToast('❌ Network error.','danger');}
+}
+
+/* ── Franchises ── */
+let _frData=[];
+async function loadFranchises(force){
+  if(_frData.length&&!force){renderFranchises();return;}
+  const tbody=document.getElementById('franchises-tbody');
+  tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
+  try{
+    const [data,cities]=await Promise.all([
+      fetch('/api/admin/franchises_data').then(r=>r.json()),
+      fetch('/api/admin/franchise_cities').then(r=>r.json())
+    ]);
+    _frData=data;
+    const sel=document.getElementById('fr-city-filter');const cur=sel.value;
+    sel.innerHTML='<option value="">All Cities</option>'+cities.map(c=>`<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+    sel.value=cur;
+    document.getElementById('fr-stat-total').textContent=data.length;
+    document.getElementById('fr-stat-active').textContent=data.filter(f=>f.status==='active').length;
+    document.getElementById('fr-stat-pending').textContent=data.filter(f=>f.status==='pending').length;
+    renderFranchises();
+  }catch{tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadFranchises(true)">Retry</button></td></tr>`;}
+}
+function filterFranchises(){renderFranchises();}
+function renderFranchises(){
+  const q=(document.getElementById('fr-search').value||'').toLowerCase().trim();
+  const city=(document.getElementById('fr-city-filter').value||'').toLowerCase().trim();
+  const status=document.getElementById('fr-status-filter').value||'';
+  const tbody=document.getElementById('franchises-tbody');
+  const rows=_frData.filter(f=>{
+    const nameMatch=!q||(f.business_name||'').toLowerCase().includes(q)||(f.subadmin_name||'').toLowerCase().includes(q);
+    const cityMatch=!city||(f.city||'').toLowerCase().trim()===city;
+    const statusMatch=!status||f.status===status;
+    return nameMatch&&cityMatch&&statusMatch;
+  });
+  if(!rows.length){tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">No franchises found.</td></tr>`;return;}
+  tbody.innerHTML=rows.map(f=>{
+    const rawPhone=(f.subadmin_phone||'').replace(/\D/g,'');const waPhone=rawPhone.length===10?'91'+rawPhone:rawPhone;
+    return `<tr>
+      <td><strong>${escHtml(f.business_name)}</strong></td>
+      <td><div style="font-weight:600;">${escHtml(f.subadmin_name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(f.subadmin_email)} · ${escHtml(f.subadmin_phone)}</div></td>
+      <td><span class="badge badge-blue">${escHtml(f.city)}</span></td>
+      <td style="max-width:180px;color:var(--text-2);font-size:12px;">${escHtml(f.address||'—')}</td>
+      <td>${f.manager_count}</td><td>${f.employee_count}</td><td>${f.customer_count}</td>
+      <td><select onchange="updateFranchiseStatus('${f.id}',this.value)" class="form-control btn-sm" style="width:auto;padding:4px 8px;font-size:12px;">
+        <option value="pending" ${f.status==='pending'?'selected':''}>⏳ Pending</option>
+        <option value="active" ${f.status==='active'?'selected':''}>✅ Active</option>
+      </select></td>
+      <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
+        ${waPhone.length>=10?`<a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-success btn-sm">💬</a>`:''}
+        <button class="btn btn-warning btn-sm" onclick="resetFranchiseCredentials('${f.id}','${escHtml(f.business_name)}')">🔑 Reset</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+function openAddFranchiseModal(){
+  ['fr-business-name','fr-owner-name','fr-phone','fr-email','fr-city','fr-address'].forEach(id=>document.getElementById(id).value='');
+  openModal('modal-add-franchise');
+}
+async function submitAddFranchise(){
+  const payload={
+    business_name:document.getElementById('fr-business-name').value.trim(),
+    owner_name:document.getElementById('fr-owner-name').value.trim(),
+    phone:document.getElementById('fr-phone').value.trim(),
+    email:document.getElementById('fr-email').value.trim(),
+    city:document.getElementById('fr-city').value.trim(),
+    address:document.getElementById('fr-address').value.trim(),
+  };
+  if(!payload.business_name||!payload.owner_name||!payload.phone||!payload.city){showToast('❌ Fill all required fields.','danger');return;}
+  const btn=document.getElementById('fr-submit-btn');btn.disabled=true;btn.textContent='⏳ Creating…';
+  try{
+    const res=await fetch('/admin/franchises/add',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+    const data=await res.json();btn.disabled=false;btn.textContent='Create & Send Credentials';
+    if(data.success){closeModal('modal-add-franchise');showCredentialsModal(data.login_id,data.password);showToast('✅ '+data.message,'success');loadFranchises(true);}
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{btn.disabled=false;btn.textContent='Create & Send Credentials';showToast('❌ Network error.','danger');}
+}
+async function updateFranchiseStatus(id,status){
+  try{
+    const res=await fetch(`/admin/franchises/${id}/status`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({status})});
+    const data=await res.json();
+    if(data.success){showToast('✅ Status updated.','success');loadFranchises(true);}
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{showToast('❌ Network error.','danger');}
+}
+async function resetFranchiseCredentials(id,name){
+  if(!confirm(`Reset password for ${name}?`))return;
+  try{
+    const res=await fetch(`/admin/franchises/${id}/reset-credentials`,{method:'POST'});
+    const data=await res.json();
+    if(data.success)showCredentialsModal(data.login_id,data.new_password);
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{showToast('❌ Network error.','danger');}
+}
+
+
+
+
+async function bulkAssignCustomersToManager(managerId, managerName){
+  if(!confirm(`Assign ALL of your customers to ${managerName}?\n\nThis will overwrite any existing manager assignment on those customers.`)) return;
+  try{
+    const res = await fetch('/api/admin/bulk_assign_manager', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({ manager_id: managerId })
+    });
+    const data = await res.json();
+    if(data.success){
+      showToast(`✅ ${data.message}`, 'success');
+    } else {
+      showToast('❌ ' + (data.message || 'Failed'), 'danger');
+    }
+  }catch{
+    showToast('❌ Network error.', 'danger');
+  }
+}
+
 
 /* ── Boot ── */
 window.addEventListener('DOMContentLoaded',()=>{

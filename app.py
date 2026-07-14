@@ -46,6 +46,11 @@ invoices_col      = db.invoices
 enquiries_col     = db.enquiries
 wa_inbox_col      = db.wa_inbox
 manual_bills_col  = db.manual_bills   # NEW: manual billing records
+franchises_col = db.franchises
+try:
+    franchises_col.create_index([("subadmin_id", 1)], unique=True, sparse=True)
+except Exception as e:
+    print(f"[Franchise] Could not ensure index on franchises: {e}")
 
 # NEW: distributed scheduler lock collection. This is what makes the
 # background scheduler safe to run from MULTIPLE worker processes
@@ -131,8 +136,8 @@ def role_required(*roles):
         @wraps(f)
         def decorated_function(*args, **kwargs):
             user_role = session.get("role")
-            # Managers behave as sub-admins: they get all admin+manager permissions
-            if user_role == "manager" and "admin" in roles:
+            # Managers AND Subadmins behave as full admins for their own scope
+            if user_role in ("manager", "subadmin") and "admin" in roles:
                 return f(*args, **kwargs)
             if user_role not in roles:
                 flash("Unauthorized access.", "danger")
@@ -142,9 +147,39 @@ def role_required(*roles):
     return decorator
 
 
+def super_admin_required(f):
+    """Strictly the top-level admin only — used for Franchise management,
+    which must stay invisible to subadmins and managers."""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        if session.get("role") != "admin":
+            flash("Unauthorized — restricted to the main admin.", "danger")
+            return redirect(url_for("home"))
+        return f(*args, **kwargs)
+    return decorated_function
+
 # ---------------------------------------------------------------------------
 # HELPERS
 # ---------------------------------------------------------------------------
+
+def _scoped_team_ids():
+    """
+    Returns the list of Team ObjectIds visible to the current session.
+    Deliveries are stored with a team_id (not franchise_id), so anything
+    scoping deliveries_col must go through team_id, not franchise_id.
+      - admin    -> all teams with franchise_id None (HQ only)
+      - subadmin -> all teams with franchise_id == their own franchise
+      - manager  -> only their own assigned team(s)
+    """
+    role = session.get("role")
+    if role == "manager":
+        user = users_col.find_one({"_id": ObjectId(session["user_id"])})
+        tids = (user.get("team_ids") or ([user["team_id"]] if user and user.get("team_id") else [])) if user else []
+        return tids
+    ff = _franchise_filter()
+    teams = list(teams_col.find(ff, {"_id": 1}))
+    return [t["_id"] for t in teams]
+
 
 def _safe_send_whatsapp(phone, message, context=""):
     """
@@ -170,6 +205,39 @@ def _safe_send_whatsapp(phone, message, context=""):
         print(f"[WA-ERROR] {context or 'send'} to {phone} raised: {e}")
         return False
 
+
+# ---------------------------------------------------------------------------
+# FRANCHISE / MULTI-TENANT SCOPING HELPERS
+# ---------------------------------------------------------------------------
+def _current_user_doc():
+    if "user_id" not in session:
+        return None
+    return users_col.find_one({"_id": ObjectId(session["user_id"])})
+
+
+def _current_franchise_id():
+    """None => top-level admin's own HQ business. Otherwise the ObjectId of
+    the franchise the logged-in subadmin/manager/employee/customer belongs to."""
+    role = session.get("role")
+    if role == "admin":
+        return None
+    user = _current_user_doc()
+    return user.get("franchise_id") if user else None
+
+
+def _franchise_filter():
+    """Scopes collections keyed only by franchise_id: plans, teams, the
+    manager list. Top admin -> HQ only. Subadmin/manager -> their franchise."""
+    role = session.get("role")
+    if role == "admin":
+        return {"franchise_id": None}
+    if role in ("subadmin", "manager"):
+        return {"franchise_id": _current_franchise_id()}
+    return {}
+
+
+def _norm_city_key(city):
+    return (city or "").strip().lower()
 
 def _get_admin_whatsapp_numbers():
     """
@@ -205,6 +273,24 @@ def send_credentials_whatsapp(email, password, name, phone):
     )
     _safe_send_whatsapp(phone, msg, context="credentials")
 
+def send_franchise_credentials_whatsapp(email, password, name, phone, business_name, city, address):
+    phone = "".join(filter(str.isdigit, str(phone)))
+    if len(phone) == 10:
+        phone = "91" + phone
+    msg = (
+        f"🍓 Fruit Delights – Franchise Onboarding\n\n"
+        f"Hello {name},\n\n"
+        f"Your Franchise '{business_name}' has been created! 🎉\n"
+        f"📍 City: {city}\n"
+        f"🏠 Address: {address or '—'}\n\n"
+        f"Login ID: {email}\n"
+        f"Password: {password}\n\n"
+        f"Login:\nhttps://fruitedelights.com/login\n\n"
+        f"You have full admin access to manage plans, teams, employees, "
+        f"managers and customers for your own franchise business.\n\n"
+        f"Thank you."
+    )
+    _safe_send_whatsapp(phone, msg, context="franchise_credentials")
 
 def _generate_customer_login_id(name: str) -> str:
     """
@@ -232,13 +318,20 @@ def _resolve_customer_email(phone, existing_email=""):
 
 
 def _manager_team_filter():
-    if session.get("role") == "manager":
+    role = session.get("role")
+    if role == "manager":
         user = users_col.find_one({"_id": ObjectId(session["user_id"])})
-        tid  = user.get("team_id") if user else None
-        if tid:
-            return {"team_id": ObjectId(tid)}
-        return {"team_id": None}
-    return {}
+        if not user:
+            return {"team_id": None}
+        tids = user.get("team_ids") or ([user["team_id"]] if user.get("team_id") else [])
+        conditions = [{"assigned_manager_id": user["_id"]}]
+        if tids:
+            conditions.append({"team_id": {"$in": tids}})
+        f = {"$or": conditions}
+        f["franchise_id"] = user.get("franchise_id")
+        return f
+    # admin / subadmin fall back to plain franchise scoping (HQ vs own franchise)
+    return _franchise_filter()
 
 def _enrich_delivery_plan(delivery_dict: dict, cust: dict, today_date) -> dict:
     """Adds plan_name, is_alternate_plan, today_item to a delivery dict.
@@ -775,7 +868,7 @@ def _send_admin_boxes_tomorrow_summary():
 def home():
     if "user_id" in session:
         role = session.get("role")
-        if role in ["admin", "manager"]:
+        if role in ["admin", "manager", "subadmin"]:
             return redirect(url_for("dashboard_admin"))
         elif role == "employee":
             return redirect(url_for("dashboard_employee"))
@@ -788,7 +881,6 @@ def home():
 def sw():
     return send_from_directory("static", "sw.js")
 
-
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -796,6 +888,11 @@ def login():
         password = request.form.get("password")
         user     = users_col.find_one({"email": email})
         if user and check_password_hash(user["password"], password):
+            if user.get("role") == "subadmin":
+                fr = franchises_col.find_one({"_id": user.get("franchise_id")})
+                if not fr or fr.get("status") != "active":
+                    flash("Your franchise account is pending approval. Contact HQ support.", "danger")
+                    return render_template("login.html")
             session["user_id"] = str(user["_id"])
             session["role"]    = user["role"]
             session["name"]    = user["name"]
@@ -856,35 +953,39 @@ def dashboard_admin():
     now   = datetime.now()
     today = now.strftime("%Y-%m-%d")
     tf    = _manager_team_filter()
+    ff    = _franchise_filter()
 
     cust_q = {"role": "customer"}
     if tf:
         cust_q.update(tf)
 
+    scoped_team_ids = _scoped_team_ids()
+    delivery_scope  = {"team_id": {"$in": scoped_team_ids}}
+
     stats = {
         "total_customers":    users_col.count_documents(cust_q),
         "total_employees":    users_col.count_documents({**{"role": "employee"}, **tf}),
-        "pending_deliveries": deliveries_col.count_documents({**{"status": "pending",           "date": today}, **tf}),
-        "delivered_today":    deliveries_col.count_documents({**{"status": "delivered",         "date": today}, **tf}),
-        "on_holiday_today":   deliveries_col.count_documents({**{"status": "cancelled_holiday", "date": today}, **tf}),
-        "active_teams":       teams_col.count_documents({}),
+        "pending_deliveries": deliveries_col.count_documents({**delivery_scope, "status": "pending",           "date": today}),
+        "delivered_today":    deliveries_col.count_documents({**delivery_scope, "status": "delivered",         "date": today}),
+        "on_holiday_today":   deliveries_col.count_documents({**delivery_scope, "status": "cancelled_holiday", "date": today}),
+        "active_teams":       teams_col.count_documents(ff),
     }
 
     if session.get("role") == "manager":
         user = users_col.find_one({"_id": ObjectId(session["user_id"])})
-        assigned_tid = user.get("team_id") if user else None
-        teams = [teams_col.find_one({"_id": assigned_tid})] if assigned_tid else []
-        teams = [t for t in teams if t]
+        tids = (user.get("team_ids") or ([user["team_id"]] if user and user.get("team_id") else [])) if user else []
+        teams = list(teams_col.find({"_id": {"$in": tids}})) if tids else []
     else:
-        teams = list(teams_col.find())
+        teams = list(teams_col.find(ff))
 
-    plans = list(plans_col.find())
+    plans = list(plans_col.find(ff))
     for t in teams: t["_id"] = str(t["_id"])
     for p in plans: p["_id"] = str(p["_id"])
 
     return render_template("dashboard_admin.html",
                            stats=stats, teams=teams, plans=plans,
                            active_page="home")
+
 
 
 @app.route("/api/admin/employees")
@@ -1022,23 +1123,28 @@ def admin_analytics():
         days = int(range_days)
     except ValueError:
         days = 7
+
+    scoped_team_ids = _scoped_team_ids()
+    team_scope = {"team_id": {"$in": scoped_team_ids}}
+
     results = []
     for i in range(days - 1, -1, -1):
         d = (datetime.now() - timedelta(days=i)).strftime("%Y-%m-%d")
         results.append({
             "date":      d,
-            "delivered": deliveries_col.count_documents({"status": "delivered",         "date": d}),
-            "pending":   deliveries_col.count_documents({"status": "pending",           "date": d}),
-            "holiday":   deliveries_col.count_documents({"status": "cancelled_holiday", "date": d}),
+            "delivered": deliveries_col.count_documents({**team_scope, "status": "delivered",         "date": d}),
+            "pending":   deliveries_col.count_documents({**team_scope, "status": "pending",           "date": d}),
+            "holiday":   deliveries_col.count_documents({**team_scope, "status": "cancelled_holiday", "date": d}),
         })
-    today     = datetime.now().strftime("%Y-%m-%d")
-    teams     = list(teams_col.find())
+
+    today = datetime.now().strftime("%Y-%m-%d")
+    teams = list(teams_col.find({"_id": {"$in": scoped_team_ids}}))
     area_data = []
     for t in teams:
         cnt = deliveries_col.count_documents({"team_id": t["_id"], "status": "pending", "date": today})
         area_data.append({"area": t.get("area", t["name"]), "pending": cnt})
-    return jsonify({"timeseries": results, "area_pending": area_data})
 
+    return jsonify({"timeseries": results, "area_pending": area_data})
 
 @app.route("/api/admin/enquiries/edit/<enquiry_id>", methods=["POST"])
 @login_required
@@ -1056,11 +1162,13 @@ def edit_enquiry(enquiry_id):
 # ---------------------------------------------------------------------------
 # ADMIN – plans
 # ---------------------------------------------------------------------------
+
+
 @app.route("/admin/plans")
 @login_required
 @role_required("admin", "manager")
 def list_plans():
-    plans = list(plans_col.find())
+    plans = list(plans_col.find(_franchise_filter()))
     return render_template("plans.html", plans=plans, active_page="plans")
 
 
@@ -1076,7 +1184,8 @@ def add_plan():
         "price_per_month": float(request.form.get("price_per_month", 0)),
         "duration_days":   int(request.form.get("duration_days", 0)),
         "tax_percent":     float(request.form.get("tax_percent", 0)),
-        "alternate_items": alt_list,   # e.g. ["Fruit", "Sprouts"]
+        "alternate_items": alt_list,
+        "franchise_id":    _current_franchise_id(),
         "created_at":      datetime.now()
     })
     flash(f"✅ Plan '{request.form.get('name')}' created successfully.", "success")
@@ -1100,7 +1209,6 @@ def edit_plan(plan_id):
     flash("Plan updated.", "success")
     return redirect(url_for("dashboard_admin"))
 
-
 @app.route("/admin/plans/delete/<plan_id>", methods=["POST"])
 @login_required
 @role_required("admin", "manager")
@@ -1118,13 +1226,13 @@ def delete_plan(plan_id):
 @role_required("admin", "manager")
 def list_teams():
     city_filter = request.args.get("city", "")
-    query       = {}
+    query       = dict(_franchise_filter())
     if city_filter:
         query["city"] = {"$regex": city_filter, "$options": "i"}
     teams  = list(teams_col.find(query))
     for t in teams:
         t["employee_count"] = users_col.count_documents({"role": "employee", "team_id": t["_id"]})
-    cities = teams_col.distinct("city")
+    cities = teams_col.distinct("city", _franchise_filter())
     return render_template("teams.html", teams=teams, cities=cities,
                            city_filter=city_filter, active_page="teams")
 
@@ -1134,14 +1242,14 @@ def list_teams():
 @role_required("admin", "manager")
 def add_team():
     teams_col.insert_one({
-        "name":       request.form.get("name"),
-        "area":       request.form.get("area"),
-        "city":       request.form.get("city"),
-        "created_at": datetime.now()
+        "name":         request.form.get("name"),
+        "area":         request.form.get("area"),
+        "city":         request.form.get("city"),
+        "franchise_id": _current_franchise_id(),
+        "created_at":   datetime.now()
     })
     flash(f"✅ Team '{request.form.get('name')}' added successfully.", "success")
     return redirect(url_for("dashboard_admin"))
-
 
 @app.route("/admin/teams/edit/<team_id>", methods=["POST"])
 @login_required
@@ -1262,6 +1370,7 @@ def reset_customer_credentials(customer_id):
 # ---------------------------------------------------------------------------
 # ADMIN – add / edit / delete users
 # ---------------------------------------------------------------------------
+
 @app.route("/admin/users/add", methods=["POST"])
 @login_required
 @role_required("admin", "manager")
@@ -1284,12 +1393,13 @@ def add_user():
             return redirect(url_for("dashboard_admin"))
     raw_password = secrets.token_urlsafe(8)
     user_data = {
-        "name":       name,
-        "email":      email,
-        "phone":      phone,
-        "role":       role,
-        "password":   generate_password_hash(raw_password),
-        "created_at": datetime.now()
+        "name":         name,
+        "email":        email,
+        "phone":        phone,
+        "role":         role,
+        "franchise_id": _current_franchise_id(),
+        "password":     generate_password_hash(raw_password),
+        "created_at":   datetime.now()
     }
     if role in ["employee", "customer"]:
         tid = request.form.get("team_id")
@@ -1671,6 +1781,7 @@ def approve_enquiry(enquiry_id):
         "email":            email,
         "phone":            phone,
         "role":             "customer",
+        "franchise_id":     _current_franchise_id(),
         "password":         generate_password_hash(raw_password),
         "address":          enq.get("address"),
         "preferred_time":   enq.get("delivery_time"),
@@ -1711,7 +1822,6 @@ def approve_enquiry(enquiry_id):
     sample_note = f" (Sample: {plan_label})" if sample_val else f" (Plan: {plan_label})"
     flash(f"✅ '{name}' approved{sample_note} → Login: {email} sent on WhatsApp.", "success")
     return redirect(url_for("dashboard_admin"))
-
 
 @app.route("/admin/enquiries/delete/<enquiry_id>", methods=["POST"])
 @login_required
@@ -2852,21 +2962,23 @@ def assign_team_to_customer():
 @login_required
 @role_required("admin")
 def api_managers():
-    managers = list(users_col.find({"role": "manager"}))
-    teams    = list(teams_col.find())
+    ff       = _franchise_filter()
+    query    = {"role": "manager", **ff}
+    managers = list(users_col.find(query))
+    teams    = list(teams_col.find(ff))
     team_map = {str(t["_id"]): t for t in teams}
     result = []
     for m in managers:
-        team = team_map.get(str(m.get("team_id", "")), {})
+        tids       = m.get("team_ids") or ([m["team_id"]] if m.get("team_id") else [])
+        tids       = [str(t) for t in tids]
+        team_names = [team_map[t]["name"] for t in tids if t in team_map]
         result.append({
-            "id":        str(m["_id"]),
-            "name":      m.get("name", ""),
-            "email":     m.get("email", ""),
-            "phone":     m.get("phone", "—"),
-            "team_id":   str(m.get("team_id", "")),
-            "team_name": team.get("name", "—"),
-            "team_city": team.get("city", ""),
-            "team_area": team.get("area", ""),
+            "id":         str(m["_id"]),
+            "name":       m.get("name", ""),
+            "email":      m.get("email", ""),
+            "phone":      m.get("phone", "—"),
+            "team_ids":   tids,
+            "team_names": team_names,
         })
     return jsonify(result)
 
@@ -2877,18 +2989,33 @@ def api_managers():
 def assign_team_to_manager():
     data       = request.get_json(silent=True) or {}
     manager_id = data.get("manager_id")
-    team_id    = data.get("team_id")
+    team_ids   = data.get("team_ids", [])
     if not manager_id:
         return jsonify({"success": False, "message": "manager_id required"}), 400
-    update = {}
-    if team_id:
-        update["team_id"] = ObjectId(team_id)
-    else:
-        update["team_id"] = None
-    users_col.update_one({"_id": ObjectId(manager_id), "role": "manager"}, {"$set": update})
-    team = teams_col.find_one({"_id": ObjectId(team_id)}) if team_id else None
-    return jsonify({"success": True, "team_name": team.get("name", "") if team else "None"})
+    oids = [ObjectId(t) for t in team_ids if t]
+    users_col.update_one(
+        {"_id": ObjectId(manager_id), "role": "manager"},
+        {"$set": {"team_ids": oids, "team_id": oids[0] if oids else None}}
+    )
+    names = [t.get("name", "") for t in teams_col.find({"_id": {"$in": oids}})]
+    return jsonify({"success": True, "team_names": names})
 
+@app.route("/api/admin/assign_manager", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def assign_manager_to_user():
+    data      = request.get_json(silent=True) or {}
+    target_id = data.get("target_id")
+    manager_id = data.get("manager_id")  # "" clears assignment
+    if not target_id:
+        return jsonify({"success": False, "message": "target_id required"}), 400
+    try:
+        update = {"assigned_manager_id": ObjectId(manager_id) if manager_id else None}
+        users_col.update_one({"_id": ObjectId(target_id)}, {"$set": update})
+    except Exception as e:
+        return jsonify({"success": False, "message": str(e)}), 400
+    mgr = users_col.find_one({"_id": ObjectId(manager_id)}) if manager_id else None
+    return jsonify({"success": True, "manager_name": mgr.get("name", "") if mgr else ""})
 
 # ---------------------------------------------------------------------------
 # N8N – Add enquiry from WhatsApp
@@ -3971,6 +4098,160 @@ def wa_test_send():
     })
 
 
+
+
+# ---------------------------------------------------------------------------
+# SUPER ADMIN – FRANCHISE MANAGEMENT (subadmins = franchise owners)
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/franchises_data")
+@login_required
+@super_admin_required
+def api_franchises_data():
+    status_filter = request.args.get("status", "").strip().lower()
+    query = {}
+    if status_filter in ("active", "pending"):
+        query["status"] = status_filter
+    franchises = list(franchises_col.find(query))
+    result = []
+    for fr in franchises:
+        fid = fr["_id"]
+        subadmin = users_col.find_one({"_id": fr.get("subadmin_id")}) if fr.get("subadmin_id") else None
+        result.append({
+            "id":               str(fid),
+            "business_name":    fr.get("business_name", ""),
+            "city":             fr.get("city", ""),
+            "address":          fr.get("address", ""),
+            "status":           fr.get("status", "pending"),
+            "subadmin_id":      str(fr.get("subadmin_id")) if fr.get("subadmin_id") else "",
+            "subadmin_name":    subadmin.get("name", "") if subadmin else "",
+            "subadmin_email":   subadmin.get("email", "") if subadmin else "",
+            "subadmin_phone":   subadmin.get("phone", "") if subadmin else "",
+            "manager_count":    users_col.count_documents({"role": "manager",  "franchise_id": fid}),
+            "employee_count":   users_col.count_documents({"role": "employee", "franchise_id": fid}),
+            "customer_count":   users_col.count_documents({"role": "customer", "franchise_id": fid}),
+            "created_at":       fr["created_at"].strftime("%Y-%m-%d") if isinstance(fr.get("created_at"), datetime) else "",
+        })
+    return jsonify(result)
+
+
+@app.route("/api/admin/franchise_cities")
+@login_required
+@super_admin_required
+def api_franchise_cities():
+    """Case-insensitive de-duplicated city list — 'Delhi' and 'delhi' collapse
+    into ONE entry (first-seen casing is kept for display)."""
+    cities = franchises_col.distinct("city")
+    seen = {}
+    for c in cities:
+        key = _norm_city_key(c)
+        if key and key not in seen:
+            seen[key] = c.strip()
+    return jsonify(sorted(seen.values(), key=lambda s: s.lower()))
+
+
+@app.route("/admin/franchises/add", methods=["POST"])
+@login_required
+@super_admin_required
+def add_franchise():
+    data          = request.get_json(silent=True) or {}
+    business_name = (data.get("business_name") or "").strip()
+    owner_name    = (data.get("owner_name") or "").strip()
+    phone         = (data.get("phone") or "").strip()
+    email_in      = (data.get("email") or "").strip()
+    city          = (data.get("city") or "").strip()
+    address       = (data.get("address") or "").strip()
+
+    if not business_name or not owner_name or not phone or not city:
+        return jsonify({"success": False, "message": "Business name, owner name, phone and city are required."}), 400
+
+    email = email_in or _resolve_customer_email(phone, "")
+    if users_col.find_one({"email": email}):
+        return jsonify({"success": False, "message": f"User ID '{email}' is already taken."}), 400
+
+    raw_password = secrets.token_urlsafe(8)
+
+    fr_result = franchises_col.insert_one({
+        "business_name": business_name,
+        "city":          city,
+        "address":       address,
+        "status":        "pending",
+        "subadmin_id":   None,
+        "created_at":    datetime.now(),
+    })
+    fid = fr_result.inserted_id
+
+    sub_result = users_col.insert_one({
+        "name":         owner_name,
+        "email":        email,
+        "phone":        phone,
+        "role":         "subadmin",
+        "password":     generate_password_hash(raw_password),
+        "franchise_id": fid,
+        "created_at":   datetime.now(),
+    })
+    franchises_col.update_one({"_id": fid}, {"$set": {"subadmin_id": sub_result.inserted_id}})
+
+    send_franchise_credentials_whatsapp(email, raw_password, owner_name, phone, business_name, city, address)
+
+    return jsonify({
+        "success":      True,
+        "franchise_id": str(fid),
+        "login_id":     email,
+        "password":     raw_password,
+        "message":      f"✅ Franchise '{business_name}' created. Credentials sent on WhatsApp.",
+    })
+
+
+@app.route("/admin/franchises/<franchise_id>/status", methods=["POST"])
+@login_required
+@super_admin_required
+def update_franchise_status(franchise_id):
+    data   = request.get_json(silent=True) or {}
+    status = (data.get("status") or "").strip().lower()
+    if status not in ("active", "pending"):
+        return jsonify({"success": False, "message": "Invalid status."}), 400
+    try:
+        franchises_col.update_one({"_id": ObjectId(franchise_id)}, {"$set": {"status": status}})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid franchise ID."}), 400
+    return jsonify({"success": True, "status": status})
+
+
+@app.route("/admin/franchises/<franchise_id>/reset-credentials", methods=["POST"])
+@login_required
+@super_admin_required
+def reset_franchise_credentials(franchise_id):
+    try:
+        fr = franchises_col.find_one({"_id": ObjectId(franchise_id)})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid franchise ID."}), 400
+    if not fr or not fr.get("subadmin_id"):
+        return jsonify({"success": False, "message": "Franchise owner not found."}), 404
+    subadmin = users_col.find_one({"_id": fr["subadmin_id"]})
+    if not subadmin:
+        return jsonify({"success": False, "message": "Owner account not found."}), 404
+
+    new_password = secrets.token_urlsafe(8)
+    users_col.update_one({"_id": subadmin["_id"]}, {"$set": {"password": generate_password_hash(new_password)}})
+    phone = "".join(filter(str.isdigit, str(subadmin.get("phone", ""))))
+    if len(phone) == 10:
+        phone = "91" + phone
+    name, login_id = subadmin.get("name", ""), subadmin.get("email", "")
+    msg = (
+        f"🍓 Fruit Delights – Franchise Password Reset\n\n"
+        f"Hello {name},\n\nYour franchise login password has been reset.\n\n"
+        f"Login ID: {login_id}\nNew Password: {new_password}\n\n"
+        f"Login:\nhttps://fruitedelights.com/login\n\n"
+        f"If you did not request this, contact HQ support."
+    )
+    wa_sent = _safe_send_whatsapp(phone, msg, context="reset_franchise") if phone else False
+    return jsonify({
+        "success": True, "wa_sent": wa_sent, "name": name,
+        "login_id": login_id, "new_password": new_password,
+        "message": f"Password reset for {name}." + (" Sent on WhatsApp." if wa_sent else " WhatsApp delivery failed."),
+    })
+
+
 # ---------------------------------------------------------------------------
 # CRON ROUTES (kept for manual/debug triggering only — production scheduling
 # runs via the background thread started at the bottom of this file, since
@@ -4048,6 +4329,51 @@ def employee_holiday_customers():
         })
 
     return jsonify({"success": True, "count": len(result), "customers": result, "date": today_str})
+
+
+@app.route("/api/admin/bulk_assign_manager", methods=["POST"])
+@login_required
+def bulk_assign_manager_customers():
+    """
+    Assigns ALL of the caller's customers (scoped to their own franchise/HQ)
+    to a single manager in one shot. Restricted to admin & subadmin only —
+    managers themselves cannot reassign a whole customer base.
+
+    Scoping:
+      - admin (HQ)   -> franchise_id is None  -> only HQ customers, only HQ managers
+      - subadmin     -> franchise_id is theirs -> only their franchise's customers/managers
+    """
+    if session.get("role") not in ("admin", "subadmin"):
+        return jsonify({"success": False, "message": "Unauthorized."}), 403
+
+    data = request.get_json(silent=True) or {}
+    manager_id = data.get("manager_id")
+    if not manager_id:
+        return jsonify({"success": False, "message": "manager_id is required."}), 400
+
+    try:
+        manager = users_col.find_one({"_id": ObjectId(manager_id), "role": "manager"})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid manager_id."}), 400
+    if not manager:
+        return jsonify({"success": False, "message": "Manager not found."}), 404
+
+    caller_franchise_id = _current_franchise_id()   # None for admin, ObjectId for subadmin
+    manager_franchise_id = manager.get("franchise_id")
+
+    if manager_franchise_id != caller_franchise_id:
+        return jsonify({"success": False, "message": "That manager is not part of your franchise/HQ."}), 403
+
+    query = {"role": "customer", "franchise_id": caller_franchise_id}
+    result = users_col.update_many(query, {"$set": {"assigned_manager_id": manager["_id"]}})
+
+    return jsonify({
+        "success":  True,
+        "matched":  result.matched_count,
+        "modified": result.modified_count,
+        "message":  f"Assigned {result.matched_count} customer(s) to {manager.get('name','')}."
+    })
+
 
 # ── Start the scheduler thread ─────────────────────────────────────────────
 # Guard prevents double-start when Flask debug reloader spawns a child process.
