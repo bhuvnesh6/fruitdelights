@@ -410,6 +410,9 @@ tbody tr:hover td{background:var(--bg-3)}
       <a class="nav-item" href="/admin/bulk-whatsapp">
         <span class="nav-icon">📣</span> Bulk WhatsApp
       </a>
+      <div class="nav-item" data-page="whatsapp-settings" onclick="navigate('whatsapp-settings',this)">
+        <span class="nav-icon">📶</span> WhatsApp Setup
+      </div>
     </div>
     <div class="sidebar-section">
       <div class="sidebar-section-label">Quick Add</div>
@@ -716,6 +719,7 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="section-title-bar">
           <h2>Customers</h2>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <button class="btn btn-excel btn-sm" style="background:linear-gradient(135deg,#4f46e5,#4338ca);" onclick="openImportCustomersModal()">📥 Import Excel</button>
             <button class="btn btn-excel btn-sm" onclick="downloadCustomersExcel()">📥 Export Excel</button>
             <button class="btn btn-primary" onclick="openAddUserModal('customer')">＋ Add Customer</button>
           </div>
@@ -750,6 +754,42 @@ tbody tr:hover td{background:var(--bg-3)}
           </table>
         </div>
         <div id="cust-result-count" style="margin-top:10px;font-size:12px;color:var(--text-3);text-align:right;"></div>
+      </div>
+
+      <!-- ===== WHATSAPP SETUP ===== -->
+      <div class="page-section" id="page-whatsapp-settings">
+        <div class="section-title-bar"><h2>📶 WhatsApp Setup (Wirebase)</h2></div>
+        <div class="card" style="max-width:600px;">
+          <div class="card-header"><div class="card-title">Instance Credentials</div></div>
+          <p style="font-size:12px;color:var(--text-2);margin-bottom:14px;margin-top:-10px;">
+            Every franchise / HQ admin has its own Wirebase instance. Credentials, invoices, manual bills, payment reminders and bulk WhatsApp for
+            {% if session.role == 'admin' %}HQ{% else %}your franchise{% endif %}
+            will all send through the instance configured here.
+          </p>
+          <div class="form-group">
+            <label class="form-label">Wirebase API Key *</label>
+            <input type="text" id="wa-set-apikey" class="form-control" placeholder="X-API-Key from Wirebase">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Wirebase Instance Name *</label>
+            <input type="text" id="wa-set-instance" class="form-control" placeholder="e.g. bhvu">
+          </div>
+          <button class="btn btn-primary" onclick="saveWhatsappSettings()">💾 Save Credentials</button>
+          <div id="wa-set-status" style="font-size:12px;color:var(--text-3);margin-top:8px;"></div>
+
+          <div class="divider"></div>
+          <div class="card-title" style="margin-bottom:10px;">Incoming Message Webhook</div>
+          <p style="font-size:12px;color:var(--text-2);margin-bottom:10px;">
+            Create this once, then paste it into your Wirebase instance's webhook config so replies land in your Enquiries inbox.
+          </p>
+          <div id="wa-webhook-wrap" style="display:none;">
+            <div style="display:flex;gap:8px;">
+              <input type="text" id="wa-webhook-url" class="form-control" readonly>
+              <button class="btn btn-ghost btn-sm" onclick="copyWebhookUrl()">📋 Copy</button>
+            </div>
+          </div>
+          <button class="btn btn-ghost btn-sm" id="wa-generate-btn" onclick="generateWebhook()" style="margin-top:10px;">🔗 Generate Webhook</button>
+        </div>
       </div>
 
       <!-- ===== ENQUIRIES (admin only) ===== -->
@@ -1545,12 +1585,33 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
+<!-- Import Customers from Excel Modal -->
+<div class="modal-backdrop" id="modal-import-customers">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">📥 Import Customers from Excel</div><button class="modal-close" onclick="closeModal('modal-import-customers')">✕</button></div>
+    <div style="font-size:12px;color:var(--text-2);margin-bottom:12px;">
+      Header row columns: <strong>name, phone, email, plan_name, team_name, start_date, address, preferred_time, off_days, discount_percent, discount_amount</strong>.
+      Only <strong>name</strong> and <strong>phone</strong> are required. New customers are created under
+      {% if session.role == 'admin' %}HQ{% else %}your franchise{% endif %} and get their WhatsApp login credentials automatically.
+    </div>
+    <div class="form-group">
+      <label class="form-label">Select .xlsx file</label>
+      <input type="file" id="import-cust-file" accept=".xlsx,.xls" class="form-control" onchange="handleImportCustomerFile(event)">
+    </div>
+    <div id="import-cust-status" style="font-size:12px;color:var(--text-3);margin-bottom:10px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('modal-import-customers')">Cancel</button>
+      <button type="button" class="btn btn-primary" id="import-cust-submit-btn" disabled onclick="submitImportCustomers()">✅ Import Customers</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast-container" id="toast-container"></div>
 
 <!-- ============================================================ JAVASCRIPT ============================================================ -->
 <script>
 const IS_ADMIN = {{ 'true' if session.role in ['admin','subadmin'] else 'false' }};
-const pageTitles = {home:'Dashboard',plans:'Subscription Plans',teams:'Teams',managers:'Managers',employees:'Delivery Partners',customers:'Customers',enquiries:'Web Enquiries'};
+const pageTitles = {home:'Dashboard',plans:'Subscription Plans',teams:'Teams',managers:'Managers',employees:'Delivery Partners',customers:'Customers',enquiries:'Web Enquiries','whatsapp-settings':'WhatsApp Setup'};
 const _loaded = {employees:false,customers:false,managers:false};
 let _custData = [];
 let _enqData  = [];
@@ -1574,6 +1635,7 @@ function navigate(page, el) {
   if (page==='managers'&&!_loaded.managers)   loadManagers();
   if (page==='franchises') loadFranchises(false);
   if (page==='enquiries') loadEnquiries(false);
+  if (page==='whatsapp-settings') loadWhatsappSettings();
 }
 
 function escHtml(s){return String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
@@ -1611,12 +1673,107 @@ function copyBothCreds(){
   navigator.clipboard.writeText(text).then(()=>showToast('✅ Copied both!','success'));
 }
 
+/* ── WhatsApp Setup (Wirebase) ── */
+async function loadWhatsappSettings(){
+  try{
+    const data = await fetch('/api/admin/whatsapp_settings').then(r=>r.json());
+    document.getElementById('wa-set-apikey').value = data.api_key || '';
+    document.getElementById('wa-set-instance').value = data.instance_name || '';
+    if(data.webhook_url){
+      document.getElementById('wa-webhook-url').value = data.webhook_url;
+      document.getElementById('wa-webhook-wrap').style.display='block';
+      document.getElementById('wa-generate-btn').style.display='none';
+    } else {
+      document.getElementById('wa-webhook-wrap').style.display='none';
+      document.getElementById('wa-generate-btn').style.display='inline-flex';
+    }
+    document.getElementById('wa-set-status').textContent = data.configured ? `Last updated: ${data.updated_at||'—'}` : 'Not configured yet.';
+  }catch{ showToast('❌ Failed to load WhatsApp settings.','danger'); }
+}
+async function saveWhatsappSettings(){
+  const api_key = document.getElementById('wa-set-apikey').value.trim();
+  const instance_name = document.getElementById('wa-set-instance').value.trim();
+  if(!api_key || !instance_name){showToast('❌ Both fields are required.','danger');return;}
+  try{
+    const res = await fetch('/api/admin/whatsapp_settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key,instance_name})});
+    const data = await res.json();
+    if(data.success){showToast('✅ Saved.','success'); loadWhatsappSettings();}
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{showToast('❌ Network error.','danger');}
+}
+async function generateWebhook(){
+  try{
+    const res = await fetch('/api/admin/whatsapp_settings/generate_webhook',{method:'POST'});
+    const data = await res.json();
+    if(data.success){
+      document.getElementById('wa-webhook-url').value = data.webhook_url;
+      document.getElementById('wa-webhook-wrap').style.display='block';
+      document.getElementById('wa-generate-btn').style.display='none';
+      showToast(data.already_existed?'ℹ️ Webhook already existed.':'✅ Webhook created!','success');
+    } else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{showToast('❌ Network error.','danger');}
+}
+function copyWebhookUrl(){
+  const el=document.getElementById('wa-webhook-url');
+  el.select(); el.setSelectionRange(0,9999);
+  navigator.clipboard.writeText(el.value).then(()=>showToast('✅ Copied!','success'));
+}
 
-
-
-
-
-
+/* ── Customer Excel Import ── */
+function openImportCustomersModal(){
+  document.getElementById('import-cust-file').value='';
+  document.getElementById('import-cust-status').textContent='';
+  document.getElementById('import-cust-submit-btn').disabled = true;
+  window._importedCustomerRows = [];
+  openModal('modal-import-customers');
+}
+function handleImportCustomerFile(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const wb = XLSX.read(e.target.result, {type:'binary'});
+    const ws = wb.Sheets[wb.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(ws, {defval:''});
+    window._importedCustomerRows = rows.map(r=>({
+      name: r.name || r.Name || '',
+      phone: String(r.phone || r.Phone || '').trim(),
+      email: r.email || r.Email || '',
+      plan_name: r.plan_name || r.Plan || r.plan || '',
+      team_name: r.team_name || r.Team || r.team || '',
+      start_date: r.start_date || r['Start Date'] || '',
+      address: r.address || r.Address || '',
+      preferred_time: r.preferred_time || r['Preferred Time'] || '',
+      off_days: r.off_days || r['Off Days'] || '',
+      discount_percent: r.discount_percent || 0,
+      discount_amount: r.discount_amount || 0,
+    })).filter(r=>r.name && r.phone);
+    document.getElementById('import-cust-status').textContent = `${window._importedCustomerRows.length} valid rows found.`;
+    document.getElementById('import-cust-submit-btn').disabled = window._importedCustomerRows.length === 0;
+  };
+  reader.readAsBinaryString(file);
+}
+async function submitImportCustomers(){
+  const rows = window._importedCustomerRows || [];
+  if(!rows.length){showToast('No rows to import.','danger');return;}
+  const btn=document.getElementById('import-cust-submit-btn');
+  btn.disabled=true; btn.textContent='⏳ Importing…';
+  try{
+    const res = await fetch('/api/admin/customers/bulk_import_excel',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({customers: rows})
+    });
+    const data = await res.json();
+    btn.disabled=false; btn.textContent='✅ Import Customers';
+    if(data.success){
+      showToast(`✅ ${data.message}`,'success');
+      setTimeout(()=>{closeModal('modal-import-customers'); loadCustomers();},1500);
+    } else showToast('❌ '+(data.message||'Import failed'),'danger');
+  }catch{
+    btn.disabled=false; btn.textContent='✅ Import Customers';
+    showToast('❌ Network error.','danger');
+  }
+}
 
 /* ── Excel helpers ── */
 function exportToExcel(rows,headers,filename,sheetName){

@@ -52,6 +52,13 @@ try:
 except Exception as e:
     print(f"[Franchise] Could not ensure index on franchises: {e}")
 
+whatsapp_settings_col = db.whatsapp_settings
+try:
+    whatsapp_settings_col.create_index([("franchise_id", 1)], unique=True)
+    whatsapp_settings_col.create_index([("webhook_token", 1)], unique=True, sparse=True)
+except Exception as e:
+    print(f"[WhatsApp] Could not ensure index on whatsapp_settings: {e}")
+
 # NEW: distributed scheduler lock collection. This is what makes the
 # background scheduler safe to run from MULTIPLE worker processes
 # (Gunicorn/uWSGI workers, PM2 clusters, etc.) and safe across restarts.
@@ -181,25 +188,33 @@ def _scoped_team_ids():
     return [t["_id"] for t in teams]
 
 
-def _safe_send_whatsapp(phone, message, context=""):
-    """
-    Wrapper around wp.send_whatsapp with actual error visibility.
-    Every system WhatsApp send (credentials, invoices, manual bills,
-    payment reminders, admin summary) goes through this instead of calling
-    send_whatsapp directly — a bare `False` return with zero explanation is
-    exactly why manual bills / invoices silently "don't reach WhatsApp".
+def _get_wa_settings(franchise_id):
+    """franchise_id: None = HQ admin's own instance, else ObjectId of a franchise."""
+    return whatsapp_settings_col.find_one({"franchise_id": franchise_id})
 
-    NOTE: this is a DIFFERENT WhatsApp session/number than
-    outwpmsg.send_whatsapp_msg (used only for the enquiry inbox chat).
-    The inbox chat working does NOT mean this session is working — if
-    system messages stop arriving, check the session behind wp.py first.
+
+def _safe_send_whatsapp(phone, message, context="", franchise_id=None):
     """
+    Resolves the correct Wirebase api_key/instance_name for the given
+    franchise (None = HQ) from whatsapp_settings_col, then sends through
+    that instance. Callers should pass franchise_id whenever they know
+    which franchise/customer/enquiry a message belongs to — cron jobs
+    iterating customers should use customer.get("franchise_id"); request
+    handlers should use _current_franchise_id().
+    """
+    settings      = _get_wa_settings(franchise_id)
+    api_key       = settings.get("api_key") if settings else None
+    instance_name = settings.get("instance_name") if settings else None
+    if not api_key or not instance_name:
+        print(f"[WA-FAIL] {context or 'send'} to {phone} — no WhatsApp instance "
+              f"configured for franchise_id={franchise_id}. Set it up under "
+              f"Admin Dashboard → WhatsApp Setup.")
+        return False
     try:
-        ok = send_whatsapp(phone, message)
+        ok = send_whatsapp(phone, message, api_key=api_key, instance_name=instance_name)
         if not ok:
-            print(f"[WA-FAIL] {context or 'send'} to {phone} — wp.send_whatsapp "
-                  f"returned falsy. Check that Number A's WhatsApp session "
-                  f"(the one wp.py talks to) is still connected/logged in.")
+            print(f"[WA-FAIL] {context or 'send'} to {phone} — wirebase send failed "
+                  f"on instance '{instance_name}'.")
         return ok
     except Exception as e:
         print(f"[WA-ERROR] {context or 'send'} to {phone} raised: {e}")
@@ -257,8 +272,7 @@ def _get_admin_whatsapp_numbers():
         numbers.append(digits)
     return numbers
 
-
-def send_credentials_whatsapp(email, password, name, phone):
+def send_credentials_whatsapp(email, password, name, phone, franchise_id=None):
     phone = "".join(filter(str.isdigit, str(phone)))
     if len(phone) == 10:
         phone = "91" + phone
@@ -271,7 +285,9 @@ def send_credentials_whatsapp(email, password, name, phone):
         f"Login:\nhttps://fruitedelights.com/login\n\n"
         f"Thank you."
     )
-    _safe_send_whatsapp(phone, msg, context="credentials")
+    _safe_send_whatsapp(phone, msg, context="credentials", franchise_id=franchise_id)
+
+
 
 def send_franchise_credentials_whatsapp(email, password, name, phone, business_name, city, address):
     phone = "".join(filter(str.isdigit, str(phone)))
@@ -533,7 +549,7 @@ def _send_invoice_whatsapp(customer, invoice):
         f"Total Due:    ₹{invoice.get('total', 0):.2f}\n\n"
         f"Thank you for being a valued customer! 🍉"
     )
-    _safe_send_whatsapp(phone, msg, context="invoice")
+    _safe_send_whatsapp(phone, msg, context="invoice", franchise_id=customer.get("franchise_id"))
 
 
 # ---------------------------------------------------------------------------
@@ -588,10 +604,15 @@ def _wa_append_message(enquiry_id: str, direction: str, body: str,
 # BULK WHATSAPP
 # ---------------------------------------------------------------------------
 
-def _send_bulk_wa_worker(targets, message, batch_size=10):
+def _send_bulk_wa_worker(targets, message, batch_size=10, franchise_id=None):
     """
     Sends WhatsApp messages in batches with random gaps.
     targets = list of {"phone": "...", "name": "..."}
+    franchise_id determines which Wirebase instance/api_key is used for the
+    entire batch (None = HQ admin's own instance). All bulk-send entry
+    points below now resolve this from the calling session so subadmins'
+    bulk campaigns route through their OWN franchise's Wirebase instance
+    instead of silently falling back to HQ's.
     """
     total   = len(targets)
     sent    = 0
@@ -609,7 +630,7 @@ def _send_bulk_wa_worker(targets, message, batch_size=10):
                 continue
             try:
                 personalised = message.replace("{name}", t.get("name", "there"))
-                ok = _safe_send_whatsapp(phone, personalised, context="bulk_wa")
+                ok = _safe_send_whatsapp(phone, personalised, context="bulk_wa", franchise_id=franchise_id)
                 if ok:
                     sent += 1
                 else:
@@ -772,7 +793,7 @@ def _send_payment_reminder_whatsapp(customer, offset_day):
         f"Please complete your payment at the earliest to avoid any interruption in delivery.\n\n"
         f"If you've already paid, please ignore this message. 🙏"
     )
-    return _safe_send_whatsapp(phone, msg, context="payment_reminder")
+    return _safe_send_whatsapp(phone, msg, context="payment_reminder", franchise_id=customer.get("franchise_id"))
 
 
 def _run_payment_reminders_job():
@@ -1433,7 +1454,7 @@ def add_user():
             "payment_reminder_days_sent": [],
         })
     users_col.insert_one(user_data)
-    send_credentials_whatsapp(email, raw_password, name, phone)
+    send_credentials_whatsapp(email, raw_password, name, phone, franchise_id=_current_franchise_id())
     flash(f"✅ {role.capitalize()} '{name}' added successfully.", "success")
     return redirect(url_for("dashboard_admin"))
 
@@ -1531,6 +1552,126 @@ def delete_user(user_id):
     flash("User removed.", "warning")
     next_page = request.form.get("next", "dashboard_admin")
     return redirect(url_for(next_page))
+
+
+# ---------------------------------------------------------------------------
+# ADMIN – Bulk import customers from Excel (NEW)
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/customers/bulk_import_excel", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def api_bulk_import_customers_excel():
+    """
+    Accepts JSON: {"customers": [ {name, phone, email, plan_name, team_name,
+    start_date, address, preferred_time, off_days, discount_percent,
+    discount_amount}, ... ]}
+    Rows are parsed client-side from the uploaded .xlsx (SheetJS) and posted
+    here as plain JSON. Only name + phone are required — everything else is
+    optional and best-effort matched (plan_name / team_name against this
+    franchise's own plans/teams; unmatched values are simply skipped).
+    New customers get their WhatsApp login credentials sent automatically
+    through this franchise's/HQ's own configured Wirebase instance.
+    """
+    data = request.get_json(silent=True) or {}
+    rows = data.get("customers", [])
+    if not rows or not isinstance(rows, list):
+        return jsonify({"success": False, "message": "No customer rows provided."}), 400
+
+    franchise_id = _current_franchise_id()
+    ff = _franchise_filter()
+
+    teams = list(teams_col.find(ff))
+    team_name_map = {(t.get("name") or "").strip().lower(): t["_id"] for t in teams}
+
+    plans = list(plans_col.find(ff))
+    plan_name_map = {(p.get("name") or "").strip().lower(): p for p in plans}
+
+    inserted = 0
+    skipped  = 0
+    errors   = []
+
+    for idx, row in enumerate(rows):
+        try:
+            name  = (row.get("name") or "").strip()
+            phone = (row.get("phone") or "").strip()
+            if not name or not phone:
+                skipped += 1
+                errors.append(f"Row {idx + 1}: name and phone are required.")
+                continue
+
+            email = _resolve_customer_email(phone, row.get("email", ""))
+            if users_col.find_one({"email": email}):
+                skipped += 1
+                errors.append(f"Row {idx + 1}: User ID '{email}' already taken.")
+                continue
+
+            team_id = None
+            team_name = (row.get("team_name") or "").strip().lower()
+            if team_name and team_name in team_name_map:
+                team_id = team_name_map[team_name]
+
+            plan_id = None
+            plan_name = (row.get("plan_name") or "").strip().lower()
+            if plan_name and plan_name in plan_name_map:
+                plan_id = plan_name_map[plan_name]["_id"]
+
+            start_date_str = str(row.get("start_date") or "").strip()
+            start_date = None
+            if start_date_str:
+                for fmt in ("%Y-%m-%d", "%d-%m-%Y", "%d/%m/%Y", "%m/%d/%Y"):
+                    try:
+                        start_date = datetime.strptime(start_date_str, fmt)
+                        break
+                    except Exception:
+                        continue
+
+            off_days_raw = row.get("off_days", "")
+            if isinstance(off_days_raw, list):
+                off_days = [str(d).strip() for d in off_days_raw if str(d).strip()]
+            else:
+                off_days = [d.strip() for d in str(off_days_raw or "").split(",") if d.strip()]
+
+            raw_password = secrets.token_urlsafe(8)
+            user_data = {
+                "name":                     name,
+                "email":                    email,
+                "phone":                    phone,
+                "role":                     "customer",
+                "franchise_id":             franchise_id,
+                "password":                 generate_password_hash(raw_password),
+                "team_id":                  team_id,
+                "plan_id":                  plan_id,
+                "address":                  row.get("address", "") or "",
+                "preferred_time":           row.get("preferred_time", "") or "",
+                "off_days":                 off_days,
+                "holidays":                 [],
+                "start_date":               start_date or datetime.now(),
+                "discount_percent":         float(row.get("discount_percent", 0) or 0),
+                "discount_amount":          float(row.get("discount_amount", 0) or 0),
+                "status":                   "active",
+                "source":                   "admin_bulk_excel_import",
+                "created_at":               datetime.now(),
+                "payment_status":           "pending",
+                "payment_partial_amount":   0,
+                "is_new":                   True,
+                "new_tagged_at":            datetime.now(),
+                "payment_reminder_days_sent": [],
+            }
+            users_col.insert_one(user_data)
+            send_credentials_whatsapp(email, raw_password, name, phone, franchise_id=franchise_id)
+            inserted += 1
+        except Exception as e:
+            skipped += 1
+            errors.append(f"Row {idx + 1}: {str(e)}")
+
+    return jsonify({
+        "success":  True,
+        "inserted": inserted,
+        "skipped":  skipped,
+        "total":    len(rows),
+        "errors":   errors[:10],
+        "message":  f"Imported {inserted} customers. {skipped} skipped."
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -1818,7 +1959,7 @@ def approve_enquiry(enquiry_id):
         f"👉 Login here:\nhttps://fruitedelights.com/login\n\n"
         f"Thank you for joining us! 🍉"
     )
-    _safe_send_whatsapp(wa_phone, msg, context="approve_enquiry")
+    _safe_send_whatsapp(wa_phone, msg, context="approve_enquiry", franchise_id=_current_franchise_id())
     sample_note = f" (Sample: {plan_label})" if sample_val else f" (Plan: {plan_label})"
     flash(f"✅ '{name}' approved{sample_note} → Login: {email} sent on WhatsApp.", "success")
     return redirect(url_for("dashboard_admin"))
@@ -1838,6 +1979,150 @@ def delete_enquiry(enquiry_id):
 def enquiry_count():
     count = enquiries_col.count_documents({"tag": "form_enquiry", "status": "pending"})
     return jsonify({"pending": count})
+
+
+# ---------------------------------------------------------------------------
+# WHATSAPP SETUP (Wirebase) — per-franchise/HQ credentials + webhook
+# ---------------------------------------------------------------------------
+# Each franchise (identified by franchise_id — None for HQ admin) has its
+# OWN Wirebase api_key + instance_name stored in whatsapp_settings_col.
+# _get_wa_settings()/_safe_send_whatsapp() already resolve these for every
+# outbound send (credentials, invoices, manual bills, reminders, bulk WA).
+# The routes below let the admin/subadmin manage those credentials from the
+# dashboard's "WhatsApp Setup" page, and generate a unique inbound webhook
+# URL (one per franchise) that gets pasted into that Wirebase instance so
+# replies land in this franchise's own Enquiries inbox — not anyone else's.
+# ---------------------------------------------------------------------------
+
+@app.route("/api/admin/whatsapp_settings", methods=["GET"])
+@login_required
+@role_required("admin", "manager")
+def api_get_whatsapp_settings():
+    fid = _current_franchise_id()
+    settings = whatsapp_settings_col.find_one({"franchise_id": fid})
+    if not settings:
+        return jsonify({
+            "configured":    False,
+            "api_key":       "",
+            "instance_name": "",
+            "webhook_url":   None,
+            "updated_at":    "",
+        })
+    webhook_url = None
+    if settings.get("webhook_token"):
+        webhook_url = f"{request.url_root.rstrip('/')}/api/webhook/wirebase/{settings['webhook_token']}"
+    updated_at = settings.get("updated_at")
+    return jsonify({
+        "configured":    bool(settings.get("api_key") and settings.get("instance_name")),
+        "api_key":       settings.get("api_key", ""),
+        "instance_name": settings.get("instance_name", ""),
+        "webhook_url":   webhook_url,
+        "updated_at":    updated_at.strftime("%Y-%m-%d %H:%M") if isinstance(updated_at, datetime) else "",
+    })
+
+
+@app.route("/api/admin/whatsapp_settings/save", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def api_save_whatsapp_settings():
+    data          = request.get_json(silent=True) or {}
+    api_key       = (data.get("api_key") or "").strip()
+    instance_name = (data.get("instance_name") or "").strip()
+    if not api_key or not instance_name:
+        return jsonify({"success": False, "message": "Both API key and instance name are required."}), 400
+
+    fid = _current_franchise_id()
+    whatsapp_settings_col.update_one(
+        {"franchise_id": fid},
+        {
+            "$set": {
+                "api_key":       api_key,
+                "instance_name": instance_name,
+                "updated_at":    datetime.now(),
+            },
+            "$setOnInsert": {"franchise_id": fid, "created_at": datetime.now()},
+        },
+        upsert=True
+    )
+    return jsonify({"success": True, "message": "WhatsApp settings saved."})
+
+
+@app.route("/api/admin/whatsapp_settings/generate_webhook", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def api_generate_whatsapp_webhook():
+    fid = _current_franchise_id()
+    settings = whatsapp_settings_col.find_one({"franchise_id": fid})
+    if settings and settings.get("webhook_token"):
+        webhook_url = f"{request.url_root.rstrip('/')}/api/webhook/wirebase/{settings['webhook_token']}"
+        return jsonify({"success": True, "webhook_url": webhook_url, "already_existed": True})
+
+    token = secrets.token_hex(16)
+    while whatsapp_settings_col.find_one({"webhook_token": token}):
+        token = secrets.token_hex(16)
+
+    whatsapp_settings_col.update_one(
+        {"franchise_id": fid},
+        {
+            "$set": {"webhook_token": token, "updated_at": datetime.now()},
+            "$setOnInsert": {"franchise_id": fid, "created_at": datetime.now()},
+        },
+        upsert=True
+    )
+    webhook_url = f"{request.url_root.rstrip('/')}/api/webhook/wirebase/{token}"
+    return jsonify({"success": True, "webhook_url": webhook_url, "already_existed": False})
+
+
+@app.route("/api/webhook/wirebase/<token>", methods=["POST"])
+def wirebase_incoming_webhook(token):
+    """
+    Receives Wirebase's incoming-message webhook, scoped to a single
+    franchise/HQ via the unique <token> in the URL (generated above).
+    Wirebase's payload looks like:
+      {
+        "instanceId": "...", "instanceName": "bhvu",
+        "number": "917303938618", "isLid": false,
+        "message": "Ok ok ok ok ok", "isGroup": false, "groupId": null, ...
+      }
+    """
+    settings = whatsapp_settings_col.find_one({"webhook_token": token})
+    if not settings:
+        return jsonify({"error": "Invalid webhook token"}), 404
+
+    franchise_id = settings.get("franchise_id")
+    data = request.get_json(silent=True) or {}
+
+    if data.get("isGroup"):
+        return jsonify({"status": "ignored", "reason": "group message"}), 200
+
+    body       = (data.get("message") or "").strip()
+    phone_raw  = str(data.get("number") or "").strip()
+    push_name  = (data.get("pushName") or data.get("senderName") or data.get("name") or "").strip()
+    message_id = str(data.get("messageId") or data.get("id") or "")
+
+    if not body:
+        return jsonify({"status": "ignored", "reason": "empty body"}), 200
+
+    norm_phone = _normalise_phone(phone_raw)
+    phone_10   = norm_phone[2:] if len(norm_phone) == 12 and norm_phone.startswith("91") else norm_phone
+
+    enq = enquiries_col.find_one({
+        "phone": {"$in": [norm_phone, phone_10, phone_raw]},
+        "tag":   "form_enquiry",
+    })
+
+    if not enq:
+        # Scope the "unknown sender" bucket by franchise so two franchises
+        # texting from a numerically-similar bucket never collide.
+        bucket_id = f"unknown_{str(franchise_id)}_{norm_phone or phone_raw}"
+        _wa_append_message(enquiry_id=bucket_id, direction="in", body=body,
+                           phone=norm_phone, push_name=push_name, message_id=message_id)
+        return jsonify({"status": "saved", "matched": False, "bucket": bucket_id}), 200
+
+    enq_id = str(enq["_id"])
+    _wa_append_message(enquiry_id=enq_id, direction="in", body=body,
+                       phone=norm_phone, push_name=push_name, message_id=message_id)
+    return jsonify({"status": "saved", "matched": True, "enquiry_id": enq_id}), 200
 
 
 # ---------------------------------------------------------------------------
@@ -1893,9 +2178,15 @@ def wa_thread(enquiry_id):
 
 @app.route("/api/webhook/wa_incoming", methods=["POST"])
 def wa_incoming_webhook():
+    """
+    Legacy/global incoming-message webhook (kept for backward compatibility
+    with any existing n8n/automation wiring). New setups should use the
+    per-franchise /api/webhook/wirebase/<token> route generated from the
+    WhatsApp Setup page instead, which scopes inbound replies correctly.
+    """
     data       = request.get_json(silent=True) or {}
-    phone_raw  = (data.get("phoneNumber") or "").strip()
-    body       = (data.get("body") or "").strip()
+    phone_raw  = (data.get("phoneNumber") or data.get("number") or "").strip()
+    body       = (data.get("body") or data.get("message") or "").strip()
     push_name  = (data.get("pushName") or "").strip()
     message_id = (data.get("messageId") or "").strip()
     if not body:
@@ -3500,7 +3791,9 @@ def api_bulk_whatsapp_send():
         return jsonify({"success": False, "message": "No valid recipients found."}), 400
 
     targets = [{"phone": u.get("phone",""), "name": u.get("name","there")} for u in users]
-    t = threading.Thread(target=_send_bulk_wa_worker, args=(targets, message, batch_size), daemon=True)
+    # Route this batch through the CALLER's own franchise/HQ Wirebase instance.
+    fid = _current_franchise_id()
+    t = threading.Thread(target=_send_bulk_wa_worker, args=(targets, message, batch_size, fid), daemon=True)
     t.start()
 
     return jsonify({
@@ -3529,9 +3822,10 @@ def api_bulk_whatsapp_send_targets():
     if not valid_targets:
         return jsonify({"success": False, "message": "No valid phone numbers found."}), 400
 
+    fid = _current_franchise_id()
     t = threading.Thread(
         target=_send_bulk_wa_worker,
-        args=(valid_targets, message, batch_size),
+        args=(valid_targets, message, batch_size, fid),
         daemon=True
     )
     t.start()
@@ -3557,7 +3851,8 @@ def api_bulk_whatsapp_send_to_enquiries():
     targets   = [{"phone": e.get("phone", ""), "name": e.get("name", "there")} for e in enquiries if e.get("phone")]
     if not targets:
         return jsonify({"success": False, "message": "No pending enquiries with phone numbers found."}), 400
-    t = threading.Thread(target=_send_bulk_wa_worker, args=(targets, message, batch_size), daemon=True)
+    fid = _current_franchise_id()
+    t = threading.Thread(target=_send_bulk_wa_worker, args=(targets, message, batch_size, fid), daemon=True)
     t.start()
     return jsonify({
         "success": True,
@@ -4041,7 +4336,8 @@ def send_manual_bill(bill_id):
     if not phone:
         return jsonify({"success": False, "message": "No phone number on file"}), 400
 
-    ok = _safe_send_whatsapp(phone, bill["message_text"], context=f"manual_bill:{bill_id}")
+    ok = _safe_send_whatsapp(phone, bill["message_text"], context=f"manual_bill:{bill_id}",
+                              franchise_id=(customer or {}).get("franchise_id"))
     if ok:
         manual_bills_col.update_one({"_id": bill["_id"]}, {"$set": {"sent": True, "sent_at": datetime.now()}})
 
@@ -4091,10 +4387,11 @@ def wa_test_send():
         phone = "91" + phone
     if not phone:
         return jsonify({"success": False, "message": "phone required"}), 400
-    ok = _safe_send_whatsapp(phone, "✅ Test message from Fruit Delights admin panel.", context="wa_test_send")
+    ok = _safe_send_whatsapp(phone, "✅ Test message from Fruit Delights admin panel.",
+                              context="wa_test_send", franchise_id=_current_franchise_id())
     return jsonify({
         "success": ok,
-        "message": "Sent." if ok else "Failed — check server logs for [WA-FAIL]/[WA-ERROR] and confirm the WhatsApp session is connected."
+        "message": "Sent." if ok else "Failed — check server logs for [WA-FAIL]/[WA-ERROR] and confirm the WhatsApp instance is configured under WhatsApp Setup."
     })
 
 
