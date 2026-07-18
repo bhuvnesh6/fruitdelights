@@ -71,6 +71,38 @@ except Exception as e:
 
 
 # ---------------------------------------------------------------------------
+# JSON-SAFETY HELPER
+# ---------------------------------------------------------------------------
+def _jsonify_safe(doc):
+    """
+    Converts every ObjectId field in a Mongo document (one level deep) into
+    a plain string so the document can be safely passed through Jinja's
+    |tojson filter (used throughout dashboard_admin.html by openEditPlan(),
+    openEditTeam(), openViewModal(), etc. to hydrate JS-side edit modals).
+
+    Without this, any document that still contains a raw ObjectId field
+    (e.g. plans/teams carrying a `franchise_id` ObjectId, or a customer
+    carrying `team_id`/`plan_id`) blows up render_template() with:
+        TypeError: Object of type ObjectId is not JSON serializable
+    which previously crashed dashboard_admin() (and therefore login) for
+    EVERY admin-tier role (admin, subadmin, manager) as soon as any plan or
+    team had a franchise_id set.
+
+    NOTE: after calling this, the field is now a STRING. Any code that goes
+    on to use that field in a Mongo query (e.g. ObjectId filters) must wrap
+    it back with ObjectId(...) explicitly.
+    """
+    if not doc:
+        return doc
+    for k, v in list(doc.items()):
+        if isinstance(v, ObjectId):
+            doc[k] = str(v)
+        elif isinstance(v, list):
+            doc[k] = [str(item) if isinstance(item, ObjectId) else item for item in v]
+    return doc
+
+
+# ---------------------------------------------------------------------------
 # PLAN SCHEDULE HELPERS
 # ---------------------------------------------------------------------------
 
@@ -812,6 +844,8 @@ def _run_payment_reminders_job():
     })
     sent_count = 0
     for cust in customers:
+        if not cust.get("auto_followup_enabled", True):
+            continue
         tagged_at = cust.get("new_tagged_at")
         if not isinstance(tagged_at, datetime):
             continue
@@ -914,6 +948,7 @@ def login():
                 if not fr or fr.get("status") != "active":
                     flash("Your franchise account is pending approval. Contact HQ support.", "danger")
                     return render_template("login.html")
+            session.permanent = True
             session["user_id"] = str(user["_id"])
             session["role"]    = user["role"]
             session["name"]    = user["name"]
@@ -1000,8 +1035,16 @@ def dashboard_admin():
         teams = list(teams_col.find(ff))
 
     plans = list(plans_col.find(ff))
-    for t in teams: t["_id"] = str(t["_id"])
-    for p in plans: p["_id"] = str(p["_id"])
+    # FIX: use _jsonify_safe (not just str()'ing _id) so ANY ObjectId field
+    # on these documents (e.g. franchise_id) is also converted to a string
+    # before being passed to `{{ plan | tojson }}` / `{{ team | tojson }}`
+    # in the template. Previously only `_id` was stringified, so a plan or
+    # team belonging to a franchise (franchise_id set) would crash
+    # render_template() with "Object of type ObjectId is not JSON
+    # serializable" — which broke this whole page (and therefore login) for
+    # every admin-tier role.
+    for t in teams: _jsonify_safe(t)
+    for p in plans: _jsonify_safe(p)
 
     return render_template("dashboard_admin.html",
                            stats=stats, teams=teams, plans=plans,
@@ -1093,6 +1136,8 @@ def api_customers():
             "is_new":           bool(c.get("is_new", False)),
             "holiday_today":    holiday_today,
             "holiday_tomorrow": holiday_tomorrow,
+            "auto_billing_enabled":  c.get("auto_billing_enabled", True),
+            "auto_followup_enabled": c.get("auto_followup_enabled", True),
             "created_at":       (
                 c["created_at"].strftime("%Y-%m-%d")
                 if isinstance(c.get("created_at"), datetime) else ""
@@ -1107,7 +1152,8 @@ def api_customers():
 @login_required
 @role_required("admin", "manager")
 def api_enquiries_data():
-    enquiries = list(enquiries_col.find({"tag": "form_enquiry"}).sort("created_at", -1))
+    query = {"tag": "form_enquiry", **_franchise_filter()}
+    enquiries = list(enquiries_col.find(query).sort("created_at", -1))
     enq_ids_with_msgs = set(
         str(doc["enquiry_id"])
         for doc in wa_inbox_col.find({}, {"enquiry_id": 1})
@@ -1176,7 +1222,10 @@ def edit_enquiry(enquiry_id):
     update = {k: data[k] for k in allowed if k in data}
     if not update:
         return jsonify({"success": False, "message": "Nothing to update."}), 400
-    enquiries_col.update_one({"_id": ObjectId(enquiry_id)}, {"$set": update})
+    query = {"_id": ObjectId(enquiry_id), **_franchise_filter()}
+    result = enquiries_col.update_one(query, {"$set": update})
+    if result.matched_count == 0:
+        return jsonify({"success": False, "message": "Enquiry not found in your scope."}), 404
     return jsonify({"success": True, "message": "Enquiry updated."})
 
 
@@ -1190,6 +1239,10 @@ def edit_enquiry(enquiry_id):
 @role_required("admin", "manager")
 def list_plans():
     plans = list(plans_col.find(_franchise_filter()))
+    # FIX: same ObjectId-serialization issue as dashboard_admin() — plans.html
+    # also renders `{{ plan | tojson }}` for the edit modal.
+    for p in plans:
+        _jsonify_safe(p)
     return render_template("plans.html", plans=plans, active_page="plans")
 
 
@@ -1252,7 +1305,10 @@ def list_teams():
         query["city"] = {"$regex": city_filter, "$options": "i"}
     teams  = list(teams_col.find(query))
     for t in teams:
+        # NOTE: compute employee_count BEFORE stringifying _id, since this
+        # query still needs the real ObjectId.
         t["employee_count"] = users_col.count_documents({"role": "employee", "team_id": t["_id"]})
+        _jsonify_safe(t)
     cities = teams_col.distinct("city", _franchise_filter())
     return render_template("teams.html", teams=teams, cities=cities,
                            city_filter=city_filter, active_page="teams")
@@ -1436,7 +1492,15 @@ def add_user():
                 start_date = datetime.strptime(start_date_str, "%Y-%m-%d")
             except Exception:
                 pass
-            user_data.update({
+        # FIX: this block used to be indented INSIDE `if start_date_str:`,
+        # which meant that whenever a customer was added WITHOUT a start
+        # date, none of plan_id / address / off_days / discount / status /
+        # is_new / payment fields were ever set on the new user document —
+        # they'd be created as a bare shell with just name/email/phone/role.
+        # It must run unconditionally for every customer, regardless of
+        # whether a start date was supplied (start_date falls back to now()
+        # below exactly as intended).
+        user_data.update({
             "plan_id":          plan["_id"] if plan else None,
             "address":          request.form.get("address"),
             "preferred_time":   request.form.get("preferred_time"),
@@ -1552,6 +1616,79 @@ def delete_user(user_id):
     flash("User removed.", "warning")
     next_page = request.form.get("next", "dashboard_admin")
     return redirect(url_for(next_page))
+
+
+# ---------------------------------------------------------------------------
+# ADMIN – Delete ALL customers (scoped to caller's own franchise/HQ) — NEW
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/customers/delete_all", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def delete_all_customers():
+    """
+    Deletes every customer scoped to the CALLER's own franchise/HQ only —
+    _franchise_filter() guarantees a subadmin can never touch another
+    franchise's (or HQ's) customers. Also cleans up that customer's
+    deliveries/invoices/manual bills so nothing orphaned is left behind.
+    Requires the exact confirmation string "DELETE ALL" from the frontend.
+    """
+    data = request.get_json(silent=True) or {}
+    confirm_text = (data.get("confirm") or "").strip().upper()
+    if confirm_text != "DELETE ALL":
+        return jsonify({"success": False, "message": 'Type "DELETE ALL" to confirm.'}), 400
+
+    ff = _franchise_filter()
+    cust_ids = [c["_id"] for c in users_col.find({"role": "customer", **ff}, {"_id": 1})]
+
+    if not cust_ids:
+        return jsonify({"success": True, "deleted": 0, "message": "No customers to delete."})
+
+    users_col.delete_many({"_id": {"$in": cust_ids}})
+    deliveries_col.delete_many({"customer_id": {"$in": cust_ids}})
+    invoices_col.delete_many({"customer_id": {"$in": cust_ids}})
+    manual_bills_col.delete_many({"customer_id": {"$in": cust_ids}})
+
+    return jsonify({
+        "success": True,
+        "deleted": len(cust_ids),
+        "message": f"Deleted {len(cust_ids)} customer(s) and their delivery/billing history.",
+    })
+
+
+# ---------------------------------------------------------------------------
+# ADMIN – Per-customer Auto-Billing / Auto-Follow-up toggle — NEW
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/customer/<customer_id>/toggle_auto_messages", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def toggle_customer_auto_messages(customer_id):
+    """
+    Body: {"auto_billing_enabled": true/false} and/or
+          {"auto_followup_enabled": true/false}
+    When auto_billing_enabled is False, the nightly check_invoice_due /
+    scheduler job still GENERATES the invoice record (so billing history
+    stays accurate) but skips sending the WhatsApp message for it.
+    When auto_followup_enabled is False, the payment-reminder job skips
+    that customer entirely. Manual "Send" buttons elsewhere are unaffected.
+    """
+    data = request.get_json(silent=True) or {}
+    update = {}
+    if "auto_billing_enabled" in data:
+        update["auto_billing_enabled"] = bool(data["auto_billing_enabled"])
+    if "auto_followup_enabled" in data:
+        update["auto_followup_enabled"] = bool(data["auto_followup_enabled"])
+    if not update:
+        return jsonify({"success": False, "message": "Nothing to update."}), 400
+    try:
+        result = users_col.update_one(
+            {"_id": ObjectId(customer_id), "role": "customer"},
+            {"$set": update}
+        )
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid customer ID."}), 400
+    if result.matched_count == 0:
+        return jsonify({"success": False, "message": "Customer not found."}), 404
+    return jsonify({"success": True, **update, "message": "Preference updated."})
 
 
 # ---------------------------------------------------------------------------
@@ -1718,6 +1855,8 @@ def api_get_user(user_id):
         # NEW: payment status fields
         "payment_status":         user.get("payment_status", "pending"),
         "payment_partial_amount": float(user.get("payment_partial_amount", 0) or 0),
+        "auto_billing_enabled":   user.get("auto_billing_enabled", True),
+        "auto_followup_enabled":  user.get("auto_followup_enabled", True),
     })
 
 # ---------------------------------------------------------------------------
@@ -1858,6 +1997,7 @@ def submit_enquiry():
         "status":         "pending",
         "source":         "web_form",
         "tag":            "form_enquiry",
+        "franchise_id":   None,   # public site form always lands in HQ's inbox
         "created_at":     datetime.now(),
     })
     flash("Thanks! We'll reach you on WhatsApp shortly. 🍓", "success")
@@ -1871,15 +2011,16 @@ def submit_enquiry():
 @login_required
 @role_required("admin", "manager")
 def list_enquiries():
-    enquiries = list(enquiries_col.find({"tag": "form_enquiry"}).sort("created_at", -1))
+    query = {"tag": "form_enquiry", **_franchise_filter()}
+    enquiries = list(enquiries_col.find(query).sort("created_at", -1))
     return render_template("enquiries.html", enquiries=enquiries, active_page="enquiries")
-
 
 @app.route("/admin/enquiries/approve/<enquiry_id>", methods=["POST"])
 @login_required
 @role_required("admin", "manager")
 def approve_enquiry(enquiry_id):
-    enq = enquiries_col.find_one({"_id": ObjectId(enquiry_id)})
+    enq_query = {"_id": ObjectId(enquiry_id), **_franchise_filter()}
+    enq = enquiries_col.find_one(enq_query)
     if not enq:
         flash("Enquiry not found.", "danger")
         return redirect(url_for("dashboard_admin"))
@@ -1968,7 +2109,8 @@ def approve_enquiry(enquiry_id):
 @login_required
 @role_required("admin", "manager")
 def delete_enquiry(enquiry_id):
-    enquiries_col.delete_one({"_id": ObjectId(enquiry_id)})
+    query = {"_id": ObjectId(enquiry_id), **_franchise_filter()}
+    enquiries_col.delete_one(query)
     flash("Enquiry removed.", "warning")
     return redirect(url_for("dashboard_admin"))
 
@@ -1977,7 +2119,8 @@ def delete_enquiry(enquiry_id):
 @login_required
 @role_required("admin", "manager")
 def enquiry_count():
-    count = enquiries_col.count_documents({"tag": "form_enquiry", "status": "pending"})
+    query = {"tag": "form_enquiry", "status": "pending", **_franchise_filter()}
+    count = enquiries_col.count_documents(query)
     return jsonify({"pending": count})
 
 
@@ -2077,13 +2220,26 @@ def api_generate_whatsapp_webhook():
 def wirebase_incoming_webhook(token):
     """
     Receives Wirebase's incoming-message webhook, scoped to a single
-    franchise/HQ via the unique <token> in the URL (generated above).
-    Wirebase's payload looks like:
+    franchise/HQ via the unique <token> in the URL. Payload looks like:
       {
         "instanceId": "...", "instanceName": "bhvu",
         "number": "917303938618", "isLid": false,
-        "message": "Ok ok ok ok ok", "isGroup": false, "groupId": null, ...
+        "message": "Ok ok ok ok ok", "isGroup": false, "groupId": null,
+        "pushName": "John Doe", "messageId": "...", ...
       }
+
+    Logic (per your spec):
+      1. Group messages are ignored.
+      2. If the sender's number already belongs to a known employee /
+         manager / customer / subadmin IN THIS FRANCHISE — do nothing.
+         (Teams have no phone of their own, they're just employee groups,
+         so "team" is covered by the employee check.)
+      3. Else if the number already has an open Enquiry in this franchise —
+         append the incoming message to that enquiry's WhatsApp inbox
+         (this already existed).
+      4. Else — brand-new number — auto-create a fresh Enquiry for this
+         franchise and seed its inbox with this first message, so it shows
+         up immediately on the Enquiries tab.
     """
     settings = whatsapp_settings_col.find_one({"webhook_token": token})
     if not settings:
@@ -2105,24 +2261,57 @@ def wirebase_incoming_webhook(token):
 
     norm_phone = _normalise_phone(phone_raw)
     phone_10   = norm_phone[2:] if len(norm_phone) == 12 and norm_phone.startswith("91") else norm_phone
+    phone_variants = list({v for v in [norm_phone, phone_10, phone_raw] if v})
 
+    # 1) Already a known person in THIS franchise (employee/manager/
+    #    customer/subadmin/admin)? Don't create an enquiry for them.
+    existing_user = users_col.find_one({
+        "phone":        {"$in": phone_variants},
+        "role":         {"$in": ["employee", "manager", "customer", "subadmin", "admin"]},
+        "franchise_id": franchise_id,
+    })
+    if existing_user:
+        return jsonify({
+            "status":    "ignored",
+            "reason":    "matched_existing_user",
+            "user_role": existing_user.get("role"),
+            "user_id":   str(existing_user["_id"]),
+        }), 200
+
+    # 2) Already an open enquiry for this number, in this franchise?
     enq = enquiries_col.find_one({
-        "phone": {"$in": [norm_phone, phone_10, phone_raw]},
-        "tag":   "form_enquiry",
+        "phone":        {"$in": phone_variants},
+        "tag":          "form_enquiry",
+        "franchise_id": franchise_id,
     })
 
     if not enq:
-        # Scope the "unknown sender" bucket by franchise so two franchises
-        # texting from a numerically-similar bucket never collide.
-        bucket_id = f"unknown_{str(franchise_id)}_{norm_phone or phone_raw}"
-        _wa_append_message(enquiry_id=bucket_id, direction="in", body=body,
+        # 3) Brand-new number — auto-create the enquiry right away.
+        enq_doc = {
+            "name":           push_name or norm_phone or phone_raw,
+            "phone":          norm_phone or phone_raw,
+            "address":        "",
+            "delivery_time":  "",
+            "start_date":     "",
+            "plan":           "",
+            "payment_method": "upi",
+            "status":         "pending",
+            "source":         "wirebase_webhook",
+            "tag":            "form_enquiry",
+            "franchise_id":   franchise_id,
+            "created_at":     datetime.now(),
+        }
+        result = enquiries_col.insert_one(enq_doc)
+        enq_id = str(result.inserted_id)
+        _wa_append_message(enquiry_id=enq_id, direction="in", body=body,
                            phone=norm_phone, push_name=push_name, message_id=message_id)
-        return jsonify({"status": "saved", "matched": False, "bucket": bucket_id}), 200
+        return jsonify({"status": "saved", "matched": False, "created_enquiry": True, "enquiry_id": enq_id}), 200
 
     enq_id = str(enq["_id"])
     _wa_append_message(enquiry_id=enq_id, direction="in", body=body,
                        phone=norm_phone, push_name=push_name, message_id=message_id)
     return jsonify({"status": "saved", "matched": True, "enquiry_id": enq_id}), 200
+
 
 
 # ---------------------------------------------------------------------------
@@ -2237,7 +2426,7 @@ def bulk_enquiries_import():
                 skipped += 1
                 errors.append(f"Row {idx + 1}: Name and phone are required.")
                 continue
-            existing = enquiries_col.find_one({"phone": phone, "tag": "form_enquiry"})
+            existing = enquiries_col.find_one({"phone": phone, "tag": "form_enquiry", **_franchise_filter()})
             if existing:
                 skipped += 1
                 errors.append(f"Row {idx + 1}: Phone {phone} already exists.")
@@ -2263,6 +2452,7 @@ def bulk_enquiries_import():
                 "status":         status,
                 "source":         "admin_bulk_import",
                 "tag":            "form_enquiry",
+                "franchise_id":   _current_franchise_id(),
                 "created_at":     datetime.now(),
             })
             inserted += 1
@@ -2283,7 +2473,8 @@ def bulk_enquiries_import():
 @login_required
 @role_required("admin", "manager")
 def enquiries_export():
-    enquiries = list(enquiries_col.find({"tag": "form_enquiry"}).limit(1000))
+    query = {"tag": "form_enquiry", **_franchise_filter()}
+    enquiries = list(enquiries_col.find(query).limit(1000))
     data = []
     for e in enquiries:
         data.append({
@@ -2763,7 +2954,8 @@ def check_invoice_due():
                 "generated_at":     datetime.now(),
             }
             invoices_col.insert_one(invoice)
-            _send_invoice_whatsapp(customer, invoice)
+            if customer.get("auto_billing_enabled", True):
+                _send_invoice_whatsapp(customer, invoice)
             # NEW: reset payment status for the new billing cycle
             users_col.update_one({"_id": customer["_id"]}, {"$set": {"payment_status": "pending", "payment_partial_amount": 0}})
             generated += 1
@@ -2822,7 +3014,8 @@ def generate_monthly_bills():
                 "generated_at":  datetime.now()
             }
             invoices_col.insert_one(invoice)
-            _send_invoice_whatsapp(customer, invoice)
+            if customer.get("auto_billing_enabled", True):
+                _send_invoice_whatsapp(customer, invoice)
             # NEW: reset payment status for the new billing cycle
             users_col.update_one({"_id": customer["_id"]}, {"$set": {"payment_status": "pending", "payment_partial_amount": 0}})
             generated += 1
@@ -4546,6 +4739,80 @@ def reset_franchise_credentials(franchise_id):
         "success": True, "wa_sent": wa_sent, "name": name,
         "login_id": login_id, "new_password": new_password,
         "message": f"Password reset for {name}." + (" Sent on WhatsApp." if wa_sent else " WhatsApp delivery failed."),
+    })
+
+
+# ---------------------------------------------------------------------------
+# SUPER ADMIN – Bulk-assign ALL of HQ's own data to one franchise — NEW
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/assign_all_to_franchise", methods=["POST"])
+@login_required
+@super_admin_required
+def assign_all_to_franchise():
+    """
+    Moves ALL of HQ's own (franchise_id == None) records in the selected
+    categories to a single chosen franchise, in one shot:
+      enquiries / managers / employees / customers (+ their deliveries,
+      invoices, manual bills) / plans / teams.
+    super_admin_required means only the true top-level admin can do this —
+    never a subadmin/manager. It ONLY ever touches records that currently
+    belong to HQ (franchise_id is None); another franchise's existing data
+    is never read or modified.
+    """
+    data = request.get_json(silent=True) or {}
+    franchise_id_str = (data.get("franchise_id") or "").strip()
+    sections = data.get("sections") or []
+    if not franchise_id_str:
+        return jsonify({"success": False, "message": "franchise_id is required."}), 400
+    if not sections:
+        return jsonify({"success": False, "message": "Select at least one section to assign."}), 400
+
+    try:
+        fr = franchises_col.find_one({"_id": ObjectId(franchise_id_str)})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid franchise_id."}), 400
+    if not fr:
+        return jsonify({"success": False, "message": "Franchise not found."}), 404
+
+    fid = fr["_id"]
+    summary = {}
+
+    if "enquiries" in sections:
+        r = enquiries_col.update_many({"tag": "form_enquiry", "franchise_id": None}, {"$set": {"franchise_id": fid}})
+        summary["enquiries"] = r.modified_count
+
+    if "managers" in sections:
+        r = users_col.update_many({"role": "manager", "franchise_id": None}, {"$set": {"franchise_id": fid}})
+        summary["managers"] = r.modified_count
+
+    if "employees" in sections:
+        r = users_col.update_many({"role": "employee", "franchise_id": None}, {"$set": {"franchise_id": fid}})
+        summary["employees"] = r.modified_count
+
+    if "customers" in sections:
+        cust_ids = [c["_id"] for c in users_col.find({"role": "customer", "franchise_id": None}, {"_id": 1})]
+        if cust_ids:
+            users_col.update_many({"_id": {"$in": cust_ids}}, {"$set": {"franchise_id": fid}})
+            deliveries_col.update_many({"customer_id": {"$in": cust_ids}}, {"$set": {"franchise_id": fid}})
+            invoices_col.update_many({"customer_id": {"$in": cust_ids}}, {"$set": {"franchise_id": fid}})
+            manual_bills_col.update_many({"customer_id": {"$in": cust_ids}}, {"$set": {"franchise_id": fid}})
+        summary["customers"] = len(cust_ids)
+
+    if "plans" in sections:
+        r = plans_col.update_many({"franchise_id": None}, {"$set": {"franchise_id": fid}})
+        summary["plans"] = r.modified_count
+
+    if "teams" in sections:
+        r = teams_col.update_many({"franchise_id": None}, {"$set": {"franchise_id": fid}})
+        summary["teams"] = r.modified_count
+
+    total = sum(summary.values())
+    return jsonify({
+        "success":        True,
+        "summary":        summary,
+        "total":          total,
+        "franchise_name": fr.get("business_name", ""),
+        "message":        f"Assigned {total} record(s) to '{fr.get('business_name','')}'.",
     })
 
 

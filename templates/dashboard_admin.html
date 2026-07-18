@@ -398,7 +398,7 @@ tbody tr:hover td{background:var(--bg-3)}
         <span class="nav-icon">👥</span> Customers
         <span class="nav-badge" id="cust-badge">{{ stats.total_customers }}</span>
       </div>
-      {% if session.role == 'admin' %}
+      {% if session.role in ['admin', 'subadmin'] %}
       <div class="nav-item" data-page="enquiries" onclick="navigate('enquiries',this)">
         <span class="nav-icon">📩</span> Enquiries
         <span class="nav-badge" id="enq-badge" style="background:#f97316;display:none;">0</span>
@@ -721,6 +721,9 @@ tbody tr:hover td{background:var(--bg-3)}
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <button class="btn btn-excel btn-sm" style="background:linear-gradient(135deg,#4f46e5,#4338ca);" onclick="openImportCustomersModal()">📥 Import Excel</button>
             <button class="btn btn-excel btn-sm" onclick="downloadCustomersExcel()">📥 Export Excel</button>
+            {% if session.role in ['admin', 'subadmin'] %}
+            <button class="btn btn-danger btn-sm" onclick="confirmDeleteAllCustomers()">🗑️ Delete All Customers</button>
+            {% endif %}
             <button class="btn btn-primary" onclick="openAddUserModal('customer')">＋ Add Customer</button>
           </div>
         </div>
@@ -793,7 +796,7 @@ tbody tr:hover td{background:var(--bg-3)}
       </div>
 
       <!-- ===== ENQUIRIES (admin only) ===== -->
-      {% if session.role == 'admin' %}
+      {% if session.role in ['admin', 'subadmin'] %}
       <div class="page-section" id="page-enquiries">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;">
           <h2 style="font-family:var(--font-disp);font-size:22px;">Web Form Enquiries</h2>
@@ -851,6 +854,32 @@ tbody tr:hover td{background:var(--bg-3)}
       <thead><tr><th>Business</th><th>Owner</th><th>City</th><th>Address</th><th>Managers</th><th>Employees</th><th>Customers</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody id="franchises-tbody"><tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr></tbody>
     </table>
+  </div>
+
+  <div class="card" style="margin-top:22px;">
+    <div class="card-header"><div class="card-title">🔀 Bulk-Assign HQ Data to a Franchise</div></div>
+    <p style="font-size:12px;color:var(--text-2);margin-bottom:14px;margin-top:-10px;">
+      Moves ALL of HQ's own (unassigned) records in the checked categories to one franchise, in a single click —
+      useful for handing over enquiries / customers / staff that were onboarded before this franchise existed.
+      This never touches another franchise's existing data — only HQ-owned records are moved.
+    </p>
+    <div class="form-group">
+      <label class="form-label">Target Franchise *</label>
+      <select id="baf-franchise-select" class="form-control"><option value="">— Select franchise —</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Sections to Assign</label>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;margin-top:6px;">
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" class="baf-section" value="enquiries" checked> 📩 Enquiries</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" class="baf-section" value="managers" checked> 🧑‍💼 Managers</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" class="baf-section" value="employees" checked> 🚴 Employees</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" class="baf-section" value="customers" checked> 👥 Customers (+ billing &amp; delivery data)</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" class="baf-section" value="plans"> 📋 Plans</label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;"><input type="checkbox" class="baf-section" value="teams"> 🏘️ Teams</label>
+      </div>
+    </div>
+    <button class="btn btn-primary" onclick="submitAssignAllToFranchise()">🔀 Assign Selected to Franchise</button>
+    <div id="baf-status" style="font-size:12px;color:var(--text-3);margin-top:10px;"></div>
   </div>
 </div>
 {% endif %}
@@ -1266,6 +1295,20 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
+      <div class="divider-label">🔔 Auto Messaging</div>
+      <div style="background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:14px;margin-bottom:14px;display:flex;gap:24px;flex-wrap:wrap;">
+        <div>
+          <div class="form-label" style="margin-bottom:6px;">Auto Billing Messages</div>
+          <button type="button" class="btn btn-sm" id="ec-toggle-billing" onclick="toggleAutoMessage('billing')">—</button>
+          <div style="font-size:11px;color:var(--text-3);margin-top:4px;max-width:220px;">Sends the WhatsApp invoice automatically when a billing cycle ends. Billing still gets recorded either way.</div>
+        </div>
+        <div>
+          <div class="form-label" style="margin-bottom:6px;">Auto Follow-up / Reminders</div>
+          <button type="button" class="btn btn-sm" id="ec-toggle-followup" onclick="toggleAutoMessage('followup')">—</button>
+          <div style="font-size:11px;color:var(--text-3);margin-top:4px;max-width:220px;">Automatic payment-reminder WhatsApp messages for new/pending customers.</div>
+        </div>
+      </div>
+
       <div class="divider-label">💰 Discount</div>
       <div class="form-row">
         <div class="form-group"><label class="form-label">Discount %</label><input type="number" name="discount_percent" id="ec-discpct" class="form-control" min="0" max="100" step="0.01" value="0"></div>
@@ -1619,6 +1662,60 @@ let _enqData  = [];
 /* ── Holiday state for edit modal ── */
 let _ecCurrentId = '';
 let _ecHolidays  = [];
+/* ── Auto-messaging toggle state for edit modal ── */
+let _ecAutoBilling  = true;
+let _ecAutoFollowup = true;
+
+function renderAutoMessageToggles(){
+  const bBtn = document.getElementById('ec-toggle-billing');
+  const fBtn = document.getElementById('ec-toggle-followup');
+  if(bBtn){
+    bBtn.textContent = _ecAutoBilling ? '🟢 ON' : '⚪ OFF';
+    bBtn.className   = 'btn btn-sm ' + (_ecAutoBilling ? 'btn-success' : 'btn-ghost');
+  }
+  if(fBtn){
+    fBtn.textContent = _ecAutoFollowup ? '🟢 ON' : '⚪ OFF';
+    fBtn.className   = 'btn btn-sm ' + (_ecAutoFollowup ? 'btn-success' : 'btn-ghost');
+  }
+}
+
+async function toggleAutoMessage(kind){
+  if(!_ecCurrentId){ showToast('Save the customer first, then toggle.','danger'); return; }
+  const payload = {};
+  if(kind === 'billing'){ _ecAutoBilling = !_ecAutoBilling; payload.auto_billing_enabled = _ecAutoBilling; }
+  else { _ecAutoFollowup = !_ecAutoFollowup; payload.auto_followup_enabled = _ecAutoFollowup; }
+  renderAutoMessageToggles();
+  try{
+    const res = await fetch(`/api/admin/customer/${_ecCurrentId}/toggle_auto_messages`, {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if(data.success){ showToast('✅ Preference saved.','success'); }
+    else {
+      showToast('❌ '+(data.message||'Failed'),'danger');
+      if(kind==='billing') _ecAutoBilling=!_ecAutoBilling; else _ecAutoFollowup=!_ecAutoFollowup;
+      renderAutoMessageToggles();
+    }
+  }catch{
+    showToast('❌ Network error.','danger');
+    if(kind==='billing') _ecAutoBilling=!_ecAutoBilling; else _ecAutoFollowup=!_ecAutoFollowup;
+    renderAutoMessageToggles();
+  }
+}
+
+async function confirmDeleteAllCustomers(){
+  const typed = prompt('⚠️ This permanently deletes ALL customers in your scope (and their delivery/billing history).\n\nType DELETE ALL to confirm:');
+  if(typed === null) return;
+  if(typed.trim().toUpperCase() !== 'DELETE ALL'){ showToast('❌ Confirmation text did not match. Nothing deleted.','danger'); return; }
+  try{
+    const res = await fetch('/api/admin/customers/delete_all', {
+      method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({confirm:'DELETE ALL'})
+    });
+    const data = await res.json();
+    if(data.success){ showToast(`✅ ${data.message}`,'success'); _loaded.customers=false; loadCustomers(); }
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{ showToast('❌ Network error.','danger'); }
+}
 
 function navigate(page, el) {
   document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active'));
@@ -2752,6 +2849,8 @@ function openEditEmployee(id,name,email,phone,teamId){
 function openEditCustomer(c){
   _ecCurrentId=c.id||'';
   _ecHolidays=[...(c.holidays||[])];
+  _ecAutoBilling  = c.auto_billing_enabled  !== false;   // default true
+  _ecAutoFollowup = c.auto_followup_enabled !== false;   // default true
   document.getElementById('ec-customer-id').value=c.id||'';
   document.getElementById('ec-name').value=c.name||'';
   document.getElementById('ec-email').value=c.email||'';
@@ -2774,6 +2873,7 @@ togglePartialAmount();
   for(let opt of sel.options){opt.selected=(c.off_days||[]).includes(opt.value);}
   document.getElementById('edit-cust-form').action='/admin/users/edit/'+c.id;
   renderHolidayChips();
+  renderAutoMessageToggles();
   openModal('modal-edit-customer');
 }
 function openAddUserModal(role){
@@ -2923,6 +3023,7 @@ async function loadFranchises(force){
       fetch('/api/admin/franchise_cities').then(r=>r.json())
     ]);
     _frData=data;
+    populateBafFranchiseSelect();
     const sel=document.getElementById('fr-city-filter');const cur=sel.value;
     sel.innerHTML='<option value="">All Cities</option>'+cities.map(c=>`<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
     sel.value=cur;
@@ -3002,6 +3103,86 @@ async function resetFranchiseCredentials(id,name){
     if(data.success)showCredentialsModal(data.login_id,data.new_password);
     else showToast('❌ '+(data.message||'Failed'),'danger');
   }catch{showToast('❌ Network error.','danger');}
+}
+
+/* ── Bulk-Assign HQ Data to a Franchise ── */
+function populateBafFranchiseSelect(){
+  const sel = document.getElementById('baf-franchise-select');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select franchise —</option>' +
+    _frData.map(f=>`<option value="${f.id}">${escHtml(f.business_name)} (${escHtml(f.city)})</option>`).join('');
+  sel.value = cur;
+}
+
+async function submitAssignAllToFranchise(){
+  const sel = document.getElementById('baf-franchise-select');
+  const franchiseId = sel.value;
+  if(!franchiseId){ showToast('❌ Select a target franchise.','danger'); return; }
+  const sections = Array.from(document.querySelectorAll('.baf-section:checked')).map(cb=>cb.value);
+  if(!sections.length){ showToast('❌ Select at least one section.','danger'); return; }
+  const franchiseName = sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
+  if(!confirm(`Assign HQ's ${sections.join(', ')} to "${franchiseName}"?\n\nThis cannot be undone automatically.`)) return;
+  document.getElementById('baf-status').textContent = 'Assigning…';
+  try{
+    const res = await fetch('/api/admin/assign_all_to_franchise', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({franchise_id: franchiseId, sections})
+    });
+    const data = await res.json();
+    if(data.success){
+      showToast(`✅ ${data.message}`,'success');
+      document.getElementById('baf-status').textContent =
+        Object.entries(data.summary).map(([k,v])=>`${k}: ${v}`).join(' · ');
+      loadFranchises(true);
+    } else {
+      showToast('❌ '+(data.message||'Failed'),'danger');
+      document.getElementById('baf-status').textContent = '';
+    }
+  }catch{
+    showToast('❌ Network error.','danger');
+    document.getElementById('baf-status').textContent = '';
+  }
+}
+
+/* ── Bulk-Assign HQ Data to a Franchise ── */
+function populateBafFranchiseSelect(){
+  const sel = document.getElementById('baf-franchise-select');
+  if(!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Select franchise —</option>' +
+    _frData.map(f=>`<option value="${f.id}">${escHtml(f.business_name)} (${escHtml(f.city)})</option>`).join('');
+  sel.value = cur;
+}
+
+async function submitAssignAllToFranchise(){
+  const sel = document.getElementById('baf-franchise-select');
+  const franchiseId = sel.value;
+  if(!franchiseId){ showToast('❌ Select a target franchise.','danger'); return; }
+  const sections = Array.from(document.querySelectorAll('.baf-section:checked')).map(cb=>cb.value);
+  if(!sections.length){ showToast('❌ Select at least one section.','danger'); return; }
+  const franchiseName = sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
+  if(!confirm(`Assign HQ's ${sections.join(', ')} to "${franchiseName}"?\n\nThis cannot be undone automatically.`)) return;
+  document.getElementById('baf-status').textContent = 'Assigning…';
+  try{
+    const res = await fetch('/api/admin/assign_all_to_franchise', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({franchise_id: franchiseId, sections})
+    });
+    const data = await res.json();
+    if(data.success){
+      showToast(`✅ ${data.message}`,'success');
+      document.getElementById('baf-status').textContent =
+        Object.entries(data.summary).map(([k,v])=>`${k}: ${v}`).join(' · ');
+      loadFranchises(true);
+    } else {
+      showToast('❌ '+(data.message||'Failed'),'danger');
+      document.getElementById('baf-status').textContent = '';
+    }
+  }catch{
+    showToast('❌ Network error.','danger');
+    document.getElementById('baf-status').textContent = '';
+  }
 }
 
 
