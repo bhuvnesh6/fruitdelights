@@ -53,6 +53,12 @@ except Exception as e:
     print(f"[Franchise] Could not ensure index on franchises: {e}")
 
 whatsapp_settings_col = db.whatsapp_settings
+franchise_plans_col    = db.franchise_plans      # NEW: subscription tiers HQ sells to franchises
+franchise_payments_col = db.franchise_payments    # NEW: revenue log, one row per plan assignment
+
+FRANCHISE_PLAN_DURATION_DAYS = {
+    "monthly": 30, "3month": 90, "6month": 180, "annual": 365, "lifetime": None,
+}
 try:
     whatsapp_settings_col.create_index([("franchise_id", 1)], unique=True)
     whatsapp_settings_col.create_index([("webhook_token", 1)], unique=True, sparse=True)
@@ -285,6 +291,19 @@ def _franchise_filter():
 
 def _norm_city_key(city):
     return (city or "").strip().lower()
+
+def _parse_admin_numbers_field(raw: str) -> list:
+    """Comma-separated numbers -> normalized list. Used for the per-franchise
+    'admin_numbers' field on whatsapp_settings_col (NOT the global env var)."""
+    numbers = []
+    for part in (raw or "").split(","):
+        digits = "".join(filter(str.isdigit, part.strip()))
+        if not digits:
+            continue
+        if len(digits) == 10:
+            digits = "91" + digits
+        numbers.append(digits)
+    return numbers
 
 def _get_admin_whatsapp_numbers():
     """
@@ -867,14 +886,16 @@ def _run_payment_reminders_job():
 # ---------------------------------------------------------------------------
 # ADMIN BOXES SUMMARY (WhatsApp) — NEW
 # ---------------------------------------------------------------------------
-def _build_boxes_summary_text(target_date):
+
+def _build_boxes_summary_text_scoped(target_date, franchise_id):
+    """Same as before but scoped to a single franchise (None = HQ)."""
     target_str = target_date.strftime("%Y-%m-%d")
-    plans = list(plans_col.find())
+    plans = list(plans_col.find({"franchise_id": franchise_id}))
     lines = [f"📦 Boxes to Prepare — {target_date.strftime('%d %b %Y (%A)')}\n"]
     grand_total = 0
     for plan in plans:
         active_customers = list(users_col.find({
-            "role": "customer", "status": "active", "plan_id": plan["_id"]
+            "role": "customer", "status": "active", "plan_id": plan["_id"], "franchise_id": franchise_id
         }))
         count = sum(
             1 for c in active_customers
@@ -886,7 +907,8 @@ def _build_boxes_summary_text(target_date):
         lines.append(f"• {plan.get('name','')}: {count} box(es)")
 
     sample_customers = list(users_col.find({
-        "role": "customer", "status": "active", "sample": {"$exists": True, "$nin": [None, ""]}
+        "role": "customer", "status": "active", "franchise_id": franchise_id,
+        "sample": {"$exists": True, "$nin": [None, ""]}
     }))
     sample_total = 0
     day_name = target_date.strftime("%A")
@@ -902,18 +924,40 @@ def _build_boxes_summary_text(target_date):
     return "\n".join(lines)
 
 
-def _send_admin_boxes_tomorrow_summary():
-    numbers = _get_admin_whatsapp_numbers()
+def _send_boxes_tomorrow_for_scope(franchise_id):
+    """
+    franchise_id=None -> HQ. HQ may use BOTH the env ADMIN_WHATSAPP_NUMBERS
+    AND its own whatsapp_settings.admin_numbers field.
+    Any real franchise (franchise_id set) ONLY uses its own
+    whatsapp_settings.admin_numbers field — env numbers are never used for
+    a subadmin's franchise, per spec.
+    """
+    settings = _get_wa_settings(franchise_id)
+    numbers = list((settings or {}).get("admin_numbers", []))
+    if franchise_id is None:
+        numbers = list(dict.fromkeys(numbers + _get_admin_whatsapp_numbers()))
     if not numbers:
-        print("[BoxesSummary] No ADMIN_WHATSAPP_NUMBER(S) set — skipping.")
         return False
     tomorrow = (datetime.now() + timedelta(days=1)).date()
-    text = _build_boxes_summary_text(tomorrow)
+    text = _build_boxes_summary_text_scoped(tomorrow, franchise_id)
     all_ok = True
     for num in numbers:
-        ok = _safe_send_whatsapp(num, text, context="boxes_tomorrow_summary")
+        ok = _safe_send_whatsapp(num, text, context="boxes_tomorrow_summary", franchise_id=franchise_id)
         all_ok = all_ok and ok
     return all_ok
+
+
+def _send_all_boxes_tomorrow_summaries():
+    """Runs the boxes-tomorrow summary for HQ + every franchise that has
+    admin_numbers configured. Returns count of scopes that sent OK."""
+    sent = 0
+    if _send_boxes_tomorrow_for_scope(None):
+        sent += 1
+    for fr in franchises_col.find({}, {"_id": 1}):
+        if _send_boxes_tomorrow_for_scope(fr["_id"]):
+            sent += 1
+    return sent
+
 
 
 # ---------------------------------------------------------------------------
@@ -1501,6 +1545,7 @@ def add_user():
         # whether a start date was supplied (start_date falls back to now()
         # below exactly as intended).
         user_data.update({
+            "customer_since":   start_date or datetime.now(),   # NEW: immutable join date, never rolled forward
             "plan_id":          plan["_id"] if plan else None,
             "address":          request.form.get("address"),
             "preferred_time":   request.form.get("preferred_time"),
@@ -1699,15 +1744,6 @@ def toggle_customer_auto_messages(customer_id):
 @role_required("admin", "manager")
 def api_bulk_import_customers_excel():
     """
-    Accepts JSON: {"customers": [ {name, phone, email, plan_name, team_name,
-    start_date, address, preferred_time, off_days, discount_percent,
-    discount_amount}, ... ]}
-    Rows are parsed client-side from the uploaded .xlsx (SheetJS) and posted
-    here as plain JSON. Only name + phone are required — everything else is
-    optional and best-effort matched (plan_name / team_name against this
-    franchise's own plans/teams; unmatched values are simply skipped).
-    New customers get their WhatsApp login credentials sent automatically
-    through this franchise's/HQ's own configured Wirebase instance.
     """
     data = request.get_json(silent=True) or {}
     rows = data.get("customers", [])
@@ -1783,6 +1819,7 @@ def api_bulk_import_customers_excel():
                 "off_days":                 off_days,
                 "holidays":                 [],
                 "start_date":               start_date or datetime.now(),
+                "customer_since":           start_date or datetime.now(),   # NEW
                 "discount_percent":         float(row.get("discount_percent", 0) or 0),
                 "discount_amount":          float(row.get("discount_amount", 0) or 0),
                 "status":                   "active",
@@ -1955,7 +1992,7 @@ def customer_detail(customer_id):
         start_date_str = start_date
     else:
         start_date_str = ""
-    member_since     = customer.get("created_at")
+    member_since = customer.get("customer_since") or customer.get("created_at")
     member_since_str = member_since.strftime("%d %b %Y") if isinstance(member_since, datetime) else "—"
     is_sample    = bool(customer.get("sample"))
     sample_label = customer.get("sample", "")
@@ -2071,6 +2108,7 @@ def approve_enquiry(enquiry_id):
         "off_days":         [],
         "holidays":         [],
         "start_date":       start_date or datetime.now(),
+        "customer_since":   start_date or datetime.now(),   # NEW
         "discount_percent": 0,
         "discount_amount":  0,
         "status":           "active",
@@ -2150,6 +2188,7 @@ def api_get_whatsapp_settings():
             "instance_name": "",
             "webhook_url":   None,
             "updated_at":    "",
+            "admin_numbers_raw": "",
         })
     webhook_url = None
     if settings.get("webhook_token"):
@@ -2161,6 +2200,7 @@ def api_get_whatsapp_settings():
         "instance_name": settings.get("instance_name", ""),
         "webhook_url":   webhook_url,
         "updated_at":    updated_at.strftime("%Y-%m-%d %H:%M") if isinstance(updated_at, datetime) else "",
+        "admin_numbers_raw": ", ".join(settings.get("admin_numbers", [])),
     })
 
 
@@ -2171,6 +2211,7 @@ def api_save_whatsapp_settings():
     data          = request.get_json(silent=True) or {}
     api_key       = (data.get("api_key") or "").strip()
     instance_name = (data.get("instance_name") or "").strip()
+    admin_numbers = _parse_admin_numbers_field(data.get("admin_numbers", ""))
     if not api_key or not instance_name:
         return jsonify({"success": False, "message": "Both API key and instance name are required."}), 400
 
@@ -2181,13 +2222,14 @@ def api_save_whatsapp_settings():
             "$set": {
                 "api_key":       api_key,
                 "instance_name": instance_name,
+                "admin_numbers": admin_numbers,   # NEW: this franchise/HQ's own boxes-summary recipients
                 "updated_at":    datetime.now(),
             },
             "$setOnInsert": {"franchise_id": fid, "created_at": datetime.now()},
         },
         upsert=True
     )
-    return jsonify({"success": True, "message": "WhatsApp settings saved."})
+    return jsonify({"success": True, "message": "WhatsApp settings saved.", "admin_numbers_count": len(admin_numbers)})
 
 
 @app.route("/api/admin/whatsapp_settings/generate_webhook", methods=["POST"])
@@ -3328,24 +3370,38 @@ def customer_plan_status(customer_id):
     period_end = start_date + timedelta(days=duration_days - 1)
     today = date.today()
 
+    # FIX: scope delivered_count to the CURRENT billing period only.
+    # Previously this counted ALL "delivered" documents for the customer
+    # across every past cycle (no date filter), while duration_days is
+    # scoped to just this cycle — causing >100% / wildly inflated counts
+    # like "44 delivered" on a 26-day plan. Now matches the same date
+    # range used by /api/customer/my_plan_status and
+    # /api/admin/customer_box_timeline/<customer_id>.
     delivered_count = deliveries_col.count_documents({
         "customer_id": customer["_id"],
-        "status": "delivered"
+        "status": "delivered",
+        "date": {
+            "$gte": period_start.strftime("%Y-%m-%d"),
+            "$lte": period_end.strftime("%Y-%m-%d"),
+        }
     })
 
-    # If admin has set a manual override on the customer document, add it
+    # Manual override REPLACES the auto count for this cycle instead of
+    # adding to it — an admin setting "Total Delivered Boxes Override"
+    # to e.g. 10 means "treat this cycle as 10 delivered", not
+    # "auto-count PLUS 10".
     extra = customer.get("total_delivered_boxes")
     if extra is not None:
         try:
-            delivered_count += int(extra)
+            delivered_count = int(extra)
         except (TypeError, ValueError):
             pass
 
     remaining_days = max(0, duration_days - delivered_count)
 
-    completion_pct = round(
+    completion_pct = min(100, round(
         (delivered_count / duration_days) * 100
-    ) if duration_days else 0
+    )) if duration_days else 0
 
     return jsonify({
         "success": True,
@@ -4155,14 +4211,24 @@ def _run_daily_jobs():
             # ── 1:11 PM — Send "Boxes for Tomorrow" to admin WhatsApp ────
             # (Runs during the 13:11–13:12 window so it reliably fires at
             # 1:11 PM even if the loop's 60s tick drifts by a few seconds.)
-            if now.hour == 13 and 11 <= now.minute <= 12:
+            if now.hour == 13 and 10 <= now.minute <= 11:
                 if _try_acquire_job_lock("boxes_tomorrow_summary", today_key):
-                    print(f"[Scheduler] ⏰ Running boxes-tomorrow WhatsApp summary for {today_key}…")
+                    print(f"[Scheduler] ⏰ Running boxes-tomorrow WhatsApp summaries for {today_key}…")
                     try:
-                        ok = _send_admin_boxes_tomorrow_summary()
-                        print(f"[Scheduler] ✅ boxes_tomorrow_summary done. sent={ok}")
+                        n = _send_all_boxes_tomorrow_summaries()
+                        print(f"[Scheduler] ✅ boxes_tomorrow_summary done. scopes_sent={n}")
                     except Exception as e:
                         print(f"[Scheduler] ❌ boxes_tomorrow_summary failed: {e}")
+
+            # ── 7:00 AM – 7:01 AM — Franchise plan expiry check ──────────
+            if now.hour == 7 and now.minute < 2:
+                if _try_acquire_job_lock("franchise_plan_expiry", today_key):
+                    print(f"[Scheduler] ⏰ Running franchise plan expiry check for {today_key}…")
+                    try:
+                        n = _check_franchise_plan_expiry_job()
+                        print(f"[Scheduler] ✅ franchise_plan_expiry done. expired={n}")
+                    except Exception as e:
+                        print(f"[Scheduler] ❌ franchise_plan_expiry failed: {e}")
 
             # ── 8:00 PM – 8:01 PM — Check & send invoices due today ──────
             if now.hour == 20 and now.minute < 2:
@@ -4609,6 +4675,8 @@ def api_franchises_data():
         result.append({
             "id":               str(fid),
             "business_name":    fr.get("business_name", ""),
+            "assigned_plan_name": fr.get("assigned_plan_name", ""),
+            "plan_status":        fr.get("plan_status", ""),
             "city":             fr.get("city", ""),
             "address":          fr.get("address", ""),
             "status":           fr.get("status", "pending"),
@@ -4814,6 +4882,376 @@ def assign_all_to_franchise():
         "franchise_name": fr.get("business_name", ""),
         "message":        f"Assigned {total} record(s) to '{fr.get('business_name','')}'.",
     })
+    
+    
+    
+# ---------------------------------------------------------------------------
+# FRANCHISE PLANS — HQ's own subscription tiers sold to franchise owners
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/franchise_plans")
+@login_required
+@super_admin_required
+def api_franchise_plans():
+    plans = list(franchise_plans_col.find().sort("created_at", -1))
+    for p in plans:
+        p["id"] = str(p.pop("_id"))
+        if isinstance(p.get("created_at"), datetime):
+            p["created_at"] = p["created_at"].strftime("%Y-%m-%d")
+    return jsonify(plans)
+
+
+@app.route("/admin/franchise_plans/add", methods=["POST"])
+@login_required
+@super_admin_required
+def add_franchise_plan():
+    data = request.get_json(silent=True) or {}
+    name          = (data.get("name") or "").strip()
+    description   = (data.get("description") or "").strip()
+    features_raw  = data.get("features", "")
+    duration_type = (data.get("duration_type") or "").strip()
+    price         = data.get("price", 0)
+    if not name or duration_type not in FRANCHISE_PLAN_DURATION_DAYS:
+        return jsonify({"success": False, "message": "Name and a valid duration type are required."}), 400
+    try:
+        price = float(price)
+    except Exception:
+        price = 0.0
+    features = [f.strip() for f in (features_raw if isinstance(features_raw, list) else str(features_raw).split(","))
+                if f and f.strip()]
+    doc = {
+        "name": name, "description": description, "features": features,
+        "duration_type": duration_type, "duration_days": FRANCHISE_PLAN_DURATION_DAYS[duration_type],
+        "price": price, "created_at": datetime.now(),
+    }
+    result = franchise_plans_col.insert_one(doc)
+    return jsonify({"success": True, "id": str(result.inserted_id), "message": f"Franchise plan '{name}' created."})
+
+
+@app.route("/admin/franchise_plans/edit/<plan_id>", methods=["POST"])
+@login_required
+@super_admin_required
+def edit_franchise_plan(plan_id):
+    data = request.get_json(silent=True) or {}
+    duration_type = (data.get("duration_type") or "").strip()
+    if duration_type not in FRANCHISE_PLAN_DURATION_DAYS:
+        return jsonify({"success": False, "message": "Invalid duration type."}), 400
+    features_raw = data.get("features", "")
+    features = [f.strip() for f in (features_raw if isinstance(features_raw, list) else str(features_raw).split(","))
+                if f and f.strip()]
+    try:
+        price = float(data.get("price", 0))
+    except Exception:
+        price = 0.0
+    try:
+        franchise_plans_col.update_one({"_id": ObjectId(plan_id)}, {"$set": {
+            "name":          (data.get("name") or "").strip(),
+            "description":   (data.get("description") or "").strip(),
+            "features":      features,
+            "duration_type": duration_type,
+            "duration_days": FRANCHISE_PLAN_DURATION_DAYS[duration_type],
+            "price":         price,
+        }})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid plan ID."}), 400
+    return jsonify({"success": True, "message": "Franchise plan updated."})
+
+
+@app.route("/admin/franchise_plans/delete/<plan_id>", methods=["POST"])
+@login_required
+@super_admin_required
+def delete_franchise_plan(plan_id):
+    try:
+        franchise_plans_col.delete_one({"_id": ObjectId(plan_id)})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid plan ID."}), 400
+    return jsonify({"success": True, "message": "Franchise plan deleted."})
+
+
+# ---------------------------------------------------------------------------
+# ASSIGN A FRANCHISE PLAN TO A FRANCHISE + expiry automation
+# ---------------------------------------------------------------------------
+def _send_franchise_plan_whatsapp(fr, plan_name, event):
+    """event: 'assigned' | 'expired'"""
+    if not fr.get("subadmin_id"):
+        return False
+    subadmin = users_col.find_one({"_id": fr["subadmin_id"]})
+    if not subadmin:
+        return False
+    phone = "".join(filter(str.isdigit, str(subadmin.get("phone", ""))))
+    if len(phone) == 10:
+        phone = "91" + phone
+    if not phone:
+        return False
+    name = subadmin.get("name", "")
+    if event == "assigned":
+        msg = (
+            f"🍓 Fruit Delights – Franchise Plan Activated\n\n"
+            f"Hello {name},\n\n"
+            f"Your franchise plan '{plan_name}' is now active for '{fr.get('business_name','')}'.\n"
+            f"Thank you for continuing with us!"
+        )
+    else:
+        msg = (
+            f"🍓 Fruit Delights – Franchise Plan Expired\n\n"
+            f"Hello {name},\n\n"
+            f"Your franchise plan '{plan_name}' for '{fr.get('business_name','')}' has expired.\n"
+            f"Your account access has been paused. Please contact HQ to renew."
+        )
+    return _safe_send_whatsapp(phone, msg, context=f"franchise_plan_{event}")
+
+
+@app.route("/admin/franchises/<franchise_id>/assign_plan", methods=["POST"])
+@login_required
+@super_admin_required
+def assign_franchise_plan(franchise_id):
+    data = request.get_json(silent=True) or {}
+    plan_id_str  = (data.get("plan_id") or "").strip()
+    start_date_s = (data.get("start_date") or "").strip()
+    if not plan_id_str or not start_date_s:
+        return jsonify({"success": False, "message": "plan_id and start_date are required."}), 400
+    try:
+        fr = franchises_col.find_one({"_id": ObjectId(franchise_id)})
+        plan = franchise_plans_col.find_one({"_id": ObjectId(plan_id_str)})
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid IDs."}), 400
+    if not fr or not plan:
+        return jsonify({"success": False, "message": "Franchise or plan not found."}), 404
+    try:
+        start_dt = datetime.strptime(start_date_s, "%Y-%m-%d")
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid start_date format (YYYY-MM-DD)."}), 400
+
+    duration_days = plan.get("duration_days")
+    expiry_dt = None if duration_days is None else start_dt + timedelta(days=duration_days)
+
+    franchises_col.update_one({"_id": fr["_id"]}, {"$set": {
+        "assigned_plan_id":     plan["_id"],
+        "assigned_plan_name":   plan.get("name", ""),
+        "plan_duration_type":   plan.get("duration_type", ""),
+        "plan_start_date":      start_dt,
+        "plan_expiry_date":     expiry_dt,     # None = lifetime, never expires
+        "plan_status":          "active",
+        "status":               "active",      # re-activate login if it was paused
+    }})
+
+    franchise_payments_col.insert_one({
+        "franchise_id":  fr["_id"],
+        "plan_id":       plan["_id"],
+        "plan_name":     plan.get("name", ""),
+        "duration_type": plan.get("duration_type", ""),
+        "amount":        float(plan.get("price", 0)),
+        "billed_at":     datetime.now(),
+        "period_start":  start_dt,
+        "period_end":    expiry_dt,
+    })
+
+    _send_franchise_plan_whatsapp(fr, plan.get("name", ""), "assigned")
+
+    return jsonify({
+        "success": True,
+        "message": f"Plan '{plan.get('name','')}' assigned to '{fr.get('business_name','')}'.",
+        "expiry_date": expiry_dt.strftime("%Y-%m-%d") if expiry_dt else "Lifetime",
+    })
+
+
+def _check_franchise_plan_expiry_job():
+    """
+    Runs daily. Any franchise whose plan_expiry_date has passed gets:
+      - plan_status -> 'expired'
+      - status (login gate) -> 'pending'  (blocks subadmin login, matches
+        the existing check in /login: `if fr.get('status') != 'active'`)
+      - a WhatsApp notice to the franchise owner.
+    Lifetime plans (plan_expiry_date is None) are never touched.
+    """
+    today = date.today()
+    count = 0
+    frs = franchises_col.find({
+        "plan_status": "active",
+        "plan_expiry_date": {"$ne": None, "$exists": True},
+    })
+    for fr in frs:
+        exp = fr.get("plan_expiry_date")
+        if isinstance(exp, datetime):
+            exp = exp.date()
+        elif isinstance(exp, str):
+            try:
+                exp = datetime.strptime(exp, "%Y-%m-%d").date()
+            except Exception:
+                continue
+        else:
+            continue
+        if exp <= today:
+            franchises_col.update_one({"_id": fr["_id"]}, {"$set": {
+                "plan_status": "expired",
+                "status":      "pending",
+            }})
+            _send_franchise_plan_whatsapp(fr, fr.get("assigned_plan_name", ""), "expired")
+            count += 1
+    return count
+
+
+@app.route("/api/system/check_franchise_plan_expiry")
+def route_check_franchise_plan_expiry():
+    token = request.args.get("token")
+    if token != os.getenv("CRON_SECRET"):
+        return jsonify({"error": "Unauthorized"}), 401
+    n = _check_franchise_plan_expiry_job()
+    return jsonify({"success": True, "expired": n})
+
+
+@app.route("/api/subadmin/my_plan")
+@login_required
+@role_required("admin", "manager")
+def api_my_franchise_plan():
+    """admin (HQ) has no franchise plan; subadmin/manager see their franchise's assigned plan."""
+    fid = _current_franchise_id()
+    if not fid:
+        return jsonify({"success": True, "has_plan": False, "is_hq": True})
+    fr = franchises_col.find_one({"_id": fid})
+    if not fr or not fr.get("assigned_plan_id"):
+        return jsonify({"success": True, "has_plan": False})
+    exp = fr.get("plan_expiry_date")
+    start = fr.get("plan_start_date")
+    return jsonify({
+        "success": True, "has_plan": True,
+        "plan_name":   fr.get("assigned_plan_name", ""),
+        "plan_status": fr.get("plan_status", ""),
+        "duration_type": fr.get("plan_duration_type", ""),
+        "start_date":  start.strftime("%Y-%m-%d") if isinstance(start, datetime) else "",
+        "expiry_date": exp.strftime("%Y-%m-%d") if isinstance(exp, datetime) else ("Lifetime" if exp is None else str(exp)),
+    })
+
+
+# ---------------------------------------------------------------------------
+# FRANCHISE DETAIL (drill-down modal on the Franchises page)
+# ---------------------------------------------------------------------------
+@app.route("/api/admin/franchise_detail/<franchise_id>")
+@login_required
+@super_admin_required
+def api_franchise_detail(franchise_id):
+    try:
+        fid = ObjectId(franchise_id)
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid ID"}), 400
+    fr = franchises_col.find_one({"_id": fid})
+    if not fr:
+        return jsonify({"success": False, "message": "Not found"}), 404
+
+    subadmin  = users_col.find_one({"_id": fr.get("subadmin_id")}) if fr.get("subadmin_id") else None
+    managers  = list(users_col.find({"role": "manager",  "franchise_id": fid}))
+    employees = list(users_col.find({"role": "employee", "franchise_id": fid}))
+    customers = list(users_col.find({"role": "customer", "franchise_id": fid}))
+    plans     = list(plans_col.find({"franchise_id": fid}))
+    teams     = list(teams_col.find({"franchise_id": fid}))
+    enquiries = list(enquiries_col.find({"tag": "form_enquiry", "franchise_id": fid}).sort("created_at", -1).limit(50))
+    plan_map  = {str(p["_id"]): p for p in plans}
+
+    def cust_out(c):
+        p = plan_map.get(str(c.get("plan_id", "")))
+        return {
+            "id": str(c["_id"]), "name": c.get("name", ""), "phone": c.get("phone", ""),
+            "plan_name": (p.get("name") if p else c.get("sample")) or "—",
+            "status": c.get("status", "active"),
+            "payment_status": c.get("payment_status", "pending"),
+        }
+
+    start = fr.get("plan_start_date")
+    exp   = fr.get("plan_expiry_date")
+
+    return jsonify({
+        "success": True,
+        "franchise": {
+            "id": str(fr["_id"]), "business_name": fr.get("business_name", ""),
+            "city": fr.get("city", ""), "address": fr.get("address", ""),
+            "status": fr.get("status", "pending"),
+            "assigned_plan_name": fr.get("assigned_plan_name", ""),
+            "plan_status": fr.get("plan_status", ""),
+            "plan_start_date": start.strftime("%Y-%m-%d") if isinstance(start, datetime) else "",
+            "plan_expiry_date": exp.strftime("%Y-%m-%d") if isinstance(exp, datetime) else ("Lifetime" if exp is None and fr.get("assigned_plan_id") else ""),
+        },
+        "subadmin": {
+            "name": subadmin.get("name", "") if subadmin else "",
+            "email": subadmin.get("email", "") if subadmin else "",
+            "phone": subadmin.get("phone", "") if subadmin else "",
+        },
+        "managers":  [{"id": str(m["_id"]), "name": m.get("name", ""), "phone": m.get("phone", "")} for m in managers],
+        "employees": [{"id": str(e["_id"]), "name": e.get("name", ""), "phone": e.get("phone", "")} for e in employees],
+        "customers": [cust_out(c) for c in customers],
+        "plans":     [{"id": str(p["_id"]), "name": p.get("name", "")} for p in plans],
+        "teams":     [{"id": str(t["_id"]), "name": t.get("name", "")} for t in teams],
+        "enquiries": [{"id": str(en["_id"]), "name": en.get("name", ""), "phone": en.get("phone", ""),
+                        "status": en.get("status", "pending")} for en in enquiries],
+    })
+
+
+# ---------------------------------------------------------------------------
+# FRANCHISE STATS (charts + filterable list)
+# ---------------------------------------------------------------------------
+FRANCHISE_STATS_RANGE_MONTHS = {"1": 1, "3": 3, "6": 6, "12": 12, "lifetime": None}
+
+@app.route("/api/admin/franchise_stats")
+@login_required
+@super_admin_required
+def api_franchise_stats():
+    range_key = request.args.get("range", "6")
+    city      = request.args.get("city", "").strip()
+
+    query = {}
+    if city:
+        query["city"] = {"$regex": re.escape(city), "$options": "i"}
+    frs = list(franchises_col.find(query))
+    fr_ids = [f["_id"] for f in frs]
+
+    total  = len(frs)
+    active = sum(1 for f in frs if f.get("status") == "active")
+    pending = total - active
+
+    plan_dist = {}
+    for f in frs:
+        pname = f.get("assigned_plan_name") or "No Plan"
+        plan_dist[pname] = plan_dist.get(pname, 0) + 1
+
+    months = FRANCHISE_STATS_RANGE_MONTHS.get(range_key, 6)
+    now = datetime.now()
+    earnings = []
+    if months:
+        for i in range(months - 1, -1, -1):
+            m = now.month - i
+            y = now.year
+            while m <= 0:
+                m += 12
+                y -= 1
+            m_start = datetime(y, m, 1)
+            _, last = calendar.monthrange(y, m)
+            m_end = datetime(y, m, last, 23, 59, 59)
+            total_amt = 0.0
+            for pay in franchise_payments_col.find({
+                "franchise_id": {"$in": fr_ids},
+                "billed_at": {"$gte": m_start, "$lte": m_end},
+            }):
+                total_amt += float(pay.get("amount", 0))
+            earnings.append({"label": m_start.strftime("%b %Y"), "amount": round(total_amt, 2)})
+    else:
+        total_amt = sum(float(p.get("amount", 0)) for p in franchise_payments_col.find({"franchise_id": {"$in": fr_ids}}))
+        earnings = [{"label": "All Time", "amount": round(total_amt, 2)}]
+
+    cities = sorted(set((f.get("city") or "").strip() for f in frs if f.get("city")))
+
+    franchise_rows = []
+    for f in frs:
+        cust_count = users_col.count_documents({"role": "customer", "franchise_id": f["_id"]})
+        franchise_rows.append({
+            "id": str(f["_id"]), "business_name": f.get("business_name", ""),
+            "city": f.get("city", ""), "status": f.get("status", "pending"),
+            "plan_name": f.get("assigned_plan_name") or "—",
+            "customer_count": cust_count,
+        })
+
+    return jsonify({
+        "success": True, "total": total, "active": active, "pending": pending,
+        "plan_distribution": plan_dist, "earnings": earnings,
+        "cities": cities, "franchises": franchise_rows,
+    })
 
 
 # ---------------------------------------------------------------------------
@@ -4838,8 +5276,8 @@ def send_boxes_tomorrow_summary():
     token = request.args.get("token")
     if token != os.getenv("CRON_SECRET"):
         return jsonify({"error": "Unauthorized"}), 401
-    ok = _send_admin_boxes_tomorrow_summary()
-    return jsonify({"success": bool(ok)})
+    n = _send_all_boxes_tomorrow_summaries()
+    return jsonify({"success": True, "scopes_sent": n})
 
 
 @app.route("/api/employee/holiday_customers")

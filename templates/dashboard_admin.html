@@ -375,6 +375,12 @@ tbody tr:hover td{background:var(--bg-3)}
 <div class="nav-item" data-page="franchises" onclick="navigate('franchises',this)">
   <span class="nav-icon">🏢</span> Franchises
 </div>
+<div class="nav-item" data-page="franchise-plans" onclick="navigate('franchise-plans',this)">
+  <span class="nav-icon">🎟️</span> Franchise Plans
+</div>
+<div class="nav-item" data-page="franchise-stats" onclick="navigate('franchise-stats',this)">
+  <span class="nav-icon">📈</span> Franchise Stats
+</div>
 {% endif %}
 
     <div class="sidebar-section">
@@ -777,6 +783,15 @@ tbody tr:hover td{background:var(--bg-3)}
             <label class="form-label">Wirebase Instance Name *</label>
             <input type="text" id="wa-set-instance" class="form-control" placeholder="e.g. bhvu">
           </div>
+          <div class="form-group">
+            <label class="form-label">Admin Numbers for Daily Boxes Summary <span class="opt">(comma-separated)</span></label>
+            <input type="text" id="wa-set-adminnums" class="form-control" placeholder="e.g. 9876543210, 9123456780">
+            <div style="font-size:11px;color:var(--text-3);margin-top:4px;">
+              These numbers get "📦 Boxes to Prepare Tomorrow" every day at 1:10 PM, scoped to
+              {% if session.role == 'admin' %}HQ's own{% else %}your franchise's own{% endif %} customers only.
+              {% if session.role == 'admin' %}(In addition to any numbers set in ADMIN_WHATSAPP_NUMBERS on the server.){% endif %}
+            </div>
+          </div>
           <button class="btn btn-primary" onclick="saveWhatsappSettings()">💾 Save Credentials</button>
           <div id="wa-set-status" style="font-size:12px;color:var(--text-3);margin-top:8px;"></div>
 
@@ -851,7 +866,7 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
   <div class="table-wrap">
     <table id="franchises-table">
-      <thead><tr><th>Business</th><th>Owner</th><th>City</th><th>Address</th><th>Managers</th><th>Employees</th><th>Customers</th><th>Status</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Business</th><th>Owner</th><th>City</th><th>Address</th><th>Plan</th><th>Managers</th><th>Employees</th><th>Customers</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody id="franchises-tbody"><tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr></tbody>
     </table>
   </div>
@@ -880,6 +895,52 @@ tbody tr:hover td{background:var(--bg-3)}
     </div>
     <button class="btn btn-primary" onclick="submitAssignAllToFranchise()">🔀 Assign Selected to Franchise</button>
     <div id="baf-status" style="font-size:12px;color:var(--text-3);margin-top:10px;"></div>
+  </div>
+</div>
+{% endif %}
+
+{% if session.role == 'admin' %}
+<div class="page-section" id="page-franchise-plans">
+  <div class="section-title-bar">
+    <h2>Franchise Plans</h2>
+    <button class="btn btn-primary" onclick="openAddFranchisePlanModal()">＋ New Franchise Plan</button>
+  </div>
+  <div class="table-wrap">
+    <table id="fp-table">
+      <thead><tr><th>Name</th><th>Duration</th><th>Price</th><th>Features</th><th>Actions</th></tr></thead>
+      <tbody id="fp-tbody"><tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="page-section" id="page-franchise-stats">
+  <div class="section-title-bar"><h2>Franchise Stats</h2></div>
+  <div class="filter-bar">
+    <select class="form-control" id="fs-range" onchange="loadFranchiseStats()" style="max-width:160px;">
+      <option value="1">Last 1 month</option>
+      <option value="3">Last 3 months</option>
+      <option value="6" selected>Last 6 months</option>
+      <option value="12">Last 12 months</option>
+      <option value="lifetime">Lifetime</option>
+    </select>
+    <select class="form-control" id="fs-city" onchange="loadFranchiseStats()" style="max-width:180px;"><option value="">All Cities</option></select>
+  </div>
+  <div class="stat-cards" style="margin-bottom:20px;">
+    <div class="stat-card c-purple"><div class="stat-icon">🏢</div><div class="stat-value" id="fs-total">—</div><div class="stat-label">Total Franchises</div></div>
+    <div class="stat-card c-green"><div class="stat-icon">✅</div><div class="stat-value" id="fs-active">—</div><div class="stat-label">Active</div></div>
+    <div class="stat-card c-yellow"><div class="stat-icon">⏳</div><div class="stat-value" id="fs-pending">—</div><div class="stat-label">Pending</div></div>
+  </div>
+  <div class="charts-grid">
+    <div class="card"><div class="card-header"><div class="card-title">📊 Franchises per Plan</div></div><canvas id="fsPlanChart" height="220"></canvas></div>
+    <div class="card"><div class="card-header"><div class="card-title">💰 Earnings Over Time</div></div><canvas id="fsEarningsChart" height="220"></canvas></div>
+  </div>
+  <div class="card" style="margin-top:20px;">
+    <div class="card-header"><div class="card-title">Franchise List</div></div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Business</th><th>City</th><th>Plan</th><th>Status</th><th>Customers</th></tr></thead>
+        <tbody id="fs-fr-tbody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 {% endif %}
@@ -1036,6 +1097,112 @@ tbody tr:hover td{background:var(--bg-3)}
     <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
       <button type="button" class="btn btn-ghost" onclick="closeModal('modal-add-franchise')">Cancel</button>
       <button type="button" class="btn btn-primary" id="fr-submit-btn" onclick="submitAddFranchise()">Create &amp; Send Credentials</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Franchise Plan -->
+<div class="modal-backdrop" id="modal-franchise-plan">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <div class="modal-title" id="fp-modal-title">🎟️ New Franchise Plan</div>
+      <button class="modal-close" onclick="closeModal('modal-franchise-plan')">✕</button>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Plan Name *</label>
+      <input type="text" id="fp-name" class="form-control" placeholder="e.g. Growth Plan">
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Description <span class="opt">(optional)</span></label>
+      <textarea id="fp-description" class="form-control" rows="2" placeholder="Short description shown to franchise owners"></textarea>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Duration *</label>
+        <select id="fp-duration" class="form-control">
+          <option value="monthly">Monthly</option>
+          <option value="3month">3 Months</option>
+          <option value="6month">6 Months</option>
+          <option value="annual">1 Year</option>
+          <option value="lifetime">Lifetime</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Price (₹) *</label>
+        <input type="number" id="fp-price" class="form-control" min="0" step="0.01" placeholder="0">
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label class="form-label">Features</label>
+      <div id="fp-features-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px;"></div>
+      <div style="display:flex;gap:8px;">
+        <input type="text" id="fp-feature-input" class="form-control" placeholder="e.g. Unlimited customers"
+               onkeydown="if(event.key==='Enter'){event.preventDefault();fpAddFeature();}">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="fpAddFeature()" style="white-space:nowrap;">＋ Add</button>
+      </div>
+      <div style="font-size:11px;color:var(--text-3);margin-top:4px;">Press Enter or click Add after each feature.</div>
+    </div>
+
+    <div id="fp-error" style="display:none;font-size:12px;color:var(--red);background:var(--red-soft);border:1px solid #fca5a5;border-radius:var(--radius-sm);padding:8px 12px;margin-bottom:10px;"></div>
+
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('modal-franchise-plan')">Cancel</button>
+      <button type="button" class="btn btn-primary" id="fp-submit-btn" onclick="fpSubmitForm()">💾 Save Plan</button>
+    </div>
+  </div>
+</div>
+
+<!-- Assign Franchise Plan -->
+<div class="modal-backdrop" id="modal-assign-plan">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">🎟️ Assign Plan — <span id="ap-fr-name"></span></div><button class="modal-close" onclick="closeModal('modal-assign-plan')">✕</button></div>
+    <input type="hidden" id="ap-fr-id">
+    <div class="form-group">
+      <label class="form-label">Franchise Plan *</label>
+      <select id="ap-plan-select" class="form-control"><option value="">— Select plan —</option></select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Start Date *</label>
+      <input type="date" id="ap-start-date" class="form-control">
+    </div>
+    <div id="ap-expiry-preview" style="font-size:12px;color:var(--text-3);margin-bottom:10px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-assign-plan')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitAssignPlan()">✅ Assign &amp; Notify</button>
+    </div>
+  </div>
+</div>
+
+<!-- Franchise Detail Drill-down -->
+<div class="modal-backdrop" id="modal-franchise-detail">
+  <div class="modal" style="max-width:820px;">
+    <div class="modal-header"><div class="modal-title">🏢 <span id="fd-business-name">—</span></div><button class="modal-close" onclick="closeModal('modal-franchise-detail')">✕</button></div>
+    <div id="fd-loading" style="text-align:center;padding:40px;color:var(--text-3);"><div class="spinner" style="margin:0 auto 12px;"></div>Loading…</div>
+    <div id="fd-content" style="display:none;">
+      <div class="detail-grid" style="margin-bottom:14px;">
+        <div class="detail-field"><div class="detail-field-label">Owner</div><div class="detail-field-value" id="fd-owner">—</div></div>
+        <div class="detail-field"><div class="detail-field-label">City / Address</div><div class="detail-field-value" id="fd-address">—</div></div>
+        <div class="detail-field"><div class="detail-field-label">Plan</div><div class="detail-field-value" id="fd-plan">—</div></div>
+        <div class="detail-field"><div class="detail-field-label">Status</div><div class="detail-field-value" id="fd-status">—</div></div>
+      </div>
+      <div class="tab-bar">
+        <button class="tab-btn active" onclick="fdSwitchTab('customers',this)">👥 Customers</button>
+        <button class="tab-btn" onclick="fdSwitchTab('managers',this)">🧑‍💼 Managers</button>
+        <button class="tab-btn" onclick="fdSwitchTab('employees',this)">🚴 Employees</button>
+        <button class="tab-btn" onclick="fdSwitchTab('plans',this)">📋 Plans</button>
+        <button class="tab-btn" onclick="fdSwitchTab('teams',this)">🏘️ Teams</button>
+        <button class="tab-btn" onclick="fdSwitchTab('enquiries',this)">📩 Enquiries</button>
+      </div>
+      <div class="tab-pane active" id="fd-tab-customers"></div>
+      <div class="tab-pane" id="fd-tab-managers"></div>
+      <div class="tab-pane" id="fd-tab-employees"></div>
+      <div class="tab-pane" id="fd-tab-plans"></div>
+      <div class="tab-pane" id="fd-tab-teams"></div>
+      <div class="tab-pane" id="fd-tab-enquiries"></div>
     </div>
   </div>
 </div>
@@ -1654,7 +1821,7 @@ tbody tr:hover td{background:var(--bg-3)}
 <!-- ============================================================ JAVASCRIPT ============================================================ -->
 <script>
 const IS_ADMIN = {{ 'true' if session.role in ['admin','subadmin'] else 'false' }};
-const pageTitles = {home:'Dashboard',plans:'Subscription Plans',teams:'Teams',managers:'Managers',employees:'Delivery Partners',customers:'Customers',enquiries:'Web Enquiries','whatsapp-settings':'WhatsApp Setup'};
+const pageTitles = {home:'Dashboard',plans:'Subscription Plans',teams:'Teams',managers:'Managers',employees:'Delivery Partners',customers:'Customers',enquiries:'Web Enquiries','whatsapp-settings':'WhatsApp Setup',franchises:'Franchises','franchise-plans':'Franchise Plans','franchise-stats':'Franchise Stats'};
 const _loaded = {employees:false,customers:false,managers:false};
 let _custData = [];
 let _enqData  = [];
@@ -1731,6 +1898,8 @@ function navigate(page, el) {
   if (page==='customers'&&!_loaded.customers) loadCustomers();
   if (page==='managers'&&!_loaded.managers)   loadManagers();
   if (page==='franchises') loadFranchises(false);
+  if (page==='franchise-plans') loadFranchisePlans();
+  if (page==='franchise-stats') loadFranchiseStats();
   if (page==='enquiries') loadEnquiries(false);
   if (page==='whatsapp-settings') loadWhatsappSettings();
 }
@@ -1776,6 +1945,7 @@ async function loadWhatsappSettings(){
     const data = await fetch('/api/admin/whatsapp_settings').then(r=>r.json());
     document.getElementById('wa-set-apikey').value = data.api_key || '';
     document.getElementById('wa-set-instance').value = data.instance_name || '';
+    document.getElementById('wa-set-adminnums').value = data.admin_numbers_raw || '';
     if(data.webhook_url){
       document.getElementById('wa-webhook-url').value = data.webhook_url;
       document.getElementById('wa-webhook-wrap').style.display='block';
@@ -1790,9 +1960,10 @@ async function loadWhatsappSettings(){
 async function saveWhatsappSettings(){
   const api_key = document.getElementById('wa-set-apikey').value.trim();
   const instance_name = document.getElementById('wa-set-instance').value.trim();
+  const admin_numbers = document.getElementById('wa-set-adminnums').value.trim();
   if(!api_key || !instance_name){showToast('❌ Both fields are required.','danger');return;}
   try{
-    const res = await fetch('/api/admin/whatsapp_settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key,instance_name})});
+    const res = await fetch('/api/admin/whatsapp_settings/save',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({api_key,instance_name,admin_numbers})});
     const data = await res.json();
     if(data.success){showToast('✅ Saved.','success'); loadWhatsappSettings();}
     else showToast('❌ '+(data.message||'Failed'),'danger');
@@ -2182,7 +2353,7 @@ async function loadCustomerPlanStatus(customerId){
         <div><span style="font-weight:700;font-size:14px;">${escHtml(data.plan_name)}</span><span style="font-size:11px;color:var(--text-3);margin-left:8px;">${data.period_start} → ${data.period_end}</span></div>
         <span style="font-size:22px;font-weight:700;color:${barColor};">${data.completion_pct}%</span>
       </div>
-      <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${data.completion_pct}%;background:${barColor};"></div></div>
+      <div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${Math.min(100, data.completion_pct)}%;background:${barColor};"></div></div>
       ${altInfo}
       <div class="progress-stats-grid">
         <div class="progress-stat"><div class="progress-stat-val">${data.duration_days}</div><div class="progress-stat-lbl">Total Days</div></div>
@@ -3053,6 +3224,7 @@ function renderFranchises(){
       <td><div style="font-weight:600;">${escHtml(f.subadmin_name)}</div><div style="font-size:11px;color:var(--text-3);">${escHtml(f.subadmin_email)} · ${escHtml(f.subadmin_phone)}</div></td>
       <td><span class="badge badge-blue">${escHtml(f.city)}</span></td>
       <td style="max-width:180px;color:var(--text-2);font-size:12px;">${escHtml(f.address||'—')}</td>
+      <td>${f.assigned_plan_name ? `<span class="badge badge-purple">🎟️ ${escHtml(f.assigned_plan_name)}</span>${f.plan_status==='expired'?'<div style=\"font-size:10px;color:var(--red);margin-top:2px;\">Expired</div>':''}` : `<span class="badge badge-gray">No plan</span>`}</td>
       <td>${f.manager_count}</td><td>${f.employee_count}</td><td>${f.customer_count}</td>
       <td><select onchange="updateFranchiseStatus('${f.id}',this.value)" class="form-control btn-sm" style="width:auto;padding:4px 8px;font-size:12px;">
         <option value="pending" ${f.status==='pending'?'selected':''}>⏳ Pending</option>
@@ -3060,6 +3232,8 @@ function renderFranchises(){
       </select></td>
       <td><div style="display:flex;gap:5px;flex-wrap:wrap;">
         ${waPhone.length>=10?`<a href="https://wa.me/${waPhone}" target="_blank" class="btn btn-success btn-sm">💬</a>`:''}
+        <button class="btn btn-primary btn-sm" onclick="openFranchiseDetail('${f.id}')">📋 Details</button>
+        <button class="btn btn-ghost btn-sm" onclick="openAssignPlanModal('${f.id}','${escHtml(f.business_name)}')">🎟️ Assign Plan</button>
         <button class="btn btn-warning btn-sm" onclick="resetFranchiseCredentials('${f.id}','${escHtml(f.business_name)}')">🔑 Reset</button>
       </div></td>
     </tr>`;
@@ -3207,6 +3381,258 @@ async function bulkAssignCustomersToManager(managerId, managerName){
   }
 }
 
+/* ── Franchise Plans (subscription tiers) ── */
+let _fpData=[];
+const FP_DURATION_LABELS={monthly:'Monthly',"3month":'3 Months',"6month":'6 Months',annual:'1 Year',lifetime:'Lifetime'};
+async function loadFranchisePlans(){
+  const tbody=document.getElementById('fp-tbody');if(!tbody)return;
+  try{
+    _fpData=await fetch('/api/admin/franchise_plans').then(r=>r.json());
+    if(!_fpData.length){tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--text-3);">No franchise plans yet.</td></tr>`;return;}
+    tbody.innerHTML=_fpData.map(p=>`<tr>
+      <td><strong>${escHtml(p.name)}</strong><div style="font-size:11px;color:var(--text-3);">${escHtml(p.description||'')}</div></td>
+      <td><span class="badge badge-blue">${FP_DURATION_LABELS[p.duration_type]||p.duration_type}</span></td>
+      <td style="color:var(--accent);font-weight:700;">₹${p.price}</td>
+      <td style="font-size:12px;color:var(--text-2);max-width:220px;">${(p.features||[]).map(f=>`<span class="badge badge-gray" style="margin:2px;">${escHtml(f)}</span>`).join('')||'—'}</td>
+      <td><div style="display:flex;gap:6px;">
+        <button class="btn btn-ghost btn-sm" onclick='openEditFranchisePlan(${JSON.stringify(p)})'>✏️ Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteFranchisePlan('${p.id}','${escHtml(p.name)}')">🗑️</button>
+      </div></td>
+    </tr>`).join('');
+  }catch{tbody.innerHTML=`<tr><td colspan="5" style="text-align:center;padding:32px;color:var(--red);">Failed to load.</td></tr>`;}
+}
+/* ── Franchise Plan modal (replaces prompt()-based flow) ── */
+let _fpEditingId = '';
+let _fpFeatures = [];
+
+function openAddFranchisePlanModal(){
+  _fpEditingId = '';
+  _fpFeatures = [];
+  document.getElementById('fp-modal-title').textContent = '🎟️ New Franchise Plan';
+  document.getElementById('fp-name').value = '';
+  document.getElementById('fp-description').value = '';
+  document.getElementById('fp-duration').value = 'monthly';
+  document.getElementById('fp-price').value = '';
+  document.getElementById('fp-feature-input').value = '';
+  document.getElementById('fp-error').style.display = 'none';
+  fpRenderFeatures();
+  openModal('modal-franchise-plan');
+}
+
+function openEditFranchisePlan(p){
+  _fpEditingId = p.id;
+  _fpFeatures = [...(p.features || [])];
+  document.getElementById('fp-modal-title').textContent = '✏️ Edit Franchise Plan';
+  document.getElementById('fp-name').value = p.name || '';
+  document.getElementById('fp-description').value = p.description || '';
+  document.getElementById('fp-duration').value = p.duration_type || 'monthly';
+  document.getElementById('fp-price').value = p.price || '';
+  document.getElementById('fp-feature-input').value = '';
+  document.getElementById('fp-error').style.display = 'none';
+  fpRenderFeatures();
+  openModal('modal-franchise-plan');
+}
+
+function fpRenderFeatures(){
+  const wrap = document.getElementById('fp-features-list');
+  if(!_fpFeatures.length){
+    wrap.innerHTML = '<span style="font-size:12px;color:var(--text-3);">No features added yet.</span>';
+    return;
+  }
+  wrap.innerHTML = _fpFeatures.map((f, i) => `
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg-3);border:1px solid var(--border);border-radius:var(--radius-sm);padding:7px 10px;">
+      <span style="flex:1;font-size:13px;">✓ ${escHtml(f)}</span>
+      <button type="button" onclick="fpRemoveFeature(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;font-size:14px;line-height:1;">✕</button>
+    </div>
+  `).join('');
+}
+
+function fpAddFeature(){
+  const input = document.getElementById('fp-feature-input');
+  const val = input.value.trim();
+  if(!val) return;
+  _fpFeatures.push(val);
+  input.value = '';
+  fpRenderFeatures();
+}
+
+function fpRemoveFeature(idx){
+  _fpFeatures.splice(idx, 1);
+  fpRenderFeatures();
+}
+
+async function fpSubmitForm(){
+  const name = document.getElementById('fp-name').value.trim();
+  const description = document.getElementById('fp-description').value.trim();
+  const duration_type = document.getElementById('fp-duration').value;
+  const price = document.getElementById('fp-price').value;
+  const errEl = document.getElementById('fp-error');
+  errEl.style.display = 'none';
+
+  if(!name){ errEl.textContent = 'Plan name is required.'; errEl.style.display = 'block'; return; }
+  if(price === '' || isNaN(price) || parseFloat(price) < 0){ errEl.textContent = 'Enter a valid price.'; errEl.style.display = 'block'; return; }
+
+  const payload = { name, description, features: _fpFeatures.join(', '), duration_type, price };
+  const btn = document.getElementById('fp-submit-btn');
+  btn.disabled = true; btn.textContent = '⏳ Saving…';
+
+  const url = _fpEditingId ? `/admin/franchise_plans/edit/${_fpEditingId}` : '/admin/franchise_plans/add';
+  try{
+    const res = await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(payload)});
+    const data = await res.json();
+    btn.disabled = false; btn.textContent = '💾 Save Plan';
+    if(data.success){
+      showToast('✅ ' + data.message, 'success');
+      closeModal('modal-franchise-plan');
+      _fpEditingId = '';
+      loadFranchisePlans();
+    } else {
+      errEl.textContent = data.message || 'Failed to save plan.';
+      errEl.style.display = 'block';
+    }
+  }catch{
+    btn.disabled = false; btn.textContent = '💾 Save Plan';
+    errEl.textContent = 'Network error. Please try again.';
+    errEl.style.display = 'block';
+  }
+}
+async function deleteFranchisePlan(id,name){
+  if(!confirm(`Delete plan "${name}"?`))return;
+  try{
+    const res=await fetch(`/admin/franchise_plans/delete/${id}`,{method:'POST'});
+    const data=await res.json();
+    if(data.success){showToast('✅ Deleted.','success');loadFranchisePlans();}
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{showToast('❌ Network error.','danger');}
+}
+
+/* ── Assign Franchise Plan ── */
+async function openAssignPlanModal(frId,frName){
+  document.getElementById('ap-fr-id').value=frId;
+  document.getElementById('ap-fr-name').textContent=frName;
+  document.getElementById('ap-start-date').value=_fmtLocalDate(new Date());
+  document.getElementById('ap-expiry-preview').textContent='';
+  const sel=document.getElementById('ap-plan-select');
+  if(!_fpData.length) await loadFranchisePlansQuiet();
+  sel.innerHTML='<option value="">— Select plan —</option>'+_fpData.map(p=>`<option value="${p.id}" data-dur="${p.duration_type}">${escHtml(p.name)} (${FP_DURATION_LABELS[p.duration_type]||p.duration_type}) — ₹${p.price}</option>`).join('');
+  openModal('modal-assign-plan');
+}
+async function loadFranchisePlansQuiet(){ try{_fpData=await fetch('/api/admin/franchise_plans').then(r=>r.json());}catch{} }
+async function submitAssignPlan(){
+  const frId=document.getElementById('ap-fr-id').value;
+  const planId=document.getElementById('ap-plan-select').value;
+  const startDate=document.getElementById('ap-start-date').value;
+  if(!planId||!startDate){showToast('❌ Select a plan and start date.','danger');return;}
+  try{
+    const res=await fetch(`/admin/franchises/${frId}/assign_plan`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({plan_id:planId,start_date:startDate})});
+    const data=await res.json();
+    if(data.success){showToast(`✅ ${data.message} (expires: ${data.expiry_date})`,'success');closeModal('modal-assign-plan');loadFranchises(true);}
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{showToast('❌ Network error.','danger');}
+}
+
+/* ── Franchise Detail Drill-down ── */
+async function openFranchiseDetail(frId){
+  document.getElementById('fd-loading').style.display='block';
+  document.getElementById('fd-content').style.display='none';
+  document.getElementById('fd-business-name').textContent='Loading…';
+  openModal('modal-franchise-detail');
+  try{
+    const data=await fetch(`/api/admin/franchise_detail/${frId}`).then(r=>r.json());
+    if(!data.success){showToast('❌ Failed to load details.','danger');closeModal('modal-franchise-detail');return;}
+    const f=data.franchise;
+    document.getElementById('fd-business-name').textContent=f.business_name;
+    document.getElementById('fd-owner').textContent=`${data.subadmin.name||'—'} · ${data.subadmin.phone||'—'} · ${data.subadmin.email||'—'}`;
+    document.getElementById('fd-address').textContent=`${f.city||'—'}${f.address?', '+f.address:''}`;
+    document.getElementById('fd-plan').innerHTML = f.assigned_plan_name
+      ? `${escHtml(f.assigned_plan_name)} <span class="badge ${f.plan_status==='expired'?'badge-red':'badge-green'}">${escHtml(f.plan_status||'')}</span><div style="font-size:11px;color:var(--text-3);">${f.plan_start_date} → ${f.plan_expiry_date||'Lifetime'}</div>`
+      : '<span class="badge badge-gray">No plan assigned</span>';
+    document.getElementById('fd-status').innerHTML=statusBadge(f.status);
+
+    document.getElementById('fd-tab-customers').innerHTML = data.customers.length
+      ? `<div class="table-wrap"><table><thead><tr><th>Name</th><th>Plan</th><th>Status</th><th>Payment</th></tr></thead><tbody>${data.customers.map(c=>`<tr><td>${escHtml(c.name)}<div style="font-size:11px;color:var(--text-3);">${escHtml(c.phone)}</div></td><td>${escHtml(c.plan_name)}</td><td>${statusBadge(c.status)}</td><td>${paymentBadge(c.payment_status)}</td></tr>`).join('')}</tbody></table></div>`
+      : '<div class="empty-state">No customers.</div>';
+    document.getElementById('fd-tab-managers').innerHTML = data.managers.length
+      ? data.managers.map(m=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);">${escHtml(m.name)} · ${escHtml(m.phone||'—')}</div>`).join('')
+      : '<div class="empty-state">No managers.</div>';
+    document.getElementById('fd-tab-employees').innerHTML = data.employees.length
+      ? data.employees.map(e=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);">${escHtml(e.name)} · ${escHtml(e.phone||'—')}</div>`).join('')
+      : '<div class="empty-state">No employees.</div>';
+    document.getElementById('fd-tab-plans').innerHTML = data.plans.length
+      ? data.plans.map(p=>`<span class="badge badge-orange" style="margin:3px;">${escHtml(p.name)}</span>`).join('')
+      : '<div class="empty-state">No plans.</div>';
+    document.getElementById('fd-tab-teams').innerHTML = data.teams.length
+      ? data.teams.map(t=>`<span class="badge badge-blue" style="margin:3px;">${escHtml(t.name)}</span>`).join('')
+      : '<div class="empty-state">No teams.</div>';
+    document.getElementById('fd-tab-enquiries').innerHTML = data.enquiries.length
+      ? data.enquiries.map(en=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);">${escHtml(en.name)} · ${escHtml(en.phone)} · ${statusBadge(en.status)}</div>`).join('')
+      : '<div class="empty-state">No enquiries.</div>';
+
+    document.getElementById('fd-loading').style.display='none';
+    document.getElementById('fd-content').style.display='block';
+  }catch{showToast('❌ Network error.','danger');closeModal('modal-franchise-detail');}
+}
+function fdSwitchTab(name,el){
+  document.querySelectorAll('#modal-franchise-detail .tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#modal-franchise-detail .tab-pane').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('fd-tab-'+name).classList.add('active');
+}
+
+/* ── Franchise Stats page ── */
+let fsPlanChart=null, fsEarningsChart=null;
+async function loadFranchiseStats(){
+  const range=document.getElementById('fs-range').value;
+  const city=document.getElementById('fs-city').value;
+  try{
+    const data=await fetch(`/api/admin/franchise_stats?range=${range}&city=${encodeURIComponent(city)}`).then(r=>r.json());
+    document.getElementById('fs-total').textContent=data.total;
+    document.getElementById('fs-active').textContent=data.active;
+    document.getElementById('fs-pending').textContent=data.pending;
+    const citySel=document.getElementById('fs-city');
+    if(!citySel.dataset.filled){
+      citySel.innerHTML='<option value="">All Cities</option>'+data.cities.map(c=>`<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
+      citySel.dataset.filled='1';
+    }
+    const planLabels=Object.keys(data.plan_distribution);
+    const planCounts=Object.values(data.plan_distribution);
+    const ctx1=document.getElementById('fsPlanChart').getContext('2d');
+    if(fsPlanChart)fsPlanChart.destroy();
+    fsPlanChart=new Chart(ctx1,{type:'bar',data:{labels:planLabels,datasets:[{label:'Franchises',data:planCounts,backgroundColor:'rgba(79,70,229,.75)',borderRadius:6}]},options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1}}}}});
+    const ctx2=document.getElementById('fsEarningsChart').getContext('2d');
+    if(fsEarningsChart)fsEarningsChart.destroy();
+    fsEarningsChart=new Chart(ctx2,{type:'line',data:{labels:data.earnings.map(e=>e.label),datasets:[{label:'Earnings (₹)',data:data.earnings.map(e=>e.amount),borderColor:'#10b981',backgroundColor:'rgba(16,185,129,.15)',fill:true,tension:.35,pointRadius:4}]},options:{responsive:true,scales:{y:{beginAtZero:true}}}});
+    const tbody=document.getElementById('fs-fr-tbody');
+    tbody.innerHTML=data.franchises.map(f=>`<tr><td>${escHtml(f.business_name)}</td><td>${escHtml(f.city)}</td><td>${escHtml(f.plan_name)}</td><td>${statusBadge(f.status)}</td><td>${f.customer_count}</td></tr>`).join('')||`<tr><td colspan="5" style="text-align:center;color:var(--text-3);padding:20px;">No franchises.</td></tr>`;
+  }catch{showToast('❌ Failed to load franchise stats.','danger');}
+}
+
+/* ── Subadmin: show assigned franchise plan on home page ── */
+async function loadMyFranchisePlanCard(){
+  try{
+    const data=await fetch('/api/subadmin/my_plan').then(r=>r.json());
+    if(!data.success||data.is_hq) return;
+    const homeEl=document.getElementById('page-home');
+    if(!homeEl||document.getElementById('my-fr-plan-card')) return;
+    const card=document.createElement('div');
+    card.id='my-fr-plan-card';
+    card.className='card';
+    card.style.marginBottom='18px';
+    if(!data.has_plan){
+      card.innerHTML=`<div class="card-title">🎟️ Your Franchise Plan</div><div style="color:var(--text-3);font-size:13px;margin-top:8px;">No plan assigned yet. Contact HQ.</div>`;
+    } else {
+      const statusColor = data.plan_status==='expired' ? 'var(--red)' : 'var(--green)';
+      card.innerHTML=`<div class="card-title">🎟️ Your Franchise Plan</div>
+        <div style="margin-top:10px;display:flex;gap:16px;flex-wrap:wrap;align-items:center;">
+          <span class="badge badge-purple" style="font-size:13px;">${escHtml(data.plan_name)}</span>
+          <span style="color:${statusColor};font-weight:700;font-size:12px;text-transform:uppercase;">${escHtml(data.plan_status||'')}</span>
+          <span style="font-size:12px;color:var(--text-2);">Start: ${data.start_date} &nbsp;·&nbsp; Expires: ${data.expiry_date}</span>
+        </div>`;
+    }
+    homeEl.insertBefore(card, homeEl.firstChild);
+  }catch{}
+}
+
 
 /* ── Boot ── */
 window.addEventListener('DOMContentLoaded',()=>{
@@ -3214,6 +3640,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   loadEmployees();
   loadCustomers();
   loadBoxes(false);
+  loadMyFranchisePlanCard();
 });
 </script>
 </body>
