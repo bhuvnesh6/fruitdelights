@@ -321,11 +321,25 @@ tbody tr:hover td{background:var(--bg-3)}
 
 
 /* Bulk WA tabs */
-.tab-bar{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px;gap:0;}
+.tab-bar{display:flex;border-bottom:2px solid var(--border);margin-bottom:16px;gap:0;flex-wrap:wrap;}
 .tab-btn{padding:8px 18px;font-size:13px;font-weight:600;border:none;background:none;cursor:pointer;color:var(--text-2);border-bottom:2px solid transparent;margin-bottom:-2px;transition:color .15s,border-color .15s;}
 .tab-btn.active{color:var(--accent);border-bottom-color:var(--accent);}
 .tab-pane{display:none;}
 .tab-pane.active{display:block;}
+.fd-tab-count{display:inline-block;background:var(--accent-soft);color:var(--accent);font-size:10px;font-weight:800;padding:1px 6px;border-radius:99px;margin-left:4px;}
+.tab-btn.active .fd-tab-count{background:var(--accent);color:#fff;}
+
+/* Franchise Stats — hero */
+.fs-hero{background:linear-gradient(135deg,#4f46e5 0%,#7c3aed 50%,#4338ca 100%);border-radius:var(--radius);padding:28px 30px;margin-bottom:22px;color:#fff;position:relative;overflow:hidden;box-shadow:var(--shadow-lg);}
+.fs-hero::before{content:'';position:absolute;top:-40px;right:-40px;width:180px;height:180px;border-radius:50%;background:rgba(255,255,255,.08);}
+.fs-hero::after{content:'';position:absolute;bottom:-60px;left:20%;width:140px;height:140px;border-radius:50%;background:rgba(255,255,255,.06);}
+.fs-hero-title{font-family:var(--font-disp);font-size:24px;font-weight:700;margin-bottom:4px;position:relative;}
+.fs-hero-sub{font-size:13px;opacity:.85;position:relative;}
+.fs-hero-stats{display:flex;gap:28px;margin-top:18px;flex-wrap:wrap;position:relative;}
+.fs-hero-stat-val{font-size:28px;font-weight:700;line-height:1;}
+.fs-hero-stat-lbl{font-size:11px;opacity:.8;margin-top:4px;text-transform:uppercase;letter-spacing:.5px;}
+.fs-chart-card{background:var(--bg-2);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:var(--shadow-sm);}
+.fs-chart-card .card-title{display:flex;align-items:center;gap:8px;}
 
 @media(max-width:1024px){.charts-grid{grid-template-columns:1fr}}
 @media(max-width:768px){
@@ -364,25 +378,31 @@ tbody tr:hover td{background:var(--bg-3)}
       <div class="sidebar-logo-icon"><img src="{{ url_for('static', filename='img/logo.png') }}"></div>
       <div class="sidebar-logo-name">Fruite<span>Delight</span></div>
     </div>
+    {% if session.role != 'admin' %}
     <div class="sidebar-section">
       <div class="sidebar-section-label">Main</div>
       <div class="nav-item active" data-page="home" onclick="navigate('home',this)">
         <span class="nav-icon">📊</span> Dashboard
       </div>
     </div>
+    {% endif %}
 
     {% if session.role == 'admin' %}
-<div class="nav-item" data-page="franchises" onclick="navigate('franchises',this)">
-  <span class="nav-icon">🏢</span> Franchises
-</div>
-<div class="nav-item" data-page="franchise-plans" onclick="navigate('franchise-plans',this)">
-  <span class="nav-icon">🎟️</span> Franchise Plans
-</div>
-<div class="nav-item" data-page="franchise-stats" onclick="navigate('franchise-stats',this)">
-  <span class="nav-icon">📈</span> Franchise Stats
-</div>
-{% endif %}
+    <div class="sidebar-section">
+      <div class="sidebar-section-label">Main</div>
+      <div class="nav-item" data-page="franchise-stats" onclick="navigate('franchise-stats',this)">
+        <span class="nav-icon">📈</span> Franchise Stats
+      </div>
+      <div class="nav-item" data-page="franchises" onclick="navigate('franchises',this)">
+        <span class="nav-icon">🏢</span> Franchises
+      </div>
+      <div class="nav-item" data-page="franchise-plans" onclick="navigate('franchise-plans',this)">
+        <span class="nav-icon">🎟️</span> Franchise Plans
+      </div>
+    </div>
+    {% endif %}
 
+    {% if session.role != 'admin' %}
     <div class="sidebar-section">
       <div class="sidebar-section-label">Manage</div>
       <div class="nav-item" data-page="plans" onclick="navigate('plans',this)">
@@ -391,7 +411,7 @@ tbody tr:hover td{background:var(--bg-3)}
       <div class="nav-item" data-page="teams" onclick="navigate('teams',this)">
         <span class="nav-icon">🏘️</span> Teams
       </div>
-      {% if session.role == 'admin' %}
+      {% if session.role == 'subadmin' %}
       <div class="nav-item" data-page="managers" onclick="navigate('managers',this)">
         <span class="nav-icon">🧑‍💼</span> Managers
         <span class="nav-badge" id="mgr-badge" style="background:#7c3aed;display:none;"></span>
@@ -404,22 +424,32 @@ tbody tr:hover td{background:var(--bg-3)}
         <span class="nav-icon">👥</span> Customers
         <span class="nav-badge" id="cust-badge">{{ stats.total_customers }}</span>
       </div>
-      {% if session.role in ['admin', 'subadmin'] %}
+      {% if session.role == 'subadmin' %}
       <div class="nav-item" data-page="enquiries" onclick="navigate('enquiries',this)">
         <span class="nav-icon">📩</span> Enquiries
         <span class="nav-badge" id="enq-badge" style="background:#f97316;display:none;">0</span>
       </div>
       {% endif %}
     </div>
+    {% endif %}
+
     <div class="sidebar-section">
       <div class="sidebar-section-label">Tools</div>
+      {% if session.role == 'admin' %}
+      <div class="nav-item" onclick="openBulkWaFranchisesModal()">
+        <span class="nav-icon">📣</span> Message Franchise Owners
+      </div>
+      {% else %}
       <a class="nav-item" href="/admin/bulk-whatsapp">
         <span class="nav-icon">📣</span> Bulk WhatsApp
       </a>
+      {% endif %}
       <div class="nav-item" data-page="whatsapp-settings" onclick="navigate('whatsapp-settings',this)">
         <span class="nav-icon">📶</span> WhatsApp Setup
       </div>
     </div>
+
+    {% if session.role != 'admin' %}
     <div class="sidebar-section">
       <div class="sidebar-section-label">Quick Add</div>
       <div class="nav-item" onclick="openModal('modal-add-plan')">
@@ -432,6 +462,7 @@ tbody tr:hover td{background:var(--bg-3)}
         <span class="nav-icon">＋</span> Add User
       </div>
     </div>
+    {% endif %}
     <div class="sidebar-bottom">
       <div class="user-pill">
         <div class="user-pill-avatar" id="user-avatar-init">A</div>
@@ -456,7 +487,11 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="topbar-title" id="page-title">Dashboard</div>
       </div>
       <div class="topbar-actions">
+        {% if session.role != 'admin' %}
         <button class="btn btn-primary btn-sm" onclick="openAddUserModal('customer')">＋ Add User</button>
+        {% else %}
+        <button class="btn btn-primary btn-sm" onclick="openAddFranchiseModal()">＋ New Franchise</button>
+        {% endif %}
       </div>
     </header>
 
@@ -476,7 +511,7 @@ tbody tr:hover td{background:var(--bg-3)}
     <div class="page-content">
 
       <!-- ===== HOME ===== -->
-      <div class="page-section active" id="page-home">
+      <div class="page-section {% if session.role != 'admin' %}active{% endif %}" id="page-home">
         {% if session.role == 'manager' %}
         <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;padding:12px 16px;background:linear-gradient(135deg,#f5f3ff,#ede9fe);border-radius:var(--radius-sm);border:1px solid #c4b5fd;">
           <span style="font-size:20px;">🧑‍💼</span>
@@ -913,8 +948,19 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
-<div class="page-section" id="page-franchise-stats">
-  <div class="section-title-bar"><h2>Franchise Stats</h2></div>
+<div class="page-section {% if session.role == 'admin' %}active{% endif %}" id="page-franchise-stats">
+  <div class="fs-hero">
+    <div class="fs-hero-title">📈 Franchise Performance</div>
+    <div class="fs-hero-sub">A bird's-eye view of every Fruit Delights franchise, revenue and plan adoption.</div>
+    <div class="fs-hero-stats">
+      <div><div class="fs-hero-stat-val" id="fs-total">—</div><div class="fs-hero-stat-lbl">Total Franchises</div></div>
+      <div><div class="fs-hero-stat-val" id="fs-active">—</div><div class="fs-hero-stat-lbl">Active</div></div>
+      <div><div class="fs-hero-stat-val" id="fs-pending">—</div><div class="fs-hero-stat-lbl">Pending</div></div>
+      <div><div class="fs-hero-stat-val" id="fs-customers-total">—</div><div class="fs-hero-stat-lbl">Total Customers</div></div>
+      <div><div class="fs-hero-stat-val" id="fs-earnings-total">—</div><div class="fs-hero-stat-lbl">Earnings (selected range)</div></div>
+    </div>
+  </div>
+
   <div class="filter-bar">
     <select class="form-control" id="fs-range" onchange="loadFranchiseStats()" style="max-width:160px;">
       <option value="1">Last 1 month</option>
@@ -924,18 +970,16 @@ tbody tr:hover td{background:var(--bg-3)}
       <option value="lifetime">Lifetime</option>
     </select>
     <select class="form-control" id="fs-city" onchange="loadFranchiseStats()" style="max-width:180px;"><option value="">All Cities</option></select>
+    <button class="btn btn-ghost btn-sm" onclick="loadFranchiseStats()">🔄 Refresh</button>
   </div>
-  <div class="stat-cards" style="margin-bottom:20px;">
-    <div class="stat-card c-purple"><div class="stat-icon">🏢</div><div class="stat-value" id="fs-total">—</div><div class="stat-label">Total Franchises</div></div>
-    <div class="stat-card c-green"><div class="stat-icon">✅</div><div class="stat-value" id="fs-active">—</div><div class="stat-label">Active</div></div>
-    <div class="stat-card c-yellow"><div class="stat-icon">⏳</div><div class="stat-value" id="fs-pending">—</div><div class="stat-label">Pending</div></div>
-  </div>
+
   <div class="charts-grid">
-    <div class="card"><div class="card-header"><div class="card-title">📊 Franchises per Plan</div></div><canvas id="fsPlanChart" height="220"></canvas></div>
-    <div class="card"><div class="card-header"><div class="card-title">💰 Earnings Over Time</div></div><canvas id="fsEarningsChart" height="220"></canvas></div>
+    <div class="fs-chart-card"><div class="card-title">📊 Franchises per Plan</div><canvas id="fsPlanChart" height="220"></canvas></div>
+    <div class="fs-chart-card"><div class="card-title">💰 Earnings Over Time</div><canvas id="fsEarningsChart" height="220"></canvas></div>
   </div>
+
   <div class="card" style="margin-top:20px;">
-    <div class="card-header"><div class="card-title">Franchise List</div></div>
+    <div class="card-header"><div class="card-title">🏢 Franchise List</div></div>
     <div class="table-wrap">
       <table><thead><tr><th>Business</th><th>City</th><th>Plan</th><th>Status</th><th>Customers</th></tr></thead>
         <tbody id="fs-fr-tbody"></tbody>
@@ -950,11 +994,17 @@ tbody tr:hover td{background:var(--bg-3)}
 
   <!-- BOTTOM NAV -->
   <nav class="bottom-nav">
+    {% if session.role == 'admin' %}
+    <div class="bottom-nav-item active" data-page="franchise-stats" onclick="navigate('franchise-stats',this)"><span class="bn-icon">📈</span>Stats</div>
+    <div class="bottom-nav-item" data-page="franchises" onclick="navigate('franchises',this)"><span class="bn-icon">🏢</span>Franchises</div>
+    <div class="bottom-nav-item" data-page="franchise-plans" onclick="navigate('franchise-plans',this)"><span class="bn-icon">🎟️</span>Plans</div>
+    {% else %}
     <div class="bottom-nav-item active" data-page="home" onclick="navigate('home',this)"><span class="bn-icon">📊</span>Home</div>
     <div class="bottom-nav-item" data-page="plans" onclick="navigate('plans',this)"><span class="bn-icon">📋</span>Plans</div>
     <div class="bottom-nav-item" data-page="teams" onclick="navigate('teams',this)"><span class="bn-icon">🏘️</span>Teams</div>
     <div class="bottom-nav-item" data-page="employees" onclick="navigate('employees',this)"><span class="bn-icon">🚴</span>Staff</div>
     <div class="bottom-nav-item" data-page="customers" onclick="navigate('customers',this)"><span class="bn-icon">👥</span>Customers</div>
+    {% endif %}
   </nav>
 </div>
 
@@ -1190,12 +1240,12 @@ tbody tr:hover td{background:var(--bg-3)}
         <div class="detail-field"><div class="detail-field-label">Status</div><div class="detail-field-value" id="fd-status">—</div></div>
       </div>
       <div class="tab-bar">
-        <button class="tab-btn active" onclick="fdSwitchTab('customers',this)">👥 Customers</button>
-        <button class="tab-btn" onclick="fdSwitchTab('managers',this)">🧑‍💼 Managers</button>
-        <button class="tab-btn" onclick="fdSwitchTab('employees',this)">🚴 Employees</button>
-        <button class="tab-btn" onclick="fdSwitchTab('plans',this)">📋 Plans</button>
-        <button class="tab-btn" onclick="fdSwitchTab('teams',this)">🏘️ Teams</button>
-        <button class="tab-btn" onclick="fdSwitchTab('enquiries',this)">📩 Enquiries</button>
+        <button class="tab-btn active" id="fd-tabbtn-customers" onclick="fdSwitchTab('customers',this)">👥 Customers <span class="fd-tab-count">0</span></button>
+        <button class="tab-btn" id="fd-tabbtn-managers" onclick="fdSwitchTab('managers',this)">🧑‍💼 Managers <span class="fd-tab-count">0</span></button>
+        <button class="tab-btn" id="fd-tabbtn-employees" onclick="fdSwitchTab('employees',this)">🚴 Employees <span class="fd-tab-count">0</span></button>
+        <button class="tab-btn" id="fd-tabbtn-plans" onclick="fdSwitchTab('plans',this)">📋 Plans <span class="fd-tab-count">0</span></button>
+        <button class="tab-btn" id="fd-tabbtn-teams" onclick="fdSwitchTab('teams',this)">🏘️ Teams <span class="fd-tab-count">0</span></button>
+        <button class="tab-btn" id="fd-tabbtn-enquiries" onclick="fdSwitchTab('enquiries',this)">📩 Enquiries <span class="fd-tab-count">0</span></button>
       </div>
       <div class="tab-pane active" id="fd-tab-customers"></div>
       <div class="tab-pane" id="fd-tab-managers"></div>
@@ -1795,6 +1845,45 @@ tbody tr:hover td{background:var(--bg-3)}
   </div>
 </div>
 
+<!-- Bulk WhatsApp to Franchise Owners (admin only) -->
+<div class="modal-backdrop" id="modal-bulk-wa-franchises">
+  <div class="modal" style="max-width:620px;">
+    <div class="modal-header">
+      <div class="modal-title">📣 Message Franchise Owners</div>
+      <button class="modal-close" onclick="closeModal('modal-bulk-wa-franchises')">✕</button>
+    </div>
+    <div style="margin-bottom:14px;padding:10px 14px;background:var(--accent-soft);border:1px solid #c7d2fe;border-radius:var(--radius-sm);font-size:12px;color:var(--accent);">
+      🏢 <strong id="bwf-count">0</strong> franchise owner(s) selected. Use <code>{name}</code> to personalise.
+    </div>
+    <div class="form-group">
+      <label class="form-label">Recipients</label>
+      <div style="display:flex;gap:8px;margin-bottom:8px;">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="bwfSelectAll()">☑ Select All</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="bwfSelectActive()">✅ Active Only</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="bwfClear()">✕ Clear</button>
+      </div>
+      <div id="bwf-list" style="max-height:180px;overflow-y:auto;border:1px solid var(--border);border-radius:var(--radius-sm);padding:8px;"></div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Message *</label>
+      <textarea id="bwf-message" class="form-control" rows="5" placeholder="Hi {name}, this is an update from Fruit Delights HQ..."></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Quick Templates</label>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button type="button" class="btn btn-ghost btn-sm" onclick="bwfTemplate('renewal')">🎟️ Plan Renewal</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="bwfTemplate('announcement')">📢 Announcement</button>
+        <button type="button" class="btn btn-ghost btn-sm" onclick="bwfTemplate('support')">🛠️ Support Update</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:8px;">
+      <button class="btn btn-ghost" onclick="closeModal('modal-bulk-wa-franchises')">Cancel</button>
+      <button class="btn btn-wa" onclick="sendBulkWaToFranchises()">💬 Send to Franchise Owners</button>
+    </div>
+  </div>
+</div>
+
+
 <!-- Import Customers from Excel Modal -->
 <div class="modal-backdrop" id="modal-import-customers">
   <div class="modal">
@@ -1821,6 +1910,7 @@ tbody tr:hover td{background:var(--bg-3)}
 <!-- ============================================================ JAVASCRIPT ============================================================ -->
 <script>
 const IS_ADMIN = {{ 'true' if session.role in ['admin','subadmin'] else 'false' }};
+const IS_TOP_ADMIN = {{ 'true' if session.role == 'admin' else 'false' }};
 const pageTitles = {home:'Dashboard',plans:'Subscription Plans',teams:'Teams',managers:'Managers',employees:'Delivery Partners',customers:'Customers',enquiries:'Web Enquiries','whatsapp-settings':'WhatsApp Setup',franchises:'Franchises','franchise-plans':'Franchise Plans','franchise-stats':'Franchise Stats'};
 const _loaded = {employees:false,customers:false,managers:false};
 let _custData = [];
@@ -2083,14 +2173,10 @@ async function sendBulkWaToEnquiries(){
   if(!msg){showToast('Message is required.','danger');return;}
   const ids = _enqData.filter(e=>e.status==='pending').map(e=>e.id);
   if(!ids.length){showToast('No pending enquiries.','danger');return;}
-  // Build targets and call bulk send API
-  // We send via /api/admin/bulk_whatsapp/send with ids from enquiry users
-  // Since enquiries aren't users, we post directly with phone list:
   const targets = _enqData.filter(e=>e.status==='pending').map(e=>({phone:e.phone,name:e.name||'there'}));
   const btn = document.querySelector('#modal-bulk-wa-enq .btn-wa');
   btn.disabled=true; btn.textContent='Sending…';
   try{
-    // Use a custom thin endpoint or reuse the existing one with a special flag
     const res = await fetch('/api/admin/bulk_whatsapp/send_to_enquiries',{
       method:'POST',
       headers:{'Content-Type':'application/json'},
@@ -2226,7 +2312,6 @@ async function addHolidayToCustomer(){
   const d=document.getElementById('ec-holiday-date').value;
   if(!d){showToast('Select a date first.','danger');return;}
   if(!_ecCurrentId){
-    // Pre-save: just add locally
     if(!_ecHolidays.includes(d))_ecHolidays.push(d);
     renderHolidayChips();
     document.getElementById('ec-holiday-date').value='';
@@ -2240,7 +2325,6 @@ async function addBulkHolidays(){
   const dates=raw.split(',').map(d=>d.trim()).filter(Boolean);
   if(!dates.length){showToast('Enter at least one date.','danger');return;}
   if(!_ecCurrentId){
-    // Pre-save: add locally
     dates.forEach(d=>{if(!_ecHolidays.includes(d))_ecHolidays.push(d);});
     renderHolidayChips();
     document.getElementById('ec-holiday-bulk').value='';
@@ -2306,7 +2390,6 @@ function openViewModal(userData,role){
     document.getElementById('view-source').textContent=userData.source||'—';
     document.getElementById('view-created').textContent=userData.created_at||'—';
     document.getElementById('view-acct-status').innerHTML=statusBadge(userData.status||'active');
-    // Holidays
     const holidaysEl=document.getElementById('view-holidays');
     if(userData.holidays&&userData.holidays.length){
       const sorted=[...userData.holidays].sort();
@@ -2340,13 +2423,10 @@ async function loadCustomerPlanStatus(customerId){
   wrap.innerHTML=`<div style="display:flex;align-items:center;gap:10px;padding:16px;color:var(--text-3);"><div class="spinner-sm"></div><span style="font-size:13px;">Loading plan status…</span></div>`;
   try{
     const d=await fetch(`/api/customer/my_plan_status`).then(r=>r.json()).catch(()=>null);
-    // Try admin endpoint first, fall back to customer one
     const data=await fetch(`/api/admin/customer_plan_status/${customerId}`).then(r=>r.json());
-    // For box-by-box timeline, we need the boxes array. Try the customer endpoint via admin lookup.
     if(!data.success||!data.has_plan){wrap.innerHTML=`<div style="padding:12px 0;color:var(--text-3);font-size:13px;">No active plan assigned.</div>`;return;}
     const barColor=data.completion_pct>=80?'var(--green)':data.completion_pct>=40?'#f59e0b':'var(--accent)';
     const altInfo=data.is_alternate_plan?`<div style="margin-top:8px;display:flex;align-items:center;gap:6px;flex-wrap:wrap;"><span style="font-size:11px;color:var(--text-3);">Today's item:</span><span class="alt-pill">🔄 ${escHtml(data.today_item||'—')}</span></div>`:'';
-    // Box timeline — build from admin endpoint data (which has delivered count, period)
     const boxHtml = await buildBoxTimeline(customerId, data);
     wrap.innerHTML=`<div class="plan-progress-wrap">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px;">
@@ -2404,10 +2484,6 @@ let _mbOffDays=[], _mbHolidays=new Set();
 const PLAN_SCHEDULE_EXCLUSIONS = {22:['Saturday','Sunday'], 26:['Sunday']};
 const DOW_NAMES = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 
-// NEW: every plan's manual-billing calendar always spans a fixed 60 boxes,
-// regardless of the plan's real duration_days (22 / 26 / 30 / etc).
-// The real duration_days is kept separately (as _mbPlan.planDurationDays)
-// purely to know whether Sat/Sun structural exclusions apply.
 const MB_FIXED_BOX_COUNT = 60;
 
 function initManualBilling(customerId, planName, planPrice, durationDays, custStartDate, offDays, holidays){
@@ -2415,8 +2491,8 @@ function initManualBilling(customerId, planName, planPrice, durationDays, custSt
   _mbPlan = {
     name: planName,
     price: planPrice || 0,
-    duration: MB_FIXED_BOX_COUNT,          // used for calendar length + rate/day
-    planDurationDays: durationDays || 0,   // used only to detect 22/26-day exclusions & "has plan" check
+    duration: MB_FIXED_BOX_COUNT,
+    planDurationDays: durationDays || 0,
   };
   _mbOffDays = offDays || [];
   _mbHolidays = new Set(holidays || []);
@@ -2442,7 +2518,6 @@ function mbSetPaintMode(mode){
 function _mbIsExcludedDay(dateStr){
   const dt = new Date(dateStr+'T00:00:00');
   const dowName = DOW_NAMES[dt.getDay()];
-  // structural exclusions still keyed off the plan's REAL duration_days
   const excluded = PLAN_SCHEDULE_EXCLUSIONS[_mbPlan.planDurationDays] || [];
   if(excluded.includes(dowName)) return true;
   if(_mbOffDays.includes(dowName)) return true;
@@ -2456,11 +2531,6 @@ function mbRebuildCalendar(){
   if(!startVal || !_mbPlan || !_mbPlan.planDurationDays){ cal.innerHTML='<span style="font-size:12px;color:var(--text-3);">Select a start date (plan required).</span>'; return; }
   const start = new Date(startVal+'T00:00:00');
 
-  // Extend forward until we've collected exactly MB_FIXED_BOX_COUNT (60)
-  // SCHEDULABLE days (not plan-structural off, not customer off_day, not a
-  // holiday). Weekends/off-days still show in the grid but don't count
-  // toward the 60, so the calendar naturally spans however many real days
-  // that takes — same as before, just fixed at 60 instead of plan.duration.
   _mbDays = [];
   let d = new Date(start);
   let schedulableCount = 0;
@@ -2510,7 +2580,7 @@ function mbToggleDay(dateStr){
 function mbResetCalendar(){ _mbMarks={}; mbRebuildCalendar(); document.getElementById('mb-preview-wrap').style.display='none'; }
 
 function mbUpdateSummary(){
-  const total = _mbPlan ? _mbPlan.duration : _mbDays.length; // always 60 now
+  const total = _mbPlan ? _mbPlan.duration : _mbDays.length;
   const working = Object.values(_mbMarks).filter(v=>v==='delivered').length;
   const leave = Object.values(_mbMarks).filter(v=>v==='holiday').length;
   const rate = _mbPlan && _mbPlan.duration ? (_mbPlan.price/_mbPlan.duration) : 0;
@@ -2571,7 +2641,6 @@ async function buildBoxTimeline(customerId, planData){
     const statusEmoji  = {delivered:'✓', holiday:'🏖', missed:'✗', today:'•', upcoming:'○'};
     const statusTitle  = {delivered:'Delivered', holiday:'Holiday / Off', missed:'Missed', today:'Today', upcoming:'Upcoming'};
 
-    // Build tiles
     const tileHtml = data.boxes.map(b => {
       const cls = b.status;
       const extra = b.is_holiday ? ' title="Custom holiday"' : (b.is_off_day ? ' title="Regular off day"' : '');
@@ -2583,7 +2652,6 @@ async function buildBoxTimeline(customerId, planData){
       </div>`;
     }).join('');
 
-    // Holiday chips (only non-empty)
     let holidaySection = '';
     if(data.holidays && data.holidays.length){
       const chips = data.holidays.map(d => {
@@ -2638,9 +2706,6 @@ function openSampleModal(planLabel,count,planId){
   document.getElementById('sm-content').style.display='none';
   document.getElementById('sm-cards').innerHTML='';
   document.getElementById('modal-sample-customers').classList.add('open');document.body.style.overflow='hidden';
-  // FIX: match by plan_id when available (matched plans) instead of only by
-  // the free-text `sample` label — that's what was showing an empty modal
-  // for plans that actually had assigned sample customers.
   const _smUrl = planId
     ? '/api/admin/sample_customers?plan_id='+encodeURIComponent(planId)
     : '/api/admin/sample_customers?label='+encodeURIComponent(planLabel);
@@ -2746,7 +2811,6 @@ function _altCountBadges(altCounts){
 function renderBoxes(){
   const sf=document.getElementById('boxes-status-filter').value;
 
-  // FIX #2: include ALL plans regardless of active count — filter only hides truly zero rows
   const data=_boxesData.filter(p=>{
     const tot=(p.active_customers||0)+(p.sample_boxes||0);
     if(sf==='active') return (p.active_customers||0)>0;
@@ -2797,7 +2861,6 @@ function renderBoxes(){
            </td>`
         : `<td style="color:var(--text-3);font-size:11px;">${isSample ? '—' : isAlt ? '<span class="alt-pill" style="opacity:.6;">🔄 Alt plan</span>' : 'Standard'}</td>`;
 
-      // Teams with per-team alt counts in plan view
       const teamsHtml=(!isSample&&(p.teams||[]).length)
         ?`<div class="team-breakdown">${p.teams.map(t=>{const tw=Math.round((t.count/Math.max(p.active_customers||1,1))*100);const teamAltBadges=isAlt&&t.alt_counts&&Object.keys(t.alt_counts).length?`<div class="team-alt-pills">${_altCountBadges(t.alt_counts)}</div>`:'';return `<div class="team-row"><span class="t-name" title="${escHtml(t.team_name)}">${escHtml((t.team_name||'').substring(0,14))}</span><span class="t-bar"><span class="t-bar-fill" style="width:${tw}%;"></span></span><span class="t-count">${t.count}</span></div>${teamAltBadges}`;}).join('')}</div>`
         :`<span style="color:var(--text-3);font-size:11px;">—</span>`;
@@ -2809,7 +2872,6 @@ function renderBoxes(){
   }
 
   /* ── FIX #1: TEAM VIEW — full plan + alt breakdown per team ── */
-  // Build team map: team_id -> {name, area, plans: {planId: {...}}, totalActive, totalSample}
   const teamMap={};
   _boxesData.forEach(p=>{
     (p.teams||[]).forEach(t=>{
@@ -2832,14 +2894,11 @@ function renderBoxes(){
         isSample:   p.is_sample_plan||false,
       });
     });
-    // Sample: plan-level sample count (no team assignment available easily, but if plan has teams use those)
   });
 
-  // Also aggregate sample boxes per team if plan has team info
   _boxesData.forEach(p=>{
-    if(p.is_sample_plan) return; // unmatched samples have no team data
+    if(p.is_sample_plan) return;
     (p.teams||[]).forEach(t=>{
-      // sample_boxes are at plan level not team level from API; skip
     });
   });
 
@@ -2957,7 +3016,6 @@ function filterCustomers(){
     const nameMatch=!q||(r.getAttribute('data-name')||'').includes(q);
     const cityMatch=!city||(r.getAttribute('data-city')||'').toLowerCase()===city;
     const teamMatch=!team||r.getAttribute('data-team')===team;
-    // FIX #2: plan filter uses data-plan which holds plan_id
     const planMatch=!plan||r.getAttribute('data-plan')===plan;
     const statusMatch=!status||(r.getAttribute('data-status')||'').toLowerCase()===status;
     const show=nameMatch&&cityMatch&&teamMatch&&planMatch&&statusMatch;
@@ -3001,7 +3059,6 @@ async function loadEnquiries(force){
       const inboxDot=e.has_inbox?`<span class="inbox-dot"></span>`:'';
       return `<tr data-name="${(e.name||'').toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}"><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${(e.name||'?').charAt(0).toUpperCase()}</div><div style="font-weight:600;">${escHtml(e.name)}</div></div></td><td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td><td>${e.plan?`<span class="badge badge-orange">${escHtml(e.plan.substring(0,22))}</span>`:`<span class="badge badge-gray">—</span>`}</td><td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td><td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td><td>${e.payment_method==='cod'?`<span class="badge badge-yellow">💵 COD</span>`:`<span class="badge badge-blue">📱 UPI</span>`}</td><td style="font-size:12px;color:var(--text-3);">${date}</td><td>${sb}</td><td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">${approveBtn}<button class="btn btn-ghost btn-sm" onclick='openEditEnquiry(${JSON.stringify(e)})'>✏️ Edit</button><button class="btn btn-wa btn-sm" onclick="openWaInbox('${e.id}','${escHtml(e.name)}','${escHtml(e.phone||'')}','${escHtml(e.whatsapp_id||'')}')">${inboxDot}💬 Inbox</button><form method="POST" action="/admin/enquiries/delete/${e.id}" onsubmit="return confirm('Delete?');" style="display:inline;"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
     }).join('');
-    // Update FIX #5 button count
     const bweCountEl=document.getElementById('bwe-count');if(bweCountEl)bweCountEl.textContent=pending;
   }catch{tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;}
 }
@@ -3020,14 +3077,13 @@ function openEditEmployee(id,name,email,phone,teamId){
 function openEditCustomer(c){
   _ecCurrentId=c.id||'';
   _ecHolidays=[...(c.holidays||[])];
-  _ecAutoBilling  = c.auto_billing_enabled  !== false;   // default true
-  _ecAutoFollowup = c.auto_followup_enabled !== false;   // default true
+  _ecAutoBilling  = c.auto_billing_enabled  !== false;
+  _ecAutoFollowup = c.auto_followup_enabled !== false;
   document.getElementById('ec-customer-id').value=c.id||'';
   document.getElementById('ec-name').value=c.name||'';
   document.getElementById('ec-email').value=c.email||'';
   document.getElementById('ec-phone').value=c.phone||'';
   document.getElementById('ec-team').value=c.team_id||'';
-  // FIX: use plan_name properly even for plans with complex names
   document.getElementById('ec-plan').value=c.plan_name&&c.plan_name!=='—'?c.plan_name:'';
   document.getElementById('ec-address').value=c.address||'';
   document.getElementById('ec-ptime').value=c.preferred_time||'';
@@ -3319,49 +3375,6 @@ async function submitAssignAllToFranchise(){
   }
 }
 
-/* ── Bulk-Assign HQ Data to a Franchise ── */
-function populateBafFranchiseSelect(){
-  const sel = document.getElementById('baf-franchise-select');
-  if(!sel) return;
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">— Select franchise —</option>' +
-    _frData.map(f=>`<option value="${f.id}">${escHtml(f.business_name)} (${escHtml(f.city)})</option>`).join('');
-  sel.value = cur;
-}
-
-async function submitAssignAllToFranchise(){
-  const sel = document.getElementById('baf-franchise-select');
-  const franchiseId = sel.value;
-  if(!franchiseId){ showToast('❌ Select a target franchise.','danger'); return; }
-  const sections = Array.from(document.querySelectorAll('.baf-section:checked')).map(cb=>cb.value);
-  if(!sections.length){ showToast('❌ Select at least one section.','danger'); return; }
-  const franchiseName = sel.selectedOptions[0] ? sel.selectedOptions[0].textContent : '';
-  if(!confirm(`Assign HQ's ${sections.join(', ')} to "${franchiseName}"?\n\nThis cannot be undone automatically.`)) return;
-  document.getElementById('baf-status').textContent = 'Assigning…';
-  try{
-    const res = await fetch('/api/admin/assign_all_to_franchise', {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({franchise_id: franchiseId, sections})
-    });
-    const data = await res.json();
-    if(data.success){
-      showToast(`✅ ${data.message}`,'success');
-      document.getElementById('baf-status').textContent =
-        Object.entries(data.summary).map(([k,v])=>`${k}: ${v}`).join(' · ');
-      loadFranchises(true);
-    } else {
-      showToast('❌ '+(data.message||'Failed'),'danger');
-      document.getElementById('baf-status').textContent = '';
-    }
-  }catch{
-    showToast('❌ Network error.','danger');
-    document.getElementById('baf-status').textContent = '';
-  }
-}
-
-
-
-
 async function bulkAssignCustomersToManager(managerId, managerName){
   if(!confirm(`Assign ALL of your customers to ${managerName}?\n\nThis will overwrite any existing manager assignment on those customers.`)) return;
   try{
@@ -3559,8 +3572,25 @@ async function openFranchiseDetail(frId){
       ? data.employees.map(e=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);">${escHtml(e.name)} · ${escHtml(e.phone||'—')}</div>`).join('')
       : '<div class="empty-state">No employees.</div>';
     document.getElementById('fd-tab-plans').innerHTML = data.plans.length
-      ? data.plans.map(p=>`<span class="badge badge-orange" style="margin:3px;">${escHtml(p.name)}</span>`).join('')
+      ? `<div class="table-wrap"><table><thead><tr><th>Plan</th><th>Price/mo</th><th>Duration</th><th>Tax</th><th>Type</th></tr></thead><tbody>${data.plans.map(p=>`
+          <tr>
+            <td><strong>${escHtml(p.name)}</strong>${p.description?`<div style="font-size:11px;color:var(--text-3);">${escHtml(p.description)}</div>`:''}</td>
+            <td>₹${p.price_per_month||0}</td>
+            <td>${p.duration_days?p.duration_days+' days':'—'}</td>
+            <td>${p.tax_percent||0}%</td>
+            <td>${(p.alternate_items&&p.alternate_items.length>=2)?'<span class="badge badge-yellow">🔄 Alternate</span>':'<span class="badge badge-blue">Standard</span>'}</td>
+          </tr>`).join('')}</tbody></table></div>`
       : '<div class="empty-state">No plans.</div>';
+
+    const _fdCounts = data.counts || {
+      customers: data.customers.length, managers: data.managers.length,
+      employees: data.employees.length, plans: data.plans.length,
+      teams: data.teams.length, enquiries: data.enquiries.length,
+    };
+    ['customers','managers','employees','plans','teams','enquiries'].forEach(k=>{
+      const btn = document.getElementById('fd-tabbtn-'+k);
+      if(btn){ const c = btn.querySelector('.fd-tab-count'); if(c) c.textContent = _fdCounts[k] ?? 0; }
+    });
     document.getElementById('fd-tab-teams').innerHTML = data.teams.length
       ? data.teams.map(t=>`<span class="badge badge-blue" style="margin:3px;">${escHtml(t.name)}</span>`).join('')
       : '<div class="empty-state">No teams.</div>';
@@ -3589,6 +3619,10 @@ async function loadFranchiseStats(){
     document.getElementById('fs-total').textContent=data.total;
     document.getElementById('fs-active').textContent=data.active;
     document.getElementById('fs-pending').textContent=data.pending;
+    const _totalCust = data.franchises.reduce((s,f)=>s+(f.customer_count||0),0);
+    document.getElementById('fs-customers-total').textContent = _totalCust;
+    const _totalEarn = (data.earnings||[]).reduce((s,e)=>s+(e.amount||0),0);
+    document.getElementById('fs-earnings-total').textContent = '₹'+_totalEarn.toLocaleString('en-IN');
     const citySel=document.getElementById('fs-city');
     if(!citySel.dataset.filled){
       citySel.innerHTML='<option value="">All Cities</option>'+data.cities.map(c=>`<option value="${escHtml(c)}">${escHtml(c)}</option>`).join('');
@@ -3634,13 +3668,68 @@ async function loadMyFranchisePlanCard(){
 }
 
 
+/* ── Bulk-message Franchise Owners (admin only) ── */
+let _bwfSelected = new Set();
+const BWF_TEMPLATES = {
+  renewal: `Hello {name},\n\n🎟️ Your franchise plan is due for renewal soon.\n\nPlease reach out to HQ to continue uninterrupted access.\n\nThank you for partnering with Fruit Delights!`,
+  announcement: `Hello {name},\n\n📢 We have an important update for all Fruit Delights franchise partners.\n\n[Add your announcement here]\n\nThank you!`,
+  support: `Hello {name},\n\n🛠️ This is a quick note from HQ support regarding your franchise account.\n\n[Add details here]\n\nTeam Fruit Delights`,
+};
+function bwfTemplate(key){ document.getElementById('bwf-message').value = BWF_TEMPLATES[key] || ''; }
+
+function bwfRenderList(){
+  const wrap = document.getElementById('bwf-list');
+  if(!_frData.length){ wrap.innerHTML = '<span style="font-size:12px;color:var(--text-3);">Loading franchises…</span>'; return; }
+  wrap.innerHTML = _frData.map(f=>{
+    const checked = _bwfSelected.has(f.id) ? 'checked' : '';
+    return `<label style="display:flex;align-items:center;gap:8px;padding:6px 4px;font-size:13px;border-bottom:1px solid var(--border);">
+      <input type="checkbox" value="${f.id}" ${checked} onchange="bwfToggle('${f.id}',this.checked)">
+      <span style="flex:1;">${escHtml(f.business_name)} <span style="color:var(--text-3);">— ${escHtml(f.subadmin_name||'—')}</span></span>
+      ${statusBadge(f.status)}
+    </label>`;
+  }).join('');
+  document.getElementById('bwf-count').textContent = _bwfSelected.size;
+}
+function bwfToggle(id, checked){ if(checked) _bwfSelected.add(id); else _bwfSelected.delete(id); document.getElementById('bwf-count').textContent = _bwfSelected.size; }
+function bwfSelectAll(){ _bwfSelected = new Set(_frData.map(f=>f.id)); bwfRenderList(); }
+function bwfSelectActive(){ _bwfSelected = new Set(_frData.filter(f=>f.status==='active').map(f=>f.id)); bwfRenderList(); }
+function bwfClear(){ _bwfSelected.clear(); bwfRenderList(); }
+
+async function openBulkWaFranchisesModal(){
+  if(!_frData.length) await loadFranchises(false);
+  bwfSelectAll();
+  document.getElementById('bwf-message').value='';
+  openModal('modal-bulk-wa-franchises');
+}
+
+async function sendBulkWaToFranchises(){
+  const message = document.getElementById('bwf-message').value.trim();
+  if(!message){ showToast('Message is required.','danger'); return; }
+  if(!_bwfSelected.size){ showToast('Select at least one franchise owner.','danger'); return; }
+  try{
+    const res = await fetch('/api/admin/bulk_whatsapp/send_to_franchise_owners', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({message, batch_size:10, franchise_ids:[..._bwfSelected]})
+    });
+    const data = await res.json();
+    if(data.success){ showToast('✅ '+data.message,'success'); closeModal('modal-bulk-wa-franchises'); }
+    else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{ showToast('❌ Network error.','danger'); }
+}
+
 /* ── Boot ── */
 window.addEventListener('DOMContentLoaded',()=>{
-  loadChart(1,document.querySelector('.range-pill.active'));
-  loadEmployees();
-  loadCustomers();
-  loadBoxes(false);
-  loadMyFranchisePlanCard();
+  if(IS_TOP_ADMIN){
+    navigate('franchise-stats', document.querySelector('[data-page="franchise-stats"]'));
+    loadFranchises(false);
+    loadFranchiseStats();
+  } else {
+    loadChart(1,document.querySelector('.range-pill.active'));
+    loadEmployees();
+    loadCustomers();
+    loadBoxes(false);
+    loadMyFranchisePlanCard();
+  }
 });
 </script>
 </body>

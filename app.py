@@ -4110,6 +4110,47 @@ def api_bulk_whatsapp_send_to_enquiries():
     })
 
 
+@app.route("/api/admin/bulk_whatsapp/send_to_franchise_owners", methods=["POST"])
+@login_required
+@super_admin_required
+def api_bulk_whatsapp_send_to_franchise_owners():
+    """Bulk WhatsApp to franchise owners (subadmins) only — the top-level
+    admin's replacement for the customer/employee/enquiry bulk sender,
+    since admin no longer manages customer-facing data directly."""
+    data          = request.get_json(silent=True) or {}
+    message       = (data.get("message") or "").strip()
+    batch_size    = int(data.get("batch_size", 10))
+    franchise_ids = data.get("franchise_ids") or []   # empty = all franchises
+
+    if not message:
+        return jsonify({"success": False, "message": "Message is required."}), 400
+
+    query = {}
+    if franchise_ids:
+        try:
+            query["_id"] = {"$in": [ObjectId(f) for f in franchise_ids]}
+        except Exception:
+            return jsonify({"success": False, "message": "Invalid franchise_ids."}), 400
+
+    franchises   = list(franchises_col.find(query))
+    subadmin_ids = [f["subadmin_id"] for f in franchises if f.get("subadmin_id")]
+    if not subadmin_ids:
+        return jsonify({"success": False, "message": "No franchise owners found."}), 400
+
+    owners  = list(users_col.find({"_id": {"$in": subadmin_ids}}, {"name": 1, "phone": 1}))
+    targets = [{"phone": o.get("phone", ""), "name": o.get("name", "there")} for o in owners if o.get("phone")]
+    if not targets:
+        return jsonify({"success": False, "message": "No valid phone numbers found for these franchise owners."}), 400
+
+    # Franchise owners always send through HQ's own Wirebase instance.
+    t = threading.Thread(target=_send_bulk_wa_worker, args=(targets, message, batch_size, None), daemon=True)
+    t.start()
+
+    return jsonify({
+        "success": True,
+        "message": f"✅ Sending to {len(targets)} franchise owner(s) in batches of {batch_size}. Runs in background.",
+        "count":   len(targets),
+    })
 # ---------------------------------------------------------------------------
 # BACKGROUND SCHEDULER  (rewritten to use a Mongo-backed distributed lock)
 # ---------------------------------------------------------------------------
@@ -5177,10 +5218,26 @@ def api_franchise_detail(franchise_id):
         "managers":  [{"id": str(m["_id"]), "name": m.get("name", ""), "phone": m.get("phone", "")} for m in managers],
         "employees": [{"id": str(e["_id"]), "name": e.get("name", ""), "phone": e.get("phone", "")} for e in employees],
         "customers": [cust_out(c) for c in customers],
-        "plans":     [{"id": str(p["_id"]), "name": p.get("name", "")} for p in plans],
+        "plans":     [{
+            "id":               str(p["_id"]),
+            "name":             p.get("name", ""),
+            "description":      p.get("description", ""),
+            "price_per_month":  p.get("price_per_month") or p.get("price_per_day") or 0,
+            "duration_days":    p.get("duration_days", 0),
+            "tax_percent":      p.get("tax_percent", 0),
+            "alternate_items":  p.get("alternate_items", []),
+        } for p in plans],
         "teams":     [{"id": str(t["_id"]), "name": t.get("name", "")} for t in teams],
         "enquiries": [{"id": str(en["_id"]), "name": en.get("name", ""), "phone": en.get("phone", ""),
                         "status": en.get("status", "pending")} for en in enquiries],
+        "counts": {
+            "managers":  len(managers),
+            "employees": len(employees),
+            "customers": len(customers),
+            "plans":     len(plans),
+            "teams":     len(teams),
+            "enquiries": len(enquiries),
+        },
     })
 
 
