@@ -2544,9 +2544,19 @@ def dashboard_employee():
         flash("You are not assigned to any team.", "danger")
         return redirect(url_for("home"))
 
-    today_str  = datetime.now().strftime("%Y-%m-%d")
+    now = datetime.now()
+    # After 3 PM the whole employee dashboard flips to tomorrow's
+    # deliveries — same cutover used by the "Boxes to Pack" panel — so the
+    # card list, addresses, and pack list always agree with each other.
+    if now.hour >= 15:
+        target_date = (now + timedelta(days=1)).date()
+        is_next_day = True
+    else:
+        target_date = now.date()
+        is_next_day = False
+    today_str  = target_date.strftime("%Y-%m-%d")
     emp_id_str = str(employee["_id"])
-    today      = datetime.now().date()
+    today      = target_date
 
     existing_deliveries = list(deliveries_col.find({
         "team_id": employee["team_id"],
@@ -2614,7 +2624,9 @@ def dashboard_employee():
         deliveries=final_deliveries,
         photo_url="",
         cloudinary_cloud_name=app.config["CLOUDINARY_CLOUD_NAME"],
-        cloudinary_upload_preset=app.config["CLOUDINARY_UPLOAD_PRESET"]
+        cloudinary_upload_preset=app.config["CLOUDINARY_UPLOAD_PRESET"],
+        is_next_day=is_next_day,
+        is_sunday=(today.strftime("%A") == "Sunday"),
     )
 
 
@@ -3377,6 +3389,10 @@ def customer_plan_status(customer_id):
     # like "44 delivered" on a 26-day plan. Now matches the same date
     # range used by /api/customer/my_plan_status and
     # /api/admin/customer_box_timeline/<customer_id>.
+    # total_delivered_boxes is no longer used for plan-progress calculations
+    # anywhere — delivered_count is always the plain auto-count of actual
+    # "delivered" documents in the current billing period, for both admin
+    # and customer dashboards.
     delivered_count = deliveries_col.count_documents({
         "customer_id": customer["_id"],
         "status": "delivered",
@@ -3385,17 +3401,6 @@ def customer_plan_status(customer_id):
             "$lte": period_end.strftime("%Y-%m-%d"),
         }
     })
-
-    # Manual override REPLACES the auto count for this cycle instead of
-    # adding to it — an admin setting "Total Delivered Boxes Override"
-    # to e.g. 10 means "treat this cycle as 10 delivered", not
-    # "auto-count PLUS 10".
-    extra = customer.get("total_delivered_boxes")
-    if extra is not None:
-        try:
-            delivered_count = int(extra)
-        except (TypeError, ValueError):
-            pass
 
     remaining_days = max(0, duration_days - delivered_count)
 
@@ -3688,7 +3693,7 @@ def employee_my_boxes():
     if not employee or not employee.get("team_id"):
         return jsonify({"success": False, "message": "Not assigned to a team"}), 400
     now = datetime.now()
-    if now.hour >= 13:
+    if now.hour >= 15:
         target_date = (now + timedelta(days=1)).date()
         is_next_day = True
     else:
@@ -3920,9 +3925,13 @@ def customer_my_plan_status():
         })
         current += timedelta(days=1)
 
+    # total_delivered_boxes is not used for plan-progress anywhere — this
+    # is always the plain auto-count of "delivered" documents in the
+    # current billing period, matching the admin dashboard's calculation.
     delivered_count = sum(1 for b in boxes if b["status"] == "delivered")
+
     remaining_days = max(0, duration_days - delivered_count)
-    completion_pct = round((delivered_count / duration_days) * 100) if duration_days else 0
+    completion_pct = min(100, round((delivered_count / duration_days) * 100)) if duration_days else 0
 
     return jsonify({
         "success": True,
