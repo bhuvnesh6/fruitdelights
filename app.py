@@ -2153,6 +2153,34 @@ def delete_enquiry(enquiry_id):
     return redirect(url_for("dashboard_admin"))
 
 
+@app.route("/api/admin/enquiries/bulk_delete", methods=["POST"])
+@login_required
+@role_required("admin", "manager")
+def api_bulk_delete_enquiries():
+    """
+    Deletes multiple enquiries at once, scoped to the caller's own
+    franchise/HQ via _franchise_filter() — a subadmin can never delete
+    another franchise's (or HQ's) enquiries this way.
+    Body: {"ids": ["<enquiry_id>", "<enquiry_id>", ...]}
+    """
+    data = request.get_json(silent=True) or {}
+    ids = data.get("ids", [])
+    if not ids or not isinstance(ids, list):
+        return jsonify({"success": False, "message": "No enquiry IDs provided."}), 400
+    try:
+        oids = [ObjectId(i) for i in ids if i]
+    except Exception:
+        return jsonify({"success": False, "message": "Invalid enquiry ID(s)."}), 400
+    if not oids:
+        return jsonify({"success": False, "message": "No valid enquiry IDs provided."}), 400
+    query = {"_id": {"$in": oids}, **_franchise_filter()}
+    result = enquiries_col.delete_many(query)
+    return jsonify({
+        "success": True,
+        "deleted": result.deleted_count,
+        "message": f"Deleted {result.deleted_count} enquiry(ies).",
+    })
+
 @app.route("/api/admin/enquiry_count")
 @login_required
 @role_required("admin", "manager")

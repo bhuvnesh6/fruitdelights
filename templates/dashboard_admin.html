@@ -857,7 +857,9 @@ tbody tr:hover td{background:var(--bg-3)}
           <h2 style="font-family:var(--font-disp);font-size:22px;">Web Form Enquiries</h2>
           <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
             <button class="btn btn-excel btn-sm" onclick="downloadEnquiriesExcel()">📥 Export Excel</button>
-            <button class="btn btn-primary btn-sm" onclick="openBulkEnquiriesModal()">📥 Bulk Import</button>
+            <button class="btn btn-excel btn-sm" style="background:linear-gradient(135deg,#4f46e5,#4338ca);" onclick="openImportEnquiriesExcelModal()">📥 Import Excel</button>
+            <button class="btn btn-primary btn-sm" onclick="openBulkEnquiriesModal()">📥 Bulk Import (Manual)</button>
+            <button class="btn btn-danger btn-sm" id="enq-delete-selected-btn" onclick="deleteSelectedEnquiries()" style="display:none;">🗑️ Delete Selected (<span id="enq-selected-count">0</span>)</button>
             <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">🔄 Refresh</button>
           </div>
         </div>
@@ -876,8 +878,10 @@ tbody tr:hover td{background:var(--bg-3)}
         </div>
         <div class="table-wrap">
           <table id="enq-table">
-            <thead><tr><th>Name</th><th>Phone</th><th>Plan</th><th>Time Pref.</th><th>Start Date</th><th>Payment</th><th>Received</th><th>Status</th><th>Actions</th></tr></thead>
-            <tbody id="enq-tbody"><tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr></tbody>
+            <thead><tr>
+              <th style="width:30px;text-align:center;"><input type="checkbox" id="enq-select-all" onchange="toggleEnqSelectAll()"></th>
+              <th>Name</th><th>Phone</th><th>Plan</th><th>Time Pref.</th><th>Start Date</th><th>Payment</th><th>Received</th><th>Status</th><th>Actions</th></tr></thead>
+            <tbody id="enq-tbody"><tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr></tbody>
           </table>
         </div>
       </div>
@@ -1889,6 +1893,25 @@ tbody tr:hover td{background:var(--bg-3)}
 </div>
 
 
+<!-- Import Enquiries from Excel Modal -->
+<div class="modal-backdrop" id="modal-import-enquiries-excel">
+  <div class="modal">
+    <div class="modal-header"><div class="modal-title">📥 Import Enquiries from Excel</div><button class="modal-close" onclick="closeModal('modal-import-enquiries-excel')">✕</button></div>
+    <div style="font-size:12px;color:var(--text-2);margin-bottom:12px;">
+      Header row columns: <strong>name, phone</strong> (required). Optional: <strong>plan, delivery_time, start_date, payment_method, address, status</strong> — leave blank and they'll default (payment: UPI, status: pending).
+    </div>
+    <div class="form-group">
+      <label class="form-label">Select .xlsx file</label>
+      <input type="file" id="import-enq-file" accept=".xlsx,.xls" class="form-control" onchange="handleImportEnquiryFile(event)">
+    </div>
+    <div id="import-enq-status" style="font-size:12px;color:var(--text-3);margin-bottom:10px;"></div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;">
+      <button type="button" class="btn btn-ghost" onclick="closeModal('modal-import-enquiries-excel')">Cancel</button>
+      <button type="button" class="btn btn-primary" id="import-enq-submit-btn" disabled onclick="submitImportEnquiriesExcel()">✅ Import Enquiries</button>
+    </div>
+  </div>
+</div>
+
 <!-- Import Customers from Excel Modal -->
 <div class="modal-backdrop" id="modal-import-customers">
   <div class="modal">
@@ -2134,6 +2157,59 @@ async function submitImportCustomers(){
     } else showToast('❌ '+(data.message||'Import failed'),'danger');
   }catch{
     btn.disabled=false; btn.textContent='✅ Import Customers';
+    showToast('❌ Network error.','danger');
+  }
+}
+
+/* ── Enquiries: Import from Excel (name + phone required, rest blank/optional) ── */
+function openImportEnquiriesExcelModal(){
+  document.getElementById('import-enq-file').value='';
+  document.getElementById('import-enq-status').textContent='';
+  document.getElementById('import-enq-submit-btn').disabled=true;
+  window._importedEnquiryRows=[];
+  openModal('modal-import-enquiries-excel');
+}
+function handleImportEnquiryFile(evt){
+  const file=evt.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=function(e){
+    const wb=XLSX.read(e.target.result,{type:'binary'});
+    const ws=wb.Sheets[wb.SheetNames[0]];
+    const rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+    window._importedEnquiryRows=rows.map(r=>({
+      name: r.name || r.Name || '',
+      phone: String(r.phone || r.Phone || '').trim(),
+      plan: r.plan || r.Plan || '',
+      delivery_time: r.delivery_time || r['Delivery Time'] || '',
+      start_date: r.start_date || r['Start Date'] || '',
+      payment_method: String(r.payment_method || r['Payment Method'] || 'upi').toLowerCase(),
+      address: r.address || r.Address || '',
+      status: String(r.status || 'pending').toLowerCase(),
+    })).filter(r=>r.name && r.phone);
+    document.getElementById('import-enq-status').textContent=`${window._importedEnquiryRows.length} valid rows found (name + phone required, rest optional).`;
+    document.getElementById('import-enq-submit-btn').disabled=window._importedEnquiryRows.length===0;
+  };
+  reader.readAsBinaryString(file);
+}
+async function submitImportEnquiriesExcel(){
+  const rows=window._importedEnquiryRows||[];
+  if(!rows.length){showToast('No rows to import.','danger');return;}
+  const btn=document.getElementById('import-enq-submit-btn');
+  btn.disabled=true;btn.textContent='⏳ Importing…';
+  try{
+    const res=await fetch('/api/admin/bulk_enquiries_import',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({enquiries:rows})
+    });
+    const data=await res.json();
+    btn.disabled=false;btn.textContent='✅ Import Enquiries';
+    if(data.success){
+      showToast(`✅ ${data.message}`,'success');
+      setTimeout(()=>{closeModal('modal-import-enquiries-excel');loadEnquiries(true);},1200);
+    } else showToast('❌ '+(data.message||'Import failed'),'danger');
+  }catch{
+    btn.disabled=false;btn.textContent='✅ Import Enquiries';
     showToast('❌ Network error.','danger');
   }
 }
@@ -3046,7 +3122,7 @@ let _enqLoaded=false;
 async function loadEnquiries(force){
   if(_enqLoaded&&!force)return;
   const tbody=document.getElementById('enq-tbody');if(!tbody)return;
-  tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
+  tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text-3);">Loading…</td></tr>`;
   try{
     const data=await fetch('/api/admin/enquiries_data').then(r=>r.json());
     _enqData=data;_enqLoaded=true;
@@ -3056,21 +3132,60 @@ async function loadEnquiries(force){
     document.getElementById('enq-stat-approved').textContent=approved;
     const badge=document.getElementById('enq-badge');
     if(badge){if(pending>0){badge.textContent=pending;badge.style.display='inline-flex';}else{badge.style.display='none';}}
-    if(!data.length){tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--text-3);">No enquiries yet.</td></tr>`;return;}
+    document.getElementById('enq-select-all').checked=false;
+    updateEnqSelectedCount();
+    if(!data.length){tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--text-3);">No enquiries yet.</td></tr>`;return;}
     tbody.innerHTML=data.map(e=>{
       const date=e.created_at?new Date(e.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'2-digit'}):'—';
       const sb=e.status==='pending'?`<span class="badge badge-yellow">⏳ Pending</span>`:`<span class="badge badge-green">✅ Converted</span>`;
       const approveBtn=e.status==='pending'?`<form method="POST" action="/admin/enquiries/approve/${e.id}" onsubmit="return confirm('Convert to customer?');" style="display:inline;"><button class="btn btn-success btn-sm">✅ Approve</button></form>`:'';
       const inboxDot=e.has_inbox?`<span class="inbox-dot"></span>`:'';
-      return `<tr data-name="${(e.name||'').toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}"><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${(e.name||'?').charAt(0).toUpperCase()}</div><div style="font-weight:600;">${escHtml(e.name)}</div></div></td><td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td><td>${e.plan?`<span class="badge badge-orange">${escHtml(e.plan.substring(0,22))}</span>`:`<span class="badge badge-gray">—</span>`}</td><td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td><td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td><td>${e.payment_method==='cod'?`<span class="badge badge-yellow">💵 COD</span>`:`<span class="badge badge-blue">📱 UPI</span>`}</td><td style="font-size:12px;color:var(--text-3);">${date}</td><td>${sb}</td><td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">${approveBtn}<button class="btn btn-ghost btn-sm" onclick='openEditEnquiry(${JSON.stringify(e)})'>✏️ Edit</button><button class="btn btn-wa btn-sm" onclick="openWaInbox('${e.id}','${escHtml(e.name)}','${escHtml(e.phone||'')}','${escHtml(e.whatsapp_id||'')}')">${inboxDot}💬 Inbox</button><form method="POST" action="/admin/enquiries/delete/${e.id}" onsubmit="return confirm('Delete?');" style="display:inline;"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
+      return `<tr data-name="${(e.name||'').toLowerCase()}" data-phone="${(e.phone||'').toLowerCase()}" data-status="${e.status}" data-id="${e.id}"><td style="text-align:center;"><input type="checkbox" class="enq-row-checkbox" value="${e.id}" onchange="updateEnqSelectedCount()"></td><td><div style="display:flex;align-items:center;gap:8px;"><div class="avatar avatar-sm" style="background:linear-gradient(135deg,#f97316,#f59e0b);">${(e.name||'?').charAt(0).toUpperCase()}</div><div style="font-weight:600;">${escHtml(e.name)}</div></div></td><td><a href="tel:${escHtml(e.phone)}" style="color:var(--accent);font-weight:600;">${escHtml(e.phone)}</a></td><td>${e.plan?`<span class="badge badge-orange">${escHtml(e.plan.substring(0,22))}</span>`:`<span class="badge badge-gray">—</span>`}</td><td style="color:var(--text-2);font-size:12px;">${e.delivery_time||'—'}</td><td style="color:var(--text-2);font-size:12px;">${e.start_date||'—'}</td><td>${e.payment_method==='cod'?`<span class="badge badge-yellow">💵 COD</span>`:`<span class="badge badge-blue">📱 UPI</span>`}</td><td style="font-size:12px;color:var(--text-3);">${date}</td><td>${sb}</td><td><div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap;">${approveBtn}<button class="btn btn-ghost btn-sm" onclick='openEditEnquiry(${JSON.stringify(e)})'>✏️ Edit</button><button class="btn btn-wa btn-sm" onclick="openWaInbox('${e.id}','${escHtml(e.name)}','${escHtml(e.phone||'')}','${escHtml(e.whatsapp_id||'')}')">${inboxDot}💬 Inbox</button><form method="POST" action="/admin/enquiries/delete/${e.id}" onsubmit="return confirm('Delete?');" style="display:inline;"><button class="btn btn-danger btn-sm">🗑️</button></form></div></td></tr>`;
     }).join('');
     const bweCountEl=document.getElementById('bwe-count');if(bweCountEl)bweCountEl.textContent=pending;
-  }catch{tbody.innerHTML=`<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;}
+  }catch{tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;padding:32px;color:var(--red);">Failed. <button class="btn btn-ghost btn-sm" onclick="loadEnquiries(true)">Retry</button></td></tr>`;}
 }
 function filterEnqTable(){
   const q=document.getElementById('enq-search').value.toLowerCase();
   const st=document.getElementById('enq-status-filter').value;
   document.querySelectorAll('#enq-table tbody tr').forEach(r=>{const name=(r.getAttribute('data-name')||'').toLowerCase();const phone=(r.getAttribute('data-phone')||'').toLowerCase();r.style.display=((!q||(name+phone).includes(q))&&(!st||r.getAttribute('data-status')===st))?'':'none';});
+}
+
+/* ── Enquiries: select-all / bulk delete ── */
+function toggleEnqSelectAll(){
+  const checked=document.getElementById('enq-select-all').checked;
+  document.querySelectorAll('#enq-tbody tr').forEach(tr=>{
+    if(tr.style.display==='none')return; // only affect currently-filtered/visible rows
+    const cb=tr.querySelector('.enq-row-checkbox');
+    if(cb)cb.checked=checked;
+  });
+  updateEnqSelectedCount();
+}
+function updateEnqSelectedCount(){
+  const selected=document.querySelectorAll('#enq-tbody .enq-row-checkbox:checked');
+  const btn=document.getElementById('enq-delete-selected-btn');
+  const cnt=document.getElementById('enq-selected-count');
+  if(cnt)cnt.textContent=selected.length;
+  if(btn)btn.style.display=selected.length?'inline-flex':'none';
+}
+async function deleteSelectedEnquiries(){
+  const selected=Array.from(document.querySelectorAll('#enq-tbody .enq-row-checkbox:checked')).map(cb=>cb.value);
+  if(!selected.length){showToast('No enquiries selected.','danger');return;}
+  if(!confirm(`Delete ${selected.length} selected enquiry(ies)? This cannot be undone.`))return;
+  const btn=document.getElementById('enq-delete-selected-btn');
+  btn.disabled=true;
+  try{
+    const res=await fetch('/api/admin/enquiries/bulk_delete',{
+      method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ids:selected})
+    });
+    const data=await res.json();
+    btn.disabled=false;
+    if(data.success){
+      showToast(`✅ ${data.message}`,'success');
+      loadEnquiries(true);
+    } else showToast('❌ '+(data.message||'Failed'),'danger');
+  }catch{btn.disabled=false;showToast('❌ Network error.','danger');}
 }
 
 /* ── Edit modals ── */
